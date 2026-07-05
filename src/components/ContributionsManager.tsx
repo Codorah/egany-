@@ -206,6 +206,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                   <TableHead>Email</TableHead>
                   <TableHead>Période</TableHead>
                   <TableHead>Montant</TableHead>
+                  <TableHead>Pénalité</TableHead>
                   <TableHead>Statut</TableHead>
                   {isManager && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
@@ -213,7 +214,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
               <TableBody>
                 {contributions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isManager ? 5 : 4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isManager ? 6 : 5} className="text-center py-8 text-muted-foreground">
                       Aucune cotisation trouvée.
                     </TableCell>
                   </TableRow>
@@ -224,6 +225,15 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                       <TableCell className="text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
                       <TableCell>{c.period}</TableCell>
                       <TableCell>{c.amount.toLocaleString()} {group.currency}</TableCell>
+                      <TableCell>
+                        {c.penaltyApplied ? (
+                          <Badge variant={c.penaltyStatus === 'paid' ? 'secondary' : 'destructive'} className="text-[10px]">
+                            {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? '(payée)' : '(due)'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(c.status)}</TableCell>
                       {isManager && (
                         <TableCell className="text-right">

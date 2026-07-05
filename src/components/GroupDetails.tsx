@@ -1,18 +1,19 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Group, UserProfile } from '@/types';
-import { Calendar, DollarSign, Users, ArrowLeft, CheckCircle2, Clock, UserPlus, CheckCircle, CreditCard, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
 import { Chat } from './Chat';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { executePayoutDisbursement } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 
 interface GroupDetailsProps {
@@ -23,50 +24,65 @@ interface GroupDetailsProps {
 export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const { profile } = useAuth();
   const [isCompleting, setIsCompleting] = React.useState(false);
-  const [isPaying, setIsPaying] = React.useState(false);
   const [showChat, setShowChat] = React.useState(false);
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
-  const [isConfirmPaymentOpen, setIsConfirmPaymentOpen] = React.useState(false);
+  const [members, setMembers] = React.useState<Record<string, UserProfile>>({});
+  const [drawnBeneficiaryId, setDrawnBeneficiaryId] = React.useState<string | null>(null);
+  const [isDistributing, setIsDistributing] = React.useState(false);
+  const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
 
   const isCreator = profile?.uid === group.creatorId;
   const isAdmin = profile?.role === 'admin';
   const canManage = isCreator || isAdmin;
 
-  const handleStripePayment = () => {
-    if (!profile) return;
-    setIsConfirmPaymentOpen(true);
+  React.useEffect(() => {
+    const fetchMembers = async () => {
+      const entries: Record<string, UserProfile> = {};
+      for (const uid of group.members) {
+        const snap = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+        if (!snap.empty) {
+          entries[uid] = snap.docs[0].data() as UserProfile;
+        }
+      }
+      setMembers(entries);
+    };
+    fetchMembers();
+  }, [group.members]);
+
+  const memberName = (uid: string) => members[uid]?.displayName || `Membre ${uid.slice(0, 6)}`;
+
+  const scheduledBeneficiaryId = group.payoutOrder[group.currentPayoutIndex];
+  const totalPot = group.contributionAmount * group.members.length;
+
+  const handleDraw = () => {
+    const remaining = group.payoutOrder.slice(group.currentPayoutIndex);
+    const picked = remaining[Math.floor(Math.random() * remaining.length)];
+    setDrawnBeneficiaryId(picked);
   };
 
-  const executeStripePayment = async () => {
-    if (!profile) return;
-    setIsPaying(true);
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: group.contributionAmount,
-          currency: group.currency.toLowerCase(),
-          groupName: group.name,
-          groupId: group.id,
-          userId: profile.uid,
-          userName: profile.displayName,
-        }),
-      });
+  const beneficiaryToDistribute = group.distributionMethod === 'draw' ? drawnBeneficiaryId : scheduledBeneficiaryId;
 
-      const session = await response.json();
-      if (session.url) {
-        window.location.href = session.url;
-      } else {
-        throw new Error(session.error || 'Erreur lors de la création de la session de paiement');
+  const handleConfirmDistribution = async () => {
+    if (!profile || !beneficiaryToDistribute) return;
+    setIsDistributing(true);
+    try {
+      const result = await executePayoutDisbursement({
+        groupId: group.id,
+        beneficiaryId: beneficiaryToDistribute,
+        adminUserId: profile.uid
+      });
+      if (!result.success) {
+        throw new Error(result.message);
       }
+      toast.success(result.message);
+      setDrawnBeneficiaryId(null);
     } catch (error: any) {
-      console.error('Stripe error:', error);
-      toast.error(error.message || 'Erreur lors du paiement Stripe');
+      console.error('Distribution error:', error);
+      toast.error(error.message || "Erreur lors de la distribution du cycle.");
     } finally {
-      setIsPaying(false);
-      setIsConfirmPaymentOpen(false);
+      setIsDistributing(false);
+      setIsConfirmDistributeOpen(false);
     }
   };
 
@@ -123,21 +139,6 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           <p className="text-muted-foreground mt-1">{group.description}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {group.status === 'active' && (
-            <Button 
-              variant="default" 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              onClick={handleStripePayment}
-              disabled={isPaying}
-            >
-              {isPaying ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <CreditCard className="w-4 h-4 mr-2" />
-              )}
-              Cotiser avec Stripe
-            </Button>
-          )}
           {canManage && group.status === 'active' && (
             <Button 
               variant="outline" 
@@ -195,6 +196,56 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cycle Distribution Card - admin/creator only */}
+      {canManage && group.status === 'active' && (
+        <Card className="border-emerald-200 bg-emerald-50/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gift className="w-4 h-4 text-[#2BB673]" />
+              Distribution du cycle {group.currentPayoutIndex + 1}
+            </CardTitle>
+            <CardDescription>
+              Méthode : {group.distributionMethod === 'draw' ? 'Tirage au sort' : group.distributionMethod === 'auction' ? 'Enchères' : 'Rotation séquentielle'} • Pot de {totalPot.toLocaleString()} {group.currency}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            {group.distributionMethod === 'auction' ? (
+              <p className="text-sm text-muted-foreground">
+                Ce mode nécessite la fonctionnalité d'enchères, qui n'est pas encore disponible dans l'application. Changez la méthode de distribution du cercle pour "Rotation séquentielle" ou "Tirage au sort" pour pouvoir distribuer ce cycle.
+              </p>
+            ) : (
+              <>
+                {group.distributionMethod === 'draw' && !drawnBeneficiaryId && (
+                  <Button variant="outline" onClick={handleDraw} className="flex items-center gap-2">
+                    <Shuffle className="w-4 h-4" />
+                    Tirer au sort le bénéficiaire
+                  </Button>
+                )}
+                {(group.distributionMethod !== 'draw' || drawnBeneficiaryId) && (
+                  <>
+                    <p className="text-sm">
+                      Bénéficiaire {group.distributionMethod === 'draw' ? 'tiré au sort' : 'prévu'} :{' '}
+                      <span className="font-semibold">{memberName(beneficiaryToDistribute)}</span>
+                    </p>
+                    <Button
+                      onClick={() => setIsConfirmDistributeOpen(true)}
+                      disabled={isDistributing}
+                      className="bg-[#2BB673] hover:bg-[#2BB673]/90 text-white flex items-center gap-2"
+                    >
+                      {isDistributing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
+                      Lancer la distribution
+                    </Button>
+                    {group.distributionMethod === 'draw' && (
+                      <Button variant="ghost" size="sm" onClick={handleDraw}>Retirer au sort</Button>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Share & QR Code Card */}
       <Card className="border-amber-200 bg-amber-50/15 overflow-hidden">
@@ -336,7 +387,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs">
                         {memberId.charAt(0)}
                       </div>
-                      <span>Utilisateur {memberId}</span>
+                      <span>{memberName(memberId)}</span>
                       {index === group.currentPayoutIndex && (
                         <Badge variant="outline" className="ml-2 text-[10px] h-4">Actuel</Badge>
                       )}
@@ -367,17 +418,17 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* Stripe contribution confirmation bottom sheet */}
+      {/* Cycle distribution confirmation bottom sheet */}
       <ConfirmationBottomSheet
-        isOpen={isConfirmPaymentOpen}
-        onClose={() => setIsConfirmPaymentOpen(false)}
-        onConfirm={executeStripePayment}
-        title="Confirmer la cotisation"
-        description={`Vous allez effectuer une opération de transfert de ${group.contributionAmount.toLocaleString()} ${group.currency} vers le cercle d'épargne "${group.name}".`}
-        amount={group.contributionAmount}
+        isOpen={isConfirmDistributeOpen}
+        onClose={() => setIsConfirmDistributeOpen(false)}
+        onConfirm={handleConfirmDistribution}
+        title="Confirmer la distribution"
+        description={beneficiaryToDistribute ? `Vous allez distribuer le pot de ${totalPot.toLocaleString()} ${group.currency} à ${memberName(beneficiaryToDistribute)} pour le cycle ${group.currentPayoutIndex + 1}. Cette action est irréversible.` : ''}
+        amount={totalPot}
         currency={group.currency}
-        type="transfer"
-        isLoading={isPaying}
+        type="generic"
+        isLoading={isDistributing}
       />
     </div>
   );

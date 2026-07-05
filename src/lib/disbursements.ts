@@ -7,16 +7,19 @@ import {
   addDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { Group, UserProfile, LedgerEntry, AuditLog } from '@/types';
+import { Group, UserProfile, Frequency } from '@/types';
+import { LedgerEntry, AuditLog } from '@/lib/ledger';
 import { addDays, parseISO } from 'date-fns';
 
 /**
  * Calculates the next payout date based on frequency
  */
-export function calculateNextPayoutDate(currentDateStr: string, frequency: 'weekly' | 'bi-weekly' | 'monthly'): string {
+export function calculateNextPayoutDate(currentDateStr: string, frequency: Frequency): string {
   const date = parseISO(currentDateStr);
   let nextDate = date;
-  if (frequency === 'weekly') {
+  if (frequency === 'daily') {
+    nextDate = addDays(date, 1);
+  } else if (frequency === 'weekly') {
     nextDate = addDays(date, 7);
   } else if (frequency === 'bi-weekly') {
     nextDate = addDays(date, 14);

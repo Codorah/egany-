@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, 
 import { Group, UserProfile, Contribution } from '@/types';
 import { toast } from 'sonner';
 import { executeFinancialTransaction } from '@/lib/ledger';
+import { calculateLatePenalty } from '@/lib/penalties';
 
 export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
   const processingRef = useRef<{ [key: string]: boolean }>({});
@@ -46,17 +47,20 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
               }
               const freshUser = freshUserSnap.data() as UserProfile;
               const currentBalance = freshUser.walletBalance !== undefined ? freshUser.walletBalance : 0;
+              const pendingPenalty = cont.penaltyStatus === 'pending' ? (cont.penaltyApplied || 0) : 0;
+              const totalDue = cont.amount + pendingPenalty;
 
-              if (currentBalance >= cont.amount) {
+              if (currentBalance >= totalDue) {
                 const idempotencyKey = `debit_${cont.id}`;
+                const penaltyNote = pendingPenalty > 0 ? ` (dont ${pendingPenalty.toLocaleString()} ${group.currency} de pénalité de retard)` : '';
 
                 // Execute safe double-entry ledger financial transaction
                 const ledgerResult = await executeFinancialTransaction({
                   idempotencyKey,
                   userId: profile.uid,
-                  amount: cont.amount,
+                  amount: totalDue,
                   currency: group.currency || 'FCFA',
-                  description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})`,
+                  description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})${penaltyNote}`,
                   actionType: 'contribution_payment',
                   debitAccount: `user_wallet:${profile.uid}`,
                   creditAccount: `tontine_group:${group.id}`,
@@ -70,12 +74,18 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   throw new Error(ledgerResult.message);
                 }
 
+                if (pendingPenalty > 0) {
+                  await updateDoc(doc(db, 'groups', group.id, 'contributions', cont.id), {
+                    penaltyStatus: 'paid'
+                  });
+                }
+
                 // Create wallet transaction record for display
                 await addDoc(collection(db, 'users', profile.uid, 'walletTransactions'), {
                   userId: profile.uid,
-                  amount: -cont.amount,
+                  amount: -totalDue,
                   type: 'contribution_debit',
-                  description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})`,
+                  description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})${penaltyNote}`,
                   date: new Date().toISOString(),
                   status: 'completed',
                   paymentMethod: 'wallet',
@@ -86,7 +96,7 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 await addDoc(collection(db, 'notifications'), {
                   userId: profile.uid,
                   title: `Cotisation prélevée - ${group.name}`,
-                  message: `Votre cotisation de ${cont.amount.toLocaleString()} ${group.currency} a été prélevée de votre portefeuille pour la période ${cont.period || ''}.`,
+                  message: `Votre cotisation de ${totalDue.toLocaleString()} ${group.currency} a été prélevée de votre portefeuille pour la période ${cont.period || ''}${penaltyNote}.`,
                   type: 'payout',
                   read: false,
                   createdAt: serverTimestamp(),
@@ -99,7 +109,7 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   userId: 'system',
                   userName: 'Système Tontine',
                   userPhoto: '',
-                  content: `📢 ${profile.displayName} a réglé sa cotisation de ${cont.amount.toLocaleString()} ${group.currency} pour la période ${cont.period || ''} par prélèvement automatique !`,
+                  content: `📢 ${profile.displayName} a réglé sa cotisation de ${totalDue.toLocaleString()} ${group.currency} pour la période ${cont.period || ''} par prélèvement automatique !`,
                   createdAt: serverTimestamp()
                 });
 
@@ -109,18 +119,23 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 // Check if we already alerted for this specific contribution
                 const contData = cont as any;
                 if (!contData.notifiedInsufficient) {
-                  // Transition to 'late' if it was 'pending' and flag it
+                  const { penaltyAmount } = calculateLatePenalty(cont, group);
+
+                  // Transition to 'late' if it was 'pending', flag it, and apply the late penalty (if configured)
                   const contRef = doc(db, 'groups', group.id, 'contributions', cont.id);
                   await updateDoc(contRef, {
                     status: 'late',
-                    notifiedInsufficient: true
+                    notifiedInsufficient: true,
+                    ...(penaltyAmount > 0 ? { penaltyApplied: penaltyAmount, penaltyStatus: 'pending' } : {})
                   });
+
+                  const penaltyMsg = penaltyAmount > 0 ? ` Une pénalité de retard de ${penaltyAmount.toLocaleString()} ${group.currency} a été appliquée.` : '';
 
                   // Create Critical User Notification
                   await addDoc(collection(db, 'notifications'), {
                     userId: profile.uid,
                     title: `⚠️ Solde Insuffisant - ${group.name}`,
-                    message: `Le prélèvement de ${cont.amount.toLocaleString()} ${group.currency} a échoué car le solde de votre portefeuille est insuffisant (${currentBalance.toLocaleString()} ${group.currency}). Veuillez recharger.`,
+                    message: `Le prélèvement de ${cont.amount.toLocaleString()} ${group.currency} a échoué car le solde de votre portefeuille est insuffisant (${currentBalance.toLocaleString()} ${group.currency}). Veuillez recharger.${penaltyMsg}`,
                     type: 'reminder',
                     read: false,
                     createdAt: serverTimestamp(),
@@ -133,11 +148,11 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                     userId: 'system',
                     userName: 'Système Tontine',
                     userPhoto: '',
-                    content: `⚠️ Alerte : Le prélèvement automatique de ${cont.amount.toLocaleString()} ${group.currency} de ${profile.displayName} a échoué (solde de portefeuille insuffisant).`,
+                    content: `⚠️ Alerte : Le prélèvement automatique de ${cont.amount.toLocaleString()} ${group.currency} de ${profile.displayName} a échoué (solde de portefeuille insuffisant).${penaltyMsg}`,
                     createdAt: serverTimestamp()
                   });
 
-                  toast.error(`Solde insuffisant pour régler la cotisation de ${group.name}.`);
+                  toast.error(`Solde insuffisant pour régler la cotisation de ${group.name}.${penaltyMsg}`);
                 }
               }
             } catch (innerError) {
