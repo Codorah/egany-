@@ -44,7 +44,7 @@ import { UserProfile, Group, Contribution, WalletTransaction } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, changePassword, isPasswordProviderUser } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
@@ -81,10 +81,11 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
   // Profile settings states
   const [editDisplayName, setEditDisplayName] = useState(user.displayName);
-  const [editPassword, setEditPassword] = useState(user.password || '');
+  const [newPassword, setNewPassword] = useState('');
   const [editLanguage, setEditLanguage] = useState(user.language || 'fr');
   const [editTheme, setEditTheme] = useState(user.theme || 'light');
-  const [editSecurityPin, setEditSecurityPin] = useState(user.securityPin || '0000');
+  const [editSecurityPin, setEditSecurityPin] = useState('');
+  const canChangePassword = isPasswordProviderUser();
 
   // Wallet Withdrawal States
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -112,10 +113,8 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
   // Update local settings if user profile changes from db
   useEffect(() => {
     setEditDisplayName(user.displayName);
-    setEditPassword(user.password || '');
     setEditLanguage(user.language || 'fr');
     setEditTheme(user.theme || 'light');
-    setEditSecurityPin(user.securityPin || '0000');
     if (user.photoURL) {
       try {
         setEditAvatar({ ...DEFAULT_AVATAR, ...JSON.parse(user.photoURL) });
@@ -432,14 +431,14 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
     setIsWithdrawing(true);
     try {
-      // 1. Verify PIN
-      const pinCorrect = await verifyUserPin(user.uid, enteredPin);
-      if (!pinCorrect) {
+      // 1. Verify PIN (with automatic lockout after repeated failures)
+      const pinResult = await verifyUserPin(user.uid, enteredPin);
+      if (!pinResult.ok) {
         // Create Failed Audit Entry in firestore
         await addDoc(collection(db, 'auditLogs'), {
           id: `audit_failed_${Date.now()}`,
           userId: user.uid,
-          action: 'withdrawal_failed_pin',
+          action: pinResult.locked ? 'withdrawal_pin_locked' : 'withdrawal_failed_pin',
           details: `Tentative de retrait de ${amountNum.toLocaleString()} FCFA avec un code PIN erroné`,
           ip: '197.234.34.82', // Simulated West-African IP
           device: navigator.userAgent || 'WebBrowser',
@@ -447,7 +446,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           timestamp: new Date().toISOString()
         });
 
-        toast.error("Code PIN de sécurité incorrect. Retrait refusé.");
+        toast.error(pinResult.message);
         setIsWithdrawing(false);
         return;
       }
@@ -1500,28 +1499,31 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="set_pass" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-amber-500" />
-                        Nouveau mot de passe
-                      </Label>
-                      <Input 
-                        id="set_pass"
-                        type="password"
-                        value={editPassword}
-                        onChange={(e) => setEditPassword(e.target.value)}
-                        className="rounded-xl border-slate-200 focus-visible:ring-amber-500"
-                        placeholder="Entrez un nouveau mot de passe"
-                      />
-                      <p className="text-[10px] text-muted-foreground">Laissé vide si vous ne voulez pas changer vos identifiants.</p>
-                    </div>
+                    {canChangePassword && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="set_pass" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-500" />
+                          Nouveau mot de passe
+                        </Label>
+                        <Input
+                          id="set_pass"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="rounded-xl border-slate-200 focus-visible:ring-amber-500"
+                          placeholder="Laisser vide pour ne pas changer"
+                          minLength={6}
+                        />
+                        <p className="text-[10px] text-muted-foreground">Laissé vide si vous ne voulez pas changer votre mot de passe. Minimum 6 caractères.</p>
+                      </div>
+                    )}
 
                     <div className="space-y-1.5">
                       <Label htmlFor="set_pin" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                         <Lock className="text-rose-500 w-3.5 h-3.5 animate-pulse" />
-                        Code PIN de Retrait Secouru (4 chiffres)
+                        Code PIN de Retrait Sécurisé (4 chiffres)
                       </Label>
-                      <Input 
+                      <Input
                         id="set_pin"
                         type="text"
                         maxLength={4}
@@ -1529,9 +1531,9 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                         value={editSecurityPin}
                         onChange={(e) => setEditSecurityPin(e.target.value.replace(/\D/g, ''))}
                         className="rounded-xl border-slate-200 focus-visible:ring-rose-500 font-mono tracking-[0.25em] font-bold text-slate-900"
-                        placeholder="0000"
+                        placeholder={user.securityPin ? "••••" : "Définir un code PIN"}
                       />
-                      <p className="text-[10px] text-muted-foreground">Sert d'authentification 2FA pour toutes vos actions de retrait (Défaut: 0000).</p>
+                      <p className="text-[10px] text-muted-foreground">Sert d'authentification pour toutes vos actions de retrait. Laissé vide pour ne pas changer.</p>
                     </div>
                   </div>
 
@@ -1623,22 +1625,42 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                     toast.error("Le code PIN de retrait doit comporter exactement 4 chiffres.");
                     return;
                   }
+                  if (newPassword && newPassword.length < 6) {
+                    toast.error("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+                    return;
+                  }
                   setSavingSettings(true);
                   try {
+                    if (newPassword) {
+                      try {
+                        await changePassword(newPassword);
+                      } catch (pwError: any) {
+                        if (pwError?.code === 'auth/requires-recent-login') {
+                          toast.error("Pour changer votre mot de passe, veuillez vous déconnecter puis vous reconnecter, et réessayez.");
+                        } else {
+                          toast.error("Le mot de passe n'a pas pu être modifié : " + (pwError?.message || pwError));
+                        }
+                        setSavingSettings(false);
+                        return;
+                      }
+                    }
+
                     const userRef = doc(db, 'users', user.uid);
-                    await updateDoc(userRef, {
+                    const updates: Record<string, any> = {
                       displayName: editDisplayName,
-                      password: editPassword,
                       language: editLanguage,
                       theme: editTheme,
                       photoURL: JSON.stringify(editAvatar),
-                      securityPin: editSecurityPin || '0000',
                       updatedAt: new Date().toISOString()
-                    });
-                    
+                    };
+                    if (editSecurityPin) {
+                      updates.securityPin = editSecurityPin;
+                    }
+                    await updateDoc(userRef, updates);
+
                     // Sync to global context
                     await setLanguage(editLanguage as any);
-                    
+
                     // Apply theme setting dynamically to document body/html class list
                     if (editTheme === 'dark') {
                       document.documentElement.classList.add('dark');
@@ -1648,6 +1670,8 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                       localStorage.setItem('eganye_theme', 'light');
                     }
 
+                    setNewPassword('');
+                    setEditSecurityPin('');
                     toast.success("Paramètres enregistrés avec succès !");
                   } catch (error) {
                     console.error("Error saving settings:", error);

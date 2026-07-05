@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Fingerprint, 
-  ScanFace, 
-  ShieldCheck, 
-  Lock, 
-  X, 
-  Check, 
+import {
+  Fingerprint,
+  ScanFace,
+  ShieldCheck,
+  Lock,
+  X,
+  Check,
   Smartphone,
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBiometrics } from '@/hooks/useBiometrics';
 
 interface BiometricPromptProps {
   isOpen: boolean;
@@ -28,37 +29,36 @@ export function BiometricPrompt({
   mode = 'register' 
 }: BiometricPromptProps) {
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [authType, setAuthType] = useState<'fingerprint' | 'faceid'>('fingerprint');
+  const { registerBiometrics, authenticate } = useBiometrics();
 
   useEffect(() => {
     if (isOpen) {
       setScanState('idle');
-      // Automatically start scan after 300ms for a fluid mobile feel
-      const timer = setTimeout(() => {
-        handleStartScan();
-      }, 4000000000); // Wait, no, start scan automatically or on click
-      // Let's do it on button click or start instantly:
+      setErrorMessage('');
       handleStartScan();
-      return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
     setScanState('scanning');
-    
-    // Simulate biometric scan delay
-    setTimeout(() => {
-      // 95% success rate for high-fidelity demo
-      if (Math.random() > 0.05) {
-        setScanState('success');
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 1200);
-      } else {
-        setScanState('error');
-      }
-    }, 2200);
+
+    const result = mode === 'register'
+      ? await registerBiometrics(username)
+      : { success: await authenticate(), message: '' };
+
+    if (result.success) {
+      setScanState('success');
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1200);
+    } else {
+      setErrorMessage(result.message || "Échec de la vérification biométrique.");
+      setScanState('error');
+    }
   };
 
   if (!isOpen) return null;
@@ -253,7 +253,7 @@ export function BiometricPrompt({
                 }`}>
                   {scanState === 'scanning' && 'Lecture biométrique...'}
                   {scanState === 'success' && 'Vérification réussie !'}
-                  {scanState === 'error' && 'Échec, réessayez.'}
+                  {scanState === 'error' && (errorMessage || 'Échec, réessayez.')}
                   {scanState === 'idle' && 'Cliquez pour commencer'}
                 </span>
               </div>

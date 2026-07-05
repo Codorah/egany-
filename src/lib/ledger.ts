@@ -353,22 +353,75 @@ export async function performFullSystemReconciliation() {
   }
 }
 
+export interface PinVerificationResult {
+  ok: boolean;
+  locked: boolean;
+  remainingAttempts?: number;
+  lockedUntil?: string;
+  message: string;
+}
+
+const MAX_PIN_ATTEMPTS = 5;
+const PIN_LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
 /**
  * High-Security PIN validation.
  * Users can set a withdrawal PIN in their profile.
  * Every withdrawal/payout/transfer validates this 4-digit PIN.
+ * Locks out further attempts for 15 minutes after 5 consecutive failures.
  */
-export async function verifyUserPin(userId: string, enteredPin: string): Promise<boolean> {
+export async function verifyUserPin(userId: string, enteredPin: string): Promise<PinVerificationResult> {
+  const userRef = doc(db, 'users', userId);
   try {
-    const userSnap = await getDoc(doc(db, 'users', userId));
-    if (!userSnap.exists()) return false;
-    
-    const data = userSnap.data();
-    // Default PIN is "0000" for test/demo ease if none is configured
-    const storedPin = data.securityPin || '0000';
-    return storedPin === enteredPin;
+    return await runTransaction(db, async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists()) {
+        return { ok: false, locked: false, message: "Utilisateur introuvable." };
+      }
+
+      const data = userSnap.data();
+      const now = Date.now();
+      const lockedUntilMs = data.pinLockedUntil ? new Date(data.pinLockedUntil).getTime() : 0;
+
+      if (lockedUntilMs > now) {
+        return {
+          ok: false,
+          locked: true,
+          lockedUntil: data.pinLockedUntil,
+          message: `Trop de tentatives échouées. Réessayez après ${new Date(lockedUntilMs).toLocaleTimeString('fr-FR')}.`
+        };
+      }
+
+      // Default PIN is "0000" for test/demo ease if none is configured
+      const storedPin = data.securityPin || '0000';
+      const isCorrect = storedPin === enteredPin;
+
+      if (isCorrect) {
+        transaction.update(userRef, { pinFailedAttempts: 0, pinLockedUntil: null });
+        return { ok: true, locked: false, message: "Code PIN valide." };
+      }
+
+      const attempts = (data.pinFailedAttempts || 0) + 1;
+      const willLock = attempts >= MAX_PIN_ATTEMPTS;
+      const lockedUntil = willLock ? new Date(now + PIN_LOCKOUT_DURATION_MS).toISOString() : null;
+
+      transaction.update(userRef, {
+        pinFailedAttempts: willLock ? 0 : attempts,
+        pinLockedUntil: lockedUntil
+      });
+
+      return {
+        ok: false,
+        locked: willLock,
+        remainingAttempts: willLock ? 0 : MAX_PIN_ATTEMPTS - attempts,
+        lockedUntil: lockedUntil || undefined,
+        message: willLock
+          ? "Trop de tentatives incorrectes. Les retraits sont bloqués pendant 15 minutes."
+          : `Code PIN incorrect. ${MAX_PIN_ATTEMPTS - attempts} tentative(s) restante(s).`
+      };
+    });
   } catch (err) {
     console.error("PIN verification error:", err);
-    return false;
+    return { ok: false, locked: false, message: "Erreur lors de la vérification du code PIN." };
   }
 }

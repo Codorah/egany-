@@ -13,8 +13,10 @@ export interface UserProfile {
   walletBalance: number; // Virtual wallet balance (FCFA)
   language?: string;
   theme?: 'light' | 'dark';
-  password?: string;
   securityPin?: string;
+  pinFailedAttempts?: number;
+  pinLockedUntil?: string;
+  biometricsEnabled?: boolean;
 }
 
 export interface Group {

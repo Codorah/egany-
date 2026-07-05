@@ -1,34 +1,101 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permissive rules for local development and preview environment to support both authenticated and local guest users
-    
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isGroupMember(groupId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/groups/$(groupId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
+    }
+
     match /users/{userId} {
-      allow read, write: if true;
+      // Profiles are readable by any signed-in user (needed for group member lists, chat, admin search).
+      allow read: if isSignedIn();
+
+      // A user can only ever create their own profile document, and cannot self-assign the admin role
+      // (except the one bootstrap owner email, verified server-side via the Firebase Auth token, not client input).
+      allow create: if isOwner(userId) &&
+        (request.resource.data.role == 'user' ||
+         (request.resource.data.role == 'admin' && request.auth.token.email == 'diditanael@gmail.com'));
+
+      // A user can update their own profile as long as they don't change their own role.
+      // Admins can update any profile, including roles.
+      allow update: if isAdmin() ||
+        (isOwner(userId) && request.resource.data.role == resource.data.role);
+
+      allow delete: if isAdmin();
     }
-    
-    match /groups/{groupId} {
-      allow read, write: if true;
-    }
-    
-    match /groups/{groupId}/contributions/{contributionId} {
-      allow read, write: if true;
-    }
-    
+
     match /users/{userId}/walletTransactions/{transactionId} {
-      allow read, write: if true;
+      allow read, write: if isOwner(userId) || isAdmin();
     }
-    
+
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      // Existing members/creator/admin can manage the group; a signed-in user can also add themselves
+      // to `members` (join flow), but cannot otherwise rewrite a group they don't belong to.
+      allow update: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid ||
+        request.auth.uid in resource.data.members ||
+        request.auth.uid in request.resource.data.members ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (resource.data.creatorId == request.auth.uid || isAdmin());
+    }
+
+    match /groups/{groupId}/contributions/{contributionId} {
+      allow read, write: if isGroupMember(groupId) || isAdmin();
+    }
+
     match /groups/{groupId}/messages/{messageId} {
-      allow read, write: if true;
+      allow read: if isGroupMember(groupId) || isAdmin();
+      allow create: if isGroupMember(groupId) && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
-    
+
+    // Cross-user system notifications (payout received, reminders to other members, etc.) are created
+    // client-side by whichever member's session triggers them, so creation only requires sign-in.
+    // Reading, marking-read or deleting is restricted to the notification's own owner (or an admin).
     match /notifications/{notificationId} {
-      allow read, write: if true;
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
-    
+
     match /invitations/{invitationId} {
-      allow read, write: if true;
+      allow read, write: if isSignedIn();
+    }
+
+    match /doubleEntryLedger/{entryId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn();
+    }
+
+    match /idempotencyKeys/{key} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /reconciliationReports/{reportId} {
+      allow read, write: if isAdmin();
     }
   }
 }

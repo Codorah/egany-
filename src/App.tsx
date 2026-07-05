@@ -13,11 +13,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
-import { signInWithGoogle, logout } from '@/lib/firebase';
-import { Button } from '@/components/ui/button';
+import { logout } from '@/lib/firebase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { Loader2 } from 'lucide-react';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
@@ -25,34 +24,7 @@ type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'cont
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
-  const [localUserId, setLocalUserId] = useState<string | null>(() => localStorage.getItem('egayne_local_uid'));
-  const [localProfile, setLocalProfile] = useState<any | null>(null);
-  const [localProfileLoading, setLocalProfileLoading] = useState(false);
-
-  // Synchronize local profile from Firestore
-  React.useEffect(() => {
-    if (!localUserId) {
-      setLocalProfile(null);
-      return;
-    }
-    setLocalProfileLoading(true);
-    const unsub = onSnapshot(doc(db, 'users', localUserId), (snapshot) => {
-      if (snapshot.exists()) {
-        setLocalProfile(snapshot.data());
-      } else {
-        setLocalProfile(null);
-        localStorage.removeItem('egayne_local_uid');
-        setLocalUserId(null);
-      }
-      setLocalProfileLoading(false);
-    }, (error) => {
-      console.error("Local profile sync error:", error);
-      setLocalProfileLoading(false);
-    });
-    return () => unsub();
-  }, [localUserId]);
-
-  const activeProfile = profile || localProfile;
+  const activeProfile = profile;
 
   // Auto detect and synchronize system theme on first load
   React.useEffect(() => {
@@ -97,7 +69,6 @@ export default function App() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; userId: string; userName: string; userEmail: string } | null>(null);
-  const [isOnboardingSaving, setIsOnboardingSaving] = useState(false);
 
   // Handle URL parameters for joining and Paydunya recharges
   React.useEffect(() => {
@@ -197,71 +168,14 @@ export default function App() {
     setView('group-details');
   };
 
-  const handleOnboardingComplete = async (data: {
-    displayName: string;
-    avatarConfig: string;
-    password?: string;
-    language: string;
-    theme: 'light' | 'dark';
-    biometricsEnabled?: boolean;
-  }) => {
-    setIsOnboardingSaving(true);
-    try {
-      const newUid = `user_local_${Date.now()}`;
-      const userRef = doc(db, 'users', newUid);
-      const emailPlaceholder = `${data.displayName.toLowerCase().replace(/\s+/g, '') || 'user'}@egayne.com`;
-      
-      const newProfile = {
-        uid: newUid,
-        displayName: data.displayName,
-        email: emailPlaceholder,
-        photoURL: data.avatarConfig,
-        password: data.password || '',
-        language: data.language,
-        theme: data.theme,
-        role: 'member',
-        walletBalance: 0,
-        reputationScore: 75,
-        totalSaved: 0,
-        groupsJoined: 0,
-        biometricsEnabled: !!data.biometricsEnabled,
-        createdAt: new Date().toISOString()
-      };
-
-      await setDoc(userRef, newProfile);
-      localStorage.setItem('egayne_local_uid', newUid);
-      
-      if (data.biometricsEnabled) {
-        localStorage.setItem('eganye_biometrics_enrolled', 'true');
-        localStorage.setItem('eganye_biometrics_uid', newUid);
-        localStorage.setItem('eganye_biometrics_username', data.displayName);
-      }
-
-      setLocalUserId(newUid);
-      toast.success("Votre compte eganyé a été créé avec succès !");
-      setView('dashboard');
-    } catch (error) {
-      console.error("Error saving onboarding details:", error);
-      toast.error("Une erreur s'est produite lors de la configuration de votre profil.");
-    } finally {
-      setIsOnboardingSaving(false);
-    }
-  };
-
-  const handleBiometricLogin = (uid: string) => {
-    localStorage.setItem('egayne_local_uid', uid);
-    setLocalUserId(uid);
-    toast.success("Ravi de vous revoir sur eganyé ! Connexion sécurisée réussie.");
+  const handleOnboardingComplete = () => {
+    // Account creation (Firebase Auth + Firestore profile) already happened inside <Onboarding>.
+    // useAuth() picks up the new session automatically; we just reset the view.
     setView('dashboard');
   };
 
   const handleLogout = async () => {
-    if (profile) {
-      await logout();
-    } else {
-      localStorage.removeItem('egayne_local_uid');
-      setLocalUserId(null);
-    }
+    await logout();
     setView('dashboard');
   };
 
@@ -318,7 +232,7 @@ export default function App() {
     }
   };
 
-  if (authLoading || localProfileLoading) {
+  if (authLoading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#F5E6D3]/40 text-[#4B2E05]">
         <div className="flex flex-col items-center gap-3">
@@ -365,11 +279,7 @@ export default function App() {
       {activeProfile ? (
         renderView()
       ) : (
-        <Onboarding 
-          onComplete={handleOnboardingComplete} 
-          isLoading={isOnboardingSaving} 
-          onBiometricLogin={handleBiometricLogin} 
-        />
+        <Onboarding onComplete={handleOnboardingComplete} />
       )}
       <Toaster />
     </Layout>

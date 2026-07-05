@@ -14,10 +14,10 @@ export function useBiometrics() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if biometric authentication (WebAuthn or Capacitor) is supported
+    // Check if biometric authentication (WebAuthn or Capacitor) is genuinely supported
     const hasWebAuthn = !!window.PublicKeyCredential;
     const hasCapacitor = !!(window as any).Capacitor?.Plugins?.BiometricAuth;
-    setIsSupported(hasWebAuthn || hasCapacitor || true);
+    setIsSupported(hasWebAuthn || hasCapacitor);
 
     // Check enrollment state
     const enrolled = localStorage.getItem('eganye_biometrics_enrolled') === 'true';
@@ -104,21 +104,22 @@ export function useBiometrics() {
             };
           }
         } catch (e: any) {
-          console.warn("WebAuthn API blocked or failed, using premium simulator fallback:", e.message);
+          console.warn("WebAuthn registration blocked or failed:", e.message);
+          setIsAuthenticating(false);
+          return {
+            success: false,
+            message: "Impossible d'activer la biométrie : votre navigateur ou appareil a refusé ou ne prend pas en charge cette fonctionnalité.",
+            isSimulated: false
+          };
         }
       }
 
-      // 3. Immersive Simulation Fallback
-      // This mimics the full biometric workflow inside our app shell, returning success after 1.5 seconds.
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      localStorage.setItem('eganye_biometrics_enrolled', 'true');
-      localStorage.setItem('eganye_biometrics_username', username);
-      setIsEnrolled(true);
+      // No genuine biometric API available on this device/browser.
       setIsAuthenticating(false);
       return {
-        success: true,
-        message: "Authentification biométrique simulée activée !",
-        isSimulated: true
+        success: false,
+        message: "La biométrie n'est pas disponible sur cet appareil.",
+        isSimulated: false
       };
 
     } catch (error: any) {
@@ -165,14 +166,15 @@ export function useBiometrics() {
           setIsAuthenticating(false);
           return !!credential;
         } catch (e) {
-          console.warn("WebAuthn verification failed/blocked, using simulated validation...");
+          console.warn("WebAuthn verification failed/blocked:", e);
+          setIsAuthenticating(false);
+          return false;
         }
       }
 
-      // 3. Fallback mock scan
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // No genuine biometric API available on this device/browser.
       setIsAuthenticating(false);
-      return true;
+      return false;
 
     } catch (err) {
       console.error(err);

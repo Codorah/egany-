@@ -102,9 +102,6 @@ export function Layout({ children, user, view, onNavigate, onLogout }: LayoutPro
         await deleteDoc(doc(db, 'users', uDoc.id));
       }
 
-      // Clear local session UID
-      localStorage.removeItem('egayne_local_uid');
-      
       toast.success("La base de données a été réinitialisée avec succès !", { id: toastId });
       
       // Refresh to onboarding screen
@@ -205,21 +202,23 @@ export function Layout({ children, user, view, onNavigate, onLogout }: LayoutPro
                   </div>
                 </div>
 
-                {/* Developer Reset Database Section */}
-                <div className="border-t border-[#D4A574]/20 pt-3 space-y-2">
-                  <span className="text-[10px] font-bold text-[#D4A574] block uppercase">Contrôles de Test (Dev) :</span>
-                  <button
-                    onClick={handleResetDatabase}
-                    disabled={isResetting}
-                    className="w-full bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-red-200 border border-red-600/30 font-sans font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-                    {isResetting ? 'Réinitialisation...' : 'Effacer toutes les données'}
-                  </button>
-                  <p className="text-[9px] text-[#F5E6D3]/50 italic text-center leading-tight">
-                    Efface de Firestore les utilisateurs, groupes, cotisations, messages et notifications pour recommencer l'onboarding à blanc.
-                  </p>
-                </div>
+                {/* Developer Reset Database Section - admin only, this is destructive and irreversible */}
+                {user?.role === 'admin' && (
+                  <div className="border-t border-[#D4A574]/20 pt-3 space-y-2">
+                    <span className="text-[10px] font-bold text-[#D4A574] block uppercase">Contrôles de Test (Dev) :</span>
+                    <button
+                      onClick={handleResetDatabase}
+                      disabled={isResetting}
+                      className="w-full bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-red-200 border border-red-600/30 font-sans font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
+                      {isResetting ? 'Réinitialisation...' : 'Effacer toutes les données'}
+                    </button>
+                    <p className="text-[9px] text-[#F5E6D3]/50 italic text-center leading-tight">
+                      Efface de Firestore les utilisateurs, groupes, cotisations, messages et notifications pour recommencer l'onboarding à blanc.
+                    </p>
+                  </div>
+                )}
 
                 <div className="border-t border-[#D4A574]/20 pt-3 flex items-center justify-between text-xs">
                   <span className="text-[#F5E6D3]/70">Émuler rotation (PWA) :</span>

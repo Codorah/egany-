@@ -7,7 +7,6 @@ import {
 } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { BiometricPrompt } from './BiometricPrompt';
-import { useBiometrics } from '../hooks/useBiometrics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,51 +28,25 @@ import {
   EyeOff,
   Fingerprint
 } from 'lucide-react';
-import { signInWithGoogle } from '@/lib/firebase';
+import { signInWithGoogle, signUpWithEmail, signInWithEmail } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 interface OnboardingProps {
-  onComplete: (profileData: {
-    displayName: string;
-    avatarConfig: string;
-    password?: string;
-    language: string;
-    theme: 'light' | 'dark';
-    biometricsEnabled?: boolean;
-  }) => void;
+  onComplete: () => void;
   isLoading?: boolean;
-  onBiometricLogin?: (uid: string) => void;
 }
 
-export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: OnboardingProps) {
+export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const [step, setStep] = useState(0); // 0: Welcome, 1: Slides, 2: Credentials, 3: Avatar Creator, 4: Finish
   const [slideIndex, setSlideIndex] = useState(0);
-  
-  // Biometrics
-  const { registerBiometrics, isEnrolled } = useBiometrics();
+  const [authMode, setAuthMode] = useState<'signup' | 'login'>('signup');
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  // Biometrics (enrollment only - never a substitute for signing in)
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
   const [isBiometricPromptOpen, setIsBiometricPromptOpen] = useState(false);
-  const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
-  const [biometricLoginUid, setBiometricLoginUid] = useState<string | null>(null);
-
-  const hasSavedBiometrics = isEnrolled && !!localStorage.getItem('eganye_biometrics_uid');
-
-  const handleBiometricLoginClick = () => {
-    const savedUid = localStorage.getItem('eganye_biometrics_uid');
-    if (savedUid) {
-      setBiometricLoginUid(savedUid);
-      setIsAuthPromptOpen(true);
-    }
-  };
-
-  const handleBiometricLoginSuccess = () => {
-    const savedUid = localStorage.getItem('eganye_biometrics_uid') || biometricLoginUid;
-    if (savedUid && onBiometricLogin) {
-      onBiometricLogin(savedUid);
-    }
-  };
 
   // Form State
   const [displayName, setDisplayName] = useState('');
@@ -85,6 +58,32 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
 
   // Avatar State
   const [avatar, setAvatar] = useState<AvatarConfig>({ ...DEFAULT_AVATAR });
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email.includes('@')) {
+      toast.error("Veuillez saisir un email valide.");
+      return;
+    }
+    if (!password) {
+      toast.error("Veuillez saisir votre mot de passe.");
+      return;
+    }
+    setIsSubmittingAuth(true);
+    try {
+      await signInWithEmail(email, password);
+      // App-level auth listener picks up the session automatically from here.
+    } catch (err: any) {
+      console.error("Email login error:", err);
+      if (err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password' || err?.code === 'auth/user-not-found') {
+        toast.error("Email ou mot de passe incorrect.");
+      } else {
+        toast.error(`Erreur de connexion : ${err?.message || err}`);
+      }
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
 
   const handleNextStep = () => {
     if (step === 2) {
@@ -125,7 +124,7 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
           {
             duration: 8000,
             action: {
-              label: "Créer un compte local",
+              label: "Créer un compte par email",
               onClick: () => {
                 setStep(2); // Direct to step 2 for credentials setting
               }
@@ -159,15 +158,51 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
     }
   ];
 
-  const handleFinishOnboarding = () => {
-    onComplete({
-      displayName,
-      avatarConfig: JSON.stringify(avatar),
-      password,
-      language,
-      theme,
-      biometricsEnabled
-    });
+  const handleFinishOnboarding = async () => {
+    setIsCreatingAccount(true);
+    try {
+      const credential = await signUpWithEmail(email, password);
+      const uid = credential.user.uid;
+
+      const newProfile = {
+        uid,
+        displayName,
+        email,
+        photoURL: JSON.stringify(avatar),
+        language,
+        theme,
+        role: email === 'diditanael@gmail.com' ? 'admin' : 'user',
+        walletBalance: 0,
+        reputationScore: 75,
+        totalSaved: 0,
+        groupsJoined: 0,
+        biometricsEnabled: !!biometricsEnabled,
+        createdAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', uid), newProfile);
+
+      if (biometricsEnabled) {
+        localStorage.setItem('eganye_biometrics_enrolled', 'true');
+        localStorage.setItem('eganye_biometrics_username', displayName);
+      }
+
+      toast.success("Votre compte eganyé a été créé avec succès !");
+      onComplete();
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      if (err?.code === 'auth/email-already-in-use') {
+        toast.error("Cet email est déjà associé à un compte. Connectez-vous plutôt.", {
+          action: { label: "Se connecter", onClick: () => { setAuthMode('login'); setStep(2); } }
+        });
+      } else if (err?.code === 'auth/weak-password') {
+        toast.error("Le mot de passe est trop faible (minimum 6 caractères).");
+      } else {
+        toast.error(`Erreur lors de la création du compte : ${err?.message || err}`);
+      }
+    } finally {
+      setIsCreatingAccount(false);
+    }
   };
 
   return (
@@ -289,19 +324,17 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
                   Connexion via Google
                 </Button>
 
-                {hasSavedBiometrics && (
-                  <Button 
-                    onClick={handleBiometricLoginClick} 
-                    variant="outline"
-                    className="w-full border-[#2BB673]/40 text-[#2BB673] dark:text-[#4ade80] hover:bg-emerald-500/5 font-bold rounded-2xl h-12 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
-                  >
-                    <Fingerprint className="w-5 h-5 animate-pulse" />
-                    Connexion par Empreinte / Face ID
-                  </Button>
-                )}
+                <Button
+                  onClick={() => { setAuthMode('login'); setStep(2); }}
+                  variant="outline"
+                  className="w-full border-[#2BB673]/40 text-[#2BB673] dark:text-[#4ade80] hover:bg-emerald-500/5 font-bold rounded-2xl h-12 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
+                >
+                  <Key className="w-4 h-4" />
+                  J'ai déjà un compte, me connecter
+                </Button>
 
                 <p className="text-[10px] text-slate-400 text-center px-4 leading-relaxed">
-                  Note : Si le pop-up Google est bloqué par l'iframe de votre navigateur, cliquez sur <b>"Découvrir eganyé"</b> ci-dessus pour configurer un compte local instantanément.
+                  Note : Si le pop-up Google est bloqué par l'iframe de votre navigateur, cliquez sur <b>"Découvrir eganyé"</b> ci-dessus pour créer un compte par email.
                 </p>
               </div>
             </motion.div>
@@ -377,24 +410,39 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
               className="space-y-4"
             >
               <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Créez votre Compte</h2>
-                <p className="text-slate-500 text-xs">Définissez vos identifiants pour vous connecter en toute sécurité.</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                  {authMode === 'login' ? 'Connectez-vous' : 'Créez votre Compte'}
+                </h2>
+                <p className="text-slate-500 text-xs">
+                  {authMode === 'login'
+                    ? 'Entrez vos identifiants pour retrouver votre espace eganyé.'
+                    : 'Définissez vos identifiants pour vous connecter en toute sécurité.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                  className="text-[11px] font-bold text-[#2BB673] hover:underline cursor-pointer"
+                >
+                  {authMode === 'login' ? "Pas encore de compte ? Créez-en un" : "Vous avez déjà un compte ? Connectez-vous"}
+                </button>
               </div>
 
               <div className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="ob_name" className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-amber-500" />
-                    Nom d'utilisateur / Surnom
-                  </Label>
-                  <Input 
-                    id="ob_name"
-                    placeholder="Ex: Fatou Sy" 
-                    className="rounded-xl h-11 border-slate-200 focus-visible:ring-amber-500"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                  />
-                </div>
+                {authMode === 'signup' && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ob_name" className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-amber-500" />
+                      Nom d'utilisateur / Surnom
+                    </Label>
+                    <Input
+                      id="ob_name"
+                      placeholder="Ex: Fatou Sy"
+                      className="rounded-xl h-11 border-slate-200 focus-visible:ring-amber-500"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label htmlFor="ob_email" className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
@@ -435,6 +483,8 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
                   </div>
                 </div>
 
+                {authMode === 'signup' && (
+                <>
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <div className="space-y-1">
                     <Label className="font-bold text-slate-700 text-[10px] uppercase">Thème</Label>
@@ -532,16 +582,29 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
                     </div>
                   )}
                 </div>
+                </>
+                )}
               </div>
 
               <div className="pt-4">
-                <Button 
-                  onClick={handleNextStep} 
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
-                >
-                  Étape Suivante
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                {authMode === 'login' ? (
+                  <Button
+                    onClick={handleLogin}
+                    disabled={isSubmittingAuth}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingAuth ? "Connexion..." : "Se connecter"}
+                    {!isSubmittingAuth && <ArrowRight className="w-4 h-4" />}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNextStep}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
+                  >
+                    Étape Suivante
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </motion.div>
           )}
@@ -558,8 +621,8 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
               <AvatarWorkshop 
                 value={avatar} 
                 onChange={setAvatar} 
-                onSave={handleFinishOnboarding} 
-                isSaving={isLoading} 
+                onSave={handleFinishOnboarding}
+                isSaving={isCreatingAccount || isLoading} 
                 saveLabel="Créer mon Compte eganyé !" 
               />
             </motion.div>
@@ -580,19 +643,10 @@ export function Onboarding({ onComplete, isLoading = false, onBiometricLogin }: 
         mode="register"
       />
 
-      {/* Biometric Auth Prompt Modal (Login bypass) */}
-      <BiometricPrompt
-        isOpen={isAuthPromptOpen}
-        onClose={() => setIsAuthPromptOpen(false)}
-        username={localStorage.getItem('eganye_biometrics_username') || "Utilisateur"}
-        onSuccess={handleBiometricLoginSuccess}
-        mode="authenticate"
-      />
-
       {/* Footer Branding */}
       <div className="mt-auto text-center">
         <p className="text-[9px] text-slate-400 font-medium">
-          Secured with multi-factor encryption & Paydunya API. eganyé PWA v1.0.0
+          Comptes sécurisés par Firebase Authentication. eganyé PWA v1.0.0
         </p>
       </div>
     </div>
