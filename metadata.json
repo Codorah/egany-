@@ -1,0 +1,8 @@
+{
+  "name": "eganyé",
+  "description": "eganyé - Épargner mieux, grandir ensemble. Digitalisez vos cercles d'épargne (tontines) avec l'automatisation Paydunya.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

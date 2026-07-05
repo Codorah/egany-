@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>eganyé — Épargne en cercle & tontine</title>
+    
+    <!-- Instant theme initialization to prevent flickers -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('eganye_theme');
+          if (!theme) {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+    </script>
+    
+    <!-- PWA Meta tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4B2E05" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="eganyé" />
+  </head>
+  <body class="bg-[#F5E6D3]/40 dark:bg-slate-950">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

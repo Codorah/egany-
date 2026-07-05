@@ -1,0 +1,152 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and reputation data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "reputationScore": { "type": "number" },
+        "totalSaved": { "type": "number" },
+        "groupsJoined": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "walletBalance": { "type": "number" }
+      },
+      "required": ["uid", "email", "displayName", "reputationScore", "role"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A tontine savings circle",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "contributionAmount": { "type": "number" },
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "bi-weekly", "monthly"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "nextPayoutDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "completed", "pending"] },
+        "payoutOrder": { "type": "array", "items": { "type": "string" } },
+        "currentPayoutIndex": { "type": "number" },
+        "currency": { "type": "string" }
+      },
+      "required": ["name", "creatorId", "contributionAmount", "frequency"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "An invitation to join a group",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "inviterId": { "type": "string" },
+        "inviteeEmail": { "type": "string", "format": "email" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "inviterId", "inviteeEmail", "status"]
+    },
+    "Contribution": {
+      "title": "Contribution",
+      "description": "A payment made by a member to a group",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["paid", "pending", "late"] },
+        "period": { "type": "string" }
+      },
+      "required": ["groupId", "userId", "amount", "status", "date"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "An in-app notification for the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["reminder", "payout", "system", "chat"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "link": { "type": "string" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A chat message in a group",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "userId", "content", "createdAt"]
+    },
+    "WalletTransaction": {
+      "title": "WalletTransaction",
+      "description": "A ledger record of virtual wallet activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["recharge", "contribution_debit", "payout_credit", "payout_deduction"] },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["completed", "failed", "pending"] },
+        "reference": { "type": "string" },
+        "paymentMethod": { "type": "string" }
+      },
+      "required": ["userId", "amount", "type", "description", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "/users/{userId}/walletTransactions/{transactionId}": {
+      "schema": "WalletTransaction",
+      "description": "User virtual wallet transactions ledger"
+    },
+    "/groups/{groupId}": {
+      "schema": "Group",
+      "description": "Savings groups"
+    },
+    "/invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Group invitations"
+    },
+    "/groups/{groupId}/contributions/{contributionId}": {
+      "schema": "Contribution",
+      "description": "Group contributions"
+    },
+    "/groups/{groupId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Group chat messages"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
+    }
+  }
+}

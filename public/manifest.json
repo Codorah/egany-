@@ -1,0 +1,23 @@
+{
+  "name": "eganyé",
+  "short_name": "eganyé",
+  "description": "Épargne en cercle & tontine en Afrique de l'Ouest",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF8F3",
+  "theme_color": "#4B2E05",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=192&h=192&fit=crop&q=80",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=512&h=512&fit=crop&q=80",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
