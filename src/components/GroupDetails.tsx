@@ -8,6 +8,7 @@ import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, Qr
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
+import { MemberManagement } from './MemberManagement';
 import { Chat } from './Chat';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -135,6 +136,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
             <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
               {group.status === 'active' ? 'En cours' : 'Terminé'}
             </Badge>
+            <Badge variant="outline">{group.isPrivate === false ? 'Public' : 'Privé'}</Badge>
           </div>
           <p className="text-muted-foreground mt-1">{group.description}</p>
         </div>
@@ -243,6 +245,17 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 )}
               </>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {group.rules && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Règlement du cercle</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-line">{group.rules}</p>
           </CardContent>
         </Card>
       )}
@@ -417,6 +430,8 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           </Table>
         </CardContent>
       </Card>
+
+      {canManage && profile && <MemberManagement group={group} currentUserId={profile.uid} />}
 
       {/* Cycle distribution confirmation bottom sheet */}
       <ConfirmationBottomSheet

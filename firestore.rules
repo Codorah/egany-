@@ -48,11 +48,13 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       // Existing members/creator/admin can manage the group; a signed-in user can also add themselves
-      // to `members` (join flow), but cannot otherwise rewrite a group they don't belong to.
+      // to `members` (direct join) or `pendingMembers` (join request awaiting approval), but cannot
+      // otherwise rewrite a group they don't belong to.
       allow update: if isSignedIn() && (
         resource.data.creatorId == request.auth.uid ||
         request.auth.uid in resource.data.members ||
         request.auth.uid in request.resource.data.members ||
+        request.auth.uid in request.resource.data.pendingMembers ||
         isAdmin()
       );
       allow delete: if isSignedIn() && (resource.data.creatorId == request.auth.uid || isAdmin());

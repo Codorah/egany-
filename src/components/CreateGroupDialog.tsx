@@ -36,11 +36,19 @@ const formSchema = z.object({
   frequency: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
   currency: z.string().min(1),
   distributionMethod: z.enum(['sequential', 'draw', 'auction']),
+  maxMembers: z.number().min(2, "Il faut au moins 2 participants.").max(500),
+  startDate: z.string().min(1, "La date de début est requise."),
+  endDate: z.string().optional(),
+  rules: z.string().optional(),
+  isPrivate: z.boolean(),
   penaltiesEnabled: z.boolean(),
   penaltyType: z.enum(['fixed', 'percentage']),
   penaltyAmount: z.number().min(0),
   penaltyRate: z.number().min(0),
   gracePeriod: z.number().min(0),
+}).refine((data) => !data.endDate || data.endDate >= data.startDate, {
+  message: "La date de fin doit être postérieure à la date de début.",
+  path: ["endDate"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -56,6 +64,11 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
       frequency: "monthly",
       currency: "FCFA",
       distributionMethod: "sequential",
+      maxMembers: 10,
+      startDate: new Date().toISOString().slice(0, 10),
+      endDate: "",
+      rules: "",
+      isPrivate: true,
       penaltiesEnabled: false,
       penaltyType: "fixed",
       penaltyAmount: 500,
@@ -66,13 +79,14 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
 
   const penaltiesEnabled = watch('penaltiesEnabled');
   const penaltyType = watch('penaltyType');
+  const isPrivate = watch('isPrivate');
 
   const onSubmit = async (values: FormValues) => {
     if (!auth.currentUser) return;
 
     try {
       const joinCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-      const startDate = new Date().toISOString();
+      const startDate = new Date(values.startDate).toISOString();
       const groupData = {
         name: values.name,
         description: values.description,
@@ -80,6 +94,10 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
         frequency: values.frequency,
         currency: values.currency,
         distributionMethod: values.distributionMethod,
+        maxMembers: values.maxMembers,
+        isPrivate: values.isPrivate,
+        ...(values.endDate ? { endDate: new Date(values.endDate).toISOString() } : {}),
+        ...(values.rules ? { rules: values.rules } : {}),
         ...(values.penaltiesEnabled ? {
           penaltyType: values.penaltyType,
           penaltyAmount: values.penaltyType === 'fixed' ? values.penaltyAmount : 0,
@@ -117,7 +135,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
           </>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-3xl bg-white border border-[#D4A574]/30">
+      <DialogContent className="sm:max-w-[480px] max-h-[85vh] overflow-y-auto rounded-3xl bg-white border border-[#D4A574]/30">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl font-bold text-[#4B2E05]">Créer un nouveau cercle</DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
@@ -149,7 +167,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
               <Input id="contributionAmount" type="number" {...register("contributionAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-slate-200 focus:ring-[#2BB673]" />
               {errors.contributionAmount && <p className="text-[11px] text-red-600 font-semibold">{errors.contributionAmount.message}</p>}
             </div>
-            
+
             <div className="space-y-1.5">
               <Label htmlFor="frequency" className="text-xs font-bold text-[#4B2E05]">Fréquence</Label>
               <Select onValueChange={(val) => setValue("frequency", val as any)} disabled={isSubmitting}>
@@ -167,18 +185,71 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="maxMembers" className="text-xs font-bold text-[#4B2E05]">Nombre de participants</Label>
+              <Input id="maxMembers" type="number" {...register("maxMembers", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-slate-200 focus:ring-[#2BB673]" />
+              {errors.maxMembers && <p className="text-[11px] text-red-600 font-semibold">{errors.maxMembers.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="distributionMethod" className="text-xs font-bold text-[#4B2E05]">Méthode de distribution</Label>
+              <Select defaultValue="sequential" onValueChange={(val) => setValue("distributionMethod", val as any)} disabled={isSubmitting}>
+                <SelectTrigger id="distributionMethod" className="rounded-xl border-slate-200">
+                  <SelectValue placeholder="Choisir" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sequential">Rotation séquentielle</SelectItem>
+                  <SelectItem value="draw">Tirage au sort</SelectItem>
+                  <SelectItem value="auction">Enchères (bientôt disponible)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="startDate" className="text-xs font-bold text-[#4B2E05]">Date de début</Label>
+              <Input id="startDate" type="date" {...register("startDate")} disabled={isSubmitting} className="rounded-xl border-slate-200 focus:ring-[#2BB673]" />
+              {errors.startDate && <p className="text-[11px] text-red-600 font-semibold">{errors.startDate.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="endDate" className="text-xs font-bold text-[#4B2E05]">Date de fin (optionnel)</Label>
+              <Input id="endDate" type="date" {...register("endDate")} disabled={isSubmitting} className="rounded-xl border-slate-200 focus:ring-[#2BB673]" />
+              {errors.endDate && <p className="text-[11px] text-red-600 font-semibold">{errors.endDate.message}</p>}
+            </div>
+          </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="distributionMethod" className="text-xs font-bold text-[#4B2E05]">Méthode de distribution</Label>
-            <Select defaultValue="sequential" onValueChange={(val) => setValue("distributionMethod", val as any)} disabled={isSubmitting}>
-              <SelectTrigger id="distributionMethod" className="rounded-xl border-slate-200">
-                <SelectValue placeholder="Choisir" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sequential">Rotation séquentielle</SelectItem>
-                <SelectItem value="draw">Tirage au sort</SelectItem>
-                <SelectItem value="auction">Enchères (bientôt disponible)</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="rules" className="text-xs font-bold text-[#4B2E05]">Règles du cercle (optionnel)</Label>
+            <Textarea
+              id="rules"
+              placeholder="Ex: Tout retard de plus de 3 jours entraîne une pénalité. Toute exclusion nécessite un vote..."
+              className="resize-none rounded-xl border-slate-200 focus:ring-[#2BB673] h-16 text-xs"
+              {...register("rules")}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+            <div>
+              <Label htmlFor="isPrivate" className="text-xs font-bold text-[#4B2E05]">Cercle privé</Label>
+              <p className="text-[10px] text-slate-500">Invisible dans la recherche publique ; rejoignable uniquement par lien, QR code ou code.</p>
+            </div>
+            <button
+              id="isPrivate"
+              type="button"
+              onClick={() => setValue("isPrivate", !isPrivate)}
+              disabled={isSubmitting}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isPrivate ? 'bg-[#2BB673]' : 'bg-slate-200'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  isPrivate ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
 
           <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-3">

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, query, where, getDocs, updateDoc, doc, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { Group, UserProfile } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Users, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Loader2, Users, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JoinGroupProps {
@@ -19,6 +19,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -33,7 +34,11 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
         }
 
         const groupDoc = snapshot.docs[0];
-        setGroup({ id: groupDoc.id, ...groupDoc.data() } as Group);
+        const groupData = { id: groupDoc.id, ...groupDoc.data() } as Group;
+        setGroup(groupData);
+        if (groupData.pendingMembers?.includes(user.uid)) {
+          setRequestSent(true);
+        }
       } catch (error) {
         console.error("Error fetching group for join:", error);
         toast.error("Erreur lors de la récupération du groupe.");
@@ -43,14 +48,24 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
     };
 
     fetchGroup();
-  }, [joinCode, onCancel]);
+  }, [joinCode, onCancel, user.uid]);
 
   const handleJoin = async () => {
     if (!group || !user) return;
-    
+
     if (group.members.includes(user.uid)) {
       toast.info("Vous êtes déjà membre de ce groupe.");
       onJoined(group.id);
+      return;
+    }
+
+    if (group.pendingMembers?.includes(user.uid)) {
+      setRequestSent(true);
+      return;
+    }
+
+    if (group.maxMembers && group.members.length >= group.maxMembers) {
+      toast.error("Ce cercle a atteint son nombre maximum de participants.");
       return;
     }
 
@@ -58,21 +73,24 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
     try {
       const groupRef = doc(db, 'groups', group.id);
       await updateDoc(groupRef, {
-        members: arrayUnion(user.uid),
-        payoutOrder: arrayUnion(user.uid) // Add to payout order by default
+        pendingMembers: arrayUnion(user.uid)
       });
 
-      // Update user stats
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        groupsJoined: (user.groupsJoined || 0) + 1
+      await addDoc(collection(db, 'notifications'), {
+        userId: group.creatorId,
+        title: `Nouvelle demande d'adhésion - ${group.name}`,
+        message: `${user.displayName} souhaite rejoindre votre cercle "${group.name}". Rendez-vous dans la gestion des membres pour valider ou refuser.`,
+        type: 'system',
+        read: false,
+        createdAt: serverTimestamp(),
+        link: `/group/${group.id}`
       });
 
-      toast.success(`Bienvenue dans le cercle "${group.name}" !`);
-      onJoined(group.id);
+      setRequestSent(true);
+      toast.success("Votre demande d'adhésion a été envoyée !");
     } catch (error) {
-      console.error("Error joining group:", error);
-      toast.error("Erreur lors de l'adhésion au groupe.");
+      console.error("Error requesting to join group:", error);
+      toast.error("Erreur lors de la demande d'adhésion.");
     } finally {
       setJoining(false);
     }
@@ -88,6 +106,29 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
   }
 
   if (!group) return null;
+
+  if (requestSent) {
+    return (
+      <div className="max-w-md mx-auto py-8 animate-in fade-in duration-300">
+        <Card className="border border-amber-200 shadow-xl rounded-3xl bg-white overflow-hidden">
+          <CardContent className="flex flex-col items-center text-center gap-4 py-10 px-6">
+            <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center">
+              <Clock className="w-8 h-8 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-serif font-extrabold text-lg text-[#4B2E05]">Demande envoyée !</h3>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Votre demande d'adhésion au cercle "{group.name}" a été transmise à l'administrateur. Vous serez notifié dès qu'elle sera validée.
+              </p>
+            </div>
+            <Button variant="outline" className="w-full mt-2" onClick={onCancel}>
+              Retour au tableau de bord
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto py-8 animate-in fade-in duration-300">
@@ -131,7 +172,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
         </CardContent>
         <CardFooter className="flex flex-col gap-2 pt-0 pb-6 px-6">
           <Button className="w-full h-12 text-sm font-bold bg-[#2BB673] hover:bg-[#2BB673]/90 text-white rounded-2xl shadow-sm transition-all cursor-pointer" onClick={handleJoin} disabled={joining}>
-            {joining ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Confirmer l'adhésion"}
+            {joining ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Demander à rejoindre"}
           </Button>
           <Button variant="ghost" className="w-full text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer" onClick={onCancel} disabled={joining}>
             Annuler

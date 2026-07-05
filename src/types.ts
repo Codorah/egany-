@@ -19,21 +19,29 @@ export interface UserProfile {
   biometricsEnabled?: boolean;
 }
 
+export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';
+
 export interface Group {
   id: string;
   name: string;
   description: string;
   creatorId: string;
   members: string[]; // Array of UIDs
+  pendingMembers?: string[]; // Array of UIDs awaiting admin approval to join
+  memberRoles?: Record<string, GroupMemberRole>; // uid -> role within this group
   contributionAmount: number;
   frequency: Frequency;
   startDate: string;
+  endDate?: string;
   nextPayoutDate: string;
   status: 'active' | 'completed' | 'pending';
   payoutOrder: string[]; // Array of UIDs in order of payout
   currentPayoutIndex: number;
   currency: string;
   joinCode?: string;
+  isPrivate?: boolean;
+  maxMembers?: number;
+  rules?: string;
   lastReminderSentAt?: string;
   distributionMethod?: 'sequential' | 'draw' | 'auction';
   penaltyRate?: number;
