@@ -6,6 +6,8 @@ import { Profile } from '@/components/Profile';
 import { JoinGroup } from '@/components/JoinGroup';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { ContributionsManager } from '@/components/ContributionsManager';
+import { SearchGroups } from '@/components/SearchGroups';
+import { CalendarView } from '@/components/CalendarView';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,7 +22,7 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/fi
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
@@ -190,17 +192,22 @@ export default function App() {
     switch (view) {
       case 'dashboard':
         return (
-          <Dashboard 
-            user={activeProfile} 
-            groups={groups} 
-            onSelectGroup={handleSelectGroup} 
-            onManageContributions={handleManageContributions} 
+          <Dashboard
+            user={activeProfile}
+            groups={groups}
+            onSelectGroup={handleSelectGroup}
+            onManageContributions={handleManageContributions}
             onNavigateToProfileTab={(tab) => {
               setProfileTab(tab);
               setView('profile');
             }}
+            onNavigate={(v) => setView(v as View)}
           />
         );
+      case 'search-groups':
+        return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'calendar':
+        return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} />;
       case 'admin':

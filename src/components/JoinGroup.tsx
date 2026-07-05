@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { db, auth } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Group, UserProfile } from '@/types';
+import { requestToJoinGroup } from '@/lib/groups';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,35 +60,19 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
       return;
     }
 
-    if (group.pendingMembers?.includes(user.uid)) {
-      setRequestSent(true);
-      return;
-    }
-
-    if (group.maxMembers && group.members.length >= group.maxMembers) {
-      toast.error("Ce cercle a atteint son nombre maximum de participants.");
-      return;
-    }
-
     setJoining(true);
     try {
-      const groupRef = doc(db, 'groups', group.id);
-      await updateDoc(groupRef, {
-        pendingMembers: arrayUnion(user.uid)
-      });
-
-      await addDoc(collection(db, 'notifications'), {
-        userId: group.creatorId,
-        title: `Nouvelle demande d'adhésion - ${group.name}`,
-        message: `${user.displayName} souhaite rejoindre votre cercle "${group.name}". Rendez-vous dans la gestion des membres pour valider ou refuser.`,
-        type: 'system',
-        read: false,
-        createdAt: serverTimestamp(),
-        link: `/group/${group.id}`
-      });
-
+      const result = await requestToJoinGroup(group, user);
+      if (result.alreadyPending) {
+        setRequestSent(true);
+        return;
+      }
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
       setRequestSent(true);
-      toast.success("Votre demande d'adhésion a été envoyée !");
+      toast.success(result.message);
     } catch (error) {
       console.error("Error requesting to join group:", error);
       toast.error("Erreur lors de la demande d'adhésion.");

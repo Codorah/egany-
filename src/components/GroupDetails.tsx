@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Group, UserProfile } from '@/types';
-import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
@@ -430,6 +430,34 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           </Table>
         </CardContent>
       </Card>
+
+      {group.members.length > 1 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              Classement du cercle
+            </CardTitle>
+            <CardDescription>Membres classés par Score de Réputation.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {[...group.members]
+              .sort((a, b) => (members[b]?.reputationScore || 0) - (members[a]?.reputationScore || 0))
+              .map((uid, index) => (
+                <div key={uid} className={`flex items-center justify-between p-2.5 rounded-lg ${index === 0 ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-6 text-center text-xs font-black ${index === 0 ? 'text-amber-500' : 'text-muted-foreground'}`}>#{index + 1}</span>
+                    <span className="text-sm font-medium">{memberName(uid)}</span>
+                    {uid === profile?.uid && <Badge variant="outline" className="text-[9px]">Vous</Badge>}
+                  </div>
+                  <Badge className={index === 0 ? 'bg-amber-500 text-white' : ''} variant={index === 0 ? undefined : 'outline'}>
+                    {members[uid]?.reputationScore ?? '-'} / 100
+                  </Badge>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
 
       {canManage && profile && <MemberManagement group={group} currentUserId={profile.uid} />}
 

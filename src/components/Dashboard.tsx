@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle } from 'lucide-react';
+import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle, Search } from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { DashboardCharts } from './DashboardCharts';
@@ -17,6 +17,7 @@ interface DashboardProps {
   onSelectGroup: (id: string) => void;
   onManageContributions: (id: string) => void;
   onNavigateToProfileTab?: (tab: string) => void;
+  onNavigate?: (view: string) => void;
 }
 
 // Framer Motion Animation Configurations for Mobile-Native Feel
@@ -59,7 +60,7 @@ const hoverScaleVariants = {
   },
 };
 
-export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab }: DashboardProps) {
+export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab, onNavigate }: DashboardProps) {
   return (
     <motion.div
       variants={containerVariants}
@@ -87,7 +88,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         className="space-y-3"
       >
         <h2 className="text-xs font-bold uppercase tracking-wider text-[#4B2E05]/60">Actions rapides</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           
           {/* Action 1: Recharge Wallet */}
           <motion.div
@@ -131,6 +132,26 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               </motion.div>
             }
           />
+
+          {/* Action 3: Search Public Groups */}
+          <motion.div
+            variants={hoverScaleVariants}
+            whileHover="hover"
+            whileTap="tap"
+            onClick={() => onNavigate?.('search-groups')}
+            className="cursor-pointer bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-[#D4A574]/40 transition-all"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#D4A574]/10 text-[#D4A574] group-hover:bg-[#D4A574] group-hover:text-white transition-all duration-300">
+                <Search className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-base text-[#4B2E05]">Rechercher un cercle</h3>
+                <p className="text-[11px] text-slate-500 font-medium">Trouver une tontine publique à rejoindre</p>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#D4A574] group-hover:translate-x-1 transition-all" />
+          </motion.div>
 
         </div>
       </motion.div>

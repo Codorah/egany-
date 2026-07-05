@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const isManager = user.uid === group.creatorId || user.role === 'admin';
 
@@ -164,6 +165,10 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     }
   };
 
+  const filteredContributions = searchTerm
+    ? contributions.filter((c) => (c.userName || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    : contributions;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -193,10 +198,21 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
           <CardHeader>
             <CardTitle>{isManager ? 'Historique des Paiements' : 'Mes Paiements'}</CardTitle>
             <CardDescription>
-              {isManager 
-                ? 'Liste de toutes les cotisations enregistrées pour ce groupe.' 
+              {isManager
+                ? 'Liste de toutes les cotisations enregistrées pour ce groupe.'
                 : 'Historique de vos versements pour ce cercle.'}
             </CardDescription>
+            {isManager && (
+              <div className="relative pt-2 max-w-xs">
+                <Search className="absolute left-2.5 top-4.5 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un membre..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <Table>
@@ -212,14 +228,14 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contributions.length === 0 ? (
+                {filteredContributions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isManager ? 6 : 5} className="text-center py-8 text-muted-foreground">
                       Aucune cotisation trouvée.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  contributions.map((c) => (
+                  filteredContributions.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.userName || 'Membre'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
