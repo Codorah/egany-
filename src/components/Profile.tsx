@@ -38,7 +38,9 @@ import {
   Check,
   Download,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Bell,
+  Mail
 } from 'lucide-react';
 import { UserProfile, Group, Contribution, WalletTransaction } from '@/types';
 import { format } from 'date-fns';
@@ -48,6 +50,8 @@ import { db, changePassword, isPasswordProviderUser } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
+import { notifyUser } from '@/lib/notify';
+import { enablePushNotifications, disablePushNotifications } from '@/lib/push';
 import { 
   CustomAvatar, 
   AvatarConfig, 
@@ -86,6 +90,9 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
   const [editTheme, setEditTheme] = useState(user.theme || 'light');
   const [editSecurityPin, setEditSecurityPin] = useState('');
   const canChangePassword = isPasswordProviderUser();
+  const [pushEnabled, setPushEnabled] = useState(!!user.pushEnabled);
+  const [emailNotifEnabled, setEmailNotifEnabled] = useState(user.emailNotificationsEnabled ?? true);
+  const [isTogglingPush, setIsTogglingPush] = useState(false);
 
   // Wallet Withdrawal States
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -398,6 +405,42 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     toast.success("Document PDF généré ! Lancez l'impression ou enregistrez au format PDF.");
   };
 
+  const handleTogglePush = async () => {
+    setIsTogglingPush(true);
+    try {
+      if (pushEnabled) {
+        await disablePushNotifications(user.uid);
+        setPushEnabled(false);
+        toast.success('Notifications push désactivées.');
+      } else {
+        const result = await enablePushNotifications(user.uid);
+        if (result.success) {
+          setPushEnabled(true);
+          toast.success(result.message);
+        } else {
+          toast.error(result.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling push notifications:', error);
+      toast.error("Erreur lors de la mise à jour des notifications push.");
+    } finally {
+      setIsTogglingPush(false);
+    }
+  };
+
+  const handleToggleEmailNotifications = async () => {
+    const next = !emailNotifEnabled;
+    setEmailNotifEnabled(next);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { emailNotificationsEnabled: next });
+    } catch (error) {
+      console.error('Error toggling email notifications:', error);
+      setEmailNotifEnabled(!next);
+      toast.error("Erreur lors de la mise à jour des préférences email.");
+    }
+  };
+
   const handleRechargeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(rechargeAmount);
@@ -482,13 +525,11 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
       });
 
       // 4. Create User Notification
-      await addDoc(collection(db, 'notifications'), {
+      await notifyUser({
         userId: user.uid,
         title: 'Retrait de fonds validé !',
         message: `Votre demande de retrait de ${amountNum.toLocaleString()} FCFA vers votre compte ${withdrawMethod.toUpperCase()} a été traitée de manière sécurisée et intègre.`,
-        type: 'system',
-        read: false,
-        createdAt: serverTimestamp()
+        type: 'system'
       });
 
       toast.success(`Retrait de ${amountNum.toLocaleString()} FCFA effectué avec succès !`);
@@ -1600,6 +1641,65 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-b pb-1">Notifications</h3>
+
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-[#2BB673]">
+                          <Bell className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Notifications push</h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Recevoir des alertes même app fermée</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        title={pushEnabled ? 'Désactiver les notifications push' : 'Activer les notifications push'}
+                        aria-label={pushEnabled ? 'Désactiver les notifications push' : 'Activer les notifications push'}
+                        disabled={isTogglingPush}
+                        onClick={handleTogglePush}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                          pushEnabled ? 'bg-[#2BB673]' : 'bg-slate-200 dark:bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            pushEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-sky-50 dark:bg-sky-950/40 rounded-xl text-sky-600">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Notifications par email</h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Recevoir un résumé par email</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        title={emailNotifEnabled ? 'Désactiver les notifications par email' : 'Activer les notifications par email'}
+                        aria-label={emailNotifEnabled ? 'Désactiver les notifications par email' : 'Activer les notifications par email'}
+                        onClick={handleToggleEmailNotifications}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          emailNotifEnabled ? 'bg-[#2BB673]' : 'bg-slate-200 dark:bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            emailNotifEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>

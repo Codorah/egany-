@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc } from 'firebase/firestore';
 import { Group, UserProfile } from '@/types';
+import { notifyUser } from '@/lib/notify';
 import { differenceInDays, parseISO } from 'date-fns';
 
 export function useReminders(profile: UserProfile | null, groups: Group[]) {
@@ -33,13 +34,11 @@ export function useReminders(profile: UserProfile | null, groups: Group[]) {
 
             // Create notifications for all members
             const notificationsBatch = group.members.map(memberId => {
-              return addDoc(collection(db, 'notifications'), {
+              return notifyUser({
                 userId: memberId,
                 title: `Rappel: Cotisation pour ${group.name}`,
                 message: `La date de payout est dans ${daysUntilPayout} jours. N'oubliez pas votre cotisation de ${group.contributionAmount} ${group.currency}.`,
                 type: 'reminder',
-                read: false,
-                createdAt: serverTimestamp(),
                 link: `/group/${group.id}` // This is a virtual link, we handle routing in App.tsx
               });
             });

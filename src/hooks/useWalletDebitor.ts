@@ -5,6 +5,7 @@ import { Group, UserProfile, Contribution } from '@/types';
 import { toast } from 'sonner';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { calculateLatePenalty } from '@/lib/penalties';
+import { notifyUser } from '@/lib/notify';
 
 export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
   const processingRef = useRef<{ [key: string]: boolean }>({});
@@ -93,13 +94,11 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 });
 
                 // 4. Create User Notification
-                await addDoc(collection(db, 'notifications'), {
+                await notifyUser({
                   userId: profile.uid,
                   title: `Cotisation prélevée - ${group.name}`,
                   message: `Votre cotisation de ${totalDue.toLocaleString()} ${group.currency} a été prélevée de votre portefeuille pour la période ${cont.period || ''}${penaltyNote}.`,
                   type: 'payout',
-                  read: false,
-                  createdAt: serverTimestamp(),
                   link: `/group/${group.id}`
                 });
 
@@ -132,13 +131,11 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   const penaltyMsg = penaltyAmount > 0 ? ` Une pénalité de retard de ${penaltyAmount.toLocaleString()} ${group.currency} a été appliquée.` : '';
 
                   // Create Critical User Notification
-                  await addDoc(collection(db, 'notifications'), {
+                  await notifyUser({
                     userId: profile.uid,
                     title: `⚠️ Solde Insuffisant - ${group.name}`,
                     message: `Le prélèvement de ${cont.amount.toLocaleString()} ${group.currency} a échoué car le solde de votre portefeuille est insuffisant (${currentBalance.toLocaleString()} ${group.currency}). Veuillez recharger.${penaltyMsg}`,
                     type: 'reminder',
-                    read: false,
-                    createdAt: serverTimestamp(),
                     link: `/profile`
                   });
 

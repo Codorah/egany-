@@ -2,9 +2,10 @@ import React from 'react';
 import { db } from '@/lib/firebase';
 import {
   doc, updateDoc, arrayUnion, arrayRemove, deleteField,
-  collection, query, where, getDocs, addDoc, serverTimestamp
+  collection, query, where, getDocs
 } from 'firebase/firestore';
 import { Group, UserProfile, GroupMemberRole } from '@/types';
+import { notifyUser } from '@/lib/notify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,11 +46,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     fetchProfiles();
   }, [allUids]);
 
-  const notify = async (userId: string, title: string, message: string) => {
-    await addDoc(collection(db, 'notifications'), {
-      userId, title, message, type: 'system', read: false, createdAt: serverTimestamp(), link: `/group/${group.id}`
-    });
-  };
+  const notify = (userId: string, title: string, message: string) =>
+    notifyUser({ userId, title, message, type: 'system', link: `/group/${group.id}` });
 
   const handleAccept = async (uid: string) => {
     setBusyUid(uid);

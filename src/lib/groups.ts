@@ -1,6 +1,7 @@
 import { db } from './firebase';
-import { doc, updateDoc, arrayUnion, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Group, UserProfile } from '@/types';
+import { notifyUser } from './notify';
 
 export interface JoinRequestResult {
   success: boolean;
@@ -31,13 +32,11 @@ export async function requestToJoinGroup(group: Group, user: UserProfile): Promi
     pendingMembers: arrayUnion(user.uid)
   });
 
-  await addDoc(collection(db, 'notifications'), {
+  await notifyUser({
     userId: group.creatorId,
     title: `Nouvelle demande d'adhésion - ${group.name}`,
     message: `${user.displayName} souhaite rejoindre votre cercle "${group.name}". Rendez-vous dans la gestion des membres pour valider ou refuser.`,
     type: 'system',
-    read: false,
-    createdAt: serverTimestamp(),
     link: `/group/${group.id}`
   });
 

@@ -17,6 +17,9 @@ export interface UserProfile {
   pinFailedAttempts?: number;
   pinLockedUntil?: string;
   biometricsEnabled?: boolean;
+  fcmToken?: string;
+  pushEnabled?: boolean;
+  emailNotificationsEnabled?: boolean;
 }
 
 export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';

@@ -17,6 +17,7 @@ import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
 import { logout } from '@/lib/firebase';
 import { executeFinancialTransaction } from '@/lib/ledger';
+import { notifyUser } from '@/lib/notify';
 import { Loader2 } from 'lucide-react';
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -135,13 +136,11 @@ export default function App() {
           });
 
           // Create Notification
-          await addDoc(collection(db, 'notifications'), {
+          await notifyUser({
             userId: activeProfile.uid,
             title: 'Portefeuille rechargé !',
             message: `Votre portefeuille virtuel a été rechargé de ${amountNum.toLocaleString()} FCFA avec succès via Paydunya.`,
-            type: 'system',
-            read: false,
-            createdAt: serverTimestamp()
+            type: 'system'
           });
 
           toast.success(`Votre portefeuille a été crédité de ${amountNum.toLocaleString()} FCFA !`);
