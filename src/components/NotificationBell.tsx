@@ -24,33 +24,33 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const getIcon = (type: string) => {
     switch (type) {
       case 'reminder':
-        return <Clock className="w-4 h-4 text-[#E67E22]" />;
+        return <Clock className="w-4 h-4 text-brand" />;
       case 'chat':
-        return <MessageCircle className="w-4 h-4 text-sky-500" />;
+        return <MessageCircle className="w-4 h-4 text-blue-500" />;
       case 'payout':
-        return <DollarSign className="w-4 h-4 text-[#2BB673]" />;
+        return <DollarSign className="w-4 h-4 text-secondary" />;
       default:
-        return <Info className="w-4 h-4 text-[#D4A574]" />;
+        return <Info className="w-4 h-4 text-eganye-gold" />;
     }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={
-        <Button variant="ghost" size="icon" className="relative group cursor-pointer hover:bg-[#F5E6D3]/30">
-          <Bell className="w-5 h-5 text-[#4B2E05] group-hover:scale-110 transition-transform" />
+        <Button variant="ghost" size="icon" className="relative group cursor-pointer hover:bg-chip/30">
+          <Bell className="w-5 h-5 text-foreground group-hover:scale-110 transition-transform" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-600 text-white font-bold text-[10px] rounded-full animate-pulse border-2 border-white">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-danger text-white font-bold text-[10px] rounded-full animate-pulse border-2 border-card">
               {unreadCount}
             </Badge>
           )}
         </Button>
       } />
-      <DropdownMenuContent align="end" className="w-[320px] p-0 overflow-hidden rounded-3xl bg-white shadow-xl border border-[#D4A574]/20">
-        <div className="flex items-center justify-between p-4 bg-[#F5E6D3]/15">
-          <h3 className="font-serif font-bold text-sm text-[#4B2E05]">Notifications</h3>
+      <DropdownMenuContent align="end" className="w-[320px] p-0 overflow-hidden rounded-3xl bg-card shadow-xl border border-border">
+        <div className="flex items-center justify-between p-4 bg-chip/15">
+          <h3 className="font-serif font-bold text-sm text-foreground">Notifications</h3>
           {unreadCount > 0 && (
-            <span className="text-[10px] bg-[#E67E22]/10 text-[#E67E22] px-2.5 py-0.5 rounded-full font-bold">
+            <span className="text-[10px] bg-brand/10 text-brand px-2.5 py-0.5 rounded-full font-bold">
               {unreadCount} nouvelles
             </span>
           )}
@@ -58,31 +58,31 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <DropdownMenuSeparator className="m-0" />
         <ScrollArea className="h-[350px]">
           {notifications.length === 0 ? (
-            <div className="p-10 text-center text-slate-400 text-sm flex flex-col items-center gap-2">
-              <Bell className="w-8 h-8 opacity-25 text-[#4B2E05]" />
+            <div className="p-10 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+              <Bell className="w-8 h-8 opacity-25 text-foreground" />
               <p className="font-medium text-xs">Pas encore de notifications</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`relative p-4 transition-colors hover:bg-[#F5E6D3]/5 flex gap-3 ${
-                    !notification.read ? 'bg-[#E67E22]/5' : ''
+                  className={`relative p-4 transition-colors hover:bg-chip/5 flex gap-3 ${
+                    !notification.read ? 'bg-brand/5' : ''
                   }`}
                 >
                   <div className="mt-1 shrink-0">{getIcon(notification.type)}</div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs leading-snug mb-1 ${!notification.read ? 'font-bold text-[#4B2E05]' : 'font-semibold text-slate-700'}`}>
+                    <p className={`text-xs leading-snug mb-1 text-foreground ${!notification.read ? 'font-bold' : 'font-semibold'}`}>
                       {notification.title}
                     </p>
-                    <p className="text-[11px] text-slate-500 line-clamp-2 mb-2 leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
                       {notification.message}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
-                        {notification.createdAt?.seconds 
-                          ? formatDistanceToNow(new Date(notification.createdAt.seconds * 1000), { addSuffix: true, locale: fr })
+                      <span className="text-[9px] font-medium text-muted-foreground flex items-center gap-1">
+                        {notification.createdAt
+                          ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: fr })
                           : "À l'instant"}
                       </span>
                       <div className="flex items-center gap-1">
@@ -90,7 +90,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 rounded-full hover:bg-[#2BB673]/10 text-[#2BB673] cursor-pointer"
+                            className="h-6 w-6 rounded-full hover:bg-success-soft text-secondary cursor-pointer"
                             onClick={() => markAsRead(notification.id)}
                           >
                             <Check className="h-3.5 h-3.5" />
@@ -99,7 +99,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 rounded-full hover:bg-red-50 text-red-600 cursor-pointer"
+                          className="h-6 w-6 rounded-full hover:bg-danger-soft text-danger cursor-pointer"
                           onClick={() => deleteNotification(notification.id)}
                         >
                           <Trash2 className="h-3.5 h-3.5" />

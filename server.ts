@@ -2,14 +2,100 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import dotenv from 'dotenv';
+import { initializeApp, cert, type App } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 
 dotenv.config();
+
+// Firebase Admin SDK, used to send push notifications via FCM. Only
+// initialized when a service account key is actually configured -
+// push sending stays a documented no-op otherwise (see /api/send-push).
+let firebaseAdminApp: App | null = null;
+function getFirebaseAdminApp(): App | null {
+  if (firebaseAdminApp) return firebaseAdminApp;
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  if (!serviceAccountJson) return null;
+  try {
+    const credentials = JSON.parse(serviceAccountJson);
+    firebaseAdminApp = initializeApp({ credential: cert(credentials) });
+    return firebaseAdminApp;
+  } catch (error) {
+    console.error('Invalid FIREBASE_SERVICE_ACCOUNT_JSON, push notifications disabled:', error);
+    return null;
+  }
+}
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Push Notification Route (Firebase Cloud Messaging)
+  app.post('/api/send-push', async (req, res) => {
+    try {
+      const { token, title, message } = req.body;
+      if (!token || !title || !message) {
+        return res.status(400).json({ error: 'token, title et message sont requis.' });
+      }
+
+      const adminApp = getFirebaseAdminApp();
+      if (!adminApp) {
+        console.log('Push notification skipped: FIREBASE_SERVICE_ACCOUNT_JSON not configured.');
+        return res.status(200).json({ sent: false, reason: 'not_configured' });
+      }
+
+      await getMessaging(adminApp).send({
+        token,
+        notification: { title, body: message }
+      });
+      res.json({ sent: true });
+    } catch (error: any) {
+      console.error('Push notification error:', error);
+      // Never fail the caller's flow over a push delivery issue.
+      res.status(200).json({ sent: false, reason: error.message });
+    }
+  });
+
+  // Transactional Email Route (Resend)
+  app.post('/api/send-email', async (req, res) => {
+    try {
+      const { to, subject, message } = req.body;
+      if (!to || !subject || !message) {
+        return res.status(400).json({ error: 'to, subject et message sont requis.' });
+      }
+
+      const apiKey = process.env.RESEND_API_KEY;
+      const fromAddress = process.env.RESEND_FROM_EMAIL || 'eganye@resend.dev';
+      if (!apiKey) {
+        console.log('Email notification skipped: RESEND_API_KEY not configured.');
+        return res.status(200).json({ sent: false, reason: 'not_configured' });
+      }
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [to],
+          subject,
+          html: `<p>${message}</p>`
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(errorBody);
+      }
+      res.json({ sent: true });
+    } catch (error: any) {
+      console.error('Email notification error:', error);
+      res.status(200).json({ sent: false, reason: error.message });
+    }
+  });
 
   // Paydunya Checkout Route (Recharge Portefeuille Virtuel)
   app.post('/api/create-paydunya-checkout', async (req, res) => {

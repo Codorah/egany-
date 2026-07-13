@@ -6,53 +6,30 @@ import { Profile } from '@/components/Profile';
 import { JoinGroup } from '@/components/JoinGroup';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { ContributionsManager } from '@/components/ContributionsManager';
+import { SearchGroups } from '@/components/SearchGroups';
+import { CalendarView } from '@/components/CalendarView';
+import { Support } from '@/components/Support';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
+import { Marketplace } from '@/components/Marketplace';
+import { AIAssistant } from '@/components/AIAssistant';
 import { Toaster } from '@/components/ui/sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
-import { signInWithGoogle, logout } from '@/lib/firebase';
-import { Button } from '@/components/ui/button';
+import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
+import { notifyUser } from '@/lib/notify';
 import { Loader2 } from 'lucide-react';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
-  const [localUserId, setLocalUserId] = useState<string | null>(() => localStorage.getItem('egayne_local_uid'));
-  const [localProfile, setLocalProfile] = useState<any | null>(null);
-  const [localProfileLoading, setLocalProfileLoading] = useState(false);
-
-  // Synchronize local profile from Firestore
-  React.useEffect(() => {
-    if (!localUserId) {
-      setLocalProfile(null);
-      return;
-    }
-    setLocalProfileLoading(true);
-    const unsub = onSnapshot(doc(db, 'users', localUserId), (snapshot) => {
-      if (snapshot.exists()) {
-        setLocalProfile(snapshot.data());
-      } else {
-        setLocalProfile(null);
-        localStorage.removeItem('egayne_local_uid');
-        setLocalUserId(null);
-      }
-      setLocalProfileLoading(false);
-    }, (error) => {
-      console.error("Local profile sync error:", error);
-      setLocalProfileLoading(false);
-    });
-    return () => unsub();
-  }, [localUserId]);
-
-  const activeProfile = profile || localProfile;
+  const activeProfile = profile;
 
   // Auto detect and synchronize system theme on first load
   React.useEffect(() => {
@@ -63,10 +40,10 @@ export default function App() {
         // First load, theme not set in user profile yet
         const updateThemeInDb = async () => {
           try {
-            const userRef = doc(db, 'users', activeProfile.uid);
-            await updateDoc(userRef, { theme: systemTheme });
+            const { error } = await supabase.from('profiles').update({ theme: systemTheme }).eq('id', activeProfile.uid);
+            if (error) throw error;
           } catch (err) {
-            console.error("Failed to sync auto-detected theme to firestore:", err);
+            console.error("Failed to sync auto-detected theme to Supabase:", err);
           }
         };
         updateThemeInDb();
@@ -97,7 +74,6 @@ export default function App() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
   const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; userId: string; userName: string; userEmail: string } | null>(null);
-  const [isOnboardingSaving, setIsOnboardingSaving] = useState(false);
 
   // Handle URL parameters for joining and Paydunya recharges
   React.useEffect(() => {
@@ -149,26 +125,23 @@ export default function App() {
             throw new Error(ledgerResult.message);
           }
 
-          // Create matching subcollection transaction for user display
-          await addDoc(collection(db, 'users', activeProfile.uid, 'walletTransactions'), {
-            userId: activeProfile.uid,
+          // Create matching wallet transaction record for user display
+          await supabase.from('wallet_transactions').insert({
+            user_id: activeProfile.uid,
             amount: amountNum,
             type: 'recharge',
             description: `Recharge de portefeuille via Paydunya`,
-            date: new Date().toISOString(),
             status: 'completed',
-            paymentMethod: 'paydunya',
+            payment_method: 'paydunya',
             reference: ledgerResult.transactionId || rawRef
           });
 
           // Create Notification
-          await addDoc(collection(db, 'notifications'), {
+          await notifyUser({
             userId: activeProfile.uid,
             title: 'Portefeuille rechargé !',
             message: `Votre portefeuille virtuel a été rechargé de ${amountNum.toLocaleString()} FCFA avec succès via Paydunya.`,
-            type: 'system',
-            read: false,
-            createdAt: serverTimestamp()
+            type: 'system'
           });
 
           toast.success(`Votre portefeuille a été crédité de ${amountNum.toLocaleString()} FCFA !`);
@@ -197,71 +170,14 @@ export default function App() {
     setView('group-details');
   };
 
-  const handleOnboardingComplete = async (data: {
-    displayName: string;
-    avatarConfig: string;
-    password?: string;
-    language: string;
-    theme: 'light' | 'dark';
-    biometricsEnabled?: boolean;
-  }) => {
-    setIsOnboardingSaving(true);
-    try {
-      const newUid = `user_local_${Date.now()}`;
-      const userRef = doc(db, 'users', newUid);
-      const emailPlaceholder = `${data.displayName.toLowerCase().replace(/\s+/g, '') || 'user'}@egayne.com`;
-      
-      const newProfile = {
-        uid: newUid,
-        displayName: data.displayName,
-        email: emailPlaceholder,
-        photoURL: data.avatarConfig,
-        password: data.password || '',
-        language: data.language,
-        theme: data.theme,
-        role: 'member',
-        walletBalance: 0,
-        reputationScore: 75,
-        totalSaved: 0,
-        groupsJoined: 0,
-        biometricsEnabled: !!data.biometricsEnabled,
-        createdAt: new Date().toISOString()
-      };
-
-      await setDoc(userRef, newProfile);
-      localStorage.setItem('egayne_local_uid', newUid);
-      
-      if (data.biometricsEnabled) {
-        localStorage.setItem('eganye_biometrics_enrolled', 'true');
-        localStorage.setItem('eganye_biometrics_uid', newUid);
-        localStorage.setItem('eganye_biometrics_username', data.displayName);
-      }
-
-      setLocalUserId(newUid);
-      toast.success("Votre compte eganyé a été créé avec succès !");
-      setView('dashboard');
-    } catch (error) {
-      console.error("Error saving onboarding details:", error);
-      toast.error("Une erreur s'est produite lors de la configuration de votre profil.");
-    } finally {
-      setIsOnboardingSaving(false);
-    }
-  };
-
-  const handleBiometricLogin = (uid: string) => {
-    localStorage.setItem('egayne_local_uid', uid);
-    setLocalUserId(uid);
-    toast.success("Ravi de vous revoir sur eganyé ! Connexion sécurisée réussie.");
+  const handleOnboardingComplete = () => {
+    // Account creation (Firebase Auth + Firestore profile) already happened inside <Onboarding>.
+    // useAuth() picks up the new session automatically; we just reset the view.
     setView('dashboard');
   };
 
   const handleLogout = async () => {
-    if (profile) {
-      await logout();
-    } else {
-      localStorage.removeItem('egayne_local_uid');
-      setLocalUserId(null);
-    }
+    await logout();
     setView('dashboard');
   };
 
@@ -276,17 +192,28 @@ export default function App() {
     switch (view) {
       case 'dashboard':
         return (
-          <Dashboard 
-            user={activeProfile} 
-            groups={groups} 
-            onSelectGroup={handleSelectGroup} 
-            onManageContributions={handleManageContributions} 
+          <Dashboard
+            user={activeProfile}
+            groups={groups}
+            onSelectGroup={handleSelectGroup}
+            onManageContributions={handleManageContributions}
             onNavigateToProfileTab={(tab) => {
               setProfileTab(tab);
               setView('profile');
             }}
+            onNavigate={(v) => setView(v as View)}
           />
         );
+      case 'search-groups':
+        return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'calendar':
+        return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
+      case 'support':
+        return <Support user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'marketplace':
+        return <Marketplace />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} />;
       case 'admin':
@@ -318,15 +245,15 @@ export default function App() {
     }
   };
 
-  if (authLoading || localProfileLoading) {
+  if (authLoading) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#F5E6D3]/40 text-[#4B2E05]">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <div className="bg-[#2BB673] p-3.5 rounded-2xl text-white shadow-md animate-bounce">
+          <div className="bg-secondary p-3.5 rounded-2xl text-white shadow-md animate-bounce">
             <span className="font-serif font-black text-xl tracking-wide lowercase">eg</span>
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-[#E67E22]" />
-          <span className="text-xs font-serif font-bold tracking-wide uppercase text-[#4B2E05]/60">chargement d'eganyé...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-brand" />
+          <span className="text-xs font-serif font-bold tracking-wide uppercase text-muted-foreground">chargement d'eganyé...</span>
         </div>
       </div>
     );
@@ -349,28 +276,29 @@ export default function App() {
     );
   }
 
+  if (!activeProfile) {
+    return (
+      <>
+        <Onboarding onComplete={handleOnboardingComplete} />
+        <Toaster />
+      </>
+    );
+  }
+
   return (
-    <Layout 
-      user={activeProfile ? {
+    <Layout
+      user={{
         uid: activeProfile.uid,
         displayName: activeProfile.displayName,
         email: activeProfile.email,
         photoURL: activeProfile.photoURL,
         role: activeProfile.role
-      } : undefined} 
+      }}
       view={view}
       onNavigate={(v) => setView(v as View)}
       onLogout={handleLogout}
     >
-      {activeProfile ? (
-        renderView()
-      ) : (
-        <Onboarding 
-          onComplete={handleOnboardingComplete} 
-          isLoading={isOnboardingSaving} 
-          onBiometricLogin={handleBiometricLogin} 
-        />
-      )}
+      {renderView()}
       <Toaster />
     </Layout>
   );

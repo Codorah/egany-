@@ -13,9 +13,16 @@ export interface UserProfile {
   walletBalance: number; // Virtual wallet balance (FCFA)
   language?: string;
   theme?: 'light' | 'dark';
-  password?: string;
   securityPin?: string;
+  pinFailedAttempts?: number;
+  pinLockedUntil?: string;
+  biometricsEnabled?: boolean;
+  fcmToken?: string;
+  pushEnabled?: boolean;
+  emailNotificationsEnabled?: boolean;
 }
+
+export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';
 
 export interface Group {
   id: string;
@@ -23,15 +30,21 @@ export interface Group {
   description: string;
   creatorId: string;
   members: string[]; // Array of UIDs
+  pendingMembers?: string[]; // Array of UIDs awaiting admin approval to join
+  memberRoles?: Record<string, GroupMemberRole>; // uid -> role within this group
   contributionAmount: number;
   frequency: Frequency;
   startDate: string;
+  endDate?: string;
   nextPayoutDate: string;
   status: 'active' | 'completed' | 'pending';
   payoutOrder: string[]; // Array of UIDs in order of payout
   currentPayoutIndex: number;
   currency: string;
   joinCode?: string;
+  isPrivate?: boolean;
+  maxMembers?: number;
+  rules?: string;
   lastReminderSentAt?: string;
   distributionMethod?: 'sequential' | 'draw' | 'auction';
   penaltyRate?: number;
@@ -82,6 +95,10 @@ export interface Contribution {
   };
   penaltyApplied?: number;
   penaltyStatus?: 'none' | 'pending' | 'paid';
+  notifiedInsufficient?: boolean;
+  paymentMethod?: string;
+  debitedAt?: string;
+  idempotencyKey?: string;
 }
 
 export interface Payout {
@@ -90,6 +107,10 @@ export interface Payout {
   userId: string;
   amount: number;
   date: string;
+  discountAmount?: number;
+  currency?: string;
+  cycle?: number;
+  transactionId?: string;
 }
 
 export interface Invitation {
@@ -115,11 +136,36 @@ export interface WalletTransaction {
   id: string;
   userId: string;
   amount: number; // Positive for credit/recharge, negative for debit/contribution
-  type: 'recharge' | 'contribution_debit' | 'payout_credit' | 'payout_deduction';
+  type: 'recharge' | 'contribution_debit' | 'payout_credit' | 'payout_deduction' | 'withdraw';
   description: string;
   date: string;
   status: 'completed' | 'failed' | 'pending';
   reference?: string; // Paydunya checkout session ID or reference
   paymentMethod?: string; // e.g., 'paydunya' | 'wallet'
+}
+
+export interface GroupDocument {
+  id: string;
+  groupId: string;
+  uploaderId: string;
+  uploaderName: string;
+  name: string;
+  category: 'statuts' | 'contrat' | 'pv' | 'justificatif' | 'autre';
+  url?: string; // signed URL, fetched on-demand (private Supabase Storage bucket)
+  storagePath: string;
+  size: number;
+  contentType: string;
+  uploadedAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  subject: string;
+  message: string;
+  status: 'open' | 'resolved';
+  createdAt: any;
 }
 

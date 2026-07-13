@@ -1,11 +1,28 @@
-import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, limit, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapNotificationRow } from '@/lib/mappers';
 import { Notification } from '@/types';
 
 export function useNotifications(userId?: string) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = useCallback(async (uid: string) => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error("Error fetching notifications:", error);
+      setLoading(false);
+      return;
+    }
+    setNotifications((data ?? []).map(mapNotificationRow));
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     if (!userId) {
@@ -14,33 +31,23 @@ export function useNotifications(userId?: string) {
       return;
     }
 
-    const q = query(
-      collection(db, 'notifications'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(20)
-    );
+    fetchNotifications(userId);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Notification));
-      setNotifications(notifs);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching notifications:", error);
-      setLoading(false);
-    });
+    const channel = createChannel(`notifications-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        () => fetchNotifications(userId)
+      )
+      .subscribe();
 
-    return () => unsubscribe();
-  }, [userId]);
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await updateDoc(doc(db, 'notifications', notificationId), {
-        read: true
-      });
+      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notificationId);
+      if (error) throw error;
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -48,7 +55,8 @@ export function useNotifications(userId?: string) {
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      await deleteDoc(doc(db, 'notifications', notificationId));
+      const { error } = await supabase.from('notifications').delete().eq('id', notificationId);
+      if (error) throw error;
     } catch (error) {
       console.error("Error deleting notification:", error);
     }

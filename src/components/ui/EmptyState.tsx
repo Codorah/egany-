@@ -23,36 +23,36 @@ export function EmptyState({
   // Theme color maps for visual accents
   const colors = {
     amber: {
-      bg: 'bg-amber-50',
-      text: 'text-amber-600',
-      border: 'border-amber-100',
-      lightBorder: 'border-amber-200/50',
-      button: 'bg-amber-500 hover:bg-amber-600 text-slate-950',
-      glow: 'shadow-amber-100',
+      bg: 'bg-brand/10',
+      text: 'text-brand',
+      border: 'border-brand/20',
+      lightBorder: 'border-brand/30',
+      button: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+      glow: 'shadow-brand/10',
     },
     emerald: {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-600',
-      border: 'border-emerald-100',
-      lightBorder: 'border-emerald-200/50',
-      button: 'bg-[#2BB673] hover:bg-[#2BB673]/90 text-white',
-      glow: 'shadow-emerald-100',
+      bg: 'bg-secondary/10',
+      text: 'text-secondary',
+      border: 'border-secondary/20',
+      lightBorder: 'border-secondary/30',
+      button: 'bg-secondary hover:bg-secondary/90 text-white',
+      glow: 'shadow-secondary/10',
     },
     blue: {
-      bg: 'bg-blue-50',
-      text: 'text-blue-600',
-      border: 'border-blue-100',
-      lightBorder: 'border-blue-200/50',
+      bg: 'bg-blue-500/10',
+      text: 'text-blue-500',
+      border: 'border-blue-500/20',
+      lightBorder: 'border-blue-500/30',
       button: 'bg-blue-600 hover:bg-blue-700 text-white',
-      glow: 'shadow-blue-100',
+      glow: 'shadow-blue-500/10',
     },
     purple: {
-      bg: 'bg-purple-50',
-      text: 'text-purple-600',
-      border: 'border-purple-100',
-      lightBorder: 'border-purple-200/50',
+      bg: 'bg-purple-500/10',
+      text: 'text-purple-500',
+      border: 'border-purple-500/20',
+      lightBorder: 'border-purple-500/30',
       button: 'bg-purple-600 hover:bg-purple-700 text-white',
-      glow: 'shadow-purple-100',
+      glow: 'shadow-purple-500/10',
     }
   };
 
@@ -63,7 +63,7 @@ export function EmptyState({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col items-center justify-center text-center p-8 sm:p-12 bg-white rounded-3xl border border-dashed border-slate-200/80 max-w-md mx-auto space-y-5"
+      className="flex flex-col items-center justify-center text-center p-8 sm:p-12 bg-card rounded-3xl border border-dashed border-border max-w-md mx-auto space-y-5"
     >
       {/* Illustrated Visual Container */}
       <div className="relative flex items-center justify-center w-24 h-24">
@@ -73,12 +73,12 @@ export function EmptyState({
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
           className={`absolute inset-0 rounded-full border-2 border-dashed ${selectedColor.lightBorder}`}
         />
-        
+
         {/* Animated Background Ring 2 */}
         <motion.div
           animate={{ scale: [1, 1.08, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute -inset-2 rounded-full bg-slate-50 opacity-60`}
+          className={`absolute -inset-2 rounded-full bg-muted opacity-60`}
         />
 
         {/* Central Icon Circle */}
@@ -89,10 +89,10 @@ export function EmptyState({
 
       {/* Content */}
       <div className="space-y-2">
-        <h3 className="font-serif font-extrabold text-lg text-[#4B2E05]">
+        <h3 className="font-serif font-extrabold text-lg text-foreground">
           {title}
         </h3>
-        <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-sm">
+        <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-sm">
           {description}
         </p>
       </div>
