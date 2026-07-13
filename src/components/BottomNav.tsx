@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, Users, User, ShieldCheck, PlusCircle, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Users, User, ShieldCheck, PlusCircle, CalendarDays, Store, Bot } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BottomNavProps {
@@ -36,6 +36,16 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
       id: 'calendar',
       label: t('calendar'),
       icon: <CalendarDays className="w-5 h-5" />,
+    },
+    {
+      id: 'marketplace',
+      label: t('marketplace') || 'Services',
+      icon: <Store className="w-5 h-5" />,
+    },
+    {
+      id: 'ai-assistant',
+      label: t('ai_assistant') || 'Copilote',
+      icon: <Bot className="w-5 h-5" />,
     },
     {
       id: 'profile',
