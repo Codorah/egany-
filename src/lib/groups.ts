@@ -1,7 +1,36 @@
-import { db } from './firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { supabase } from './supabase';
+import { mapGroupRow } from './mappers';
 import { Group, UserProfile } from '@/types';
 import { notifyUser } from './notify';
+
+/**
+ * Fetches every group_members row for the given group rows and hydrates each
+ * into a full Group object (members[]/pendingMembers[]/memberRoles{}/
+ * payoutOrder[] reconstructed from the join table) — shared by useGroups,
+ * SearchGroups and JoinGroup so this logic lives in exactly one place.
+ */
+export async function hydrateGroups(groupRows: Record<string, any>[]): Promise<Group[]> {
+  if (groupRows.length === 0) return [];
+
+  const groupIds = groupRows.map((g) => g.id);
+  const { data: allMembers, error } = await supabase
+    .from('group_members')
+    .select('*')
+    .in('group_id', groupIds);
+
+  if (error) {
+    console.error('Error fetching group members:', error);
+    return groupRows.map((row) => mapGroupRow(row, []));
+  }
+
+  const membersByGroup = new Map<string, any[]>();
+  for (const m of allMembers ?? []) {
+    if (!membersByGroup.has(m.group_id)) membersByGroup.set(m.group_id, []);
+    membersByGroup.get(m.group_id)!.push(m);
+  }
+
+  return groupRows.map((row) => mapGroupRow(row, membersByGroup.get(row.id) ?? []));
+}
 
 export interface JoinRequestResult {
   success: boolean;
@@ -28,9 +57,13 @@ export async function requestToJoinGroup(group: Group, user: UserProfile): Promi
     return { success: false, alreadyMember: false, alreadyPending: false, message: "Ce cercle a atteint son nombre maximum de participants." };
   }
 
-  await updateDoc(doc(db, 'groups', group.id), {
-    pendingMembers: arrayUnion(user.uid)
-  });
+  const { error } = await supabase
+    .from('group_members')
+    .insert({ group_id: group.id, user_id: user.uid, status: 'pending' });
+
+  if (error) {
+    return { success: false, alreadyMember: false, alreadyPending: false, message: `Erreur lors de la demande d'adhésion : ${error.message}` };
+  }
 
   await notifyUser({
     userId: group.creatorId,

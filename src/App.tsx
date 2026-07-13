@@ -8,22 +8,24 @@ import { AdminDashboard } from '@/components/AdminDashboard';
 import { ContributionsManager } from '@/components/ContributionsManager';
 import { SearchGroups } from '@/components/SearchGroups';
 import { CalendarView } from '@/components/CalendarView';
+import { Support } from '@/components/Support';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
+import { Marketplace } from '@/components/Marketplace';
+import { AIAssistant } from '@/components/AIAssistant';
 import { Toaster } from '@/components/ui/sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
-import { logout } from '@/lib/firebase';
+import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
 import { Loader2 } from 'lucide-react';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
@@ -38,10 +40,10 @@ export default function App() {
         // First load, theme not set in user profile yet
         const updateThemeInDb = async () => {
           try {
-            const userRef = doc(db, 'users', activeProfile.uid);
-            await updateDoc(userRef, { theme: systemTheme });
+            const { error } = await supabase.from('profiles').update({ theme: systemTheme }).eq('id', activeProfile.uid);
+            if (error) throw error;
           } catch (err) {
-            console.error("Failed to sync auto-detected theme to firestore:", err);
+            console.error("Failed to sync auto-detected theme to Supabase:", err);
           }
         };
         updateThemeInDb();
@@ -123,15 +125,14 @@ export default function App() {
             throw new Error(ledgerResult.message);
           }
 
-          // Create matching subcollection transaction for user display
-          await addDoc(collection(db, 'users', activeProfile.uid, 'walletTransactions'), {
-            userId: activeProfile.uid,
+          // Create matching wallet transaction record for user display
+          await supabase.from('wallet_transactions').insert({
+            user_id: activeProfile.uid,
             amount: amountNum,
             type: 'recharge',
             description: `Recharge de portefeuille via Paydunya`,
-            date: new Date().toISOString(),
             status: 'completed',
-            paymentMethod: 'paydunya',
+            payment_method: 'paydunya',
             reference: ledgerResult.transactionId || rawRef
           });
 
@@ -207,6 +208,12 @@ export default function App() {
         return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
+      case 'support':
+        return <Support user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'marketplace':
+        return <Marketplace />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} />;
       case 'admin':
@@ -240,13 +247,13 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#F5E6D3]/40 text-[#4B2E05]">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <div className="bg-[#2BB673] p-3.5 rounded-2xl text-white shadow-md animate-bounce">
+          <div className="bg-secondary p-3.5 rounded-2xl text-white shadow-md animate-bounce">
             <span className="font-serif font-black text-xl tracking-wide lowercase">eg</span>
           </div>
-          <Loader2 className="w-6 h-6 animate-spin text-[#E67E22]" />
-          <span className="text-xs font-serif font-bold tracking-wide uppercase text-[#4B2E05]/60">chargement d'eganyé...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-brand" />
+          <span className="text-xs font-serif font-bold tracking-wide uppercase text-muted-foreground">chargement d'eganyé...</span>
         </div>
       </div>
     );
@@ -269,24 +276,29 @@ export default function App() {
     );
   }
 
+  if (!activeProfile) {
+    return (
+      <>
+        <Onboarding onComplete={handleOnboardingComplete} />
+        <Toaster />
+      </>
+    );
+  }
+
   return (
-    <Layout 
-      user={activeProfile ? {
+    <Layout
+      user={{
         uid: activeProfile.uid,
         displayName: activeProfile.displayName,
         email: activeProfile.email,
         photoURL: activeProfile.photoURL,
         role: activeProfile.role
-      } : undefined} 
+      }}
       view={view}
       onNavigate={(v) => setView(v as View)}
       onLogout={handleLogout}
     >
-      {activeProfile ? (
-        renderView()
-      ) : (
-        <Onboarding onComplete={handleOnboardingComplete} />
-      )}
+      {renderView()}
       <Toaster />
     </Layout>
   );

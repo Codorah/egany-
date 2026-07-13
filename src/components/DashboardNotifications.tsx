@@ -4,14 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Bell, 
-  Clock, 
-  Trash2, 
-  Check, 
-  AlertTriangle, 
-  DollarSign, 
-  ArrowRight, 
+import {
+  Bell,
+  Clock,
+  Trash2,
+  Check,
+  AlertTriangle,
+  DollarSign,
+  ArrowRight,
   Sparkles,
   Inbox
 } from 'lucide-react';
@@ -61,10 +61,10 @@ const itemVariants = {
   },
 };
 
-export function DashboardNotifications({ 
-  userId, 
-  onManageContributions, 
-  onSelectGroup 
+export function DashboardNotifications({
+  userId,
+  onManageContributions,
+  onSelectGroup
 }: DashboardNotificationsProps) {
   const { notifications, loading, markAsRead, deleteNotification } = useNotifications(userId);
   const [filter, setFilter] = useState<'all' | 'late' | 'payout'>('all');
@@ -99,28 +99,28 @@ export function DashboardNotifications({
   const getNotificationStyles = (notif: any) => {
     if (isLateAlert(notif)) {
       return {
-        bg: !notif.read ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-500/5 border-amber-500/10',
-        iconBg: 'bg-amber-500/15 text-[#E67E22]',
+        bg: !notif.read ? 'bg-danger/10 border-danger/30' : 'bg-danger/5 border-danger/10',
+        iconBg: 'bg-danger/15 text-danger',
         icon: <AlertTriangle className="w-4 h-4 shrink-0" />,
         badgeText: 'Alerte Retard',
-        badgeClass: 'bg-amber-500/10 text-[#E67E22] border border-amber-500/20'
+        badgeClass: 'bg-danger/10 text-danger border border-danger/20'
       };
     }
     if (notif.type === 'payout') {
       return {
-        bg: !notif.read ? 'bg-[#2BB673]/10 border-[#2BB673]/30' : 'bg-[#2BB673]/5 border-[#2BB673]/10',
-        iconBg: 'bg-[#2BB673]/15 text-[#2BB673]',
+        bg: !notif.read ? 'bg-secondary/10 border-secondary/30' : 'bg-secondary/5 border-secondary/10',
+        iconBg: 'bg-secondary/15 text-secondary',
         icon: <DollarSign className="w-4 h-4 shrink-0" />,
         badgeText: 'Paiement Reçu',
-        badgeClass: 'bg-[#2BB673]/10 text-[#2BB673] border border-[#2BB673]/20'
+        badgeClass: 'bg-secondary/10 text-secondary border border-secondary/20'
       };
     }
     return {
-      bg: !notif.read ? 'bg-slate-100/50 border-slate-200' : 'bg-white border-slate-100',
-      iconBg: 'bg-slate-100 text-slate-500',
+      bg: !notif.read ? 'bg-muted border-border' : 'bg-card border-border',
+      iconBg: 'bg-muted text-muted-foreground',
       icon: <Bell className="w-4 h-4 shrink-0" />,
       badgeText: 'Info',
-      badgeClass: 'bg-slate-100 text-slate-600'
+      badgeClass: 'bg-muted text-muted-foreground'
     };
   };
 
@@ -146,13 +146,13 @@ export function DashboardNotifications({
 
   if (loading) {
     return (
-      <Card className="bg-white border border-[#D4A574]/20 shadow-sm rounded-3xl p-6">
+      <Card className="bg-card border border-border shadow-sm rounded-3xl p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-5 bg-slate-100 rounded w-1/3"></div>
-          <div className="h-4 bg-slate-100 rounded w-1/2"></div>
+          <div className="h-5 bg-muted rounded w-1/3"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
           <div className="space-y-2.5">
-            <div className="h-12 bg-slate-50 rounded-2xl"></div>
-            <div className="h-12 bg-slate-50 rounded-2xl"></div>
+            <div className="h-12 bg-muted rounded-2xl"></div>
+            <div className="h-12 bg-muted rounded-2xl"></div>
           </div>
         </div>
       </Card>
@@ -160,35 +160,35 @@ export function DashboardNotifications({
   }
 
   return (
-    <Card className="bg-white border border-[#D4A574]/20 shadow-sm rounded-3xl overflow-hidden">
-      <CardHeader className="pb-4 bg-[#FBF8F3]/40 border-b border-[#D4A574]/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden">
+      <CardHeader className="pb-4 bg-muted/40 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-serif font-bold text-[#4B2E05] flex items-center gap-2">
-              <Bell className="w-5 h-5 text-[#E67E22]" />
+            <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
+              <Bell className="w-5 h-5 text-brand" />
               Centre d'Alertes & Activités
             </CardTitle>
             {unreadLateAlerts > 0 && (
-              <Badge className="bg-red-500 text-white border-none font-bold text-[10px] rounded-full px-2 py-0.5 animate-pulse">
+              <Badge className="bg-danger text-white border-none font-bold text-[10px] rounded-full px-2 py-0.5 animate-pulse">
                 {unreadLateAlerts} retard{unreadLateAlerts > 1 ? 's' : ''}
               </Badge>
             )}
           </div>
-          <CardDescription className="text-xs text-slate-500 mt-0.5 font-medium">
+          <CardDescription className="text-xs text-muted-foreground mt-0.5 font-medium">
             Suivi en temps réel de votre statut de paiement et rappels du cercle de tontine.
           </CardDescription>
         </div>
 
         {/* Filter Badges with mobile-native tapping style */}
-        <div className="flex gap-1.5 bg-slate-100 p-1 rounded-2xl self-start sm:self-center">
+        <div className="flex gap-1.5 bg-muted p-1 rounded-2xl self-start sm:self-center">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setFilter('all')}
             className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all ${
-              filter === 'all' 
-                ? 'bg-white text-[#4B2E05] shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+              filter === 'all'
+                ? 'bg-card text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
             }`}
           >
             Tous
@@ -198,9 +198,9 @@ export function DashboardNotifications({
             size="sm"
             onClick={() => setFilter('late')}
             className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
-              filter === 'late' 
-                ? 'bg-[#E67E22] text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+              filter === 'late'
+                ? 'bg-danger text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
             }`}
           >
             <AlertTriangle className="w-3 h-3 shrink-0" />
@@ -211,9 +211,9 @@ export function DashboardNotifications({
             size="sm"
             onClick={() => setFilter('payout')}
             className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
-              filter === 'payout' 
-                ? 'bg-[#2BB673] text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+              filter === 'payout'
+                ? 'bg-secondary text-white shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
             }`}
           >
             <DollarSign className="w-3 h-3 shrink-0" />
@@ -225,20 +225,20 @@ export function DashboardNotifications({
       <CardContent className="p-0">
         <ScrollAreaMaxHeight maxH={340}>
           {filteredNotifs.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="py-12 px-6 text-center flex flex-col items-center justify-center gap-3 bg-[#FBF8F3]/10"
+              className="py-12 px-6 text-center flex flex-col items-center justify-center gap-3 bg-muted/30"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-400">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border text-muted-foreground">
                 <Inbox className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-bold text-xs text-slate-700">Aucune alerte trouvée</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  {filter === 'late' 
-                    ? "Aucun retard de paiement n'est signalé sur vos cercles d'épargne actifs." 
-                    : filter === 'payout' 
+                <p className="font-bold text-xs text-foreground">Aucune alerte trouvée</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {filter === 'late'
+                    ? "Aucun retard de paiement n'est signalé sur vos cercles d'épargne actifs."
+                    : filter === 'payout'
                     ? "Aucun encaissement ou payout n'a encore été enregistré."
                     : "Votre historique d'alertes est vierge pour le moment."}
                 </p>
@@ -249,7 +249,7 @@ export function DashboardNotifications({
               variants={listVariants}
               initial="hidden"
               animate="visible"
-              className="divide-y divide-slate-100"
+              className="divide-y divide-border"
             >
               <AnimatePresence initial={false}>
                 {filteredNotifs.map((notif) => {
@@ -260,7 +260,7 @@ export function DashboardNotifications({
                       variants={itemVariants}
                       exit="exit"
                       layout
-                      className={`p-4 sm:p-5 flex gap-4 transition-colors relative border-l-4 ${style.bg} hover:bg-slate-50/50`}
+                      className={`p-4 sm:p-5 flex gap-4 transition-colors relative border-l-4 ${style.bg} hover:bg-muted/50`}
                     >
                       {/* Notification category indicator */}
                       <div className="shrink-0 mt-0.5">
@@ -275,18 +275,18 @@ export function DashboardNotifications({
                           <span className={`text-[11px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full ${style.badgeClass}`}>
                             {style.badgeText}
                           </span>
-                          <span className="text-[10px] font-medium text-slate-400">
-                            {notif.createdAt?.seconds 
-                              ? formatDistanceToNow(new Date(notif.createdAt.seconds * 1000), { addSuffix: true, locale: fr })
+                          <span className="text-[10px] font-medium text-muted-foreground">
+                            {notif.createdAt
+                              ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })
                               : "À l'instant"}
                           </span>
                         </div>
 
-                        <h4 className={`text-xs leading-snug mb-1 ${!notif.read ? 'font-black text-[#4B2E05]' : 'font-bold text-slate-700'}`}>
+                        <h4 className={`text-xs leading-snug mb-1 text-foreground ${!notif.read ? 'font-black' : 'font-bold'}`}>
                           {notif.title}
                         </h4>
-                        
-                        <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
                           {notif.message}
                         </p>
 
@@ -298,20 +298,20 @@ export function DashboardNotifications({
                               variant="outline"
                               size="sm"
                               onClick={() => handleActionClick(notif)}
-                              className="h-7 px-3 text-[10px] font-black uppercase tracking-wide border-[#E67E22]/30 text-[#E67E22] bg-[#E67E22]/5 hover:bg-[#E67E22] hover:text-white rounded-lg cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
+                              className="h-7 px-3 text-[10px] font-black uppercase tracking-wide border-danger/30 text-danger bg-danger/5 hover:bg-danger hover:text-white rounded-lg cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
                             >
                               <span>Régler ma cotisation</span>
                               <ArrowRight className="w-3 h-3" />
                             </Button>
                           )}
-                          
+
                           {/* System / normal click actions */}
                           {notif.type === 'payout' && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleActionClick(notif)}
-                              className="h-7 px-2 text-[10px] font-bold text-[#2BB673] hover:bg-[#2BB673]/10 rounded-lg cursor-pointer flex items-center gap-1"
+                              className="h-7 px-2 text-[10px] font-bold text-secondary hover:bg-secondary/10 rounded-lg cursor-pointer flex items-center gap-1"
                             >
                               <span>Voir le détail</span>
                             </Button>
@@ -323,7 +323,7 @@ export function DashboardNotifications({
                               variant="ghost"
                               size="sm"
                               onClick={() => markAsRead(notif.id)}
-                              className="h-7 px-2.5 text-[10px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer flex items-center gap-1 ml-auto"
+                              className="h-7 px-2.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer flex items-center gap-1 ml-auto"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>Lu</span>
@@ -335,7 +335,7 @@ export function DashboardNotifications({
                             variant="ghost"
                             size="icon"
                             onClick={() => deleteNotification(notif.id)}
-                            className="h-7 w-7 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 cursor-pointer ml-auto sm:ml-0"
+                            className="h-7 w-7 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger cursor-pointer ml-auto sm:ml-0"
                             title="Supprimer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -357,9 +357,9 @@ export function DashboardNotifications({
 // Simple custom inline scroll container wrapper to bypass external components restrictions
 function ScrollAreaMaxHeight({ maxH, children }: { maxH: number; children: React.ReactNode }) {
   return (
-    <div 
-      style={{ maxHeight: `${maxH}px` }} 
-      className="overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200"
+    <div
+      style={{ maxHeight: `${maxH}px` }}
+      className="overflow-y-auto scrollbar-thin scrollbar-thumb-border"
     >
       {children}
     </div>

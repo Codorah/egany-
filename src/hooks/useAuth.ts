@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import type { User } from '@supabase/supabase-js';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapProfileRow } from '@/lib/mappers';
 import { UserProfile } from '@/types';
 
 export function useAuth() {
@@ -10,50 +10,39 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null;
+    let profileChannel: ReturnType<typeof supabase.channel> | null = null;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-        unsubscribeProfile = null;
+    const loadProfile = async (uid: string) => {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
+      if (error) {
+        console.error('Profile fetch error:', error);
+        setLoading(false);
+        return;
+      }
+      setProfile(mapProfileRow(data));
+      setLoading(false);
+
+      // Real-time updates (equivalent of the previous Firestore onSnapshot),
+      // so wallet balance / reputation / role changes reflect live.
+      profileChannel = createChannel(`profile-${uid}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${uid}` },
+          (payload) => setProfile(mapProfileRow(payload.new))
+        )
+        .subscribe();
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+
+      if (profileChannel) {
+        supabase.removeChannel(profileChannel);
+        profileChannel = null;
       }
 
-      if (firebaseUser) {
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        
-        // Listen in real-time
-        unsubscribeProfile = onSnapshot(userRef, async (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            setProfile({
-              ...data,
-              walletBalance: data.walletBalance !== undefined ? data.walletBalance : 0
-            } as UserProfile);
-            setLoading(false);
-          } else {
-            // Create initial profile if it doesn't exist
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || 'Utilisateur',
-              photoURL: firebaseUser.photoURL || undefined,
-              reputationScore: 75, // Starting reputation can be 75 for fresh users
-              totalSaved: 0,
-              groupsJoined: 0,
-              createdAt: new Date().toISOString(),
-              role: firebaseUser.email === 'diditanael@gmail.com' ? 'admin' : 'user',
-              walletBalance: 0,
-            };
-            await setDoc(userRef, newProfile);
-            setProfile(newProfile);
-            setLoading(false);
-          }
-        }, (error) => {
-          console.error("Profile onSnapshot error:", error);
-          setLoading(false);
-        });
+      if (session?.user) {
+        loadProfile(session.user.id);
       } else {
         setProfile(null);
         setLoading(false);
@@ -61,10 +50,8 @@ export function useAuth() {
     });
 
     return () => {
-      unsubscribeAuth();
-      if (unsubscribeProfile) {
-        (unsubscribeProfile as any)();
-      }
+      authListener.subscription.unsubscribe();
+      if (profileChannel) supabase.removeChannel(profileChannel);
     };
   }, []);
 

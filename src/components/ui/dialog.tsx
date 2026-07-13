@@ -55,7 +55,7 @@ function DialogContent({
         className={cn(
           "fixed z-50 grid w-full gap-4 bg-popover p-5 text-sm text-popover-foreground shadow-2xl transition-all duration-200 outline-none",
           // Mobile: Bottom Sheet positioning
-          "bottom-0 left-0 right-0 top-auto translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none max-w-full pb-8 border-t border-slate-200 dark:border-slate-800",
+          "bottom-0 left-0 right-0 top-auto translate-x-0 translate-y-0 rounded-t-3xl rounded-b-none max-w-full pb-8 border-t border-border",
           "data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-full data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-full",
           // Desktop: Centered modal overrides
           "sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:max-w-md sm:border sm:ring-1 sm:ring-foreground/10 sm:pb-5",
@@ -65,7 +65,7 @@ function DialogContent({
         {...props}
       >
         {/* Mobile Bottom Sheet drag handle */}
-        <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-1.5 sm:hidden shrink-0" />
+        <div className="w-12 h-1 bg-border rounded-full mx-auto mb-1.5 sm:hidden shrink-0" />
         
         {children}
         {showCloseButton && (

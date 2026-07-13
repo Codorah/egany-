@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc, getDoc } from 'firebase/firestore';
-import { Group, UserProfile, Contribution } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { mapContributionRow } from '@/lib/mappers';
+import { Group, UserProfile } from '@/types';
 import { toast } from 'sonner';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { calculateLatePenalty } from '@/lib/penalties';
@@ -18,36 +18,33 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
         if (group.status !== 'active') continue;
 
         try {
-          const contributionsRef = collection(db, 'groups', group.id, 'contributions');
-          const q = query(
-            contributionsRef,
-            where('userId', '==', profile.uid)
-          );
-          
-          const snapshot = await getDocs(q);
-          const userConts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Contribution[];
+          const { data: contRows, error: contError } = await supabase
+            .from('contributions')
+            .select('*')
+            .eq('group_id', group.id)
+            .eq('user_id', profile.uid);
+          if (contError) throw contError;
 
-          // Filter for pending or late contributions that need auto-debit
-          const pendingConts = userConts.filter(c => c.status === 'pending' || c.status === 'late');
+          const userConts = (contRows ?? []).map(mapContributionRow);
+          const pendingConts = userConts.filter((c) => c.status === 'pending' || c.status === 'late');
 
           for (const cont of pendingConts) {
-            // Avoid duplicate processing in same run
             if (processingRef.current[cont.id]) continue;
             processingRef.current[cont.id] = true;
 
             try {
-              // Fetch fresh user profile to avoid race condition with wallet balance
-              const userRef = doc(db, 'users', profile.uid);
-              const freshUserSnap = await getDoc(userRef);
-              if (!freshUserSnap.exists()) {
+              // Fetch fresh balance to avoid a race condition with wallet balance
+              const { data: freshProfile, error: profileError } = await supabase
+                .from('profiles')
+                .select('wallet_balance')
+                .eq('id', profile.uid)
+                .single();
+              if (profileError || !freshProfile) {
                 processingRef.current[cont.id] = false;
                 continue;
               }
-              const freshUser = freshUserSnap.data() as UserProfile;
-              const currentBalance = freshUser.walletBalance !== undefined ? freshUser.walletBalance : 0;
+
+              const currentBalance = Number(freshProfile.wallet_balance) || 0;
               const pendingPenalty = cont.penaltyStatus === 'pending' ? (cont.penaltyApplied || 0) : 0;
               const totalDue = cont.amount + pendingPenalty;
 
@@ -55,7 +52,6 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 const idempotencyKey = `debit_${cont.id}`;
                 const penaltyNote = pendingPenalty > 0 ? ` (dont ${pendingPenalty.toLocaleString()} ${group.currency} de pénalité de retard)` : '';
 
-                // Execute safe double-entry ledger financial transaction
                 const ledgerResult = await executeFinancialTransaction({
                   idempotencyKey,
                   userId: profile.uid,
@@ -65,10 +61,7 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   actionType: 'contribution_payment',
                   debitAccount: `user_wallet:${profile.uid}`,
                   creditAccount: `tontine_group:${group.id}`,
-                  metadata: {
-                    groupId: group.id,
-                    contributionId: cont.id
-                  }
+                  metadata: { groupId: group.id, contributionId: cont.id }
                 });
 
                 if (!ledgerResult.success) {
@@ -76,24 +69,19 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 }
 
                 if (pendingPenalty > 0) {
-                  await updateDoc(doc(db, 'groups', group.id, 'contributions', cont.id), {
-                    penaltyStatus: 'paid'
-                  });
+                  await supabase.from('contributions').update({ penalty_status: 'paid' }).eq('id', cont.id);
                 }
 
-                // Create wallet transaction record for display
-                await addDoc(collection(db, 'users', profile.uid, 'walletTransactions'), {
-                  userId: profile.uid,
+                await supabase.from('wallet_transactions').insert({
+                  user_id: profile.uid,
                   amount: -totalDue,
                   type: 'contribution_debit',
                   description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})${penaltyNote}`,
-                  date: new Date().toISOString(),
                   status: 'completed',
-                  paymentMethod: 'wallet',
+                  payment_method: 'wallet',
                   reference: ledgerResult.transactionId || cont.id
                 });
 
-                // 4. Create User Notification
                 await notifyUser({
                   userId: profile.uid,
                   title: `Cotisation prélevée - ${group.name}`,
@@ -102,55 +90,43 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   link: `/group/${group.id}`
                 });
 
-                // 5. Create Group chat/community announcement
-                await addDoc(collection(db, 'groups', group.id, 'messages'), {
-                  groupId: group.id,
-                  userId: 'system',
-                  userName: 'Système Tontine',
-                  userPhoto: '',
-                  content: `📢 ${profile.displayName} a réglé sa cotisation de ${totalDue.toLocaleString()} ${group.currency} pour la période ${cont.period || ''} par prélèvement automatique !`,
-                  createdAt: serverTimestamp()
+                await supabase.from('messages').insert({
+                  group_id: group.id,
+                  user_id: null,
+                  user_name: 'Système Tontine',
+                  is_system: true,
+                  content: `📢 ${profile.displayName} a réglé sa cotisation de ${totalDue.toLocaleString()} ${group.currency} pour la période ${cont.period || ''} par prélèvement automatique !`
                 });
 
                 toast.success(`Cotisation prélevée automatiquement pour ${group.name} !`);
-              } else {
-                // Insufficient balance handling
-                // Check if we already alerted for this specific contribution
-                const contData = cont as any;
-                if (!contData.notifiedInsufficient) {
-                  const { penaltyAmount } = calculateLatePenalty(cont, group);
+              } else if (!cont.notifiedInsufficient) {
+                const { penaltyAmount } = calculateLatePenalty(cont, group);
 
-                  // Transition to 'late' if it was 'pending', flag it, and apply the late penalty (if configured)
-                  const contRef = doc(db, 'groups', group.id, 'contributions', cont.id);
-                  await updateDoc(contRef, {
-                    status: 'late',
-                    notifiedInsufficient: true,
-                    ...(penaltyAmount > 0 ? { penaltyApplied: penaltyAmount, penaltyStatus: 'pending' } : {})
-                  });
+                await supabase.from('contributions').update({
+                  status: 'late',
+                  notified_insufficient: true,
+                  ...(penaltyAmount > 0 ? { penalty_applied: penaltyAmount, penalty_status: 'pending' } : {})
+                }).eq('id', cont.id);
 
-                  const penaltyMsg = penaltyAmount > 0 ? ` Une pénalité de retard de ${penaltyAmount.toLocaleString()} ${group.currency} a été appliquée.` : '';
+                const penaltyMsg = penaltyAmount > 0 ? ` Une pénalité de retard de ${penaltyAmount.toLocaleString()} ${group.currency} a été appliquée.` : '';
 
-                  // Create Critical User Notification
-                  await notifyUser({
-                    userId: profile.uid,
-                    title: `⚠️ Solde Insuffisant - ${group.name}`,
-                    message: `Le prélèvement de ${cont.amount.toLocaleString()} ${group.currency} a échoué car le solde de votre portefeuille est insuffisant (${currentBalance.toLocaleString()} ${group.currency}). Veuillez recharger.${penaltyMsg}`,
-                    type: 'reminder',
-                    link: `/profile`
-                  });
+                await notifyUser({
+                  userId: profile.uid,
+                  title: `⚠️ Solde Insuffisant - ${group.name}`,
+                  message: `Le prélèvement de ${cont.amount.toLocaleString()} ${group.currency} a échoué car le solde de votre portefeuille est insuffisant (${currentBalance.toLocaleString()} ${group.currency}). Veuillez recharger.${penaltyMsg}`,
+                  type: 'reminder',
+                  link: `/profile`
+                });
 
-                  // Post warning to Group Community/Chat
-                  await addDoc(collection(db, 'groups', group.id, 'messages'), {
-                    groupId: group.id,
-                    userId: 'system',
-                    userName: 'Système Tontine',
-                    userPhoto: '',
-                    content: `⚠️ Alerte : Le prélèvement automatique de ${cont.amount.toLocaleString()} ${group.currency} de ${profile.displayName} a échoué (solde de portefeuille insuffisant).${penaltyMsg}`,
-                    createdAt: serverTimestamp()
-                  });
+                await supabase.from('messages').insert({
+                  group_id: group.id,
+                  user_id: null,
+                  user_name: 'Système Tontine',
+                  is_system: true,
+                  content: `⚠️ Alerte : Le prélèvement automatique de ${cont.amount.toLocaleString()} ${group.currency} de ${profile.displayName} a échoué (solde de portefeuille insuffisant).${penaltyMsg}`
+                });
 
-                  toast.error(`Solde insuffisant pour régler la cotisation de ${group.name}.${penaltyMsg}`);
-                }
+                toast.error(`Solde insuffisant pour régler la cotisation de ${group.name}.${penaltyMsg}`);
               }
             } catch (innerError) {
               console.error(`Error processing auto-debit for contribution ${cont.id}:`, innerError);
@@ -164,10 +140,7 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
       }
     };
 
-    // Run once on load/update
     runAutoDebitCheck();
-
-    // Set interval to check periodically (e.g. every 30 seconds)
     const interval = setInterval(runAutoDebitCheck, 30000);
     return () => clearInterval(interval);
   }, [profile, groups]);

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 import { Group, UserProfile } from '@/types';
-import { requestToJoinGroup } from '@/lib/groups';
+import { requestToJoinGroup, hydrateGroups } from '@/lib/groups';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,12 +25,14 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
   useEffect(() => {
     const fetchPublicGroups = async () => {
       try {
-        const q = query(collection(db, 'groups'), where('isPrivate', '==', false));
-        const snapshot = await getDocs(q);
-        const publicGroups = snapshot.docs
-          .map((d) => ({ id: d.id, ...d.data() } as Group))
-          .filter((g) => g.status === 'active' && !g.members.includes(user.uid));
-        setGroups(publicGroups);
+        const { data: groupRows, error } = await supabase
+          .from('groups')
+          .select('*')
+          .eq('is_private', false)
+          .eq('status', 'active');
+        if (error) throw error;
+        const hydrated = await hydrateGroups(groupRows ?? []);
+        setGroups(hydrated.filter((g) => !g.members.includes(user.uid)));
       } catch (error) {
         console.error('Error searching public groups:', error);
         toast.error('Erreur lors de la recherche de cercles.');

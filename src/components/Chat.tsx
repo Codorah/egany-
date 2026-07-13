@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, limit } from 'firebase/firestore';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapMessageRow } from '@/lib/mappers';
 import { UserProfile, Message } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,31 +21,39 @@ export function Chat({ groupId, user }: ChatProps) {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const q = query(
-      collection(db, 'groups', groupId, 'messages'),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
+  const fetchMessages = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: true })
+      .limit(100);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Message));
-      setMessages(msgs);
+    if (error) {
+      console.error('Error fetching messages:', error);
       setLoading(false);
-      
-      // Scroll to bottom
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    });
-
-    return () => unsubscribe();
+      return;
+    }
+    setMessages((data ?? []).map(mapMessageRow));
+    setLoading(false);
+    setTimeout(() => {
+      if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }, [groupId]);
+
+  useEffect(() => {
+    fetchMessages();
+
+    const channel = createChannel(`messages-${groupId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `group_id=eq.${groupId}` },
+        () => fetchMessages()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [groupId, fetchMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,14 +63,14 @@ export function Chat({ groupId, user }: ChatProps) {
     setNewMessage('');
 
     try {
-      await addDoc(collection(db, 'groups', groupId, 'messages'), {
-        groupId,
-        userId: user.uid,
-        userName: user.displayName,
-        userPhoto: user.photoURL || '',
+      const { error } = await supabase.from('messages').insert({
+        group_id: groupId,
+        user_id: user.uid,
+        user_name: user.displayName,
+        user_photo: user.photoURL || '',
         content: messageContent,
-        createdAt: serverTimestamp(),
       });
+      if (error) throw error;
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -99,7 +107,7 @@ export function Chat({ groupId, user }: ChatProps) {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium">{msg.userName}</span>
                     <span className="text-[10px] text-muted-foreground">
-                      {msg.createdAt && format(new Date((msg.createdAt as any).seconds * 1000), 'HH:mm', { locale: fr })}
+                      {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     </span>
                   </div>
                   <div

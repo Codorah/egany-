@@ -1,25 +1,15 @@
-import { db } from './firebase';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  addDoc, 
-  writeBatch, 
-  runTransaction, 
-  getDocs, 
-  query, 
-  where 
-} from 'firebase/firestore';
+import { supabase } from './supabase';
 
+// Kept for AdminDashboard.tsx (not yet migrated) which still casts Firestore-
+// shaped ledger/audit rows to these shapes for display.
 export interface LedgerEntry {
   id: string;
   transactionId: string;
   idempotencyKey: string;
-  account: string;      // e.g. "user_wallet:UID", "psp_paydunya", "tontine_group:GID", "system_fees"
-  counterparty: string;  // e.g. "psp_paydunya", "user_wallet:UID", etc.
+  account: string;
+  counterparty: string;
   type: 'debit' | 'credit';
-  amount: number;       // Always absolute positive value
+  amount: number;
   currency: string;
   description: string;
   createdAt: string;
@@ -28,7 +18,7 @@ export interface LedgerEntry {
 export interface AuditLog {
   id: string;
   userId: string;
-  action: string;       // e.g. "wallet_recharge", "contribution_payment", "payout_disbursement", "admin_adjustment", "reconciliation"
+  action: string;
   details: string;
   ip: string;
   device: string;
@@ -37,35 +27,24 @@ export interface AuditLog {
   idempotencyKey?: string;
 }
 
-// Utility to get user agent details
 export function getDeviceInfo() {
   if (typeof window === 'undefined') {
     return { device: 'Server Environment', ip: '127.0.0.1' };
   }
   const ua = window.navigator.userAgent;
-  let device = "Navigateur Web";
-  if (ua.includes("Mobi")) {
-    device = "Appareil Mobile";
-  }
-  if (ua.includes("Android")) {
-    device = "Android App Core";
-  } else if (ua.includes("iPhone") || ua.includes("iPad")) {
-    device = "iOS App Core";
-  }
-  return {
-    device: `${device} (${window.navigator.platform || 'Unknown OS'})`,
-    ip: '197.221.34.8' // Captured or simulated standard West-African IP prefix (e.g. Senegal Orange DSL)
-  };
+  let device = 'Navigateur Web';
+  if (ua.includes('Mobi')) device = 'Appareil Mobile';
+  if (ua.includes('Android')) device = 'Android App Core';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) device = 'iOS App Core';
+  return { device: `${device} (${window.navigator.platform || 'Unknown OS'})`, ip: '197.221.34.8' };
 }
 
 /**
- * Executes a double-entry financial transaction on Firestore with strict idempotency.
- * 
- * In double-entry bookkeeping:
- * 1. For every Debit entry there is an equal Credit entry.
- * 2. Balance = sum(Credits) - sum(Debits)
- * 3. Writes are atomic via `runTransaction`.
- * 4. Idempotency is enforced by registering the key in a dedicated `idempotencyKeys` collection.
+ * Double-entry financial transaction, atomic and idempotent — the actual
+ * logic now lives in the Postgres function execute_financial_transaction
+ * (supabase/migrations/0001_init.sql), which is atomic by default (no manual
+ * transaction orchestration needed client-side, unlike the old Firestore
+ * runTransaction version).
  */
 export async function executeFinancialTransaction(params: {
   idempotencyKey: string;
@@ -74,203 +53,71 @@ export async function executeFinancialTransaction(params: {
   currency: string;
   description: string;
   actionType: 'wallet_recharge' | 'contribution_payment' | 'payout_disbursement' | 'admin_adjustment' | 'wallet_withdrawal';
-  debitAccount: string;    // e.g. "psp_paydunya" or "user_wallet:UID"
-  creditAccount: string;   // e.g. "user_wallet:UID" or "tontine_group:GID"
-  metadata?: any;
+  debitAccount: string;
+  creditAccount: string;
+  metadata?: { contributionId?: string; groupId?: string };
 }): Promise<{ success: boolean; message: string; transactionId?: string }> {
-  const { idempotencyKey, userId, amount, currency, description, actionType, debitAccount, creditAccount, metadata } = params;
-  
-  if (amount <= 0) {
-    return { success: false, message: "Le montant doit être strictement supérieur à zéro." };
+  const { data, error } = await supabase.rpc('execute_financial_transaction', {
+    p_idempotency_key: params.idempotencyKey,
+    p_user_id: params.userId,
+    p_amount: params.amount,
+    p_currency: params.currency,
+    p_description: params.description,
+    p_action_type: params.actionType,
+    p_debit_account: params.debitAccount,
+    p_credit_account: params.creditAccount,
+    p_contribution_id: params.metadata?.contributionId ?? null,
+    p_group_id: params.metadata?.groupId ?? null,
+  });
+
+  if (error) {
+    console.error('executeFinancialTransaction RPC error:', error);
+    return { success: false, message: error.message };
   }
+  return data as { success: boolean; message: string; transactionId?: string };
+}
 
-  const { ip, device } = getDeviceInfo();
-  const transactionId = crypto.randomUUID ? crypto.randomUUID() : `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+export interface PinVerificationResult {
+  ok: boolean;
+  locked: boolean;
+  remainingAttempts?: number;
+  lockedUntil?: string;
+  message: string;
+}
 
-  try {
-    const result = await runTransaction(db, async (transaction) => {
-      // 1. Strict Idempotency Check
-      const idempotencyRef = doc(db, 'idempotencyKeys', idempotencyKey);
-      const idempotencySnap = await transaction.get(idempotencyRef);
-      
-      if (idempotencySnap.exists()) {
-        const existingData = idempotencySnap.data();
-        return {
-          success: true,
-          message: "Transaction déjà exécutée (Idempotent).",
-          transactionId: existingData.transactionId
-        };
-      }
+export async function verifyUserPin(userId: string, enteredPin: string): Promise<PinVerificationResult> {
+  const { data, error } = await supabase.rpc('verify_user_pin', {
+    p_user_id: userId,
+    p_entered_pin: enteredPin,
+  });
 
-      // 2. Read current user state to update balance correctly
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await transaction.get(userRef);
-      if (!userSnap.exists()) {
-        throw new Error("L'utilisateur spécifié n'existe pas.");
-      }
-      
-      const userData = userSnap.data();
-      const currentBalance = userData.walletBalance !== undefined ? userData.walletBalance : 0;
-
-      // 3. Balance sufficiency guard
-      let newBalance = currentBalance;
-      if (debitAccount === `user_wallet:${userId}`) {
-        if (currentBalance < amount) {
-          throw new Error("Solde insuffisant dans votre portefeuille.");
-        }
-        newBalance = currentBalance - amount;
-      } else if (creditAccount === `user_wallet:${userId}`) {
-        newBalance = currentBalance + amount;
-      }
-
-      // 4. Record Double-Entry Bookkeeping Ledger
-      // Entry A: Debit
-      const debitEntryId = `${transactionId}_dr`;
-      const debitEntryRef = doc(db, 'doubleEntryLedger', debitEntryId);
-      const debitEntry: LedgerEntry = {
-        id: debitEntryId,
-        transactionId,
-        idempotencyKey,
-        account: debitAccount,
-        counterparty: creditAccount,
-        type: 'debit',
-        amount,
-        currency,
-        description,
-        createdAt: new Date().toISOString()
-      };
-
-      // Entry B: Credit
-      const creditEntryId = `${transactionId}_cr`;
-      const creditEntryRef = doc(db, 'doubleEntryLedger', creditEntryId);
-      const creditEntry: LedgerEntry = {
-        id: creditEntryId,
-        transactionId,
-        idempotencyKey,
-        account: creditAccount,
-        counterparty: debitAccount,
-        type: 'credit',
-        amount,
-        currency,
-        description,
-        createdAt: new Date().toISOString()
-      };
-
-      // 5. Update user profile walletBalance safely inside the transaction
-      transaction.update(userRef, {
-        walletBalance: newBalance,
-        totalSaved: actionType === 'contribution_payment' ? (userData.totalSaved || 0) + amount : (userData.totalSaved || 0),
-        updatedAt: new Date().toISOString()
-      });
-
-      // 6. Save ledger entries
-      transaction.set(debitEntryRef, debitEntry);
-      transaction.set(creditEntryRef, creditEntry);
-
-      // 7. Register Idempotency Key
-      transaction.set(idempotencyRef, {
-        idempotencyKey,
-        transactionId,
-        createdAt: new Date().toISOString(),
-        userId,
-        amount,
-        actionType
-      });
-
-      // 8. Create Immutable Audit Log
-      const auditLogId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-      const auditLogRef = doc(db, 'auditLogs', auditLogId);
-      const auditLog: AuditLog = {
-        id: auditLogId,
-        userId,
-        action: actionType,
-        details: `${description} | Double-entrée : Débit [${debitAccount}] / Crédit [${creditAccount}] de ${amount} ${currency}`,
-        ip,
-        device,
-        timestamp: new Date().toISOString(),
-        status: 'success',
-        idempotencyKey
-      };
-      transaction.set(auditLogRef, auditLog);
-
-      // If there are other documents to update, handle them
-      if (metadata) {
-        if (metadata.contributionId && metadata.groupId) {
-          const contRef = doc(db, 'groups', metadata.groupId, 'contributions', metadata.contributionId);
-          transaction.update(contRef, {
-            status: 'paid',
-            paymentMethod: 'wallet',
-            debitedAt: new Date().toISOString(),
-            idempotencyKey
-          });
-        }
-        if (metadata.groupId && metadata.payoutId && metadata.isPayoutDisbursed) {
-          const groupRef = doc(db, 'groups', metadata.groupId);
-          transaction.update(groupRef, {
-            currentPayoutIndex: metadata.nextPayoutIndex,
-            nextPayoutDate: metadata.nextPayoutDate,
-            updatedAt: new Date().toISOString()
-          });
-        }
-      }
-
-      return {
-        success: true,
-        message: "Transaction financière approuvée et enregistrée.",
-        transactionId
-      };
-    });
-
-    return result;
-
-  } catch (error: any) {
-    console.error("Double-entry transaction failure:", error);
-    
-    // Log failure in audit log outside transaction
-    try {
-      const auditLogId = `audit_fail_${Date.now()}`;
-      await setDoc(doc(db, 'auditLogs', auditLogId), {
-        id: auditLogId,
-        userId,
-        action: actionType,
-        details: `ÉCHEC : ${description} | Erreur: ${error.message || error}`,
-        ip,
-        device,
-        timestamp: new Date().toISOString(),
-        status: 'failure',
-        idempotencyKey
-      });
-    } catch (logErr) {
-      console.error("Failed to log audit failure:", logErr);
-    }
-
-    return {
-      success: false,
-      message: error.message || "Erreur critique de comptabilité double-entrée."
-    };
+  if (error) {
+    console.error('verifyUserPin RPC error:', error);
+    return { ok: false, locked: false, message: 'Erreur lors de la vérification du code PIN.' };
   }
+  return data as PinVerificationResult;
 }
 
 /**
- * Nightly Reconciliation Routine (Can be triggered manually by administrator)
- * Calculates the absolute mathematical integrity of the system:
- * 1. For each user, fetches all Credit & Debit ledger entries from doubleEntryLedger.
- * 2. Compares Sum(Credits) - Sum(Debits) against their actual user profile `walletBalance`.
- * 3. Compares internal totals with external PSP simulated reports.
- * 4. Generates a discrepancy score.
+ * Reconciliation is a plain read + admin-gated write (no cross-table
+ * atomicity needed), so unlike the two functions above it runs as regular
+ * client queries rather than a SECURITY DEFINER RPC — RLS's is_admin() check
+ * on reconciliation_reports/reconciliation_report_lines/audit_logs already
+ * protects it correctly for a genuinely admin-only caller.
  */
 export async function performFullSystemReconciliation() {
   const { ip, device } = getDeviceInfo();
-  const reportId = `recon_${Date.now()}`;
-  
-  try {
-    // 1. Fetch all users
-    const usersSnap = await getDocs(collection(db, 'users'));
-    const users = usersSnap.docs.map(d => d.data());
 
-    // 2. Fetch all ledger entries
-    const ledgerSnap = await getDocs(collection(db, 'doubleEntryLedger'));
-    const ledgerEntries = ledgerSnap.docs.map(d => d.data() as LedgerEntry);
+  try {
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, display_name, email, wallet_balance');
+    if (profilesError) throw profilesError;
+
+    const { data: ledgerEntries, error: ledgerError } = await supabase
+      .from('double_entry_ledger')
+      .select('account, type, amount');
+    if (ledgerError) throw ledgerError;
 
     const reconciliations: Array<{
       userId: string;
@@ -283,145 +130,84 @@ export async function performFullSystemReconciliation() {
 
     let totalDiscrepancies = 0;
 
-    for (const u of users) {
-      const uId = u.uid;
-      const actualBalance = u.walletBalance || 0;
+    for (const p of profiles ?? []) {
+      const walletAccount = `user_wallet:${p.id}`;
+      const credits = (ledgerEntries ?? [])
+        .filter((e) => e.account === walletAccount && e.type === 'credit')
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+      const debits = (ledgerEntries ?? [])
+        .filter((e) => e.account === walletAccount && e.type === 'debit')
+        .reduce((sum, e) => sum + Number(e.amount), 0);
 
-      // Filter all debits and credits of this user wallet
-      const userWalletAccount = `user_wallet:${uId}`;
-      const userCredits = ledgerEntries
-        .filter(entry => entry.account === userWalletAccount && entry.type === 'credit')
-        .reduce((sum, entry) => sum + entry.amount, 0);
-        
-      const userDebits = ledgerEntries
-        .filter(entry => entry.account === userWalletAccount && entry.type === 'debit')
-        .reduce((sum, entry) => sum + entry.amount, 0);
-
-      const calculatedBalance = userCredits - userDebits;
+      const calculatedBalance = credits - debits;
+      const actualBalance = Number(p.wallet_balance) || 0;
       const discrepancy = actualBalance - calculatedBalance;
-
-      if (discrepancy !== 0) {
-        totalDiscrepancies += Math.abs(discrepancy);
-      }
+      if (discrepancy !== 0) totalDiscrepancies += Math.abs(discrepancy);
 
       reconciliations.push({
-        userId: uId,
-        displayName: u.displayName || u.email,
+        userId: p.id,
+        displayName: p.display_name || p.email,
         currentBalance: actualBalance,
         calculatedBalance,
         discrepancy,
-        status: discrepancy === 0 ? 'OK' : 'DISCREPANCY'
+        status: discrepancy === 0 ? 'OK' : 'DISCREPANCY',
       });
     }
 
-    const reconciliationReport = {
-      id: reportId,
-      timestamp: new Date().toISOString(),
-      totalUsersChecked: users.length,
-      totalLedgerEntriesChecked: ledgerEntries.length,
-      totalDiscrepancies,
-      reconciliations,
-      status: totalDiscrepancies === 0 ? 'fully_reconciled' : 'discrepancy_alert',
-      executedBy: 'Nightly Scheduler / Admin Panel'
-    };
+    const status = totalDiscrepancies === 0 ? 'fully_reconciled' : 'discrepancy_alert';
 
-    // Save report to firestore for review
-    await setDoc(doc(db, 'reconciliationReports', reportId), reconciliationReport);
+    const { data: report, error: reportError } = await supabase
+      .from('reconciliation_reports')
+      .insert({
+        total_users_checked: profiles?.length ?? 0,
+        total_ledger_entries_checked: ledgerEntries?.length ?? 0,
+        total_discrepancies: totalDiscrepancies,
+        status,
+        executed_by: 'Admin Panel',
+      })
+      .select()
+      .single();
+    if (reportError) throw reportError;
 
-    // Save immutable audit log
-    await addDoc(collection(db, 'auditLogs'), {
-      userId: 'system',
+    if (reconciliations.length > 0) {
+      const { error: linesError } = await supabase.from('reconciliation_report_lines').insert(
+        reconciliations.map((r) => ({
+          report_id: report.id,
+          user_id: r.userId,
+          display_name: r.displayName,
+          current_balance: r.currentBalance,
+          calculated_balance: r.calculatedBalance,
+          discrepancy: r.discrepancy,
+          status: r.status,
+        }))
+      );
+      if (linesError) throw linesError;
+    }
+
+    await supabase.from('audit_logs').insert({
+      user_id: null,
       action: 'reconciliation',
-      details: `Réconciliation automatique terminée. Statut: ${reconciliationReport.status.toUpperCase()}. Écarts totaux: ${totalDiscrepancies} FCFA.`,
+      details: `Réconciliation automatique terminée. Statut: ${status.toUpperCase()}. Écarts totaux: ${totalDiscrepancies} FCFA.`,
       ip,
       device,
-      timestamp: new Date().toISOString(),
-      status: 'success'
+      status: 'success',
     });
 
     return {
       success: true,
-      report: reconciliationReport
+      report: {
+        id: report.id,
+        timestamp: report.timestamp,
+        totalUsersChecked: report.total_users_checked,
+        totalLedgerEntriesChecked: report.total_ledger_entries_checked,
+        totalDiscrepancies: report.total_discrepancies,
+        reconciliations,
+        status: report.status,
+        executedBy: report.executed_by,
+      },
     };
-
   } catch (error: any) {
-    console.error("Reconciliation error:", error);
-    return {
-      success: false,
-      message: error.message || "La réconciliation a échoué."
-    };
-  }
-}
-
-export interface PinVerificationResult {
-  ok: boolean;
-  locked: boolean;
-  remainingAttempts?: number;
-  lockedUntil?: string;
-  message: string;
-}
-
-const MAX_PIN_ATTEMPTS = 5;
-const PIN_LOCKOUT_DURATION_MS = 15 * 60 * 1000;
-
-/**
- * High-Security PIN validation.
- * Users can set a withdrawal PIN in their profile.
- * Every withdrawal/payout/transfer validates this 4-digit PIN.
- * Locks out further attempts for 15 minutes after 5 consecutive failures.
- */
-export async function verifyUserPin(userId: string, enteredPin: string): Promise<PinVerificationResult> {
-  const userRef = doc(db, 'users', userId);
-  try {
-    return await runTransaction(db, async (transaction) => {
-      const userSnap = await transaction.get(userRef);
-      if (!userSnap.exists()) {
-        return { ok: false, locked: false, message: "Utilisateur introuvable." };
-      }
-
-      const data = userSnap.data();
-      const now = Date.now();
-      const lockedUntilMs = data.pinLockedUntil ? new Date(data.pinLockedUntil).getTime() : 0;
-
-      if (lockedUntilMs > now) {
-        return {
-          ok: false,
-          locked: true,
-          lockedUntil: data.pinLockedUntil,
-          message: `Trop de tentatives échouées. Réessayez après ${new Date(lockedUntilMs).toLocaleTimeString('fr-FR')}.`
-        };
-      }
-
-      // Default PIN is "0000" for test/demo ease if none is configured
-      const storedPin = data.securityPin || '0000';
-      const isCorrect = storedPin === enteredPin;
-
-      if (isCorrect) {
-        transaction.update(userRef, { pinFailedAttempts: 0, pinLockedUntil: null });
-        return { ok: true, locked: false, message: "Code PIN valide." };
-      }
-
-      const attempts = (data.pinFailedAttempts || 0) + 1;
-      const willLock = attempts >= MAX_PIN_ATTEMPTS;
-      const lockedUntil = willLock ? new Date(now + PIN_LOCKOUT_DURATION_MS).toISOString() : null;
-
-      transaction.update(userRef, {
-        pinFailedAttempts: willLock ? 0 : attempts,
-        pinLockedUntil: lockedUntil
-      });
-
-      return {
-        ok: false,
-        locked: willLock,
-        remainingAttempts: willLock ? 0 : MAX_PIN_ATTEMPTS - attempts,
-        lockedUntil: lockedUntil || undefined,
-        message: willLock
-          ? "Trop de tentatives incorrectes. Les retraits sont bloqués pendant 15 minutes."
-          : `Code PIN incorrect. ${MAX_PIN_ATTEMPTS - attempts} tentative(s) restante(s).`
-      };
-    });
-  } catch (err) {
-    console.error("PIN verification error:", err);
-    return { ok: false, locked: false, message: "Erreur lors de la vérification du code PIN." };
+    console.error('Reconciliation error:', error);
+    return { success: false, message: error.message || 'La réconciliation a échoué.' };
   }
 }

@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, getDocs, doc, updateDoc, addDoc, serverTimestamp, onSnapshot, orderBy, where } from 'firebase/firestore';
-import { Group, UserProfile, Contribution } from '@/types';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapContributionRow, mapPayoutRow, mapProfileRow } from '@/lib/mappers';
+import { Group, UserProfile, Contribution, Payout } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search, Wallet, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContributionsManagerProps {
   group: Group;
@@ -20,8 +24,10 @@ interface ContributionsManagerProps {
 }
 
 export function ContributionsManager({ group, user, onBack }: ContributionsManagerProps) {
+  const { t } = useLanguage();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<UserProfile[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -29,119 +35,127 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
 
   useEffect(() => {
     const fetchMembers = async () => {
-      if (!isManager) return;
-      try {
-        const membersData: UserProfile[] = [];
-        for (const uid of group.members) {
-          const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
-          if (!userDoc.empty) {
-            membersData.push(userDoc.docs[0].data() as UserProfile);
-          }
-        }
-        setMembers(membersData);
-      } catch (error) {
+      if (!isManager || group.members.length === 0) return;
+      const { data, error } = await supabase.from('profiles').select('*').in('id', group.members);
+      if (error) {
         console.error("Error fetching members:", error);
+        return;
       }
+      setMembers((data ?? []).map(mapProfileRow));
     };
 
     fetchMembers();
 
-    let q = query(
-      collection(db, 'groups', group.id, 'contributions'),
-      orderBy('date', 'desc')
-    );
-
-    if (!isManager) {
-      q = query(
-        collection(db, 'groups', group.id, 'contributions'),
-        where('userId', '==', user.uid),
-        orderBy('date', 'desc')
-      );
-    }
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const contributionsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Contribution));
-      setContributions(contributionsData);
+    const fetchContributions = async () => {
+      let queryBuilder = supabase.from('contributions').select('*').eq('group_id', group.id);
+      if (!isManager) queryBuilder = queryBuilder.eq('user_id', user.uid);
+      const { data, error } = await queryBuilder.order('date', { ascending: false });
+      if (error) {
+        console.error("Error fetching contributions:", error);
+        setLoading(false);
+        return;
+      }
+      setContributions((data ?? []).map(mapContributionRow));
       setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchContributions();
+
+    const channel = createChannel(`contributions-${group.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contributions', filter: `group_id=eq.${group.id}` },
+        () => fetchContributions()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [group.id, group.members, isManager, user.uid]);
+
+  useEffect(() => {
+    if (!isManager) return;
+
+    const fetchPayouts = async () => {
+      const { data, error } = await supabase.from('payouts').select('*').eq('group_id', group.id);
+      if (error) {
+        console.error("Error fetching payouts:", error);
+        return;
+      }
+      setPayouts((data ?? []).map(mapPayoutRow));
+    };
+
+    fetchPayouts();
+
+    const channel = createChannel(`payouts-${group.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payouts', filter: `group_id=eq.${group.id}` }, () => fetchPayouts())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [group.id, isManager]);
 
   const handleUpdateStatus = async (contributionId: string, newStatus: 'paid' | 'pending' | 'late' | 'pending_approval') => {
     try {
-      await updateDoc(doc(db, 'groups', group.id, 'contributions', contributionId), {
-        status: newStatus,
-        updatedAt: serverTimestamp()
-      });
-      toast.success("Statut mis à jour !");
+      const { error } = await supabase.from('contributions').update({ status: newStatus }).eq('id', contributionId);
+      if (error) throw error;
+      toast.success(t('status_updated'));
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Erreur lors de la mise à jour.");
+      toast.error(t('status_update_error'));
     }
   };
 
   const handleSubmitProof = async (contributionId: string, reference: string) => {
     try {
-      await updateDoc(doc(db, 'groups', group.id, 'contributions', contributionId), {
+      const { error } = await supabase.from('contributions').update({
         status: 'pending_approval',
-        proofOfPayment: {
-          reference,
-          submittedAt: new Date().toISOString()
-        },
-        updatedAt: serverTimestamp()
-      });
-      toast.success("Preuve de paiement soumise ! En attente de validation.");
+        proof_reference: reference,
+        proof_submitted_at: new Date().toISOString()
+      }).eq('id', contributionId);
+      if (error) throw error;
+      toast.success(t('proof_submitted'));
     } catch (error) {
       console.error("Error submitting proof:", error);
-      toast.error("Erreur lors de la soumission.");
+      toast.error(t('error_submitting'));
     }
   };
 
   const handleCreateContribution = async (userId: string, userName: string, userEmail?: string) => {
     try {
-      const contributionData = {
-        groupId: group.id,
-        userId,
-        userName,
-        userEmail: userEmail || '',
+      const { error } = await supabase.from('contributions').insert({
+        group_id: group.id,
+        user_id: userId,
+        user_name: userName,
+        user_email: userEmail || '',
         amount: group.contributionAmount,
         status: 'pending',
         date: new Date().toISOString(),
-        period: formatPeriod(new Date()),
-        createdAt: serverTimestamp()
-      };
-
-      await addDoc(collection(db, 'groups', group.id, 'contributions'), contributionData);
-      toast.success(`Demande de cotisation créée pour ${userName}`);
+        period: formatPeriod(new Date())
+      });
+      if (error) throw error;
+      toast.success(`${t('contribution_call_created_for')} ${userName}`);
     } catch (error) {
       console.error("Error creating contribution:", error);
-      toast.error("Erreur lors de la création.");
+      toast.error(t('error_creating'));
     }
   };
 
   const handleRegisterPayment = async (userId: string, userName: string, userEmail?: string) => {
     try {
-      const contributionData = {
-        groupId: group.id,
-        userId,
-        userName,
-        userEmail: userEmail || '',
+      const { error } = await supabase.from('contributions').insert({
+        group_id: group.id,
+        user_id: userId,
+        user_name: userName,
+        user_email: userEmail || '',
         amount: group.contributionAmount,
         status: 'paid',
         date: new Date().toISOString(),
-        period: formatPeriod(new Date()),
-        createdAt: serverTimestamp()
-      };
-
-      await addDoc(collection(db, 'groups', group.id, 'contributions'), contributionData);
-      toast.success(`Paiement enregistré pour ${userName}`);
+        period: formatPeriod(new Date())
+      });
+      if (error) throw error;
+      toast.success(`${t('payment_registered_for')} ${userName}`);
     } catch (error) {
       console.error("Error registering payment:", error);
-      toast.error("Erreur lors de l'enregistrement du paiement.");
+      toast.error(t('error_registering_payment'));
     }
   };
 
@@ -153,13 +167,13 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Payé</Badge>;
+        return <Badge className="bg-success-soft text-secondary hover:bg-success-soft border-secondary/20">{t('status_paid')}</Badge>;
       case 'pending':
-        return <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">En attente</Badge>;
+        return <Badge variant="outline" className="text-brand border-brand/20 bg-brand/10">{t('status_pending')}</Badge>;
       case 'late':
-        return <Badge variant="destructive">En retard</Badge>;
+        return <Badge variant="destructive">{t('status_late')}</Badge>;
       case 'pending_approval':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200 animate-pulse">En vérification</Badge>;
+        return <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/10 border-blue-500/20 animate-pulse">{t('status_verifying')}</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -168,6 +182,57 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const filteredContributions = searchTerm
     ? contributions.filter((c) => (c.userName || '').toLowerCase().includes(searchTerm.toLowerCase()))
     : contributions;
+
+  const totalCollected = contributions.filter((c) => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0);
+  const totalDistributed = payouts.reduce((sum, p) => sum + p.amount, 0);
+  const availableFunds = totalCollected - totalDistributed;
+
+  const handleExportExcel = () => {
+    const rows = filteredContributions.map((c) => ({
+      [t('member')]: c.userName || t('member'),
+      Email: c.userEmail || '',
+      [t('period')]: c.period || '',
+      [`${t('amount')} (${group.currency})`]: c.amount,
+      [`${t('penalty')} (${group.currency})`]: c.penaltyApplied || 0,
+      [t('penalty_status_col')]: c.penaltyStatus === 'paid' ? t('status_paid') : c.penaltyApplied ? t('due') : '-',
+      [t('status')]: c.status,
+      [t('date')]: c.date ? new Date(c.date).toLocaleDateString('fr-FR') : ''
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, t('contributions_management'));
+    XLSX.writeFile(workbook, `cotisations_${group.name.replace(/\s+/g, '_')}.xlsx`);
+    toast.success(t('excel_generated'));
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Rapport des cotisations - ${group.name}`, 14, 15);
+    
+    const tableColumn = [t('member'), "Email", t('period'), `${t('amount')} (${group.currency})`, t('status'), t('date')];
+    const tableRows: any[] = [];
+
+    filteredContributions.forEach(c => {
+      const rowData = [
+        c.userName || '',
+        c.userEmail || '',
+        c.period || '',
+        c.amount,
+        c.status === 'paid' ? 'Payé' : c.status === 'pending' ? 'En attente' : c.status,
+        c.date ? new Date(c.date).toLocaleDateString('fr-FR') : ''
+      ];
+      tableRows.push(rowData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save(`cotisations_${group.name.replace(/\s+/g, '_')}.pdf`);
+    toast.success("Rapport PDF généré !");
+  };
 
   if (loading) {
     return (
@@ -186,27 +251,64 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
           </Button>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {isManager ? 'Gestion des Cotisations' : 'Mes Cotisations'}
+              {isManager ? t('contributions_management') : t('my_contributions_title')}
             </h1>
             <p className="text-muted-foreground">{group.name} • {group.contributionAmount.toLocaleString()} {group.currency}</p>
           </div>
         </div>
+        {isManager && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('export_excel')}</span>
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF} className="gap-2 border-red-200 text-red-600 hover:bg-red-50">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Export PDF</span>
+            </Button>
+          </div>
+        )}
       </div>
+
+      {isManager && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wallet className="w-4 h-4" />
+              {t('circle_accounting')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-3 rounded-xl bg-success-soft border border-secondary/20">
+              <p className="text-[10px] font-bold uppercase text-secondary">{t('total_collected_in')}</p>
+              <p className="text-lg font-bold text-secondary">{totalCollected.toLocaleString()} {group.currency}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-brand/10 border border-brand/20">
+              <p className="text-[10px] font-bold uppercase text-brand">{t('total_distributed_out')}</p>
+              <p className="text-lg font-bold text-brand">{totalDistributed.toLocaleString()} {group.currency}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-muted border border-border">
+              <p className="text-[10px] font-bold uppercase text-muted-foreground">{t('available_funds')}</p>
+              <p className="text-lg font-bold">{availableFunds.toLocaleString()} {group.currency}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className={isManager ? "lg:col-span-2" : "lg:col-span-3"}>
           <CardHeader>
-            <CardTitle>{isManager ? 'Historique des Paiements' : 'Mes Paiements'}</CardTitle>
+            <CardTitle>{isManager ? t('payment_history') : t('my_payments')}</CardTitle>
             <CardDescription>
               {isManager
-                ? 'Liste de toutes les cotisations enregistrées pour ce groupe.'
-                : 'Historique de vos versements pour ce cercle.'}
+                ? t('contributions_list_desc')
+                : t('my_contributions_desc')}
             </CardDescription>
             {isManager && (
               <div className="relative pt-2 max-w-xs">
                 <Search className="absolute left-2.5 top-4.5 w-3.5 h-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher un membre..."
+                  placeholder={t('search_member')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 h-8 text-xs"
@@ -218,33 +320,33 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Membre</TableHead>
+                  <TableHead>{t('member')}</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Période</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Pénalité</TableHead>
-                  <TableHead>Statut</TableHead>
-                  {isManager && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('period')}</TableHead>
+                  <TableHead>{t('amount')}</TableHead>
+                  <TableHead>{t('penalty')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  {isManager && <TableHead className="text-right">{t('actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContributions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isManager ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      Aucune cotisation trouvée.
+                      {t('no_contribution_found')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredContributions.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.userName || 'Membre'}</TableCell>
+                      <TableCell className="font-medium">{c.userName || t('member')}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
                       <TableCell>{c.period}</TableCell>
                       <TableCell>{c.amount.toLocaleString()} {group.currency}</TableCell>
                       <TableCell>
                         {c.penaltyApplied ? (
                           <Badge variant={c.penaltyStatus === 'paid' ? 'secondary' : 'destructive'} className="text-[10px]">
-                            {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? '(payée)' : '(due)'}
+                            {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs">-</span>
@@ -259,18 +361,18 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                                 <Button 
                                   size="icon" 
                                   variant="outline" 
-                                  className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50"
+                                  className="h-8 w-8 text-secondary border-secondary/20 hover:bg-success-soft"
                                   onClick={() => handleUpdateStatus(c.id, 'paid')}
-                                  title="Approuver le paiement"
+                                  title={t('approve_payment')}
                                 >
                                   <Check className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   size="icon" 
                                   variant="outline" 
-                                  className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50"
+                                  className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft"
                                   onClick={() => handleUpdateStatus(c.id, 'pending')}
-                                  title="Rejeter la preuve"
+                                  title={t('reject_proof')}
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -284,10 +386,10 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="paid">Payé</SelectItem>
-                                <SelectItem value="pending">En attente</SelectItem>
-                                <SelectItem value="late">En retard</SelectItem>
-                                <SelectItem value="pending_approval">Vérification</SelectItem>
+                                <SelectItem value="paid">{t('status_paid')}</SelectItem>
+                                <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                                <SelectItem value="late">{t('status_late')}</SelectItem>
+                                <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -303,7 +405,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                           )}
                           {c.status === 'pending_approval' && (
                             <span className="text-xs text-muted-foreground italic">
-                              Réf: {c.proofOfPayment?.reference}
+                              {t('ref_label')} {c.proofOfPayment?.reference}
                             </span>
                           )}
                         </TableCell>
@@ -319,8 +421,8 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
         {isManager && (
           <Card>
             <CardHeader>
-              <CardTitle>Membres du Cercle</CardTitle>
-              <CardDescription>Initialiser une nouvelle cotisation pour un membre.</CardDescription>
+              <CardTitle>{t('circle_members')}</CardTitle>
+              <CardDescription>{t('init_contribution_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {members.map((member) => (
@@ -331,7 +433,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                     </div>
                     <div className="text-sm">
                       <p className="font-medium">{member.displayName}</p>
-                      <p className="text-xs text-muted-foreground">Score: {member.reputationScore}/100</p>
+                      <p className="text-xs text-muted-foreground">{t('score_label')} {member.reputationScore}/100</p>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -342,16 +444,16 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                       onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
                     >
                       <Plus className="w-3 h-3 mr-1" />
-                      Appel
+                      {t('call_contribution')}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="default" 
-                      className="h-7 text-[10px] px-2 bg-green-600 hover:bg-green-700"
+                      className="h-7 text-[10px] px-2 bg-secondary hover:bg-secondary/90"
                       onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
                     >
                       <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Payer
+                      {t('pay')}
                     </Button>
                   </div>
                 </div>
@@ -371,13 +473,14 @@ function DeclarePaymentDialog({
   contribution: Contribution, 
   onSubmit: (reference: string) => void 
 }) {
+  const { t } = useLanguage();
   const [reference, setReference] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reference.trim()) {
-      toast.error("Veuillez saisir une référence (ex: ID Orange Money, Wave...)");
+      toast.error(t('enter_reference_error'));
       return;
     }
     onSubmit(reference.trim());
@@ -390,30 +493,30 @@ function DeclarePaymentDialog({
       <DialogTrigger render={
         <Button size="sm" variant="outline" className="h-8 gap-2">
           <CheckCircle2 className="w-4 h-4" />
-          Déclarer
+          {t('declare')}
         </Button>
       } />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Déclarer un paiement</DialogTitle>
+          <DialogTitle>{t('declare_payment')}</DialogTitle>
           <DialogDescription>
-            Saisissez la référence du transfert (Mobile Money, Virement, etc.) pour que l'administrateur puisse valider votre cotisation.
+            {t('declare_payment_desc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="reference">Référence de transaction</Label>
+            <Label htmlFor="reference">{t('transaction_reference')}</Label>
             <Input 
               id="reference" 
-              placeholder="Ex: OM-20230512-8271, WAVE-..."
+              placeholder={t('reference_placeholder')}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Annuler</Button>
-            <Button type="submit">Envoyer le justificatif</Button>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
+            <Button type="submit">{t('send_proof')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

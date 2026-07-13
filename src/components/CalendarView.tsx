@@ -111,14 +111,14 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
                 <div
                   key={key}
                   className={`aspect-square rounded-lg border p-1 flex flex-col items-center justify-start text-xs ${
-                    inMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-900/30 text-muted-foreground'
-                  } ${isToday(day) ? 'border-[#2BB673] border-2' : 'border-slate-100 dark:border-slate-800'}`}
+                    inMonth ? 'bg-card' : 'bg-muted text-muted-foreground'
+                  } ${isToday(day) ? 'border-secondary border-2' : 'border-border'}`}
                 >
-                  <span className={`font-semibold ${isToday(day) ? 'text-[#2BB673]' : ''}`}>{format(day, 'd')}</span>
+                  <span className={`font-semibold ${isToday(day) ? 'text-secondary' : ''}`}>{format(day, 'd')}</span>
                   {dayEvents.length > 0 && (
                     <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
                       {dayEvents.slice(0, 3).map((_, i) => (
-                        <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#E67E22]" />
+                        <span key={i} className="w-1.5 h-1.5 rounded-full bg-brand" />
                       ))}
                     </div>
                   )}
@@ -141,10 +141,10 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
               <div
                 key={`${event.groupId}-${i}`}
                 onClick={() => onSelectGroup(event.groupId)}
-                className="flex items-center justify-between p-3 rounded-xl border hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl border hover:bg-muted cursor-pointer transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#2BB673]/10 text-[#2BB673]">
+                  <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
                     <Gift className="w-4 h-4" />
                   </div>
                   <div>

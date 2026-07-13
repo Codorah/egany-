@@ -95,6 +95,10 @@ export interface Contribution {
   };
   penaltyApplied?: number;
   penaltyStatus?: 'none' | 'pending' | 'paid';
+  notifiedInsufficient?: boolean;
+  paymentMethod?: string;
+  debitedAt?: string;
+  idempotencyKey?: string;
 }
 
 export interface Payout {
@@ -103,6 +107,10 @@ export interface Payout {
   userId: string;
   amount: number;
   date: string;
+  discountAmount?: number;
+  currency?: string;
+  cycle?: number;
+  transactionId?: string;
 }
 
 export interface Invitation {
@@ -128,11 +136,36 @@ export interface WalletTransaction {
   id: string;
   userId: string;
   amount: number; // Positive for credit/recharge, negative for debit/contribution
-  type: 'recharge' | 'contribution_debit' | 'payout_credit' | 'payout_deduction';
+  type: 'recharge' | 'contribution_debit' | 'payout_credit' | 'payout_deduction' | 'withdraw';
   description: string;
   date: string;
   status: 'completed' | 'failed' | 'pending';
   reference?: string; // Paydunya checkout session ID or reference
   paymentMethod?: string; // e.g., 'paydunya' | 'wallet'
+}
+
+export interface GroupDocument {
+  id: string;
+  groupId: string;
+  uploaderId: string;
+  uploaderName: string;
+  name: string;
+  category: 'statuts' | 'contrat' | 'pv' | 'justificatif' | 'autre';
+  url?: string; // signed URL, fetched on-demand (private Supabase Storage bucket)
+  storagePath: string;
+  size: number;
+  contentType: string;
+  uploadedAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  subject: string;
+  message: string;
+  status: 'open' | 'resolved';
+  createdAt: any;
 }
 

@@ -40,18 +40,21 @@ import {
   FileSpreadsheet,
   FileText,
   Bell,
-  Mail
+  Mail,
+  Gift,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { UserProfile, Group, Contribution, WalletTransaction } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, changePassword, isPasswordProviderUser } from '@/lib/firebase';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { supabase, createChannel, changePassword, isPasswordProviderUser } from '@/lib/supabase';
+import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
-import { enablePushNotifications, disablePushNotifications } from '@/lib/push';
 import { 
   CustomAvatar, 
   AvatarConfig, 
@@ -89,10 +92,13 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
   const [editLanguage, setEditLanguage] = useState(user.language || 'fr');
   const [editTheme, setEditTheme] = useState(user.theme || 'light');
   const [editSecurityPin, setEditSecurityPin] = useState('');
-  const canChangePassword = isPasswordProviderUser();
-  const [pushEnabled, setPushEnabled] = useState(!!user.pushEnabled);
+  const [canChangePassword, setCanChangePassword] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCanChangePassword(isPasswordProviderUser(session));
+    });
+  }, []);
   const [emailNotifEnabled, setEmailNotifEnabled] = useState(user.emailNotificationsEnabled ?? true);
-  const [isTogglingPush, setIsTogglingPush] = useState(false);
 
   // Wallet Withdrawal States
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -137,36 +143,47 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
   // Fetch Wallet Transactions in real-time
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'users', user.uid, 'walletTransactions'), (snapshot) => {
-      const txs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as WalletTransaction[];
-      txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setWalletTransactions(txs);
+    const fetchTx = async () => {
+      const { data, error } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .eq('user_id', user.uid)
+        .order('date', { ascending: false });
+      if (error) {
+        console.error("Error fetching transactions:", error);
+        setLoadingTransactions(false);
+        return;
+      }
+      setWalletTransactions((data ?? []).map(mapWalletTransactionRow));
       setLoadingTransactions(false);
-    }, (error) => {
-      console.error("Error fetching transactions:", error);
-      setLoadingTransactions(false);
-    });
-    return () => unsub();
+    };
+    fetchTx();
+
+    const channel = createChannel(`wallet-tx-${user.uid}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${user.uid}` },
+        () => fetchTx()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user.uid]);
 
   const handleExportCSV = () => {
     if (walletTransactions.length === 0) {
-      toast.error("Aucune transaction disponible pour l'export.");
+      toast.error(t('prof_no_tx_export'));
       return;
     }
     
     // Headers
-    const headers = ['Type', 'Description', 'Montant (FCFA)', 'Date', 'Methode', 'Statut'];
-    
+    const headers = [t('prof_type'), t('prof_description'), `${t('amount')} (FCFA)`, t('date'), t('prof_method'), t('status')];
+
     // Rows
     const rows = walletTransactions.map(tx => {
-      const typeStr = tx.amount > 0 ? 'Crédit' : 'Débit';
+      const typeStr = tx.amount > 0 ? t('prof_credit') : t('prof_debit');
       const dateStr = format(new Date(tx.date), 'yyyy-MM-dd HH:mm');
       const methodStr = tx.paymentMethod || 'Paydunya';
-      const statusStr = tx.status === 'completed' ? 'Complété' : tx.status;
+      const statusStr = tx.status === 'completed' ? t('prof_completed') : tx.status;
       
       return [
         typeStr,
@@ -187,12 +204,12 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Historique exporté au format CSV !");
+    toast.success(t('prof_csv_exported'));
   };
 
   const handleExportPDF = () => {
     if (walletTransactions.length === 0) {
-      toast.error("Aucune transaction disponible pour l'export.");
+      toast.error(t('prof_no_tx_export'));
       return;
     }
     
@@ -203,7 +220,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error("Veuillez autoriser les popups pour pouvoir exporter en PDF.");
+      toast.error(t('prof_allow_popups'));
       return;
     }
     
@@ -340,32 +357,32 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
       <body>
         <div class="header">
           <div class="logo">eganyé<span class="logo-accent">.</span></div>
-          <div class="title">Relevé de Portefeuille</div>
+          <div class="title">${t('prof_wallet_statement')}</div>
         </div>
-        
+
         <div class="details">
           <div class="details-col">
-            <h4>Titulaire du compte</h4>
+            <h4>${t('prof_account_holder')}</h4>
             <p>${user.displayName}</p>
             <p style="font-size: 12px; color: #64748b; font-weight: normal; margin-top: 2px;">${user.email || ''}</p>
           </div>
           <div class="details-col" style="text-align: right;">
-            <h4>Période du Relevé</h4>
-            <p>Jusqu'au ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}</p>
+            <h4>${t('prof_statement_period')}</h4>
+            <p>${t('prof_up_to')} ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}</p>
           </div>
         </div>
 
         <div style="display: flex; gap: 20px; margin-bottom: 35px;">
           <div class="summary-card" style="flex: 1;">
-            <h5>Total Crédité</h5>
+            <h5>${t('prof_total_credited')}</h5>
             <p style="color: #10b981; font-weight: bold;">+${totalCredits.toLocaleString()} FCFA</p>
           </div>
           <div class="summary-card" style="flex: 1;">
-            <h5>Total Débité</h5>
+            <h5>${t('prof_total_debited')}</h5>
             <p style="color: #f43f5e; font-weight: bold;">-${totalDebits.toLocaleString()} FCFA</p>
           </div>
           <div class="summary-card" style="flex: 1; background-color: #fffbeb; border-color: #fef3c7;">
-            <h5>Solde Actuel</h5>
+            <h5>${t('prof_current_balance')}</h5>
             <p style="color: #b45309; font-weight: bold;">${currentBalance.toLocaleString()} FCFA</p>
           </div>
         </div>
@@ -373,12 +390,12 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         <table>
           <thead>
             <tr>
-              <th>Mouvement</th>
-              <th>Description</th>
-              <th style="text-align: right;">Montant</th>
-              <th>Date & Heure</th>
-              <th>Méthode</th>
-              <th style="text-align: right;">Statut</th>
+              <th>${t('prof_movement')}</th>
+              <th>${t('prof_description')}</th>
+              <th style="text-align: right;">${t('amount')}</th>
+              <th>${t('prof_date_time')}</th>
+              <th>${t('prof_method')}</th>
+              <th style="text-align: right;">${t('status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -387,8 +404,8 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         </table>
 
         <div class="footer">
-          Document généré électroniquement par eganyé - Votre tontine numérique fiable et solidaire.<br>
-          © ${new Date().getFullYear()} eganyé. Tous droits réservés.
+          ${t('prof_pdf_footer')}<br>
+          © ${new Date().getFullYear()} eganyé. ${t('prof_rights_reserved')}
         </div>
 
         <script>
@@ -402,42 +419,19 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    toast.success("Document PDF généré ! Lancez l'impression ou enregistrez au format PDF.");
-  };
-
-  const handleTogglePush = async () => {
-    setIsTogglingPush(true);
-    try {
-      if (pushEnabled) {
-        await disablePushNotifications(user.uid);
-        setPushEnabled(false);
-        toast.success('Notifications push désactivées.');
-      } else {
-        const result = await enablePushNotifications(user.uid);
-        if (result.success) {
-          setPushEnabled(true);
-          toast.success(result.message);
-        } else {
-          toast.error(result.message);
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling push notifications:', error);
-      toast.error("Erreur lors de la mise à jour des notifications push.");
-    } finally {
-      setIsTogglingPush(false);
-    }
+    toast.success(t('prof_pdf_generated'));
   };
 
   const handleToggleEmailNotifications = async () => {
     const next = !emailNotifEnabled;
     setEmailNotifEnabled(next);
     try {
-      await updateDoc(doc(db, 'users', user.uid), { emailNotificationsEnabled: next });
+      const { error } = await supabase.from('profiles').update({ email_notifications_enabled: next }).eq('id', user.uid);
+      if (error) throw error;
     } catch (error) {
       console.error('Error toggling email notifications:', error);
       setEmailNotifEnabled(!next);
-      toast.error("Erreur lors de la mise à jour des préférences email.");
+      toast.error(t('prof_email_error'));
     }
   };
 
@@ -445,7 +439,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     e.preventDefault();
     const amt = parseFloat(rechargeAmount);
     if (isNaN(amt) || amt < 100) {
-      toast.error("Veuillez saisir un montant minimum de 100 FCFA.");
+      toast.error(t('prof_min_100'));
       return;
     }
     setRechargeOpen(false);
@@ -456,39 +450,30 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     e.preventDefault();
     const amountNum = parseFloat(withdrawAmount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      toast.error("Veuillez entrer un montant valide.");
+      toast.error(t('prof_valid_amount'));
       return;
     }
     if (amountNum < 500) {
-      toast.error("Le montant minimum de retrait est de 500 FCFA.");
+      toast.error(t('prof_min_withdraw_500'));
       return;
     }
     if (amountNum > (user.walletBalance || 0)) {
-      toast.error("Solde insuffisant dans votre portefeuille virtuel.");
+      toast.error(t('prof_insufficient_balance'));
       return;
     }
     if (enteredPin.length !== 4) {
-      toast.error("Veuillez entrer un code PIN à 4 chiffres.");
+      toast.error(t('prof_enter_pin_4'));
       return;
     }
 
     setIsWithdrawing(true);
     try {
-      // 1. Verify PIN (with automatic lockout after repeated failures)
+      // 1. Verify PIN (with automatic lockout after repeated failures).
+      // Failed-attempt audit logging happens server-side inside the RPC
+      // itself (verify_user_pin), since direct client writes to audit_logs
+      // are restricted to admins.
       const pinResult = await verifyUserPin(user.uid, enteredPin);
       if (!pinResult.ok) {
-        // Create Failed Audit Entry in firestore
-        await addDoc(collection(db, 'auditLogs'), {
-          id: `audit_failed_${Date.now()}`,
-          userId: user.uid,
-          action: pinResult.locked ? 'withdrawal_pin_locked' : 'withdrawal_failed_pin',
-          details: `Tentative de retrait de ${amountNum.toLocaleString()} FCFA avec un code PIN erroné`,
-          ip: '197.234.34.82', // Simulated West-African IP
-          device: navigator.userAgent || 'WebBrowser',
-          status: 'failed',
-          timestamp: new Date().toISOString()
-        });
-
         toast.error(pinResult.message);
         setIsWithdrawing(false);
         return;
@@ -512,15 +497,14 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         throw new Error(ledgerResult.message);
       }
 
-      // 3. Create matching wallet transaction subcollection entry for user display
-      await addDoc(collection(db, 'users', user.uid, 'walletTransactions'), {
-        userId: user.uid,
+      // 3. Create matching wallet transaction record for user display
+      await supabase.from('wallet_transactions').insert({
+        user_id: user.uid,
         amount: -amountNum,
         type: 'withdraw',
         description: `Retrait vers ${withdrawMethod.toUpperCase()}`,
-        date: new Date().toISOString(),
         status: 'completed',
-        paymentMethod: withdrawMethod,
+        payment_method: withdrawMethod,
         reference: ledgerResult.transactionId || `wdr_${Date.now()}`
       });
 
@@ -532,14 +516,14 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         type: 'system'
       });
 
-      toast.success(`Retrait de ${amountNum.toLocaleString()} FCFA effectué avec succès !`);
+      toast.success(`${t('prof_withdraw_success')} (${amountNum.toLocaleString()} FCFA)`);
       setWithdrawOpen(false);
       setWithdrawAmount('');
       setWithdrawDetails('');
       setEnteredPin('');
     } catch (error: any) {
       console.error("Error executing withdrawal transaction:", error);
-      toast.error(error.message || "Une erreur est survenue lors de l'enregistrement de votre retrait.");
+      toast.error(error.message || t('prof_withdraw_error'));
     } finally {
       setIsWithdrawing(false);
     }
@@ -563,21 +547,21 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
       });
       const data = await response.json();
       if (data.url) {
-        toast.info("Redirection vers le portail sécurisé Paydunya...");
+        toast.info(t('prof_redirect_paydunya'));
         window.location.href = data.url;
       } else {
         throw new Error(data.error || "Une erreur s'est produite");
       }
     } catch (error: any) {
       console.error("Recharge Paydunya error:", error);
-      toast.error(error.message || "Erreur lors de l'initiation de la recharge.");
+      toast.error(error.message || t('prof_recharge_error'));
     } finally {
       setIsRedirecting(false);
       setIsConfirmRechargeOpen(false);
     }
   };
 
-  // Live snapshot listener to fetch user's contributions across all groups
+  // Fetch + realtime subscription for the user's contributions across all groups
   useEffect(() => {
     if (!groups || groups.length === 0) {
       setContributions([]);
@@ -586,44 +570,38 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
     }
 
     setLoadingContributions(true);
-    const unsubscribes: (() => void)[] = [];
-    const contributionsMap: { [groupId: string]: Contribution[] } = {};
-    let activeListeners = groups.length;
+    const groupIds = groups.map((g) => g.id);
 
-    groups.forEach((group) => {
-      const q = query(
-        collection(db, 'groups', group.id, 'contributions'),
-        where('userId', '==', user.uid)
-      );
+    const fetchContributions = async () => {
+      const { data, error } = await supabase
+        .from('contributions')
+        .select('*')
+        .eq('user_id', user.uid)
+        .in('group_id', groupIds)
+        .order('date', { ascending: false });
 
-      const unsub = onSnapshot(q, (snapshot) => {
-        const groupConts = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Contribution[];
-
-        contributionsMap[group.id] = groupConts;
-
-        // Flatten and combine all contributions
-        const allConts = Object.values(contributionsMap).flat().sort((a, b) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
-
-        setContributions(allConts);
+      if (error) {
+        console.error('Error fetching contributions:', error);
         setLoadingContributions(false);
-      }, (error) => {
-        console.error(`Error fetching contributions for group ${group.id}:`, error);
-        activeListeners--;
-        if (activeListeners === 0) {
-          setLoadingContributions(false);
-        }
-      });
+        return;
+      }
 
-      unsubscribes.push(unsub);
-    });
+      setContributions((data ?? []).map(mapContributionRow));
+      setLoadingContributions(false);
+    };
+
+    fetchContributions();
+
+    const channel = createChannel(`profile-contributions-${user.uid}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contributions', filter: `user_id=eq.${user.uid}` },
+        () => fetchContributions()
+      )
+      .subscribe();
 
     return () => {
-      unsubscribes.forEach((unsub) => unsub());
+      supabase.removeChannel(channel);
     };
   }, [groups, user.uid]);
 
@@ -695,12 +673,12 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         groupsJoinedCount !== user.groupsJoined
       ) {
         try {
-          await updateDoc(doc(db, 'users', user.uid), {
-            reputationScore: computedScore,
-            totalSaved: computedTotalSaved,
-            groupsJoined: groupsJoinedCount,
-            updatedAt: new Date().toISOString()
-          });
+          const { error } = await supabase.from('profiles').update({
+            reputation_score: computedScore,
+            total_saved: computedTotalSaved,
+            groups_joined: groupsJoinedCount,
+          }).eq('id', user.uid);
+          if (error) throw error;
         } catch (error) {
           console.error("Error updating user statistics in db:", error);
         }
@@ -719,37 +697,37 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
   const strokeDashoffset = circumference - (computedScore / 100) * circumference;
 
   const getScoreInfo = (sc: number) => {
-    if (sc >= 85) return { 
-      tier: "Tier S", 
-      color: "text-emerald-600 stroke-emerald-600 fill-emerald-50", 
-      ringColor: "stroke-emerald-100",
-      bgBadg: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      name: "Fiabilité Exemplaire", 
-      desc: "Excellent gestionnaire. Vos cotisations sont toujours payées à temps ou en avance." 
+    if (sc >= 85) return {
+      tier: "Tier S",
+      color: "text-secondary stroke-secondary fill-success-soft",
+      ringColor: "stroke-secondary/20",
+      bgBadg: "bg-success-soft text-secondary border-secondary/20",
+      name: t('prof_tier_s_name'),
+      desc: t('prof_tier_s_desc')
     };
-    if (sc >= 70) return { 
-      tier: "Tier A", 
-      color: "text-teal-600 stroke-teal-600 fill-teal-50", 
-      ringColor: "stroke-teal-100",
-      bgBadg: "bg-teal-100 text-teal-800 border-teal-200",
-      name: "Membre de Confiance", 
-      desc: "Trésorier et adhérent performant. Vous honorez vos échéances avec régularité." 
+    if (sc >= 70) return {
+      tier: "Tier A",
+      color: "text-teal-500 stroke-teal-500 fill-teal-500/10",
+      ringColor: "stroke-teal-500/20",
+      bgBadg: "bg-teal-500/10 text-teal-500 border-teal-500/20",
+      name: t('prof_tier_a_name'),
+      desc: t('prof_tier_a_desc')
     };
-    if (sc >= 50) return { 
-      tier: "Tier B", 
-      color: "text-amber-600 stroke-amber-600 fill-amber-50", 
-      ringColor: "stroke-amber-100",
-      bgBadg: "bg-amber-100 text-amber-800 border-amber-200",
-      name: "Profil Régulier", 
-      desc: "Membre correct. Essayez de régler vos cotisations un peu plus tôt pour remonter de Tier." 
+    if (sc >= 50) return {
+      tier: "Tier B",
+      color: "text-brand stroke-brand fill-brand/10",
+      ringColor: "stroke-brand/20",
+      bgBadg: "bg-brand/10 text-brand border-brand/20",
+      name: t('prof_tier_b_name'),
+      desc: t('prof_tier_b_desc')
     };
-    return { 
-      tier: "Tier C", 
-      color: "text-rose-600 stroke-rose-600 fill-rose-50", 
-      ringColor: "stroke-rose-100",
-      bgBadg: "bg-rose-100 text-rose-800 border-rose-200",
-      name: "Score Fragile", 
-      desc: "Des retards répétés ont affecté votre fiabilité financière. Réglez les cotisations en suspens." 
+    return {
+      tier: "Tier C",
+      color: "text-danger stroke-danger fill-danger-soft",
+      ringColor: "stroke-danger/20",
+      bgBadg: "bg-danger-soft text-danger border-danger/20",
+      name: t('prof_tier_c_name'),
+      desc: t('prof_tier_c_desc')
     };
   };
 
@@ -757,7 +735,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
   const getGroupName = (groupId: string) => {
     const gp = groups.find(g => g.id === groupId);
-    return gp ? gp.name : "Cercle inconnu";
+    return gp ? gp.name : t('prof_unknown_circle');
   };
 
   const getFilteredContributions = useMemo(() => {
@@ -782,11 +760,11 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         className="flex flex-col md:flex-row gap-6 items-center justify-between bg-card p-6 rounded-2xl border shadow-sm"
       >
         <div className="flex flex-col sm:flex-row gap-6 items-center text-center sm:text-left">
-          <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-amber-500/30 flex items-center justify-center bg-slate-50">
+          <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-brand/30 flex items-center justify-center bg-muted">
             {user.photoURL ? (
               <CustomAvatar config={user.photoURL} size={80} />
             ) : (
-              <div className="text-2xl font-semibold text-amber-700 bg-amber-100 w-full h-full flex items-center justify-center">
+              <div className="text-2xl font-semibold text-brand bg-brand/10 w-full h-full flex items-center justify-center">
                 {user.displayName.charAt(0)}
               </div>
             )}
@@ -800,7 +778,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
             </div>
             <p className="text-muted-foreground text-sm">{user.email}</p>
             <p className="text-xs text-muted-foreground">
-              Inscrit le {format(new Date(user.createdAt || Date.now()), 'dd MMMM yyyy', { locale: fr })}
+              {t('prof_registered_on')} {format(new Date(user.createdAt || Date.now()), 'dd MMMM yyyy', { locale: fr })}
             </p>
           </div>
         </div>
@@ -809,11 +787,11 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           <Button 
             variant="outline" 
             size="sm" 
-            className="rounded-xl flex items-center gap-1.5 hover:bg-slate-50 cursor-pointer active:scale-95 transition-transform"
+            className="rounded-xl flex items-center gap-1.5 hover:bg-muted cursor-pointer active:scale-95 transition-transform"
             onClick={() => setShowExplanation(!showExplanation)}
           >
             <HelpCircle className="w-4 h-4 text-muted-foreground" />
-            <span>Formule du Score</span>
+            <span>{t('score_formula')}</span>
           </Button>
         </div>
       </motion.div>
@@ -827,14 +805,14 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <Card className="bg-[#FBF8F3]/80 border border-[#D4A574]/30 shadow-sm rounded-3xl">
-              <CardHeader className="pb-3 border-b border-[#D4A574]/15">
-                <CardTitle className="text-md font-bold flex items-center gap-2 text-[#4B2E05]">
-                  <Sparkles className="w-5 h-5 text-[#E67E22]" />
-                  Calculateur de Score de Réputation en Temps Réel
+            <Card className="bg-muted/80 border border-border shadow-sm rounded-3xl">
+              <CardHeader className="pb-3 border-b border-border">
+                <CardTitle className="text-md font-bold flex items-center gap-2 text-foreground">
+                  <Sparkles className="w-5 h-5 text-brand" />
+                  {t('prof_score_calculator')}
                 </CardTitle>
-                <CardDescription className="text-[#4B2E05]/80 font-medium">
-                  Le score récompense la rigueur de vos dépôts pour sécuriser le cercle d'épargne.
+                <CardDescription className="text-foreground/80 font-medium">
+                  {t('prof_score_calc_desc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
@@ -843,45 +821,45 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch text-center">
                   
                   {/* Step 1: Base Score */}
-                  <div className="bg-white p-4 rounded-2xl border border-[#D4A574]/20 flex flex-col justify-between shadow-xs">
+                  <div className="bg-card p-4 rounded-2xl border border-border flex flex-col justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Score de Confiance</span>
-                      <span className="text-3xl font-serif font-black text-slate-700">60</span>
-                      <span className="text-xs text-muted-foreground block mt-1">Capital initial octroyé</span>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">{t('prof_trust_score')}</span>
+                      <span className="text-3xl font-serif font-black text-foreground">60</span>
+                      <span className="text-xs text-muted-foreground block mt-1">{t('prof_initial_capital')}</span>
                     </div>
-                    <div className="text-lg font-bold text-[#D4A574] mt-2">+</div>
+                    <div className="text-lg font-bold text-eganye-gold mt-2">+</div>
                   </div>
 
                   {/* Step 2: On-time Bonuses */}
-                  <div className="bg-emerald-50/40 p-4 rounded-2xl border border-emerald-100 flex flex-col justify-between shadow-xs">
+                  <div className="bg-success-soft/40 p-4 rounded-2xl border border-secondary/20 flex flex-col justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-emerald-600 block mb-1">Bonus Versements</span>
-                      <span className="text-3xl font-serif font-black text-emerald-600">+{paidCount * 8}</span>
-                      <span className="text-xs text-slate-500 block mt-1">
-                        {paidCount} versement{paidCount > 1 ? 's' : ''} payé{paidCount > 1 ? 's' : ''} (+8 pts / dépôt)
+                      <span className="text-[10px] uppercase font-bold text-secondary block mb-1">{t('prof_payment_bonus')}</span>
+                      <span className="text-3xl font-serif font-black text-secondary">+{paidCount * 8}</span>
+                      <span className="text-xs text-muted-foreground block mt-1">
+                        {paidCount} {t('prof_payments_paid_label')} (+8 pts)
                       </span>
                     </div>
-                    <div className="text-lg font-bold text-[#D4A574] mt-2">−</div>
+                    <div className="text-lg font-bold text-eganye-gold mt-2">−</div>
                   </div>
 
                   {/* Step 3: Late Penalties */}
-                  <div className="bg-rose-50/40 p-4 rounded-2xl border border-rose-100 flex flex-col justify-between shadow-xs">
+                  <div className="bg-danger-soft/40 p-4 rounded-2xl border border-danger/20 flex flex-col justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-rose-600 block mb-1">Pénalités Retards</span>
-                      <span className="text-3xl font-serif font-black text-rose-600">-{lateCount * 18}</span>
-                      <span className="text-xs text-slate-500 block mt-1">
-                        {lateCount} retard{lateCount > 1 ? 's' : ''} constaté{lateCount > 1 ? 's' : ''} (-18 pts / retard)
+                      <span className="text-[10px] uppercase font-bold text-danger block mb-1">{t('prof_late_penalties')}</span>
+                      <span className="text-3xl font-serif font-black text-danger">-{lateCount * 18}</span>
+                      <span className="text-xs text-muted-foreground block mt-1">
+                        {lateCount} {t('prof_lates_noted')} (-18 pts)
                       </span>
                     </div>
-                    <div className="text-lg font-bold text-[#D4A574] mt-2">=</div>
+                    <div className="text-lg font-bold text-eganye-gold mt-2">=</div>
                   </div>
 
                   {/* Step 4: Final Reputation Score */}
-                  <div className="bg-amber-500 text-slate-950 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+                  <div className="bg-primary text-primary-foreground p-4 rounded-2xl flex flex-col justify-between shadow-sm">
                     <div>
-                      <span className="text-[10px] uppercase font-black text-slate-900 block mb-1">Score Actuel</span>
+                      <span className="text-[10px] uppercase font-black text-primary-foreground block mb-1">{t('prof_current_score')}</span>
                       <span className="text-3xl font-serif font-black">{computedScore}</span>
-                      <span className="text-[10px] font-bold block mt-1">Cliqué & mis à jour en direct</span>
+                      <span className="text-[10px] font-bold block mt-1">{t('prof_live_updated')}</span>
                     </div>
                     <div className="text-xs font-bold mt-2 bg-white/20 px-2 py-0.5 rounded-full inline-block mx-auto">
                       {scoreInfo.tier}
@@ -891,24 +869,16 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                 </div>
 
                 {/* dynamic tips based on score */}
-                <div className="bg-white/80 p-4 rounded-2xl border border-[#D4A574]/20 space-y-2">
-                  <h4 className="font-bold text-xs text-[#4B2E05] flex items-center gap-1.5 uppercase">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    Conseil d'amélioration personnalisé
+                <div className="bg-card/80 p-4 rounded-2xl border border-border space-y-2">
+                  <h4 className="font-bold text-xs text-foreground flex items-center gap-1.5 uppercase">
+                    <Sparkles className="w-4 h-4 text-brand" />
+                    {t('prof_improve_tip')}
                   </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {computedScore >= 85 && (
-                      "Félicitations ! Votre score exemplaire (Tier S) vous confère la priorité absolue pour être désigné premier bénéficiaire des fonds des tontines auxquelles vous postulez."
-                    )}
-                    {computedScore >= 70 && computedScore < 85 && (
-                      "Excellent ! Vous êtes un membre de confiance (Tier A). Pour passer au Tier S, assurez-vous d'anticiper le rechargement de votre portefeuille virtuel 24h avant chaque échéance."
-                    )}
-                    {computedScore >= 50 && computedScore < 70 && (
-                      "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Wave ou Orange Money."
-                    )}
-                    {computedScore < 50 && (
-                      "Attention ! Votre score est critique (Tier C) à cause de retards répétés. Pour restaurer votre réputation, alimentez immédiatement votre solde de portefeuille et réglez vos cotisations en attente."
-                    )}
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {computedScore >= 85 && t('reputation_tip_s')}
+                    {computedScore >= 70 && computedScore < 85 && t('reputation_tip_a')}
+                    {computedScore >= 50 && computedScore < 70 && t('reputation_tip_b')}
+                    {computedScore < 50 && t('reputation_tip_c')}
                   </p>
                 </div>
               </CardContent>
@@ -924,10 +894,10 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         <Card className="flex flex-col justify-between">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Fiabilité Globale
+              {t('prof_global_reliability')}
             </CardTitle>
             <CardDescription>
-              Performance instantanée de trésorerie
+              {t('prof_instant_treasury')}
             </CardDescription>
           </CardHeader>
           
@@ -956,7 +926,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
               </svg>
               <div className="text-center z-10">
                 <span className="text-4xl font-extrabold tracking-tight">{computedScore}</span>
-                <span className="text-xs block font-medium text-slate-400">/ 100</span>
+                <span className="text-xs block font-medium text-muted-foreground">/ 100</span>
               </div>
             </div>
 
@@ -971,88 +941,88 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           {/* Paydunya Virtual Wallet Card */}
-          <Card className="flex flex-col justify-between border-amber-200 bg-amber-50/20 sm:col-span-2">
+          <Card className="flex flex-col justify-between border-brand/20 bg-brand/10 sm:col-span-2">
             <CardHeader className="pb-1">
               <div className="flex justify-between items-start">
-                <CardTitle className="text-xs font-semibold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Wallet className="w-4 h-4 text-amber-600" />
-                  Portefeuille Virtuel Tontine
+                <CardTitle className="text-xs font-semibold text-brand uppercase tracking-wider flex items-center gap-1.5">
+                  <Wallet className="w-4 h-4 text-brand" />
+                  {t('prof_virtual_wallet')}
                 </CardTitle>
-                <Badge className="bg-amber-600/15 text-amber-700 border-amber-300">Sécurisé par Paydunya</Badge>
+                <Badge className="bg-brand/15 text-brand border-brand/30">{t('prof_secured_paydunya')}</Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="text-3xl font-black text-slate-900 tracking-tight">
-                    {(user.walletBalance || 0).toLocaleString()} <span className="text-lg font-bold text-slate-500">FCFA</span>
+                  <div className="text-3xl font-black text-foreground tracking-tight">
+                    {(user.walletBalance || 0).toLocaleString()} <span className="text-lg font-bold text-muted-foreground">FCFA</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Solde disponible pour vos prélèvements et versements automatiques.
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('prof_balance_available_desc')}
                   </p>
                 </div>
                 
                 <div className="flex gap-2 items-center flex-wrap shrink-0">
                   <Dialog open={rechargeOpen} onOpenChange={setRechargeOpen}>
                     <DialogTrigger render={
-                      <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl flex items-center gap-2 shadow-sm">
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl flex items-center gap-2 shadow-sm">
                         <Plus className="w-4 h-4" />
-                        Recharger via Paydunya
+                        {t('prof_recharge_via_paydunya')}
                       </Button>
                     } />
                     <DialogContent className="sm:max-w-[425px]">
                       <form onSubmit={handleRechargeSubmit}>
                         <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2 font-bold text-xl text-slate-900">
-                            <Wallet className="w-5 h-5 text-amber-500" />
-                            Recharger mon Portefeuille
+                          <DialogTitle className="flex items-center gap-2 font-bold text-xl text-foreground">
+                            <Wallet className="w-5 h-5 text-brand" />
+                            {t('recharge_wallet_title')}
                           </DialogTitle>
-                          <DialogDescription className="text-slate-500 text-xs font-normal">
-                            Alimentez votre portefeuille virtuel via Paydunya (Wave, Orange Money, MTN, Carte Bancaire) pour automatiser vos cotisations quotidiennes de tontine.
+                          <DialogDescription className="text-muted-foreground text-xs font-normal">
+                            {t('prof_recharge_dialog_desc')}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-6">
                           <div className="space-y-2">
-                            <Label htmlFor="amount" className="font-bold text-slate-700 text-sm">
-                              Montant de la recharge (FCFA)
+                            <Label htmlFor="amount" className="font-bold text-foreground text-sm">
+                              {t('prof_recharge_amount')}
                             </Label>
                             <div className="relative">
                               <Input
                                 id="amount"
                                 type="number"
-                                placeholder="Ex: 5000"
-                                className="pr-14 font-extrabold text-lg text-slate-900 focus-visible:ring-amber-500"
+                                placeholder={t('prof_ex_5000')}
+                                className="pr-14 font-extrabold text-lg text-foreground focus-visible:ring-primary"
                                 value={rechargeAmount}
                                 onChange={(e) => setRechargeAmount(e.target.value)}
                                 min="100"
                                 required
                               />
-                              <span className="absolute right-3 top-2.5 font-bold text-slate-400">FCFA</span>
+                              <span className="absolute right-3 top-2.5 font-bold text-muted-foreground">FCFA</span>
                             </div>
-                            <p className="text-[10px] text-slate-400 font-normal">Montant minimum : 100 FCFA</p>
+                            <p className="text-[10px] text-muted-foreground font-normal">{t('prof_min_amount_100')}</p>
                           </div>
                         </div>
                         <DialogFooter>
                           <Button 
                             type="button" 
                             variant="ghost" 
-                            className="rounded-xl text-slate-500 hover:bg-slate-100"
+                            className="rounded-xl text-muted-foreground hover:bg-muted"
                             onClick={() => setRechargeOpen(false)}
                             disabled={isRedirecting}
                           >
-                            Annuler
+                            {t('cancel')}
                           </Button>
                           <Button 
                             type="submit" 
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl"
                             disabled={isRedirecting}
                           >
                             {isRedirecting ? (
                               <>
                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                Redirection...
+                                {t('prof_redirecting')}
                               </>
-                            ) : "Procéder au paiement"}
+                            ) : t('prof_proceed_payment')}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1061,70 +1031,70 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
                   <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
                     <DialogTrigger render={
-                      <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50 font-bold rounded-xl flex items-center gap-2">
-                        <ArrowDownLeft className="w-4 h-4 text-rose-500" />
-                        Retirer mes fonds
+                      <Button variant="outline" className="border-border text-foreground hover:bg-muted font-bold rounded-xl flex items-center gap-2">
+                        <ArrowDownLeft className="w-4 h-4 text-danger" />
+                        {t('prof_withdraw_funds')}
                       </Button>
                     } />
                     <DialogContent className="sm:max-w-[425px]">
                       <form onSubmit={handleWithdrawSubmit}>
                         <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2 font-bold text-xl text-slate-900">
-                            <ArrowDownLeft className="w-5 h-5 text-rose-500" />
-                            Retirer de l'argent
+                          <DialogTitle className="flex items-center gap-2 font-bold text-xl text-foreground">
+                            <ArrowDownLeft className="w-5 h-5 text-danger" />
+                            {t('prof_withdraw_money')}
                           </DialogTitle>
-                          <DialogDescription className="text-slate-500 text-xs font-normal">
-                            Transférez vos gains ou fonds disponibles de votre portefeuille virtuel vers votre compte externe (Mobile Money ou Carte Bancaire).
+                          <DialogDescription className="text-muted-foreground text-xs font-normal">
+                            {t('prof_withdraw_dialog_desc')}
                           </DialogDescription>
                         </DialogHeader>
                         
                         <div className="grid gap-4 py-4 text-xs">
                           <div className="space-y-1.5">
-                            <Label htmlFor="w_amount" className="font-bold text-slate-700">
-                              Montant à retirer (FCFA)
+                            <Label htmlFor="w_amount" className="font-bold text-foreground">
+                              {t('prof_amount_to_withdraw')}
                             </Label>
                             <div className="relative">
                               <Input
                                 id="w_amount"
                                 type="number"
-                                placeholder="Ex: 5000"
-                                className="pr-14 font-extrabold text-lg text-slate-900 focus-visible:ring-rose-500"
+                                placeholder={t('prof_ex_5000')}
+                                className="pr-14 font-extrabold text-lg text-foreground focus-visible:ring-danger"
                                 value={withdrawAmount}
                                 onChange={(e) => setWithdrawAmount(e.target.value)}
                                 min="500"
                                 max={user.walletBalance || 0}
                                 required
                               />
-                              <span className="absolute right-3 top-2.5 font-bold text-slate-400">FCFA</span>
+                              <span className="absolute right-3 top-2.5 font-bold text-muted-foreground">FCFA</span>
                             </div>
-                            <p className="text-[10px] text-slate-400">Solde disponible : {(user.walletBalance || 0).toLocaleString()} FCFA (Min: 500 FCFA)</p>
+                            <p className="text-[10px] text-muted-foreground">{t('prof_available_balance')} : {(user.walletBalance || 0).toLocaleString()} FCFA (Min: 500 FCFA)</p>
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="font-bold text-slate-700">Moyen de retrait</Label>
+                            <Label className="font-bold text-foreground">{t('prof_withdraw_method')}</Label>
                             <div className="grid grid-cols-3 gap-2">
                               {['orange_money', 'wave', 'bank_card'].map((method) => (
                                 <button
                                   key={method}
                                   type="button"
                                   onClick={() => setWithdrawMethod(method)}
-                                  className={`p-2 rounded-xl border text-center transition-all font-bold ${withdrawMethod === method ? 'border-rose-500 bg-rose-50/30 text-rose-600' : 'border-slate-200 hover:bg-slate-50 text-slate-500'}`}
+                                  className={`p-2 rounded-xl border text-center transition-all font-bold ${withdrawMethod === method ? 'border-danger bg-danger-soft/30 text-danger' : 'border-border hover:bg-muted text-muted-foreground'}`}
                                 >
-                                  {method === 'orange_money' ? 'OM' : method === 'wave' ? 'Wave' : 'Carte'}
+                                  {method === 'orange_money' ? 'OM' : method === 'wave' ? 'Wave' : t('prof_card')}
                                 </button>
                               ))}
                             </div>
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label htmlFor="w_details" className="font-bold text-slate-700">
-                              Numéro de téléphone / Coordonnées de destination
+                            <Label htmlFor="w_details" className="font-bold text-foreground">
+                              {t('prof_dest_details')}
                             </Label>
                             <Input
                               id="w_details"
                               type="text"
-                              placeholder="Ex: +221 77 123 45 67"
-                              className="rounded-xl border-slate-200 focus-visible:ring-rose-500 font-semibold"
+                              placeholder={t('prof_ex_phone')}
+                              className="rounded-xl border-border focus-visible:ring-danger font-semibold"
                               value={withdrawDetails}
                               onChange={(e) => setWithdrawDetails(e.target.value)}
                               required
@@ -1132,21 +1102,21 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                           </div>
 
                           <div className="space-y-1.5 border-t border-dashed pt-3 mt-1">
-                            <Label htmlFor="w_pin" className="font-bold text-rose-600 flex items-center gap-1">
+                            <Label htmlFor="w_pin" className="font-bold text-danger flex items-center gap-1">
                               <Lock className="w-3.5 h-3.5" />
-                              2FA : Entrez votre code PIN de Retrait
+                              {t('prof_2fa_pin')}
                             </Label>
                             <Input
                               id="w_pin"
                               type="password"
                               maxLength={4}
                               placeholder="• • • •"
-                              className="rounded-xl border-rose-200 focus-visible:ring-rose-500 text-center tracking-[0.5em] font-extrabold text-lg"
+                              className="rounded-xl border-danger/20 focus-visible:ring-danger text-center tracking-[0.5em] font-extrabold text-lg"
                               value={enteredPin}
                               onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, ''))}
                               required
                             />
-                            <p className="text-[10px] text-muted-foreground text-center">Un code PIN incorrect bloquera l'opération (Par défaut: 0000).</p>
+                            <p className="text-[10px] text-muted-foreground text-center">{t('prof_wrong_pin_blocks')}</p>
                           </div>
                         </div>
 
@@ -1154,26 +1124,26 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                           <Button 
                             type="button" 
                             variant="ghost" 
-                            className="rounded-xl text-slate-500"
+                            className="rounded-xl text-muted-foreground"
                             onClick={() => {
                               setWithdrawOpen(false);
                               setEnteredPin('');
                             }}
                             disabled={isWithdrawing}
                           >
-                            Annuler
+                            {t('cancel')}
                           </Button>
                           <Button 
                             type="submit" 
-                            className="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl"
+                            className="bg-danger hover:bg-danger/90 text-white font-bold rounded-xl"
                             disabled={isWithdrawing}
                           >
                             {isWithdrawing ? (
                               <>
                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                Retrait sécurisé...
+                                {t('prof_secure_withdrawing')}
                               </>
-                            ) : "Confirmer le retrait"}
+                            ) : t('prof_confirm_withdraw')}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1187,17 +1157,17 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           <Card className="flex flex-col justify-between">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Wallet className="w-4 h-4 text-emerald-500" />
-                Capital Total Épargné
+                <Wallet className="w-4 h-4 text-secondary" />
+                {t('prof_total_capital_saved')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-3">
               <div className="text-3xl font-extrabold tracking-tight">
                 {computedTotalSaved.toLocaleString()} <span className="text-lg font-medium text-muted-foreground">{groups[0]?.currency || "FCFA"}</span>
               </div>
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary font-medium">
                 <TrendingUp className="w-4 h-4" />
-                <span>Tous les cercles d'épargne confondus</span>
+                <span>{t('prof_all_circles_combined')}</span>
               </div>
             </CardContent>
           </Card>
@@ -1206,7 +1176,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                Taux de Ponctualité
+                {t('prof_punctuality_rate')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-3 space-y-2">
@@ -1215,7 +1185,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
               </div>
               <Progress value={punctualityRate} className="h-2" />
               <p className="text-xs text-muted-foreground pt-1">
-                Mesure la part de paiements faits à temps sans dépassement ou pénalités de retard.
+                {t('prof_punctuality_desc')}
               </p>
             </CardContent>
           </Card>
@@ -1224,15 +1194,15 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-primary" />
-                Cercles Actifs Rejoints
+                {t('prof_active_circles_joined')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-3">
               <div className="text-3xl font-extrabold tracking-tight">
-                {groupsJoinedCount} <span className="text-lg font-medium text-muted-foreground">cercles</span>
+                {groupsJoinedCount} <span className="text-lg font-medium text-muted-foreground">{t('circles_unit')}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Vous êtes membre de {groupsJoinedCount} différents cercles d'épargne tontine actifs.
+                {t('prof_member_of_prefix')} {groupsJoinedCount} {t('prof_member_of_suffix')}
               </p>
             </CardContent>
           </Card>
@@ -1240,27 +1210,27 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           <Card className="flex flex-col justify-between col-span-1">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-500" />
-                Tableau de bord des cotisations
+                <Clock className="w-4 h-4 text-brand" />
+                {t('prof_contributions_dashboard')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-3">
               <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                <div className="bg-emerald-50/50 p-2 rounded-xl border border-emerald-100">
-                  <span className="font-bold text-lg text-emerald-600 block">{paidCount}</span>
-                  <span className="text-muted-foreground">Payés</span>
+                <div className="bg-success-soft/50 p-2 rounded-xl border border-secondary/20">
+                  <span className="font-bold text-lg text-secondary block">{paidCount}</span>
+                  <span className="text-muted-foreground">{t('prof_paid_plural')}</span>
                 </div>
-                <div className="bg-rose-50/50 p-2 rounded-xl border border-rose-100">
-                  <span className="font-bold text-lg text-rose-600 block">{lateCount}</span>
-                  <span className="text-muted-foreground">Retards</span>
+                <div className="bg-danger-soft/50 p-2 rounded-xl border border-danger/20">
+                  <span className="font-bold text-lg text-danger block">{lateCount}</span>
+                  <span className="text-muted-foreground">{t('prof_lates')}</span>
                 </div>
                 <div className="bg-blue-50/50 p-2 rounded-xl border border-blue-100">
                   <span className="font-bold text-md text-blue-600 block">{pendingApprovalCount}</span>
-                  <span className="text-[10px] text-muted-foreground">Vérification</span>
+                  <span className="text-[10px] text-muted-foreground">{t('status_verification_short')}</span>
                 </div>
-                <div className="bg-slate-50 p-2 rounded-xl border">
+                <div className="bg-muted p-2 rounded-xl border">
                   <span className="font-bold text-md block">{pendingCount}</span>
-                  <span className="text-muted-foreground">À payer</span>
+                  <span className="text-muted-foreground">{t('prof_to_pay')}</span>
                 </div>
               </div>
             </CardContent>
@@ -1271,12 +1241,13 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
       {/* Historical logs table card with Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 max-w-[550px] mb-4 bg-slate-100 p-1 rounded-xl">
-          <TabsTrigger value="contributions" className="rounded-lg font-bold py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Contributions</TabsTrigger>
-          <TabsTrigger value="wallet" className="rounded-lg font-bold py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">Portefeuille</TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-lg font-bold py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm flex items-center gap-1.5">
+        <TabsList className="flex overflow-x-auto gap-2 mb-4 bg-transparent p-0 scrollbar-none snap-x max-w-full">
+          <TabsTrigger value="contributions" className="rounded-xl font-bold py-2 px-4 data-[state=active]:bg-brand data-[state=active]:text-white bg-muted">{t('contributions')}</TabsTrigger>
+          <TabsTrigger value="wallet" className="rounded-xl font-bold py-2 px-4 data-[state=active]:bg-brand data-[state=active]:text-white bg-muted">{t('my_wallet')}</TabsTrigger>
+          <TabsTrigger value="referral" className="rounded-xl font-bold py-2 px-4 data-[state=active]:bg-brand data-[state=active]:text-white bg-muted flex items-center gap-1.5"><Gift className="w-4 h-4"/> Parrainage</TabsTrigger>
+          <TabsTrigger value="settings" className="rounded-xl font-bold py-2 px-4 data-[state=active]:bg-brand data-[state=active]:text-white bg-muted flex items-center gap-1.5">
             <Settings className="w-4 h-4" />
-            Paramètres
+            {t('settings')}
           </TabsTrigger>
         </TabsList>
 
@@ -1284,9 +1255,9 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 gap-4">
               <div>
-                <CardTitle>Registre des Contributions</CardTitle>
+                <CardTitle>{t('prof_contributions_registry')}</CardTitle>
                 <CardDescription>
-                  Historique complet de toutes vos transactions et justificatifs de versement
+                  {t('prof_contributions_registry_desc')}
                 </CardDescription>
               </div>
               
@@ -1297,31 +1268,31 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                   className="rounded-xl"
                   onClick={() => setFilterStatus('all')}
                 >
-                  Tous
+                  {t('all')}
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant={filterStatus === 'paid' ? 'default' : 'outline'}
                   className="rounded-xl"
                   onClick={() => setFilterStatus('paid')}
                 >
-                  Payés
+                  {t('prof_paid_plural')}
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant={filterStatus === 'pending_approval' ? 'default' : 'outline'}
                   className="rounded-xl"
                   onClick={() => setFilterStatus('pending_approval')}
                 >
-                  En vérification
+                  {t('prof_in_verification')}
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant={filterStatus === 'late' ? 'default' : 'outline'}
                   className="rounded-xl font-medium"
                   onClick={() => setFilterStatus('late')}
                 >
-                  En retard
+                  {t('status_late')}
                 </Button>
               </div>
             </CardHeader>
@@ -1330,13 +1301,13 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
               {loadingContributions ? (
                 <div className="flex items-center justify-center py-20 text-muted-foreground">
                   <Clock className="w-6 h-6 animate-spin mr-2" />
-                  Récupération du registre de trésorerie...
+                  {t('prof_fetching_ledger')}
                 </div>
               ) : getFilteredContributions.length === 0 ? (
                 <EmptyState
                   icon={AlertTriangle}
-                  title="Aucune contribution"
-                  description="Aucune contribution n'a été enregistrée dans cette catégorie pour le moment. Vos cotisations s'afficheront ici automatiquement."
+                  title={t('prof_no_contribution')}
+                  description={t('prof_no_contribution_desc')}
                   variant="amber"
                 />
               ) : (
@@ -1344,19 +1315,19 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Cercle d'épargne</TableHead>
-                        <TableHead>Période d'appel</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Date d'échéance</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Identifiant / Réf de transaction</TableHead>
+                        <TableHead>{t('prof_circle_col')}</TableHead>
+                        <TableHead>{t('prof_call_period_col')}</TableHead>
+                        <TableHead>{t('amount')}</TableHead>
+                        <TableHead>{t('prof_due_date_col')}</TableHead>
+                        <TableHead>{t('status')}</TableHead>
+                        <TableHead>{t('prof_id_ref_col')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {getFilteredContributions.map((c) => (
-                        <TableRow key={c.id} className="hover:bg-slate-50/50">
+                        <TableRow key={c.id} className="hover:bg-muted/50">
                           <TableCell className="font-semibold">{getGroupName(c.groupId)}</TableCell>
-                          <TableCell className="font-medium text-slate-700">{c.period || "-"}</TableCell>
+                          <TableCell className="font-medium text-foreground">{c.period || "-"}</TableCell>
                           <TableCell className="font-bold">
                             {c.amount.toLocaleString()} {groups[0]?.currency || "FCFA"}
                           </TableCell>
@@ -1365,28 +1336,28 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                           </TableCell>
                           <TableCell>
                             {c.status === 'paid' && (
-                              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Payé</Badge>
+                              <Badge className="bg-success-soft text-secondary border-secondary/20">{t('status_paid')}</Badge>
                             )}
                             {c.status === 'pending_approval' && (
-                              <Badge className="bg-blue-100 text-blue-800 border-blue-200 animate-pulse">Vérification</Badge>
+                              <Badge className="bg-blue-100 text-blue-800 border-blue-200 animate-pulse">{t('status_verification_short')}</Badge>
                             )}
                             {c.status === 'pending' && (
-                              <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">En attente</Badge>
+                              <Badge variant="outline" className="text-brand border-brand/20 bg-brand/10">{t('status_pending')}</Badge>
                             )}
                             {c.status === 'late' && (
-                              <Badge variant="destructive">En retard</Badge>
+                              <Badge variant="destructive">{t('status_late')}</Badge>
                             )}
                           </TableCell>
-                          <TableCell className="font-mono text-xs text-slate-500">
+                          <TableCell className="font-mono text-xs text-muted-foreground">
                             {c.proofOfPayment?.reference ? (
                               <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50/50 py-1 px-2.5 rounded-lg border border-blue-100 max-w-max">
                                 <Clock className="w-3.5 h-3.5" />
                                 {c.proofOfPayment.reference}
                               </span>
                             ) : c.status === 'paid' ? (
-                              <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50/50 py-1 px-2.5 rounded-lg border border-emerald-100 max-w-max">
+                              <span className="flex items-center gap-1 text-secondary bg-success-soft/50 py-1 px-2.5 rounded-lg border border-secondary/20 max-w-max">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                Validation direct
+                                {t('prof_direct_validation')}
                               </span>
                             ) : (
                               <span className="text-muted-foreground italic">-</span>
@@ -1406,9 +1377,9 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 gap-4">
               <div>
-                <CardTitle>Transactions du Portefeuille</CardTitle>
+                <CardTitle>{t('prof_wallet_transactions')}</CardTitle>
                 <CardDescription>
-                  Historique complet de vos recharges Paydunya, prélèvements automatiques et payouts de tontine.
+                  {t('prof_wallet_transactions_desc')}
                 </CardDescription>
               </div>
               {walletTransactions.length > 0 && (
@@ -1417,35 +1388,49 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                     size="sm"
                     variant="outline"
                     onClick={handleExportCSV}
-                    className="rounded-xl flex items-center gap-1.5 h-8 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-700"
+                    className="rounded-xl flex items-center gap-1.5 h-8 text-xs font-bold border-border hover:bg-muted text-foreground"
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Export CSV</span>
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-secondary" />
+                    <span>{t('prof_export_csv')}</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={handleExportPDF}
-                    className="rounded-xl flex items-center gap-1.5 h-8 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-700"
+                    className="rounded-xl flex items-center gap-1.5 h-8 text-xs font-bold border-border hover:bg-muted text-foreground"
                   >
-                    <FileText className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Statement PDF</span>
+                    <FileText className="w-3.5 h-3.5 text-danger" />
+                    <span>{t('prof_statement_pdf')}</span>
                   </Button>
                 </div>
               )}
             </CardHeader>
             <CardContent>
+              {walletTransactions.length > 0 && (
+                <div className="h-48 mb-6 mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={[...walletTransactions].reverse().map(t => ({ date: format(new Date(t.created_at), 'dd/MM'), amount: t.amount }))}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                      <YAxis hide domain={['auto', 'auto']} />
+                      <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} />
+                      <Line type="monotone" dataKey="amount" stroke="#16a34a" strokeWidth={3} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
               {loadingTransactions ? (
                 <div className="flex items-center justify-center py-20 text-muted-foreground">
                   <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                  Récupération de l'historique du portefeuille...
+                  {t('prof_fetching_wallet')}
                 </div>
               ) : walletTransactions.length === 0 ? (
                 <EmptyState
                   icon={Wallet}
-                  title="Aucune transaction"
-                  description="Votre portefeuille virtuel n'a encore enregistré aucun mouvement financier. Effectuez un rechargement pour commencer !"
-                  actionText="Recharger mon portefeuille"
+                  title={t('prof_no_transaction')}
+                  description={t('prof_no_transaction_desc')}
+                  actionText={t('recharge_wallet_title')}
                   onAction={() => setRechargeOpen(true)}
                   variant="emerald"
                 />
@@ -1454,47 +1439,47 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Date & Heure</TableHead>
-                        <TableHead>Méthode</TableHead>
-                        <TableHead>Statut</TableHead>
+                        <TableHead>{t('prof_type')}</TableHead>
+                        <TableHead>{t('prof_description')}</TableHead>
+                        <TableHead>{t('amount')}</TableHead>
+                        <TableHead>{t('prof_date_time')}</TableHead>
+                        <TableHead>{t('prof_method')}</TableHead>
+                        <TableHead>{t('status')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {walletTransactions.map((tx) => (
-                        <TableRow key={tx.id} className="hover:bg-slate-50/50">
+                        <TableRow key={tx.id} className="hover:bg-muted/50">
                           <TableCell>
                             {tx.amount > 0 ? (
-                              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 flex items-center gap-1 max-w-max">
+                              <Badge className="bg-success-soft text-secondary border-secondary/20 flex items-center gap-1 max-w-max">
                                 <ArrowUpRight className="w-3 h-3" />
-                                Crédit
+                                {t('prof_credit')}
                               </Badge>
                             ) : (
-                              <Badge className="bg-rose-100 text-rose-800 border-rose-200 flex items-center gap-1 max-w-max">
+                              <Badge className="bg-danger-soft text-danger border-danger/20 flex items-center gap-1 max-w-max">
                                 <ArrowDownRight className="w-3 h-3" />
-                                Débit
+                                {t('prof_debit')}
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="font-semibold text-slate-800">
+                          <TableCell className="font-semibold text-foreground">
                             {tx.description}
                           </TableCell>
-                          <TableCell className={`font-black ${tx.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          <TableCell className={`font-black ${tx.amount > 0 ? 'text-secondary' : 'text-danger'}`}>
                             {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()} FCFA
                           </TableCell>
                           <TableCell className="text-muted-foreground text-xs font-medium">
                             {format(new Date(tx.date), 'dd MMMM yyyy HH:mm', { locale: fr })}
                           </TableCell>
                           <TableCell>
-                            <span className="capitalize text-xs bg-slate-100 py-1 px-2.5 rounded-lg border font-semibold text-slate-600">
+                            <span className="capitalize text-xs bg-muted py-1 px-2.5 rounded-lg border font-semibold text-muted-foreground">
                               {tx.paymentMethod || 'Paydunya'}
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge className="bg-emerald-500 text-white font-semibold">
-                              {tx.status === 'completed' ? 'Complété' : tx.status}
+                            <Badge className="bg-success-soft0 text-white font-semibold">
+                              {tx.status === 'completed' ? t('prof_completed') : tx.status}
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -1507,62 +1492,108 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="referral">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl text-brand">
+                <Gift className="w-6 h-6" />
+                Invitez vos proches, gagnez plus !
+              </CardTitle>
+              <CardDescription>
+                Parrainez vos amis et gagnez 1000 FCFA pour chaque ami qui rejoint un cercle de tontine.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-muted p-6 rounded-2xl border border-border text-center space-y-4">
+                <h4 className="font-bold text-foreground">Votre code de parrainage</h4>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="bg-background border-2 border-dashed border-brand/50 px-6 py-3 rounded-xl font-mono text-2xl font-black text-brand tracking-widest">
+                    EGANYE-{user.uid.substring(0, 5).toUpperCase()}
+                  </div>
+                  <Button variant="outline" size="icon" className="rounded-xl h-12 w-12" onClick={() => {
+                    navigator.clipboard.writeText(`EGANYE-${user.uid.substring(0, 5).toUpperCase()}`);
+                    toast.success('Code copié !');
+                  }}>
+                    <Copy className="w-5 h-5 text-muted-foreground" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">Partagez ce code avec vos contacts</p>
+                <Button className="mt-4 rounded-xl font-bold bg-brand hover:bg-brand-deep w-full sm:w-auto">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Partager l'application
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-success-soft border border-secondary/20">
+                  <p className="text-xs font-bold uppercase text-secondary">Amis parrainés</p>
+                  <p className="text-3xl font-black text-secondary mt-1">0</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-brand/10 border border-brand/20">
+                  <p className="text-xs font-bold uppercase text-brand">Gains générés</p>
+                  <p className="text-3xl font-black text-brand mt-1">0 FCFA</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-950">
-                <Settings className="w-5 h-5 text-[#E67E22]" />
-                Paramètres généraux d'eganyé
+              <CardTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
+                <Settings className="w-5 h-5 text-brand" />
+                {t('prof_general_settings')}
               </CardTitle>
               <CardDescription>
-                Personnalisez vos identifiants de connexion, la langue de l'application, et dessinez votre avatar vectoriel unique.
+                {t('prof_general_settings_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* Left Column: Traditional Forms */}
-                <div className="lg:col-span-6 space-y-6">
+                <div className="lg:col-span-6 space-y-6 min-w-0 w-full overflow-hidden">
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-b pb-1">Sécurité & Identité</h3>
-                    
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-widest border-b pb-1">{t('prof_security_identity')}</h3>
+
                     <div className="space-y-1.5">
-                      <Label htmlFor="set_name" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-amber-500" />
-                        Nom d'utilisateur / Surnom
+                      <Label htmlFor="set_name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-brand" />
+                        {t('prof_username_nickname')}
                       </Label>
-                      <Input 
+                      <Input
                         id="set_name"
                         value={editDisplayName}
                         onChange={(e) => setEditDisplayName(e.target.value)}
-                        className="rounded-xl border-slate-200 focus-visible:ring-amber-500"
-                        placeholder="Ex: Fatou Sy"
+                        className="rounded-xl border-border focus-visible:ring-primary"
+                        placeholder={t('prof_ex_name')}
                       />
                     </div>
 
                     {canChangePassword && (
                       <div className="space-y-1.5">
-                        <Label htmlFor="set_pass" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-amber-500" />
-                          Nouveau mot de passe
+                        <Label htmlFor="set_pass" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-brand" />
+                          {t('prof_new_password')}
                         </Label>
                         <Input
                           id="set_pass"
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="rounded-xl border-slate-200 focus-visible:ring-amber-500"
-                          placeholder="Laisser vide pour ne pas changer"
+                          className="rounded-xl border-border focus-visible:ring-primary"
+                          placeholder={t('prof_leave_blank')}
                           minLength={6}
                         />
-                        <p className="text-[10px] text-muted-foreground">Laissé vide si vous ne voulez pas changer votre mot de passe. Minimum 6 caractères.</p>
+                        <p className="text-[10px] text-muted-foreground">{t('prof_leave_blank_pw_desc')}</p>
                       </div>
                     )}
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="set_pin" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Lock className="text-rose-500 w-3.5 h-3.5 animate-pulse" />
-                        Code PIN de Retrait Sécurisé (4 chiffres)
+                      <Label htmlFor="set_pin" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Lock className="text-danger w-3.5 h-3.5 animate-pulse" />
+                        {t('prof_withdrawal_pin')}
                       </Label>
                       <Input
                         id="set_pin"
@@ -1571,48 +1602,48 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                         pattern="\d{4}"
                         value={editSecurityPin}
                         onChange={(e) => setEditSecurityPin(e.target.value.replace(/\D/g, ''))}
-                        className="rounded-xl border-slate-200 focus-visible:ring-rose-500 font-mono tracking-[0.25em] font-bold text-slate-900"
-                        placeholder={user.securityPin ? "••••" : "Définir un code PIN"}
+                        className="rounded-xl border-border focus-visible:ring-danger font-mono tracking-[0.25em] font-bold text-foreground"
+                        placeholder={user.securityPin ? t('prof_pin_placeholder_set') : t('prof_pin_placeholder_define')}
                       />
-                      <p className="text-[10px] text-muted-foreground">Sert d'authentification pour toutes vos actions de retrait. Laissé vide pour ne pas changer.</p>
+                      <p className="text-[10px] text-muted-foreground">{t('prof_pin_desc')}</p>
                     </div>
                   </div>
 
                   <div className="space-y-4 pt-2">
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-b pb-1">{t('display_preferences')}</h3>
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-widest border-b pb-1">{t('display_preferences')}</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                          <Globe className="w-3.5 h-3.5 text-amber-500" />
+                        <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Globe className="w-3.5 h-3.5 text-brand" />
                           {t('app_language')}
                         </Label>
-                        <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                        <div className="grid grid-cols-4 gap-1 bg-muted p-1 rounded-xl border border-border">
                           <button
                             type="button"
                             onClick={() => setEditLanguage('fr')}
-                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'fr' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'fr' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             FR
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditLanguage('en')}
-                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'en' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'en' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             EN
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditLanguage('wo')}
-                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'wo' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'wo' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             WO
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditLanguage('bm')}
-                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'bm' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            className={`text-[10px] font-bold py-1.5 rounded-lg transition-all ${editLanguage === 'bm' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             BM
                           </button>
@@ -1620,22 +1651,30 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-brand" />
                           {t('visual_theme')}
                         </Label>
-                        <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                        <div className="flex gap-1.5 bg-muted p-1 rounded-xl border border-border">
                           <button
                             type="button"
-                            onClick={() => setEditTheme('light')}
-                            className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-all ${editTheme === 'light' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            onClick={() => {
+                              setEditTheme('light');
+                              document.documentElement.classList.remove('dark');
+                              document.documentElement.classList.add('light');
+                            }}
+                            className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-all ${editTheme === 'light' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             {t('light_mode')}
                           </button>
                           <button
                             type="button"
-                            onClick={() => setEditTheme('dark')}
-                            className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-all ${editTheme === 'dark' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            onClick={() => {
+                              setEditTheme('dark');
+                              document.documentElement.classList.remove('light');
+                              document.documentElement.classList.add('dark');
+                            }}
+                            className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-all ${editTheme === 'dark' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             {t('dark_mode')}
                           </button>
@@ -1645,53 +1684,25 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest border-b pb-1">Notifications</h3>
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-widest border-b pb-1">{t('prof_notifications_section')}</h3>
 
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between bg-muted p-3.5 rounded-2xl border border-border">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-[#2BB673]">
-                          <Bell className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Notifications push</h4>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Recevoir des alertes même app fermée</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        title={pushEnabled ? 'Désactiver les notifications push' : 'Activer les notifications push'}
-                        aria-label={pushEnabled ? 'Désactiver les notifications push' : 'Activer les notifications push'}
-                        disabled={isTogglingPush}
-                        onClick={handleTogglePush}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
-                          pushEnabled ? 'bg-[#2BB673]' : 'bg-slate-200 dark:bg-slate-800'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            pushEnabled ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-sky-50 dark:bg-sky-950/40 rounded-xl text-sky-600">
+                        <div className="p-1.5 bg-blue-500/10 rounded-xl text-blue-500">
                           <Mail className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Notifications par email</h4>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Recevoir un résumé par email</p>
+                          <h4 className="text-xs font-black text-foreground">{t('prof_email_notif')}</h4>
+                          <p className="text-[10px] text-muted-foreground font-medium">{t('prof_email_notif_desc')}</p>
                         </div>
                       </div>
                       <button
                         type="button"
-                        title={emailNotifEnabled ? 'Désactiver les notifications par email' : 'Activer les notifications par email'}
-                        aria-label={emailNotifEnabled ? 'Désactiver les notifications par email' : 'Activer les notifications par email'}
+                        title={emailNotifEnabled ? t('prof_disable_email') : t('prof_enable_email')}
+                        aria-label={emailNotifEnabled ? t('prof_disable_email') : t('prof_enable_email')}
                         onClick={handleToggleEmailNotifications}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          emailNotifEnabled ? 'bg-[#2BB673]' : 'bg-slate-200 dark:bg-slate-800'
+                          emailNotifEnabled ? 'bg-secondary' : 'bg-border'
                         }`}
                       >
                         <span
@@ -1705,7 +1716,7 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
                 </div>
 
                 {/* Right Column: Dynamic Reusable SVG Avatar Workshop */}
-                <div className="lg:col-span-6 bg-slate-50/50 dark:bg-slate-900/30 p-2 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="lg:col-span-6 bg-muted/50 p-2 sm:p-4 rounded-2xl border border-border min-w-0 w-full overflow-hidden">
                   <AvatarWorkshop 
                     value={editAvatar} 
                     onChange={setEditAvatar} 
@@ -1718,45 +1729,47 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
               <Button 
                 onClick={async () => {
                   if (!editDisplayName.trim()) {
-                    toast.error("Veuillez entrer un nom d'utilisateur valide.");
+                    toast.error(t('prof_valid_username'));
                     return;
                   }
                   if (editSecurityPin && editSecurityPin.length !== 4) {
-                    toast.error("Le code PIN de retrait doit comporter exactement 4 chiffres.");
+                    toast.error(t('prof_pin_exactly_4'));
                     return;
                   }
                   if (newPassword && newPassword.length < 6) {
-                    toast.error("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+                    toast.error(t('prof_pw_min_6'));
                     return;
                   }
                   setSavingSettings(true);
                   try {
                     if (newPassword) {
-                      try {
-                        await changePassword(newPassword);
-                      } catch (pwError: any) {
-                        if (pwError?.code === 'auth/requires-recent-login') {
-                          toast.error("Pour changer votre mot de passe, veuillez vous déconnecter puis vous reconnecter, et réessayez.");
+                      const { error: pwError } = await changePassword(newPassword);
+                      if (pwError) {
+                        if (pwError.message?.toLowerCase().includes('session')) {
+                          toast.error(t('prof_pw_relogin'));
                         } else {
-                          toast.error("Le mot de passe n'a pas pu être modifié : " + (pwError?.message || pwError));
+                          toast.error(t('prof_pw_change_failed') + pwError.message);
                         }
                         setSavingSettings(false);
                         return;
                       }
                     }
 
-                    const userRef = doc(db, 'users', user.uid);
-                    const updates: Record<string, any> = {
-                      displayName: editDisplayName,
+                    const { error: profileError } = await supabase.from('profiles').update({
+                      display_name: editDisplayName,
                       language: editLanguage,
                       theme: editTheme,
-                      photoURL: JSON.stringify(editAvatar),
-                      updatedAt: new Date().toISOString()
-                    };
+                      avatar_config: editAvatar,
+                    }).eq('id', user.uid);
+                    if (profileError) throw profileError;
+
                     if (editSecurityPin) {
-                      updates.securityPin = editSecurityPin;
+                      const { error: pinError } = await supabase.rpc('set_user_pin', {
+                        p_user_id: user.uid,
+                        p_new_pin: editSecurityPin,
+                      });
+                      if (pinError) throw pinError;
                     }
-                    await updateDoc(userRef, updates);
 
                     // Sync to global context
                     await setLanguage(editLanguage as any);
@@ -1772,23 +1785,23 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
 
                     setNewPassword('');
                     setEditSecurityPin('');
-                    toast.success("Paramètres enregistrés avec succès !");
+                    toast.success(t('prof_settings_saved'));
                   } catch (error) {
                     console.error("Error saving settings:", error);
-                    toast.error("Erreur lors de la sauvegarde des paramètres.");
+                    toast.error(t('prof_settings_error'));
                   } finally {
                     setSavingSettings(false);
                   }
                 }}
                 disabled={savingSettings}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl px-8 flex items-center gap-2"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-8 flex items-center gap-2"
               >
                 {savingSettings ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Check className="w-4 h-4" />
                 )}
-                Enregistrer les paramètres
+                {t('prof_save_settings')}
               </Button>
             </CardFooter>
           </Card>
@@ -1800,8 +1813,8 @@ export function Profile({ user, groups, defaultTab }: ProfileProps) {
         isOpen={isConfirmRechargeOpen}
         onClose={() => setIsConfirmRechargeOpen(false)}
         onConfirm={executeRecharge}
-        title="Confirmer la recharge"
-        description="Vous allez être redirigé vers l'interface de paiement sécurisée Paydunya afin d'approvisionner votre portefeuille virtuel d'un montant de :"
+        title={t('prof_confirm_recharge_title')}
+        description={t('prof_confirm_recharge_desc')}
         amount={parseFloat(rechargeAmount) || 0}
         type="recharge"
         isLoading={isRedirecting}

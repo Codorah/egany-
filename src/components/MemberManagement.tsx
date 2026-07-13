@@ -1,9 +1,6 @@
 import React from 'react';
-import { db } from '@/lib/firebase';
-import {
-  doc, updateDoc, arrayUnion, arrayRemove, deleteField,
-  collection, query, where, getDocs
-} from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
+import { mapProfileRow } from '@/lib/mappers';
 import { Group, UserProfile, GroupMemberRole } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,11 +33,14 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
 
   React.useEffect(() => {
     const fetchProfiles = async () => {
-      const entries: Record<string, UserProfile> = {};
-      for (const uid of allUids) {
-        const snap = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
-        if (!snap.empty) entries[uid] = snap.docs[0].data() as UserProfile;
+      if (allUids.length === 0) return;
+      const { data, error } = await supabase.from('profiles').select('*').in('id', allUids);
+      if (error) {
+        console.error('Error fetching member profiles:', error);
+        return;
       }
+      const entries: Record<string, UserProfile> = {};
+      for (const row of data ?? []) entries[row.id] = mapProfileRow(row);
       setProfiles(entries);
     };
     fetchProfiles();
@@ -52,16 +52,15 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   const handleAccept = async (uid: string) => {
     setBusyUid(uid);
     try {
-      const groupRef = doc(db, 'groups', group.id);
-      await updateDoc(groupRef, {
-        members: arrayUnion(uid),
-        payoutOrder: arrayUnion(uid),
-        pendingMembers: arrayRemove(uid)
+      const { error } = await supabase.rpc('assign_next_payout_position', {
+        p_group_id: group.id,
+        p_user_id: uid,
       });
+      if (error) throw error;
+
       const profile = profiles[uid];
-      await updateDoc(doc(db, 'users', uid), {
-        groupsJoined: (profile?.groupsJoined || 0) + 1
-      });
+      await supabase.from('profiles').update({ groups_joined: (profile?.groupsJoined || 0) + 1 }).eq('id', uid);
+
       await notify(uid, `Adhésion approuvée - ${group.name}`, `Votre demande pour rejoindre "${group.name}" a été acceptée. Bienvenue !`);
       toast.success(`${profile?.displayName || 'Le membre'} a été accepté dans le cercle.`);
     } catch (error) {
@@ -75,7 +74,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   const handleReject = async (uid: string) => {
     setBusyUid(uid);
     try {
-      await updateDoc(doc(db, 'groups', group.id), { pendingMembers: arrayRemove(uid) });
+      const { error } = await supabase.from('group_members').delete().eq('group_id', group.id).eq('user_id', uid);
+      if (error) throw error;
       await notify(uid, `Adhésion refusée - ${group.name}`, `Votre demande pour rejoindre "${group.name}" a été refusée par l'administrateur.`);
       toast.success('Demande refusée.');
     } catch (error) {
@@ -95,11 +95,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
 
     setBusyUid(uid);
     try {
-      await updateDoc(doc(db, 'groups', group.id), {
-        members: arrayRemove(uid),
-        payoutOrder: arrayRemove(uid),
-        [`memberRoles.${uid}`]: deleteField()
-      });
+      const { error } = await supabase.from('group_members').delete().eq('group_id', group.id).eq('user_id', uid);
+      if (error) throw error;
       await notify(uid, `Exclusion - ${group.name}`, `Vous avez été exclu du cercle "${group.name}" par l'administrateur.`);
       toast.success('Membre exclu du cercle.');
     } catch (error) {
@@ -113,9 +110,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   const handleRoleChange = async (uid: string, role: GroupMemberRole) => {
     setBusyUid(uid);
     try {
-      await updateDoc(doc(db, 'groups', group.id), {
-        [`memberRoles.${uid}`]: role === 'member' ? deleteField() : role
-      });
+      const { error } = await supabase.from('group_members').update({ role }).eq('group_id', group.id).eq('user_id', uid);
+      if (error) throw error;
       toast.success(`Rôle mis à jour : ${roleLabels[role]}.`);
     } catch (error) {
       console.error('Error updating member role:', error);
@@ -141,13 +137,13 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
           <div className="space-y-2">
             <p className="text-xs font-bold uppercase text-muted-foreground">Demandes en attente ({pendingMembers.length})</p>
             {pendingMembers.map((uid) => (
-              <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg bg-amber-50/50 border-amber-200">
+              <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg bg-brand/10 border-brand/20">
                 <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
                 <div className="flex gap-1.5">
-                  <Button size="icon" variant="outline" className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
+                  <Button size="icon" variant="outline" className="h-8 w-8 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
                     {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="outline" className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50" disabled={busyUid === uid} onClick={() => handleReject(uid)} title="Refuser">
+                  <Button size="icon" variant="outline" className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title="Refuser">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -179,7 +175,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                     </SelectContent>
                   </Select>
                   {!isCreatorRow && (
-                    <Button size="icon" variant="outline" className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50" disabled={busyUid === uid} onClick={() => handleExclude(uid)} title="Exclure">
+                    <Button size="icon" variant="outline" className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExclude(uid)} title="Exclure">
                       <UserMinus className="h-4 w-4" />
                     </Button>
                   )}

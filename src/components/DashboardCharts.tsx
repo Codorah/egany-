@@ -1,21 +1,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db } from '@/lib/firebase';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapContributionRow, mapWalletTransactionRow } from '@/lib/mappers';
 import { Group, UserProfile, WalletTransaction, Contribution } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, Wallet, Landmark, Calendar, ChevronDown } from 'lucide-react';
 
@@ -49,25 +49,24 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const q = query(
-      collection(db, 'users', user.uid, 'walletTransactions')
-    );
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      const txs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as WalletTransaction[];
-      
-      // Filter out failed transactions and sort chronologically (oldest first)
-      const completedTxs = txs
+    const fetchTx = async () => {
+      const { data, error } = await supabase.from('wallet_transactions').select('*').eq('user_id', user.uid);
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        return;
+      }
+      const completedTxs = (data ?? [])
+        .map(mapWalletTransactionRow)
         .filter(t => t.status === 'completed')
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
       setTransactions(completedTxs);
-    });
+    };
+    fetchTx();
 
-    return () => unsub();
+    const channel = createChannel(`dashboard-tx-${user.uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${user.uid}` }, () => fetchTx())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user?.uid]);
 
   // Load Group Contributions (all groups the user is member of)
@@ -77,30 +76,22 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
       return;
     }
 
-    const unsubscribes: (() => void)[] = [];
-    const allContsMap: { [groupId: string]: Contribution[] } = {};
+    const groupIds = groups.map((g) => g.id);
 
-    groups.forEach((group) => {
-      const q = collection(db, 'groups', group.id, 'contributions');
-      const unsub = onSnapshot(q, (snapshot) => {
-        const groupConts = snapshot.docs.map(doc => ({
-          id: doc.id,
-          groupId: group.id,
-          ...doc.data()
-        })) as Contribution[];
-        
-        allContsMap[group.id] = groupConts;
-
-        // Flatten all contributions
-        const flatConts = Object.values(allContsMap).flat();
-        setContributions(flatConts);
-      });
-      unsubscribes.push(unsub);
-    });
-
-    return () => {
-      unsubscribes.forEach(unsub => unsub());
+    const fetchContributions = async () => {
+      const { data, error } = await supabase.from('contributions').select('*').in('group_id', groupIds);
+      if (error) {
+        console.error('Error fetching contributions:', error);
+        return;
+      }
+      setContributions((data ?? []).map(mapContributionRow));
     };
+    fetchContributions();
+
+    const channel = createChannel(`dashboard-contributions-${groupIds.join('-')}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, () => fetchContributions())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [groups]);
 
   // Set default selected group once groups are loaded
@@ -119,7 +110,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
       past.setMonth(past.getMonth() - 2);
       const prev = new Date();
       prev.setMonth(prev.getMonth() - 1);
-      
+
       return [
         { name: getMonthName(past.toISOString()), Balance: 0 },
         { name: getMonthName(prev.toISOString()), Balance: Math.round(user.walletBalance * 0.4) },
@@ -135,7 +126,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
       // amount can be positive or negative
       runningBalance += tx.amount;
       const monthName = getMonthName(tx.date);
-      
+
       const existing = data.find(d => d.name === monthName);
       if (existing) {
         existing.Balance = runningBalance;
@@ -159,10 +150,10 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
   // 2. Process group monthly contributions
   const contributionData = useMemo(() => {
     const selectedGroupObj = groups.find(g => g.id === selectedGroupId);
-    
+
     // Filter contributions by selected group
-    const filtered = selectedGroupId === 'all' 
-      ? contributions 
+    const filtered = selectedGroupId === 'all'
+      ? contributions
       : contributions.filter(c => c.groupId === selectedGroupId);
 
     if (filtered.length === 0) {
@@ -214,30 +205,40 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
     return `${value.toLocaleString()} FCFA`;
   };
 
+  const tooltipStyle = {
+    backgroundColor: 'var(--card)',
+    borderRadius: '16px',
+    border: '1px solid var(--border)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+    fontFamily: 'Inter, sans-serif',
+    color: 'var(--foreground)',
+  };
+  const labelStyle = { color: 'var(--foreground)', fontWeight: 700 };
+
   return (
-    <Card className="bg-white border border-[#D4A574]/20 shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
-      <CardHeader className="pb-4 bg-[#FBF8F3]/40 border-b border-slate-100/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+      <CardHeader className="pb-4 bg-muted/40 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <CardTitle className="font-serif text-lg font-bold text-[#4B2E05] flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#2BB673]" />
+          <CardTitle className="font-serif text-lg font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-secondary" />
             Analyses d'Épargne & Cotisations
           </CardTitle>
-          <CardDescription className="text-xs text-slate-500 font-medium">
+          <CardDescription className="text-xs text-muted-foreground font-medium">
             Visualisez la croissance de vos fonds et le statut des cotisations.
           </CardDescription>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-          <TabsList className="bg-slate-100/80 p-0.5 rounded-xl h-9">
-            <TabsTrigger 
-              value="balance" 
-              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#4B2E05] data-[state=active]:shadow-xs"
+          <TabsList className="bg-muted p-0.5 rounded-xl h-9">
+            <TabsTrigger
+              value="balance"
+              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
               Balance Globale
             </TabsTrigger>
-            <TabsTrigger 
-              value="contributions" 
-              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#4B2E05] data-[state=active]:shadow-xs"
+            <TabsTrigger
+              value="contributions"
+              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
               Cotisations du Cercle
             </TabsTrigger>
@@ -247,7 +248,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
 
       <CardContent className="pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          
+
           {/* TAB 1: BALANCE EVOLUTION */}
           <TabsContent value="balance" className="mt-0 outline-none">
             <motion.div
@@ -256,33 +257,33 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-[#FBF8F3] border border-[#D4A574]/10 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2BB673]/10 flex items-center justify-center text-[#2BB673]">
+              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Solde Portefeuille</p>
-                  <p className="font-serif font-extrabold text-base text-[#4B2E05]">{formatCurrency(user.walletBalance)}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Solde Portefeuille</p>
+                  <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.walletBalance)}</p>
                 </div>
               </div>
-              <div className="p-4 bg-[#FBF8F3] border border-[#D4A574]/10 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#E67E22]/10 flex items-center justify-center text-[#E67E22]">
+              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand">
                   <Landmark className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Total Épargné</p>
-                  <p className="font-serif font-extrabold text-base text-[#4B2E05]">{formatCurrency(user.totalSaved)}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Épargné</p>
+                  <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.totalSaved)}</p>
                 </div>
               </div>
-              <div className="p-4 bg-[#FBF8F3] border border-[#D4A574]/10 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
+              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-eganye-gold/10 flex items-center justify-center text-eganye-gold">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Dernière Transaction</p>
-                  <p className="font-serif font-bold text-sm text-[#4B2E05]">
-                    {transactions.length > 0 
-                      ? new Date(transactions[transactions.length - 1].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) 
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Dernière Transaction</p>
+                  <p className="font-serif font-bold text-sm text-foreground">
+                    {transactions.length > 0
+                      ? new Date(transactions[transactions.length - 1].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
                       : 'Aucune'}
                   </p>
                 </div>
@@ -294,41 +295,37 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                 <LineChart data={balanceData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2BB673" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#2BB673" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--secondary)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="var(--secondary)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#94A3B8" 
-                    fontSize={11} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    stroke="#94A3B8" 
-                    fontSize={11} 
-                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`} 
-                    tickLine={false} 
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--ink-soft)"
+                    fontSize={11}
+                    tickLine={false}
                     axisLine={false}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '16px', 
-                      border: '1px solid rgba(212, 165, 116, 0.2)', 
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}
+                  <YAxis
+                    stroke="var(--ink-soft)"
+                    fontSize={11}
+                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelStyle={labelStyle}
                     formatter={(value: any) => [formatCurrency(Number(value)), 'Solde']}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Balance" 
-                    stroke="#2BB673" 
-                    strokeWidth={3} 
-                    dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} 
-                    activeDot={{ r: 6, strokeWidth: 0, fill: '#2BB673' }} 
+                  <Line
+                    type="monotone"
+                    dataKey="Balance"
+                    stroke="var(--secondary)"
+                    strokeWidth={3}
+                    dot={{ r: 4, strokeWidth: 2, fill: 'var(--card)' }}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--secondary)' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -345,24 +342,26 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-400 uppercase">Cercle d'Épargne :</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase">Cercle d'Épargne :</span>
                 <div className="relative inline-block">
                   <select
                     value={selectedGroupId}
                     onChange={(e) => setSelectedGroupId(e.target.value)}
-                    className="appearance-none bg-slate-100 hover:bg-slate-200/80 transition-colors text-xs font-bold text-[#4B2E05] pl-3 pr-8 py-1.5 rounded-xl border-none cursor-pointer focus:outline-none"
+                    aria-label="Cercle d'épargne"
+                    title="Cercle d'épargne"
+                    className="appearance-none bg-muted hover:bg-muted/70 transition-colors text-xs font-bold text-foreground pl-3 pr-8 py-1.5 rounded-xl border-none cursor-pointer focus:outline-none"
                   >
                     <option value="all">Tous mes cercles</option>
                     {groups.map((g) => (
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 pointer-events-none text-[#4B2E05]" />
+                  <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 pointer-events-none text-foreground" />
                 </div>
               </div>
 
               {currentGroup && (
-                <div className="text-xs font-semibold text-[#E67E22] bg-[#E67E22]/10 px-3 py-1 rounded-xl">
+                <div className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1 rounded-xl">
                   Cotisation récurrente : {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
                 </div>
               )}
@@ -371,39 +370,35 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={contributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#94A3B8" 
-                    fontSize={11} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    stroke="#94A3B8" 
-                    fontSize={11} 
-                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`} 
-                    tickLine={false} 
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--ink-soft)"
+                    fontSize={11}
+                    tickLine={false}
                     axisLine={false}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '16px', 
-                      border: '1px solid rgba(212, 165, 116, 0.2)', 
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}
+                  <YAxis
+                    stroke="var(--ink-soft)"
+                    fontSize={11}
+                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelStyle={labelStyle}
                     formatter={(value: any) => [formatCurrency(Number(value))]}
                   />
-                  <Legend 
-                    verticalAlign="top" 
-                    height={36} 
-                    iconType="circle" 
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    iconType="circle"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} 
+                    wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--foreground)' }}
                   />
-                  <Bar dataKey="Payé" fill="#2BB673" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey="En attente" fill="#E67E22" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Payé" fill="var(--secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="En attente" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
