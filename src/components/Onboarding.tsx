@@ -196,13 +196,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   };
 
   return (
-    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-10 md:pt-10 md:pb-10 relative overflow-hidden md:rounded-[2.5rem] md:shadow-[0_0_60px_rgba(0,0,0,0.05)] transition-all duration-500 ${
+    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-10 md:pt-10 md:pb-10 relative overflow-hidden md:rounded-2xl md:shadow-elevated transition-all duration-500 ${
       step === 3 ? 'md:max-w-4xl' : 'md:max-w-xl'
     }`}>
 
-      {/* Background aesthetic blobs */}
-      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[40%] bg-brand/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[40%] bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle background accent — very light, not distracting */}
+      <div className="absolute top-[-30%] right-[-20%] w-[50%] h-[40%] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
 
       {/* Progress Indicators */}
       {step > 0 && step < 4 && (
@@ -275,12 +274,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               <img
                 src="/logo-emblem.png"
                 alt="eganyé"
-                className="mx-auto w-16 h-16 rounded-[20px] shadow-lg"
+                className="mx-auto w-20 h-20 rounded-2xl shadow-soft"
               />
 
               <div className="space-y-2">
-                <h1 className="text-4xl font-serif font-extrabold text-foreground tracking-wide lowercase">eganyé</h1>
-                <p className="text-brand font-sans font-bold tracking-widest text-xs uppercase">{t('onboarding_subtitle') || 'Épargner mieux, grandir ensemble.'}</p>
+                <h1 className="text-3xl font-serif font-black text-foreground tracking-wide lowercase">eganyé</h1>
+                <p className="text-brand font-sans font-bold tracking-widest text-[11px] uppercase">{t('onboarding_subtitle') || 'Épargner mieux, grandir ensemble.'}</p>
               </div>
 
               <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
@@ -290,7 +289,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               <div className="space-y-3 pt-4">
                 <Button
                   onClick={() => setStep(1)}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 glow-orange transition-all flex items-center justify-center gap-2"
                 >
                   Découvrir eganyé
                   <ArrowRight className="w-4 h-4" />
@@ -354,15 +353,14 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className={`p-6 rounded-3xl bg-gradient-to-br ${slides[slideIndex].color} border border-border flex flex-col items-center text-center space-y-4 overflow-hidden`}
+                  className={`p-5 rounded-2xl bg-card border border-border flex flex-col items-center text-center space-y-4 overflow-hidden shadow-soft`}
                 >
-                  <div className="w-full h-48 sm:h-56 rounded-2xl overflow-hidden shadow-md relative border border-white/20">
+                  <div className="w-full h-44 sm:h-52 rounded-xl overflow-hidden shadow-soft relative">
                     <img
                       src={slides[slideIndex].image}
                       alt={slides[slideIndex].title}
-                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-serif font-black text-foreground">{slides[slideIndex].title}</h3>
                   <p className="text-muted-foreground text-xs leading-relaxed max-w-sm font-medium">{slides[slideIndex].description}</p>
@@ -431,7 +429,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     <Input
                       id="ob_name"
                       placeholder="Ex: Fatou Sy"
-                      className="rounded-xl h-11 border-border focus-visible:ring-primary"
+                      className="rounded-xl h-12 border-border focus-visible:ring-primary text-sm"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
@@ -463,7 +461,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                       id="ob_pass"
                       type={showPassword ? "text" : "password"}
                       placeholder="Min. 6 caractères"
-                      className="rounded-xl h-11 pr-10 border-border focus-visible:ring-primary"
+                      className="rounded-xl h-12 pr-10 border-border focus-visible:ring-primary text-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />

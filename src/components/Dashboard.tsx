@@ -93,14 +93,14 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 pb-16"
+      className="space-y-6 pb-16"
     >
-      {/* Header and Welcome */}
+      {/* Header — Clean, no background box */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/30 p-6 rounded-3xl border border-border/60"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
       >
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
               Bonjour {user.displayName} 👋
@@ -112,7 +112,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             )}
           </div>
           <p className="text-xs text-muted-foreground font-medium">
-            Votre espace d'épargne communautaire Eganyé
+            Voici ce qui se passe dans vos cercles aujourd'hui.
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
@@ -120,85 +120,71 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         </div>
       </motion.div>
 
-      {/* "MON ARGENT" Financial Overview Banner */}
-      <motion.div variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            💰 Mon Argent
-          </h2>
-          <span className="text-[11px] font-semibold text-primary">Vue consolidée</span>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Solde disponible */}
-          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Solde Disponible</span>
-              <p className="text-2xl sm:text-3xl font-serif font-black text-primary">
-                {availableBalance.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
-              </p>
+      {/* Mon Portefeuille — Compact single card matching mockup */}
+      <motion.div variants={itemVariants}>
+        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted-foreground">Mon portefeuille</span>
+              <Button
+                onClick={() => onNavigate?.('wallet-savings')}
+                variant="ghost"
+                size="sm"
+                className="text-[11px] font-bold text-primary h-7 px-2 cursor-pointer"
+              >
+                Voir tout
+              </Button>
             </div>
-            <div className="pt-3">
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Solde disponible</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-primary">
+                  {availableBalance.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Épargne total</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {totalSaved.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">En attente de recevoir</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {nextPayoutAmount.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Cercles actifs</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {groups.length}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
               <Button
                 onClick={() => onNavigate?.('wallet-savings')}
                 size="sm"
-                className="w-full gradient-sunset text-white font-bold rounded-xl h-8 text-[11px] cursor-pointer shadow-xs"
+                className="gradient-sunset text-white font-bold rounded-xl h-9 text-xs cursor-pointer flex-1"
               >
-                <Wallet className="w-3.5 h-3.5 mr-1" /> Recharger
+                <Wallet className="w-3.5 h-3.5 mr-1.5" /> Recharger
               </Button>
             </div>
-          </Card>
-
-          {/* 2. Argent engagé en tontines */}
-          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">En Tontines</span>
-              <p className="text-2xl sm:text-3xl font-serif font-black text-amber-600 dark:text-amber-400">
-                {committedInTontines.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
-              </p>
-            </div>
-            <p className="text-[10px] text-muted-foreground font-medium pt-3 flex items-center gap-1">
-              <Users className="w-3 h-3 text-amber-500" /> {groups.length} cercle(s) actif(s)
-            </p>
-          </Card>
-
-          {/* 3. Total Épargné */}
-          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Total Épargné</span>
-              <p className="text-2xl sm:text-3xl font-serif font-black text-emerald-600 dark:text-emerald-400">
-                {totalSaved.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
-              </p>
-            </div>
-            <p className="text-[10px] text-emerald-600 font-bold pt-3 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> Épargne accumulée
-            </p>
-          </Card>
-
-          {/* 4. Prochain pot à recevoir */}
-          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Prochain Pot</span>
-              <p className="text-2xl sm:text-3xl font-serif font-black text-blue-600 dark:text-blue-400">
-                {nextPayoutAmount.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
-              </p>
-            </div>
-            <p className="text-[10px] text-muted-foreground font-medium pt-3 flex items-center gap-1">
-              <Gift className="w-3 h-3 text-blue-500" /> Tour prévu ce mois
-            </p>
-          </Card>
-        </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* 4 ACTIONABLE CARDS */}
       <motion.div variants={itemVariants} className="space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          ⚡ Prochaines Actions & Fiabilité
+          Prochaines actions
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1: Prochaine Cotisation */}
-          <Card className="glass-card rounded-3xl p-5 border border-primary/30 shadow-soft space-y-3 relative overflow-hidden">
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-primary flex items-center gap-1.5">
                 <Clock className="w-4 h-4" /> Prochaine Cotisation
@@ -246,7 +232,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           </Card>
 
           {/* Card 2: Mon Prochain Tour */}
-          <Card className="glass-card rounded-3xl p-5 border border-emerald-500/30 shadow-soft space-y-3 relative overflow-hidden">
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                 <Gift className="w-4 h-4" /> Mon Prochain Tour (Gain)
@@ -275,7 +261,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           </Card>
 
           {/* Card 3: Score de Fiabilité (Explicable) */}
-          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft space-y-3 relative overflow-hidden">
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" /> Score de Fiabilité
@@ -320,37 +306,31 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
 
       {/* Cultural Community Banner */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="relative h-44 rounded-3xl overflow-hidden shadow-soft group border border-border/60">
+        <div className="relative h-36 rounded-2xl overflow-hidden shadow-soft group">
           <img
             src="/onboarding-mamas.png"
             alt="Mamans commerçantes et tontine"
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col justify-end">
-            <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Épargne Solidaire</span>
-            <h3 className="text-sm sm:text-base font-serif font-bold text-white leading-snug">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 flex flex-col justify-end">
+            <span className="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Épargne Solidaire</span>
+            <h3 className="text-sm font-serif font-bold text-white leading-snug">
               La Tontine des Mamans & Commerçantes
             </h3>
-            <p className="text-[11px] text-white/80 line-clamp-1">
-              Faites fructifier vos revenus de marché en toute confiance.
-            </p>
           </div>
         </div>
 
-        <div className="relative h-44 rounded-3xl overflow-hidden shadow-soft group border border-border/60">
+        <div className="relative h-36 rounded-2xl overflow-hidden shadow-soft group">
           <img
             src="/young-savers.png"
             alt="Jeunes épargnants africains"
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col justify-end">
-            <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">Avenir & Projets</span>
-            <h3 className="text-sm sm:text-base font-serif font-bold text-white leading-snug">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 flex flex-col justify-end">
+            <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">Avenir & Projets</span>
+            <h3 className="text-sm font-serif font-bold text-white leading-snug">
               Une Jeunesse Prospère qui Construit
             </h3>
-            <p className="text-[11px] text-white/80 line-clamp-1">
-              Épargnez entre amis pour financer vos idées et entreprises.
-            </p>
           </div>
         </div>
       </motion.div>
@@ -388,7 +368,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             }
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.map((group) => {
               const progressPct = Math.round((group.currentPayoutIndex / Math.max(group.members.length, 1)) * 100);
               return (
@@ -398,7 +378,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                   className="h-full"
                 >
                   <Card
-                    className="h-full transition-all cursor-pointer group glass-card rounded-3xl overflow-hidden shadow-soft hover:shadow-elevated hover:border-primary/40 relative flex flex-col justify-between"
+                    className="h-full transition-all cursor-pointer group glass-card rounded-2xl overflow-hidden shadow-soft hover:shadow-elevated hover:border-primary/30 relative flex flex-col justify-between"
                     onClick={() => onSelectGroup(group.id)}
                   >
                     <CardHeader className="pb-3">
@@ -474,7 +454,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
 
       {/* Reliability Score Info Modal */}
       <Dialog open={showReliabilityInfo} onOpenChange={setShowReliabilityInfo}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
+        <DialogContent className="max-w-md rounded-2xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-serif font-bold flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />

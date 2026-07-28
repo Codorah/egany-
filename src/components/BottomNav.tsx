@@ -29,61 +29,60 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
     {
       id: 'dashboard',
       label: 'Accueil',
-      icon: <LayoutGrid className="w-5 h-5" />,
+      icon: LayoutGrid,
     },
     {
       id: 'my-circles',
-      label: 'Mes Cercles',
-      icon: <Users className="w-5 h-5" />,
+      label: 'Cercles',
+      icon: Users,
     },
     {
       id: 'wallet-savings',
-      label: 'Mon Épargne',
-      icon: <Wallet className="w-5 h-5" />,
+      label: 'Épargne',
+      icon: Wallet,
     },
     {
       id: 'profile',
       label: 'Profil',
-      icon: <User className="w-5 h-5" />,
+      icon: User,
     }
   ];
 
   const containerClasses = isSimulated
-    ? "sticky bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-4 z-40 border-t border-border/80"
-    : "fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-4 z-40 border-t border-border/80 md:hidden";
+    ? "sticky bottom-0 left-0 right-0 h-[60px] glass-nav flex justify-around items-center px-2 z-40"
+    : "fixed bottom-0 left-0 right-0 h-[60px] glass-nav flex justify-around items-center px-2 z-40 md:hidden";
 
   return (
     <div className={containerClasses}>
       {navItems.map((item) => {
+        const Icon = item.icon;
         const isActive = currentView === item.id || 
           (item.id === 'my-circles' && (currentView === 'search-groups' || currentView === 'group-details' || currentView === 'contributions'));
         return (
           <button
             key={item.id}
             onClick={() => handleNav(item.id)}
-            className="flex flex-col items-center justify-center flex-1 h-full relative cursor-pointer group py-1 transition-transform active:scale-95"
+            className="flex flex-col items-center justify-center flex-1 h-full relative cursor-pointer py-1.5"
           >
-            <div className={`p-1.5 rounded-2xl transition-all duration-300 relative flex items-center justify-center ${
-              isActive
-                ? 'text-primary bg-primary/15 font-bold shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            <div className={`relative flex items-center justify-center transition-colors duration-200 ${
+              isActive ? 'text-primary' : 'text-muted-foreground'
             }`}>
-              {item.icon}
-              {isActive && (
-                <motion.div
-                  layoutId="activeNavTabIndicator"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-1 rounded-full bg-primary glow-orange"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
+              <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
             </div>
-            <span className={`text-[10px] mt-0.5 tracking-tight transition-all duration-200 ${
+            <span className={`text-[9px] mt-1 tracking-tight transition-colors duration-200 ${
               isActive
-                ? 'text-primary font-black'
-                : 'text-muted-foreground font-semibold'
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground font-medium'
             }`}>
               {item.label}
             </span>
+            {isActive && (
+              <motion.div
+                layoutId="activeNavDot"
+                className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
           </button>
         );
       })}

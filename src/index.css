@@ -68,28 +68,28 @@
 
 :root {
     /* Palette Neo-Fintech Africaine — Mode Clair (Défaut) */
-    --background: #FDFBF7;   /* app-cream lumineux */
-    --foreground: #2D1A04;   /* app-ink profond */
-    --card: #FFFFFF;         /* app-paper pur */
+    --background: #FDFBF7;
+    --foreground: #2D1A04;
+    --card: #FFFFFF;
     --card-foreground: #2D1A04;
     --popover: #FFFFFF;
     --popover-foreground: #2D1A04;
 
-    --primary: #E67E22;      /* Orange Sunset principal */
+    --primary: #E67E22;
     --primary-foreground: #FFFFFF;
 
-    --secondary: #10B981;    /* Émeraude confiance */
+    --secondary: #10B981;
     --secondary-foreground: #FFFFFF;
 
-    --muted: #F5EEDC;        /* app-chip doux */
-    --muted-foreground: #8C6D46; /* app-soft */
+    --muted: #F5F0E8;
+    --muted-foreground: #8C6D46;
 
-    --accent: #F5EEDC;
+    --accent: #F5F0E8;
     --accent-foreground: #2D1A04;
 
-    --destructive: #E74C3C;  /* app-danger */
-    --border: #EBDCC6;       /* app-line élégant */
-    --input: #EBDCC6;
+    --destructive: #E74C3C;
+    --border: #F0E6D6;
+    --input: #F0E6D6;
     --ring: #E67E22;
 
     --brand: #E67E22;
@@ -99,7 +99,7 @@
     --success-deep: #059669;
     --danger: #E74C3C;
     --danger-soft: #FEF2F2;
-    --chip: #F5EEDC;
+    --chip: #F5F0E8;
     --ink-soft: #8C6D46;
 
     --chart-1: #E67E22;
@@ -113,9 +113,9 @@
     --sidebar-foreground: #2D1A04;
     --sidebar-primary: #E67E22;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #F5EEDC;
+    --sidebar-accent: #F5F0E8;
     --sidebar-accent-foreground: #2D1A04;
-    --sidebar-border: #EBDCC6;
+    --sidebar-border: #F0E6D6;
     --sidebar-ring: #E67E22;
 }
 
@@ -141,8 +141,8 @@
     --accent-foreground: #F7EBE0;
 
     --destructive: #EF4444;
-    --border: #382A1C;
-    --input: #382A1C;
+    --border: #2E2318;
+    --input: #2E2318;
     --ring: #F39C12;
 
     --brand: #F39C12;
@@ -161,7 +161,7 @@
     --sidebar-primary-foreground: #120D08;
     --sidebar-accent: #2A1F15;
     --sidebar-accent-foreground: #F7EBE0;
-    --sidebar-border: #382A1C;
+    --sidebar-border: #2E2318;
     --sidebar-ring: #F39C12;
 }
 
@@ -174,41 +174,47 @@
   }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Glassmorphism & Modern Utilities */
+/* ======================================================== */
+/* CARD STYLES — Soft & Clean (matching mockup)             */
+/* ======================================================== */
+
+/* Primary card style: opaque white, ultra-soft shadow, fine border */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(235, 220, 198, 0.6);
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .dark .glass-card {
-  background: rgba(29, 21, 14, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 42, 28, 0.6);
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 
+/* Bottom nav: clean, barely transparent */
 .glass-nav {
-  background: rgba(253, 251, 247, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(235, 220, 198, 0.7);
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
 }
 
 .dark .glass-nav {
-  background: rgba(18, 13, 8, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(56, 42, 28, 0.7);
+  background: rgba(18, 13, 8, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
 }
 
-/* Financial Gradients */
+/* ======================================================== */
+/* GRADIENTS — Refined & Warm                               */
+/* ======================================================== */
+
 .gradient-sunset {
-  background: linear-gradient(135deg, #E67E22 0%, #F39C12 50%, #D4A574 100%);
+  background: linear-gradient(135deg, #E67E22 0%, #F0932B 60%, #D4A574 100%);
 }
 
 .gradient-emerald {
@@ -223,24 +229,30 @@
   background: linear-gradient(135deg, #2D1A04 0%, #4B2E05 50%, #1A0F02 100%);
 }
 
-/* Glow Shadows */
-.glow-orange {
-  box-shadow: 0 10px 30px -10px rgba(230, 126, 34, 0.35);
-}
-
-.glow-emerald {
-  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.35);
-}
+/* ======================================================== */
+/* SHADOWS — Ultra-soft, matching mockup's flat feel        */
+/* ======================================================== */
 
 .shadow-soft {
-  box-shadow: 0 4px 20px -2px rgba(45, 26, 4, 0.06), 0 2px 6px -1px rgba(45, 26, 4, 0.03);
+  box-shadow: 0 1px 3px 0 rgba(45, 26, 4, 0.04), 0 1px 2px -1px rgba(45, 26, 4, 0.03);
 }
 
 .shadow-elevated {
-  box-shadow: 0 12px 32px -4px rgba(45, 26, 4, 0.12), 0 4px 12px -2px rgba(45, 26, 4, 0.04);
+  box-shadow: 0 4px 12px -2px rgba(45, 26, 4, 0.08), 0 2px 6px -1px rgba(45, 26, 4, 0.03);
 }
 
-/* Micro-animations */
+.glow-orange {
+  box-shadow: 0 4px 14px -4px rgba(230, 126, 34, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.25);
+}
+
+/* ======================================================== */
+/* MICRO-ANIMATIONS                                         */
+/* ======================================================== */
+
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.85; transform: scale(1.03); }
@@ -250,10 +262,19 @@
   animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Custom Scrollbars */
+/* Smooth hover lift for interactive cards */
+@keyframes float-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+/* ======================================================== */
+/* SCROLLBAR — Minimal & elegant                            */
+/* ======================================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -261,10 +282,31 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 165, 116, 0.3);
+  background: rgba(212, 165, 116, 0.2);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(230, 126, 34, 0.5);
+  background: rgba(230, 126, 34, 0.35);
+}
+
+/* ======================================================== */
+/* GLOBAL INTERACTION REFINEMENTS                           */
+/* ======================================================== */
+
+button, [role="button"] {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active, [role="button"]:active {
+  transform: scale(0.98);
+}
+
+input, textarea, select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
 }

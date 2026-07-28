@@ -236,57 +236,57 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       id: 'account',
       title: 'Mon compte',
       description: 'Gérez vos informations personnelles et votre identité.',
-      icon: <User className="w-6 h-6 text-amber-500" />,
-      color: 'bg-amber-500/10 border-amber-500/20'
+      icon: <User className="w-5 h-5 text-amber-600" />,
+      color: 'bg-amber-50 dark:bg-amber-500/10'
     },
     {
       id: 'payments',
       title: 'Argent & paiements',
       description: 'Gérez vos moyens de paiement, transferts et retraits.',
-      icon: <Wallet className="w-6 h-6 text-emerald-500" />,
-      color: 'bg-emerald-500/10 border-emerald-500/20'
+      icon: <Wallet className="w-5 h-5 text-emerald-600" />,
+      color: 'bg-emerald-50 dark:bg-emerald-500/10'
     },
     {
       id: 'circles',
       title: 'Mes cercles',
       description: 'Gérez vos tontines, vos préférences et invitations.',
-      icon: <Users className="w-6 h-6 text-orange-500" />,
-      color: 'bg-orange-500/10 border-orange-500/20'
+      icon: <Users className="w-5 h-5 text-orange-600" />,
+      color: 'bg-orange-50 dark:bg-orange-500/10'
     },
     {
       id: 'security',
       title: 'Sécurité & confidentialité',
       description: 'Sécurisez votre compte et gérez vos données.',
-      icon: <Shield className="w-6 h-6 text-blue-500" />,
-      color: 'bg-blue-500/10 border-blue-500/20'
+      icon: <Shield className="w-5 h-5 text-blue-600" />,
+      color: 'bg-blue-50 dark:bg-blue-500/10'
     },
     {
       id: 'notifications',
       title: 'Notifications & communication',
       description: 'Choisissez comment vous recevez les notifications.',
-      icon: <Bell className="w-6 h-6 text-amber-500" />,
-      color: 'bg-amber-500/10 border-amber-500/20'
+      icon: <Bell className="w-5 h-5 text-amber-600" />,
+      color: 'bg-amber-50 dark:bg-amber-500/10'
     },
     {
       id: 'subscription',
       title: 'Abonnement & récompenses',
       description: 'Gérez votre abonnement et vos avantages.',
-      icon: <Award className="w-6 h-6 text-purple-500" />,
-      color: 'bg-purple-500/10 border-purple-500/20'
+      icon: <Award className="w-5 h-5 text-purple-600" />,
+      color: 'bg-purple-50 dark:bg-purple-500/10'
     },
     {
       id: 'support',
       title: 'Aide & support',
       description: 'Trouvez de l\'aide, des tutoriels ou contactez le support.',
-      icon: <HelpCircle className="w-6 h-6 text-teal-500" />,
-      color: 'bg-teal-500/10 border-teal-500/20'
+      icon: <HelpCircle className="w-5 h-5 text-teal-600" />,
+      color: 'bg-teal-50 dark:bg-teal-500/10'
     },
     {
       id: 'legal',
       title: 'Légal & informations',
       description: 'Consultez les conditions, politiques et documents légaux.',
-      icon: <BookOpen className="w-6 h-6 text-slate-500" />,
-      color: 'bg-slate-500/10 border-slate-500/20'
+      icon: <BookOpen className="w-5 h-5 text-slate-600" />,
+      color: 'bg-slate-50 dark:bg-slate-500/10'
     }
   ];
 
@@ -294,11 +294,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     <div className="space-y-8 pb-20 max-w-6xl mx-auto">
       {/* HEADER BAR FOR SUB-SECTIONS */}
       {activeSection && (
-        <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border/80 shadow-xs">
+        <div className="flex items-center justify-between bg-card p-3 rounded-xl border border-border shadow-soft">
           <Button
             onClick={() => setActiveSection(null)}
             variant="ghost"
-            className="flex items-center gap-2 text-xs font-bold text-foreground cursor-pointer hover:bg-muted"
+            className="flex items-center gap-2 text-xs font-bold text-foreground cursor-pointer hover:bg-muted h-8"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour aux Paramètres</span>
@@ -317,7 +317,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
           {/* DESKTOP WEB LAYOUT (GRID VIEW MATCHING BOTTOM HALF OF MOCKUP) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left User Identity Card */}
-            <Card className="glass-card rounded-3xl overflow-hidden shadow-soft border border-border/80 lg:col-span-1 h-fit space-y-6 p-6">
+            <Card className="glass-card rounded-2xl overflow-hidden shadow-soft lg:col-span-1 h-fit space-y-5 p-5">
               <div className="flex flex-col items-center text-center space-y-3">
                 <div className="relative group cursor-pointer" onClick={() => setActiveSection('account')}>
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-md">
@@ -389,16 +389,16 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                     onClick={() => setActiveSection(cat.id)}
                     className="cursor-pointer"
                   >
-                    <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft hover:shadow-elevated hover:border-primary/40 transition-all flex items-start gap-4 h-full">
-                      <div className={`p-3 rounded-2xl ${cat.color} shrink-0`}>
+                    <Card className="glass-card rounded-2xl p-4 border border-border shadow-soft hover:shadow-elevated hover:border-primary/30 transition-all flex items-start gap-3 h-full">
+                      <div className={`p-2.5 rounded-xl ${cat.color} shrink-0`}>
                         {cat.icon}
                       </div>
                       <div className="flex-1 space-y-1">
                         <div className="flex justify-between items-center">
-                          <h3 className="font-serif font-bold text-base text-foreground">{cat.title}</h3>
+                          <h3 className="font-sans font-bold text-sm text-foreground">{cat.title}</h3>
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-1">
                           {cat.description}
                         </p>
                       </div>
@@ -412,16 +412,16 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   onClick={() => setShowDeleteConfirm(true)}
                   className="cursor-pointer"
                 >
-                  <Card className="rounded-3xl p-5 border border-rose-300 dark:border-rose-950 bg-rose-50/50 dark:bg-rose-950/20 shadow-soft hover:shadow-elevated transition-all flex items-start gap-4 h-full">
-                    <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 shrink-0">
+                  <Card className="rounded-2xl p-4 border border-rose-200 dark:border-rose-950 bg-rose-50/80 dark:bg-rose-950/20 shadow-soft hover:shadow-elevated transition-all flex items-start gap-3 h-full">
+                    <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 shrink-0">
                       <Trash2 className="w-6 h-6" />
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex justify-between items-center">
-                        <h3 className="font-serif font-bold text-base text-rose-600 dark:text-rose-400">Supprimer mon compte</h3>
+                        <h3 className="font-sans font-bold text-sm text-rose-600 dark:text-rose-400">Supprimer mon compte</h3>
                         <ChevronRight className="w-4 h-4 text-rose-400" />
                       </div>
-                      <p className="text-xs text-rose-600/80 dark:text-rose-400/80 leading-relaxed">
+                      <p className="text-[11px] text-rose-600/80 dark:text-rose-400/80 leading-relaxed line-clamp-1">
                         Supprimez définitivement votre compte Eganyé.
                       </p>
                     </div>

@@ -137,7 +137,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
+            <h1 className="text-2xl font-serif font-black tracking-tight text-foreground">{group.name}</h1>
             <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
               {group.status === 'active' ? 'En cours' : 'Terminé'}
             </Badge>
@@ -166,8 +166,8 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       </div>
 
       {/* Carnet de Tontine Numérique & Transparence de Caisse */}
-      <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 shadow-soft">
-        <CardHeader className="pb-3 bg-muted/30">
+      <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
+        <CardHeader className="pb-3 bg-muted/20">
           <div className="flex justify-between items-center">
             <CardTitle className="text-base font-serif font-bold flex items-center gap-2">
               <Landmark className="w-5 h-5 text-primary" />
@@ -181,21 +181,21 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
             État financier en temps réel accessible à tous les membres du cercle.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+        <CardContent className="p-5 space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-muted/30 p-3 rounded-xl">
               <span className="text-[10px] font-bold uppercase text-muted-foreground block">Caisse Actuelle</span>
               <p className="text-lg font-black text-primary mt-0.5">
                 {(group.contributionAmount * group.currentPayoutIndex).toLocaleString()} {group.currency}
               </p>
             </div>
-            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+            <div className="bg-muted/30 p-3 rounded-xl">
               <span className="text-[10px] font-bold uppercase text-muted-foreground block">Cotisation / Membre</span>
               <p className="text-lg font-black text-foreground mt-0.5">
                 {group.contributionAmount.toLocaleString()} {group.currency}
               </p>
             </div>
-            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+            <div className="bg-muted/30 p-3 rounded-xl">
               <span className="text-[10px] font-bold uppercase text-muted-foreground block">Membres Actifs</span>
               <p className="text-lg font-black text-foreground mt-0.5">
                 {group.members.length} participants
