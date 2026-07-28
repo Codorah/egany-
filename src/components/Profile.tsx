@@ -319,169 +319,68 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         </CardContent>
       </Card>
 
-      {/* SECTION 1: MON COMPTE */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          👤 MON COMPTE
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<User className="w-5 h-5 text-primary" />}
-            title="Informations personnelles"
-            onClick={() => setActiveModal('personal_info')}
-          />
-          <MenuRow
-            icon={<ShieldCheck className="w-5 h-5 text-emerald-500" />}
-            title="Vérification d'identité (KYC Niveaux 1-3)"
-            onClick={() => setActiveModal('kyc_verification')}
-          />
-          <MenuRow
-            icon={<Users className="w-5 h-5 text-amber-500" />}
-            title="Mandataire Numérique"
-            onClick={() => setActiveModal('digital_mandate')}
-          />
-        </Card>
-      </div>
-
-      {/* SECTION 2: ARGENT & PAIEMENTS */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          💰 ARGENT & PAIEMENTS
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<Wallet className="w-5 h-5 text-primary" />}
-            title="Portefeuille & Moyens de paiement"
-            onClick={() => setActiveModal('payment_info')}
-          />
-          <MenuRow
-            icon={<CreditCard className="w-5 h-5 text-primary" />}
-            title="Historique des transactions"
-            onClick={() => setActiveModal('payments_transfers')}
-          />
-          <MenuRow
-            icon={<ArrowDownCircle className="w-5 h-5 text-primary" />}
-            title="Retirer des fonds"
-            onClick={() => setActiveModal('withdraw_funds')}
-          />
-        </Card>
-      </div>
-
-      {/* SECTION 3: MES CERCLES */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          🔄 MES CERCLES
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<History className="w-5 h-5 text-primary" />}
-            title="Historique des tontines"
-            onClick={() => setActiveModal('tontine_history')}
-          />
-        </Card>
-      </div>
-
-      {/* SECTION 4: SÉCURITÉ & CONFIDENTIALITÉ */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          🔐 SÉCURITÉ & CONFIDENTIALITÉ
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<Shield className="w-5 h-5 text-primary" />}
-            title="Sécurité du compte & Code PIN"
-            onClick={() => setActiveModal('security_settings')}
-          />
-          <MenuRow
-            icon={<Globe className="w-5 h-5 text-primary" />}
-            title="Appareils connectés & Sessions"
-            onClick={() => setActiveModal('connected_devices')}
-          />
-          <MenuRow
-            icon={<Ban className="w-5 h-5 text-primary" />}
-            title="Utilisateurs bloqués"
-            onClick={() => setActiveModal('blocked_users')}
-          />
-        </Card>
-      </div>
-
-      {/* SECTION 5: NOTIFICATIONS */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          🔔 NOTIFICATIONS
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<Bell className="w-5 h-5 text-primary" />}
-            title="Préférences de notification (Push / SMS / Email)"
-            onClick={() => setActiveModal('notifications_settings')}
-          />
-        </Card>
-      </div>
-
-      {/* ABONNEMENT BANNER */}
-      <Card className="gradient-sunset text-white rounded-3xl p-5 shadow-soft border border-white/20">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
-              Mon Abonnement
-            </span>
-            <h4 className="text-base font-serif font-black">Plan d'essai Gratuit</h4>
-            <p className="text-xs text-white/80">Profitez de toutes les fonctionnalités d'épargne.</p>
-          </div>
-          <Button
-            onClick={() => setActiveModal('promotions')}
-            size="sm"
-            className="bg-white text-primary hover:bg-white/90 font-bold rounded-2xl h-10 px-4 text-xs shrink-0 cursor-pointer shadow-xs"
-          >
-            Voir les offres
-          </Button>
-        </div>
+      {/* 8 PRIMARY CATEGORIES LIST (MOCKUP EXACT MATCH) */}
+      <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60 shadow-soft">
+        <MenuRow
+          icon={<User className="w-5 h-5 text-primary" />}
+          title="Mon compte"
+          onClick={() => setActiveModal('personal_info')}
+        />
+        <MenuRow
+          icon={<CreditCard className="w-5 h-5 text-primary" />}
+          title="Argent & paiements"
+          onClick={() => setActiveModal('payment_info')}
+        />
+        <MenuRow
+          icon={<Users className="w-5 h-5 text-primary" />}
+          title="Mes cercles"
+          onClick={() => setActiveModal('tontine_history')}
+        />
+        <MenuRow
+          icon={<Shield className="w-5 h-5 text-primary" />}
+          title="Sécurité & confidentialité"
+          onClick={() => setActiveModal('security_settings')}
+        />
+        <MenuRow
+          icon={<Bell className="w-5 h-5 text-primary" />}
+          title="Notifications"
+          onClick={() => setActiveModal('notifications_settings')}
+        />
+        <MenuRow
+          icon={<Tag className="w-5 h-5 text-primary" />}
+          title="Abonnement & récompenses"
+          onClick={() => setActiveModal('promotions')}
+        />
+        <MenuRow
+          icon={<HelpCircle className="w-5 h-5 text-primary" />}
+          title="Aide & support"
+          onClick={() => setActiveModal('help_support')}
+        />
+        <MenuRow
+          icon={<BookOpen className="w-5 h-5 text-primary" />}
+          title="Légal & informations"
+          onClick={() => setActiveModal('legal_docs')}
+        />
       </Card>
 
-      {/* SECTION 7: AIDE & LÉGAL */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          🆘 AIDE & LÉGAL
-        </h3>
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
-          <MenuRow
-            icon={<HelpCircle className="w-5 h-5 text-primary" />}
-            title="Centre d'aide & FAQ"
-            onClick={() => setActiveModal('help_support')}
-          />
-          <MenuRow
-            icon={<Lightbulb className="w-5 h-5 text-primary" />}
-            title="Tutoriels & Découverte"
-            onClick={() => setActiveModal('tutorial')}
-          />
-          <MenuRow
-            icon={<Mail className="w-5 h-5 text-primary" />}
-            title="Contacter le support"
-            onClick={() => setActiveModal('contact_support')}
-          />
-          <MenuRow
-            icon={<Bug className="w-5 h-5 text-primary" />}
-            title="Signaler un problème"
-            onClick={() => setActiveModal('report_issue')}
-          />
-          <MenuRow
-            icon={<BookOpen className="w-5 h-5 text-primary" />}
-            title="Documents légaux & Règlement des tontines"
-            onClick={() => setActiveModal('legal_docs')}
-          />
-        </Card>
-      </div>
-
-      {/* LOGOUT BUTTON */}
-      <div className="pt-2">
+      {/* ACTION BUTTONS: SE DÉCONNECTER & SUPPRIMER MON COMPTE */}
+      <div className="space-y-3 pt-2">
         <Button
           onClick={() => onLogout?.()}
           variant="outline"
-          className="w-full h-12 rounded-2xl border-rose-300 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-12 rounded-2xl border-border text-foreground font-bold hover:bg-muted flex items-center justify-center gap-2 cursor-pointer shadow-xs"
         >
-          <LogOut className="w-4 h-4" />
-          <span>Déconnexion</span>
+          <LogOut className="w-4 h-4 text-muted-foreground" />
+          <span>Se déconnecter</span>
+        </Button>
+
+        <Button
+          onClick={() => setActiveModal('delete_account')}
+          variant="outline"
+          className="w-full h-12 rounded-2xl border-rose-300 dark:border-rose-950 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Bug className="w-4 h-4 text-rose-500" />
+          <span>Supprimer mon compte</span>
         </Button>
       </div>
 
