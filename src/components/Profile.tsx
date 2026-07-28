@@ -321,7 +321,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               <div className="flex flex-col items-center text-center space-y-3">
                 <div className="relative group cursor-pointer" onClick={() => setActiveSection('account')}>
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-md">
-                    <CustomAvatar config={JSON.stringify(editAvatar)} size={96} />
+                    <CustomAvatar photoURL={user.photoURL} name={user.displayName} size={96} />
                   </div>
                   <div className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-xs">
                     <User className="w-4 h-4" />

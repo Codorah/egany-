@@ -91,13 +91,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
               <DropdownMenuTrigger render={
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full focus-visible:ring-0 p-0 overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
                   <div className="h-full w-full rounded-full overflow-hidden flex items-center justify-center bg-muted">
-                    {user.photoURL ? (
-                      <CustomAvatar config={user.photoURL} size={40} />
-                    ) : (
-                      <div className="w-full h-full gradient-sunset flex items-center justify-center font-bold text-primary-foreground text-sm">
-                        {user.displayName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <CustomAvatar photoURL={user.photoURL} name={user.displayName} size={40} />
                   </div>
                 </Button>
               } />
