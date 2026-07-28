@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Group, UserProfile } from '@/types';
-import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
@@ -165,94 +165,138 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Cotisation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{group.contributionAmount.toLocaleString()} {group.currency}</div>
-            <p className="text-xs text-muted-foreground mt-1">{group.frequency}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Membres</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{group.members.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Participants actifs</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Prochain Payout</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{format(new Date(group.nextPayoutDate), 'dd MMM', { locale: fr })}</div>
-            <p className="text-xs text-muted-foreground mt-1">Cycle {group.currentPayoutIndex + 1}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Pot Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(group.contributionAmount * group.members.length).toLocaleString()} {group.currency}</div>
-            <p className="text-xs text-muted-foreground mt-1">Par cycle</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cycle Distribution Card - admin/creator only */}
-      {canManage && group.status === 'active' && (
-        <Card className="border-secondary/20 bg-success-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Gift className="w-4 h-4 text-secondary" />
-              Distribution du cycle {group.currentPayoutIndex + 1}
+      {/* Carnet de Tontine Numérique & Transparence de Caisse */}
+      <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 shadow-soft">
+        <CardHeader className="pb-3 bg-muted/30">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base font-serif font-bold flex items-center gap-2">
+              <Landmark className="w-5 h-5 text-primary" />
+              Carnet Numérique & Transparence de Caisse
             </CardTitle>
-            <CardDescription>
-              Méthode : {group.distributionMethod === 'draw' ? 'Tirage au sort' : group.distributionMethod === 'auction' ? 'Enchères' : 'Rotation séquentielle'} • Pot de {totalPot.toLocaleString()} {group.currency}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            {group.distributionMethod === 'auction' ? (
-              <p className="text-sm text-muted-foreground">
-                Ce mode nécessite la fonctionnalité d'enchères, qui n'est pas encore disponible dans l'application. Changez la méthode de distribution du cercle pour "Rotation séquentielle" ou "Tirage au sort" pour pouvoir distribuer ce cycle.
+            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+              Transparence Totale
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            État financier en temps réel accessible à tous les membres du cercle.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground block">Caisse Actuelle</span>
+              <p className="text-lg font-black text-primary mt-0.5">
+                {(group.contributionAmount * group.currentPayoutIndex).toLocaleString()} {group.currency}
               </p>
-            ) : (
-              <>
-                {group.distributionMethod === 'draw' && !drawnBeneficiaryId && (
-                  <Button variant="outline" onClick={handleDraw} className="flex items-center gap-2">
-                    <Shuffle className="w-4 h-4" />
-                    Tirer au sort le bénéficiaire
-                  </Button>
-                )}
-                {(group.distributionMethod !== 'draw' || drawnBeneficiaryId) && (
-                  <>
-                    <p className="text-sm">
-                      Bénéficiaire {group.distributionMethod === 'draw' ? 'tiré au sort' : 'prévu'} :{' '}
-                      <span className="font-semibold">{memberName(beneficiaryToDistribute)}</span>
-                    </p>
-                    <Button
-                      onClick={() => setIsConfirmDistributeOpen(true)}
-                      disabled={isDistributing}
-                      className="bg-secondary hover:bg-secondary/90 text-white flex items-center gap-2"
-                    >
-                      {isDistributing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
-                      Lancer la distribution
-                    </Button>
-                    {group.distributionMethod === 'draw' && (
-                      <Button variant="ghost" size="sm" onClick={handleDraw}>Retirer au sort</Button>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </div>
+            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground block">Cotisation / Membre</span>
+              <p className="text-lg font-black text-foreground mt-0.5">
+                {group.contributionAmount.toLocaleString()} {group.currency}
+              </p>
+            </div>
+            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground block">Membres Actifs</span>
+              <p className="text-lg font-black text-foreground mt-0.5">
+                {group.members.length} participants
+              </p>
+            </div>
+            <div className="bg-card p-3.5 rounded-2xl border border-border/60">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground block">Pot par Cycle</span>
+              <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {totalPot.toLocaleString()} {group.currency}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Visual Rotation Timeline: "Qui reçoit quand ?" */}
+      <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 shadow-soft">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base font-serif font-bold flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-emerald-500" />
+              Tour de Distribution — Qui reçoit quand ?
+            </CardTitle>
+            <Badge className="bg-primary text-primary-foreground font-black text-xs px-3 py-1 rounded-xl">
+              Tour {group.currentPayoutIndex + 1} / {group.members.length}
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            Planning officiel des décaissements du cercle.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          {/* Highlight Card for Next Beneficiary */}
+          <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
+                🥇 Prochain Bénéficiaire (Tour {group.currentPayoutIndex + 1})
+              </span>
+              <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
+              <p className="text-xs text-white/90">
+                Date : {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">Montant Net Prévu</span>
+              <p className="text-2xl font-black text-white">{totalPot.toLocaleString()} {group.currency}</p>
+            </div>
+          </div>
+
+          {/* Timeline List */}
+          <div className="space-y-2 pt-2">
+            {group.payoutOrder.map((memberId, idx) => {
+              const isPast = idx < group.currentPayoutIndex;
+              const isCurrent = idx === group.currentPayoutIndex;
+              return (
+                <div
+                  key={memberId}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    isCurrent 
+                      ? 'bg-primary/10 border-primary/40 shadow-xs' 
+                      : isPast 
+                      ? 'bg-muted/30 border-border/40 opacity-70' 
+                      : 'bg-card border-border/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                      isCurrent 
+                        ? 'bg-primary text-primary-foreground' 
+                        : isPast 
+                        ? 'bg-emerald-500/20 text-emerald-600' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      #{idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        {memberName(memberId)}
+                        {isCurrent && <Badge className="bg-primary text-white text-[9px] px-1.5 py-0">En cours</Badge>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {isPast ? 'Décaissement effectué' : isCurrent ? 'Tour de gain actuel' : 'À venir'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-black text-foreground">
+                      {totalPot.toLocaleString()} {group.currency}
+                    </span>
+                    <span className={`block text-[10px] font-bold ${
+                      isPast ? 'text-emerald-600' : isCurrent ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
+                      {isPast ? '✅ Payé' : isCurrent ? '🟠 Prochain' : '⚪ Attente'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {group.rules && (
         <Card>

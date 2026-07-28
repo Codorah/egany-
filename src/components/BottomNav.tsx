@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Users, User } from 'lucide-react';
+import { LayoutGrid, Users, Wallet, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BottomNavProps {
@@ -32,9 +32,14 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
       icon: <LayoutGrid className="w-5 h-5" />,
     },
     {
-      id: 'search-groups',
+      id: 'my-circles',
       label: 'Mes Cercles',
       icon: <Users className="w-5 h-5" />,
+    },
+    {
+      id: 'wallet-savings',
+      label: 'Mon Épargne',
+      icon: <Wallet className="w-5 h-5" />,
     },
     {
       id: 'profile',
@@ -44,18 +49,19 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
   ];
 
   const containerClasses = isSimulated
-    ? "sticky bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-6 z-40 border-t border-border/80"
-    : "fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-6 z-40 border-t border-border/80 md:hidden";
+    ? "sticky bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-4 z-40 border-t border-border/80"
+    : "fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-4 z-40 border-t border-border/80 md:hidden";
 
   return (
     <div className={containerClasses}>
       {navItems.map((item) => {
-        const isActive = currentView === item.id || (item.id === 'search-groups' && (currentView === 'group-details' || currentView === 'contributions'));
+        const isActive = currentView === item.id || 
+          (item.id === 'my-circles' && (currentView === 'search-groups' || currentView === 'group-details' || currentView === 'contributions'));
         return (
           <button
             key={item.id}
             onClick={() => handleNav(item.id)}
-            className="flex flex-col items-center justify-center flex-1 h-full relative cursor-pointer group py-1.5 transition-transform active:scale-95"
+            className="flex flex-col items-center justify-center flex-1 h-full relative cursor-pointer group py-1 transition-transform active:scale-95"
           >
             <div className={`p-1.5 rounded-2xl transition-all duration-300 relative flex items-center justify-center ${
               isActive
@@ -71,10 +77,10 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
                 />
               )}
             </div>
-            <span className={`text-[11px] mt-1 tracking-tight transition-all duration-200 ${
+            <span className={`text-[10px] mt-0.5 tracking-tight transition-all duration-200 ${
               isActive
-                ? 'text-primary font-extrabold'
-                : 'text-muted-foreground font-medium'
+                ? 'text-primary font-black'
+                : 'text-muted-foreground font-semibold'
             }`}>
               {item.label}
             </span>

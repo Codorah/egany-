@@ -1,16 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle, Search, Sparkles, CreditCard, PiggyBank } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { 
+  Users, 
+  TrendingUp, 
+  ShieldCheck, 
+  ArrowRight, 
+  Wallet, 
+  PlusCircle, 
+  Search, 
+  Sparkles, 
+  PiggyBank, 
+  Calendar, 
+  Gift, 
+  Clock, 
+  Info, 
+  CheckCircle2, 
+  AlertCircle,
+  Banknote
+} from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { DashboardCharts } from './DashboardCharts';
 import { DashboardNotifications } from './DashboardNotifications';
 import { EmptyState } from './ui/EmptyState';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { format, differenceInDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface DashboardProps {
   user: UserProfile;
@@ -45,30 +65,35 @@ const itemVariants = {
   },
 };
 
-const hoverScaleVariants = {
-  hover: {
-    y: -4,
-    scale: 1.015,
-    transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 20,
-    },
-  },
-  tap: {
-    scale: 0.98,
-  },
-};
-
 export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab, onNavigate }: DashboardProps) {
   const { t } = useLanguage();
+  const [showReliabilityInfo, setShowReliabilityInfo] = useState(false);
+
+  // Financial calculations for "Mon Argent"
+  const availableBalance = user.walletBalance || 0;
+  const totalSaved = user.totalSaved || 0;
+  
+  // Calculate total committed money in active circles
+  const committedInTontines = groups.reduce((acc, g) => acc + (g.contributionAmount * Math.max(g.currentPayoutIndex, 1)), 0);
+
+  // Find next upcoming contribution & next expected payout
+  const activeGroups = groups.filter(g => g.status === 'active');
+  const nextGroupToPay = activeGroups[0] || null;
+  
+  // Next payout circle
+  const nextPayoutGroup = activeGroups.find(g => {
+    const userIndexInOrder = g.payoutOrder.indexOf(user.uid);
+    return userIndexInOrder >= g.currentPayoutIndex;
+  }) || activeGroups[0] || null;
+
+  const nextPayoutAmount = nextPayoutGroup ? (nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length) : 0;
 
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 pb-12"
+      className="space-y-8 pb-16"
     >
       {/* Header and Welcome */}
       <motion.div
@@ -78,7 +103,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
-              {t('dashboard_greeting')}, {user.displayName} 👋
+              Bonjour {user.displayName} 👋
             </h1>
             {user.role === 'admin' && (
               <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
@@ -87,7 +112,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             )}
           </div>
           <p className="text-xs text-muted-foreground font-medium">
-            {t('dashboard_subtitle')}
+            Votre espace d'épargne communautaire Eganyé
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
@@ -95,132 +120,196 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         </div>
       </motion.div>
 
-      {/* Virtual Wallet & Financial Card Banner */}
-      <motion.div variants={itemVariants}>
-        <div className="relative overflow-hidden rounded-3xl gradient-card p-6 sm:p-8 text-white shadow-elevated border border-amber-900/40">
-          {/* Subtle decorative shapes */}
-          <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute right-1/4 -top-12 w-48 h-48 rounded-full bg-orange-500/10 blur-2xl pointer-events-none" />
+      {/* "MON ARGENT" Financial Overview Banner */}
+      <motion.div variants={itemVariants} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            💰 Mon Argent
+          </h2>
+          <span className="text-[11px] font-semibold text-primary">Vue consolidée</span>
+        </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-center gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-amber-200/80 text-xs font-bold uppercase tracking-wider">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span>Portefeuille Numérique eganyé</span>
-              </div>
-              <div>
-                <span className="text-xs text-amber-100/70 font-medium">Solde Disponible</span>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-white">
-                    {(user.walletBalance || 0).toLocaleString()}
-                  </span>
-                  <span className="text-sm font-bold text-amber-300">FCFA</span>
-                </div>
-              </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. Solde disponible */}
+          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Solde Disponible</span>
+              <p className="text-2xl sm:text-3xl font-serif font-black text-primary">
+                {availableBalance.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
+              </p>
             </div>
-
-            {/* Quick Actions inside Card Banner */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="pt-3">
               <Button
-                onClick={() => onNavigateToProfileTab?.('wallet')}
-                className="gradient-sunset text-white font-bold rounded-2xl h-11 px-5 shadow-xs hover:opacity-95 text-xs flex items-center gap-2 cursor-pointer border border-white/20"
+                onClick={() => onNavigate?.('wallet-savings')}
+                size="sm"
+                className="w-full gradient-sunset text-white font-bold rounded-xl h-8 text-[11px] cursor-pointer shadow-xs"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Recharger Solde</span>
-              </Button>
-              <Button
-                onClick={() => onNavigate?.('search-groups')}
-                variant="outline"
-                className="bg-white/10 text-white hover:bg-white/20 font-bold rounded-2xl h-11 px-4 text-xs border border-white/20 flex items-center gap-2 cursor-pointer backdrop-blur-xs"
-              >
-                <Search className="w-4 h-4 text-amber-300" />
-                <span>Rechercher Tontine</span>
+                <Wallet className="w-3.5 h-3.5 mr-1" /> Recharger
               </Button>
             </div>
-          </div>
+          </Card>
+
+          {/* 2. Argent engagé en tontines */}
+          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">En Tontines</span>
+              <p className="text-2xl sm:text-3xl font-serif font-black text-amber-600 dark:text-amber-400">
+                {committedInTontines.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
+              </p>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium pt-3 flex items-center gap-1">
+              <Users className="w-3 h-3 text-amber-500" /> {groups.length} cercle(s) actif(s)
+            </p>
+          </Card>
+
+          {/* 3. Total Épargné */}
+          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Total Épargné</span>
+              <p className="text-2xl sm:text-3xl font-serif font-black text-emerald-600 dark:text-emerald-400">
+                {totalSaved.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
+              </p>
+            </div>
+            <p className="text-[10px] text-emerald-600 font-bold pt-3 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> Épargne accumulée
+            </p>
+          </Card>
+
+          {/* 4. Prochain pot à recevoir */}
+          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft flex flex-col justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Prochain Pot</span>
+              <p className="text-2xl sm:text-3xl font-serif font-black text-blue-600 dark:text-blue-400">
+                {nextPayoutAmount.toLocaleString()} <span className="text-xs text-muted-foreground">FCFA</span>
+              </p>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium pt-3 flex items-center gap-1">
+              <Gift className="w-3 h-3 text-blue-500" /> Tour prévu ce mois
+            </p>
+          </Card>
         </div>
       </motion.div>
 
-      {/* Overview Stat Cards */}
-      <motion.div
-        variants={itemVariants}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-5"
-      >
-        {/* Score Card */}
-        <motion.div whileHover={{ y: -2 }} className="h-full">
-          <Card className="glass-card border-emerald-500/20 shadow-soft rounded-3xl h-full overflow-hidden relative group">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>{t('reputation_score')}</span>
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              </CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-2">
-                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
-                  {user.reputationScore}
-                </span>
-                <span className="text-xs font-bold text-muted-foreground">/ 100</span>
+      {/* 4 ACTIONABLE CARDS */}
+      <motion.div variants={itemVariants} className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          ⚡ Prochaines Actions & Fiabilité
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Prochaine Cotisation */}
+          <Card className="glass-card rounded-3xl p-5 border border-primary/30 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <Clock className="w-4 h-4" /> Prochaine Cotisation
+              </span>
+              {nextGroupToPay && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                  {nextGroupToPay.frequency}
+                </Badge>
+              )}
+            </div>
+
+            {nextGroupToPay ? (
+              <>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-foreground">{nextGroupToPay.name}</h3>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-2xl font-black text-foreground">
+                      {nextGroupToPay.contributionAmount.toLocaleString()}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-bold">{nextGroupToPay.currency}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Échéance : {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    onClick={() => onManageContributions(nextGroupToPay.id)}
+                    className="gradient-sunset text-white font-bold rounded-xl h-9 text-xs cursor-pointer shadow-xs"
+                  >
+                    Cotiser
+                  </Button>
+                  <Button
+                    onClick={() => onManageContributions(nextGroupToPay.id)}
+                    variant="outline"
+                    className="border-border text-foreground hover:bg-muted font-bold rounded-xl h-9 text-xs cursor-pointer"
+                  >
+                    Espèces
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center">Aucune cotisation en attente.</p>
+            )}
+          </Card>
+
+          {/* Card 2: Mon Prochain Tour */}
+          <Card className="glass-card rounded-3xl p-5 border border-emerald-500/30 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <Gift className="w-4 h-4" /> Mon Prochain Tour (Gain)
+              </span>
+              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+                Distribution
+              </Badge>
+            </div>
+
+            {nextPayoutGroup ? (
+              <div>
+                <h3 className="font-serif font-bold text-base text-foreground">{nextPayoutGroup.name}</h3>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {(nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-bold">{nextPayoutGroup.currency}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Date estimée : {format(new Date(nextPayoutGroup.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center">Rejoignez un cercle pour planifier votre tour.</p>
+            )}
+          </Card>
+
+          {/* Card 3: Score de Fiabilité (Explicable) */}
+          <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Score de Fiabilité
+              </span>
+              <button
+                onClick={() => setShowReliabilityInfo(true)}
+                className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
+              >
+                <Info className="w-3.5 h-3.5" /> Détails
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-serif font-black text-foreground">{user.reputationScore}</span>
+                <span className="text-xs text-muted-foreground font-bold">/ 100</span>
+              </div>
               <Progress value={user.reputationScore} className="h-2 bg-emerald-500/15" />
-              <p className="mt-3 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t('excellent_reliability')}
-              </p>
-            </CardContent>
+              <div className="space-y-1 pt-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Paiements à l'heure</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">100%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Cercles complétés</span>
+                  <span className="font-bold text-foreground">{user.groupsJoined || groups.length}</span>
+                </div>
+              </div>
+            </div>
           </Card>
-        </motion.div>
-
-        {/* Total Saved Card */}
-        <motion.div whileHover={{ y: -2 }} className="h-full">
-          <Card className="glass-card shadow-soft rounded-3xl h-full overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
-                <span>{t('total_saved')}</span>
-                <PiggyBank className="w-4 h-4 text-primary" />
-              </CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-2">
-                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
-                  {user.totalSaved.toLocaleString()}
-                </span>
-                <span className="text-xs font-bold text-muted-foreground">FCFA</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                <TrendingUp className="w-4 h-4" />
-                +12% {t('savings_accumulated')}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Active Groups Card */}
-        <motion.div whileHover={{ y: -2 }} className="h-full">
-          <Card className="glass-card shadow-soft rounded-3xl h-full overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
-                <span>{t('active_groups')}</span>
-                <Users className="w-4 h-4 text-primary" />
-              </CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-2">
-                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
-                  {groups.length}
-                </span>
-                <span className="text-xs font-bold text-muted-foreground">{t('circles_unit')}</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
-                <Users className="w-3.5 h-3.5 text-primary" />
-                {user.groupsJoined || groups.length} {t('circles_joined')}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        </div>
       </motion.div>
 
-      {/* Notifications and Alerts Section */}
+      {/* Notifications & Alerts Section */}
       <motion.div variants={itemVariants}>
         <DashboardNotifications
           userId={user.uid}
@@ -229,12 +318,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         />
       </motion.div>
 
-      {/* Chart Section */}
-      <motion.div variants={itemVariants}>
-        <DashboardCharts user={user} groups={groups} />
-      </motion.div>
-
-      {/* Community Cultural Showcase Banner */}
+      {/* Cultural Community Banner */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative h-44 rounded-3xl overflow-hidden shadow-soft group border border-border/60">
           <img
@@ -271,6 +355,11 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         </div>
       </motion.div>
 
+      {/* Chart Section */}
+      <motion.div variants={itemVariants}>
+        <DashboardCharts user={user} groups={groups} />
+      </motion.div>
+
       {/* Active Circles Section */}
       <motion.div variants={itemVariants} className="space-y-5">
         <div className="flex items-center justify-between">
@@ -305,9 +394,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               return (
                 <motion.div
                   key={group.id}
-                  variants={hoverScaleVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                  whileHover={{ y: -4 }}
                   className="h-full"
                 >
                   <Card
@@ -384,6 +471,47 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           </div>
         )}
       </motion.div>
+
+      {/* Reliability Score Info Modal */}
+      <Dialog open={showReliabilityInfo} onOpenChange={setShowReliabilityInfo}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-serif font-bold flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              Comment est calculé votre Score de Fiabilité ?
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Votre score mesure votre régularité et renforce la confiance des cercles.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-emerald-700 dark:text-emerald-300">
+                <span>Paiements à l'heure</span>
+                <span>+50 Pts</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Chaque versement effectué avant l'échéance augmente directement votre score.</p>
+            </div>
+
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-primary">
+                <span>Ancienneté & Cercles Complétés</span>
+                <span>+30 Pts</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Terminer un cycle complet de tontine sans aucun incident valorise votre profil.</p>
+            </div>
+
+            <div className="p-3 bg-muted/40 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-foreground">
+                <span>Pénalité de Retard</span>
+                <span className="text-rose-500">-15 Pts / retard</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Les retards répétés diminuent temporairement votre niveau de fiabilité.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

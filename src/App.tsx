@@ -25,7 +25,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
@@ -204,8 +204,11 @@ export default function App() {
             onNavigate={(v) => setView(v as View)}
           />
         );
+      case 'my-circles':
       case 'search-groups':
         return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'wallet-savings':
+        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" onLogout={handleLogout} />;
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'support':
