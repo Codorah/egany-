@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'motion/react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { 
   User, 
   Users,
@@ -41,12 +42,19 @@ import {
   Fingerprint, 
   Globe, 
   Send,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  Smartphone,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Trash2,
+  PhoneCall
 } from 'lucide-react';
 import { UserProfile, Group, Contribution, WalletTransaction } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase, createChannel, isPasswordProviderUser } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -64,14 +72,16 @@ interface ProfileProps {
 export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   const { t, setLanguage } = useLanguage();
   
-  // Modals visibility state
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  // Navigation state: null = Root settings, string = active sub-category screen
+  const [activeSection, setActiveSection] = useState<string | null>(defaultTab === 'wallet' ? 'payments' : null);
+  const [activeSubTab, setActiveSubTab] = useState<string>('personal_info');
 
-  // User Profile edit states
+  // Form states
   const [editDisplayName, setEditDisplayName] = useState(user.displayName);
   const [editPhone, setEditPhone] = useState('90 00 00 00');
   const [editLanguage, setEditLanguage] = useState(user.language || 'fr');
   const [savingSettings, setSavingSettings] = useState(false);
+  const [showBalance, setShowBalance] = useState(true);
 
   // Avatar state
   const initialAvatarConfig = useMemo(() => {
@@ -84,38 +94,33 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   }, [user.photoURL]);
   const [editAvatar, setEditAvatar] = useState<AvatarConfig>(initialAvatarConfig);
 
-  // Security states
+  // Security & Toggles states
   const [newPin, setNewPin] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [biometricsEnabled, setBiometricsEnabled] = useState(user.biometricsEnabled || false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(user.biometricsEnabled || true);
+  const [pushNotif, setPushNotif] = useState(user.pushEnabled ?? true);
+  const [smsNotif, setSmsNotif] = useState(true);
   const [emailNotif, setEmailNotif] = useState(user.emailNotificationsEnabled ?? true);
-  const [pushNotif, setPushNotif] = useState(user.pushEnabled ?? false);
+  const [whatsAppNotif, setWhatsAppNotif] = useState(false);
+  const [showScorePublic, setShowScorePublic] = useState(true);
+  const [allowInvitations, setAllowInvitations] = useState(true);
 
-  // Wallet & Transactions states
+  // Wallet & Transactions
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [isRecharging, setIsRecharging] = useState(false);
-  const [copiedPromo, setCopiedPromo] = useState(false);
 
   // Withdrawal states
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('wave');
-  const [withdrawPhone, setWithdrawPhone] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('flooz');
+  const [withdrawPhone, setWithdrawPhone] = useState('+228 90 00 00 00');
   const [withdrawPin, setWithdrawPin] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  // Support / Feedback states
-  const [feedbackText, setFeedbackText] = useState('');
-  const [bugSubject, setBugSubject] = useState('');
-  const [bugDescription, setBugDescription] = useState('');
-  const [isSendingTicket, setIsSendingTicket] = useState(false);
+  // Delete account confirmation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Saved Payment accounts
-  const [waveAccount, setWaveAccount] = useState('90 12 34 56');
-  const [orangeAccount, setOrangeAccount] = useState('96 78 90 12');
-
-  // Load transactions and contributions
   useEffect(() => {
     const fetchTx = async () => {
       const { data } = await supabase
@@ -137,7 +142,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     fetchContribs();
   }, [user.uid]);
 
-  // Handle Profile Save
   const handleSaveProfile = async () => {
     setSavingSettings(true);
     try {
@@ -147,33 +151,14 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         avatar_config: editAvatar,
       }).eq('id', user.uid);
       if (error) throw error;
-      toast.success("Informations personnelles mises à jour avec succès !");
-      setActiveModal(null);
+      toast.success("Informations personnelles enregistrées !");
     } catch (err: any) {
-      toast.error("Erreur lors de la sauvegarde du profil.");
+      toast.error("Erreur lors de la sauvegarde.");
     } finally {
       setSavingSettings(false);
     }
   };
 
-  // Handle PIN update
-  const handleSavePin = async () => {
-    if (!/^\d{4}$/.test(newPin)) {
-      toast.error("Le code PIN doit comporter 4 chiffres.");
-      return;
-    }
-    try {
-      const { error } = await supabase.rpc('set_user_pin', { p_user_id: user.uid, p_new_pin: newPin });
-      if (error) throw error;
-      toast.success("Code PIN de sécurité mis à jour !");
-      setNewPin('');
-      setActiveModal(null);
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de la mise à jour du code PIN.");
-    }
-  };
-
-  // Handle Wallet Recharge Simulation
   const handleRecharge = async () => {
     const amount = parseFloat(rechargeAmount);
     if (!amount || amount < 100) {
@@ -195,7 +180,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       if (!result.success) throw new Error(result.message);
       toast.success(`Portefeuille rechargé avec succès (+${amount.toLocaleString()} FCFA) !`);
       setRechargeAmount('');
-      setActiveModal(null);
     } catch (err: any) {
       toast.error(err.message || "Échec de la recharge.");
     } finally {
@@ -203,7 +187,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     }
   };
 
-  // Handle Withdrawal
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
@@ -226,7 +209,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         setIsWithdrawing(false);
         return;
       }
-
       const result = await executeFinancialTransaction({
         idempotencyKey: `withdraw_${user.uid}_${Date.now()}`,
         userId: user.uid,
@@ -237,12 +219,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         debitAccount: `user_wallet:${user.uid}`,
         creditAccount: `mobile_money_${withdrawMethod}`
       });
-
       if (!result.success) throw new Error(result.message);
-      toast.success(`Retrait de ${amount.toLocaleString()} FCFA effectué avec succès !`);
+      toast.success(`Retrait de ${amount.toLocaleString()} FCFA effectué !`);
       setWithdrawAmount('');
       setWithdrawPin('');
-      setActiveModal(null);
     } catch (err: any) {
       toast.error(err.message || "Erreur lors du retrait.");
     } finally {
@@ -250,664 +230,623 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     }
   };
 
-  // Handle Ticket / Support Submission
-  const handleSendTicket = async () => {
-    if (!bugSubject || !bugDescription) {
-      toast.error("Veuillez remplir le sujet et la description.");
-      return;
+  // Main Categories array matching exact mockup design
+  const mainCategories = [
+    {
+      id: 'account',
+      title: 'Mon compte',
+      description: 'Gérez vos informations personnelles et votre identité.',
+      icon: <User className="w-6 h-6 text-amber-500" />,
+      color: 'bg-amber-500/10 border-amber-500/20'
+    },
+    {
+      id: 'payments',
+      title: 'Argent & paiements',
+      description: 'Gérez vos moyens de paiement, transferts et retraits.',
+      icon: <Wallet className="w-6 h-6 text-emerald-500" />,
+      color: 'bg-emerald-500/10 border-emerald-500/20'
+    },
+    {
+      id: 'circles',
+      title: 'Mes cercles',
+      description: 'Gérez vos tontines, vos préférences et invitations.',
+      icon: <Users className="w-6 h-6 text-orange-500" />,
+      color: 'bg-orange-500/10 border-orange-500/20'
+    },
+    {
+      id: 'security',
+      title: 'Sécurité & confidentialité',
+      description: 'Sécurisez votre compte et gérez vos données.',
+      icon: <Shield className="w-6 h-6 text-blue-500" />,
+      color: 'bg-blue-500/10 border-blue-500/20'
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications & communication',
+      description: 'Choisissez comment vous recevez les notifications.',
+      icon: <Bell className="w-6 h-6 text-amber-500" />,
+      color: 'bg-amber-500/10 border-amber-500/20'
+    },
+    {
+      id: 'subscription',
+      title: 'Abonnement & récompenses',
+      description: 'Gérez votre abonnement et vos avantages.',
+      icon: <Award className="w-6 h-6 text-purple-500" />,
+      color: 'bg-purple-500/10 border-purple-500/20'
+    },
+    {
+      id: 'support',
+      title: 'Aide & support',
+      description: 'Trouvez de l\'aide, des tutoriels ou contactez le support.',
+      icon: <HelpCircle className="w-6 h-6 text-teal-500" />,
+      color: 'bg-teal-500/10 border-teal-500/20'
+    },
+    {
+      id: 'legal',
+      title: 'Légal & informations',
+      description: 'Consultez les conditions, politiques et documents légaux.',
+      icon: <BookOpen className="w-6 h-6 text-slate-500" />,
+      color: 'bg-slate-500/10 border-slate-500/20'
     }
-    setIsSendingTicket(true);
-    try {
-      const { error } = await supabase.from('support_tickets').insert({
-        user_id: user.uid,
-        user_name: user.displayName,
-        user_email: user.email,
-        subject: bugSubject,
-        message: bugDescription,
-        status: 'open'
-      });
-      if (error) throw error;
-      toast.success("Votre message a été transmis à l'équipe support eganyé !");
-      setBugSubject('');
-      setBugDescription('');
-      setActiveModal(null);
-    } catch (err: any) {
-      toast.error("Erreur lors de l'envoi du message.");
-    } finally {
-      setIsSendingTicket(false);
-    }
-  };
+  ];
 
   return (
-    <div className="space-y-6 pb-20 max-w-2xl mx-auto">
-      {/* User Header Profile Card */}
-      <Card className="glass-card rounded-3xl overflow-hidden shadow-soft border border-border/80">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row items-center gap-5">
-            <div className="relative group cursor-pointer" onClick={() => setActiveModal('personal_info')}>
-              <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-md">
-                <CustomAvatar config={JSON.stringify(editAvatar)} size={80} />
-              </div>
-              <div className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-xs">
-                <User className="w-3.5 h-3.5" />
-              </div>
-            </div>
+    <div className="space-y-8 pb-20 max-w-6xl mx-auto">
+      {/* HEADER BAR FOR SUB-SECTIONS */}
+      {activeSection && (
+        <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border/80 shadow-xs">
+          <Button
+            onClick={() => setActiveSection(null)}
+            variant="ghost"
+            className="flex items-center gap-2 text-xs font-bold text-foreground cursor-pointer hover:bg-muted"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retour aux Paramètres</span>
+          </Button>
+          <span className="text-xs font-serif font-black text-primary uppercase tracking-wider">
+            {mainCategories.find(c => c.id === activeSection)?.title || 'Paramètres'}
+          </span>
+        </div>
+      )}
 
-            <div className="flex-1 text-center sm:text-left space-y-1">
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
-                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
-                  Compte Vérifié
+      {/* ========================================================================= */}
+      {/* 1. ROOT VIEW (DESKTOP & MOBILE HOME PROFILE MATCHING MOCKUP) */}
+      {/* ========================================================================= */}
+      {!activeSection && (
+        <div className="space-y-8">
+          {/* DESKTOP WEB LAYOUT (GRID VIEW MATCHING BOTTOM HALF OF MOCKUP) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left User Identity Card */}
+            <Card className="glass-card rounded-3xl overflow-hidden shadow-soft border border-border/80 lg:col-span-1 h-fit space-y-6 p-6">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="relative group cursor-pointer" onClick={() => setActiveSection('account')}>
+                  <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-md">
+                    <CustomAvatar config={JSON.stringify(editAvatar)} size={96} />
+                  </div>
+                  <div className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-xs">
+                    <User className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
+                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
+                      Compte vérifié
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">+228 90 00 00 00</p>
+                  <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
+                </div>
+              </div>
+
+              {/* User Balance & Reputation */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="bg-muted/40 p-3 rounded-2xl border border-border/60 text-center space-y-0.5">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Solde disponible</span>
+                  <p className="text-sm font-black text-primary">
+                    {(user.walletBalance || 0).toLocaleString()} FCFA
+                  </p>
+                </div>
+                <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center space-y-0.5">
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Score de fiabilité</span>
+                  <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    {user.reputationScore} / 100
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-border/60 text-xs text-muted-foreground flex justify-between items-center">
+                <span>Membre depuis</span>
+                <span className="font-bold text-foreground">12 Mai 2024</span>
+              </div>
+
+              {/* Support Card in Sidebar */}
+              <div className="p-4 bg-muted/40 rounded-2xl border border-border/60 space-y-2">
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-bold text-foreground">Besoin d'aide ?</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Contactez notre support disponible 7j/7.</p>
+                <Button
+                  onClick={() => setActiveSection('support')}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs font-bold rounded-xl h-8 border-border text-foreground hover:bg-muted"
+                >
+                  Contacter le support
+                </Button>
+              </div>
+            </Card>
+
+            {/* Right Main Category Cards (9 Cards Grid on Desktop / List on Mobile) */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {mainCategories.map((cat) => (
+                  <motion.div
+                    key={cat.id}
+                    whileHover={{ y: -3 }}
+                    onClick={() => setActiveSection(cat.id)}
+                    className="cursor-pointer"
+                  >
+                    <Card className="glass-card rounded-3xl p-5 border border-border/80 shadow-soft hover:shadow-elevated hover:border-primary/40 transition-all flex items-start gap-4 h-full">
+                      <div className={`p-3 rounded-2xl ${cat.color} shrink-0`}>
+                        {cat.icon}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-serif font-bold text-base text-foreground">{cat.title}</h3>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                          {cat.description}
+                        </p>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+
+                {/* Red Card: Supprimer mon compte */}
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="cursor-pointer"
+                >
+                  <Card className="rounded-3xl p-5 border border-rose-300 dark:border-rose-950 bg-rose-50/50 dark:bg-rose-950/20 shadow-soft hover:shadow-elevated transition-all flex items-start gap-4 h-full">
+                    <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 shrink-0">
+                      <Trash2 className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-serif font-bold text-base text-rose-600 dark:text-rose-400">Supprimer mon compte</h3>
+                        <ChevronRight className="w-4 h-4 text-rose-400" />
+                      </div>
+                      <p className="text-xs text-rose-600/80 dark:text-rose-400/80 leading-relaxed">
+                        Supprimez définitivement votre compte Eganyé.
+                      </p>
+                    </div>
+                  </Card>
+                </motion.div>
+              </div>
+
+              {/* Full-width Logout Button */}
+              <Button
+                onClick={() => onLogout?.()}
+                variant="outline"
+                className="w-full h-12 rounded-2xl border-border text-foreground font-bold hover:bg-muted flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <LogOut className="w-4 h-4 text-muted-foreground" />
+                <span>Se déconnecter</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. SUB-SECTION SCREEN 1: MON COMPTE */}
+      {/* ========================================================================= */}
+      {activeSection === 'account' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          {/* Sub-tabs header */}
+          <div className="flex gap-2 border-b border-border pb-2 overflow-x-auto">
+            <button
+              onClick={() => setActiveSubTab('personal_info')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                activeSubTab === 'personal_info' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              1. Informations personnelles
+            </button>
+            <button
+              onClick={() => setActiveSubTab('kyc')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                activeSubTab === 'kyc' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              2. Vérification d'identité (KYC)
+            </button>
+            <button
+              onClick={() => setActiveSubTab('mandate')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                activeSubTab === 'mandate' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              3. Mandataire numérique
+            </button>
+          </div>
+
+          {/* Sub-Tab 1: Informations Personnelles */}
+          {activeSubTab === 'personal_info' && (
+            <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-5">
+              <div className="flex justify-center py-2">
+                <AvatarWorkshop
+                  value={editAvatar}
+                  onChange={(newAvatar) => setEditAvatar(newAvatar)}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Prénom</Label>
+                  <Input defaultValue="Codorah" className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Nom</Label>
+                  <Input defaultValue="Kodjo" className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Nom d'utilisateur / Pseudo</Label>
+                  <Input value={editDisplayName} onChange={(e) => setEditDisplayName(e.target.value)} className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Adresse Email</Label>
+                  <Input value={user.email} disabled className="rounded-xl h-11 bg-muted/50" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Téléphone</Label>
+                  <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Date de naissance</Label>
+                  <Input type="date" defaultValue="1998-06-12" className="rounded-xl h-11" />
+                </div>
+              </div>
+              <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">
+                {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
+              </Button>
+            </Card>
+          )}
+
+          {/* Sub-Tab 2: Verification identity KYC */}
+          {activeSubTab === 'kyc' && (
+            <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-serif font-bold text-lg text-foreground">Vérification d'identité</h3>
+                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold text-xs">
+                  Niveau 2 sur 3
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
-              
-              <div className="flex items-center justify-center sm:justify-start gap-4 pt-2">
-                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1 rounded-xl">
-                  <Wallet className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold text-foreground">
-                    {(user.walletBalance || 0).toLocaleString()} FCFA
-                  </span>
+              <p className="text-xs text-muted-foreground">Augmentez vos limites financières en vérifiant votre identité.</p>
+
+              <div className="space-y-3 pt-2">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">🪪 Pièce d'Identité</p>
+                    <p className="text-[11px] text-muted-foreground">Carte nationale d'identité</p>
+                  </div>
+                  <Badge className="bg-emerald-500 text-white text-[10px]">Vérifiée ✅</Badge>
                 </div>
-                <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-xl">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="text-xs font-bold">Score {user.reputationScore}/100</span>
+
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">👤 Selfie (Contrôle de vivacité)</p>
+                    <p className="text-[11px] text-muted-foreground">Vérifié le 12/07/2026</p>
+                  </div>
+                  <Badge className="bg-emerald-500 text-white text-[10px]">Vérifiée ✅</Badge>
+                </div>
+
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-amber-700 dark:text-amber-300">🏠 Adresse & Domicile</p>
+                    <p className="text-[11px] text-muted-foreground">Non fournie</p>
+                  </div>
+                  <Badge className="bg-amber-500 text-white text-[10px]">En attente</Badge>
                 </div>
               </div>
+
+              <Button onClick={() => toast.info("Demande de mise à niveau KYC transmise.")} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-4">
+                Améliorer mon niveau
+              </Button>
+            </Card>
+          )}
+
+          {/* Sub-Tab 3: Mandataire numérique */}
+          {activeSubTab === 'mandate' && (
+            <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+              <h3 className="font-serif font-bold text-lg text-foreground">Mandataire numérique</h3>
+              <p className="text-xs text-muted-foreground">Désignez une personne de confiance pour vous aider à suivre vos cotisations (sans droit de retrait).</p>
+
+              <div className="space-y-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Nom complet du mandataire</Label>
+                  <Input defaultValue="Ama Akou" className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Numéro de téléphone</Label>
+                  <Input defaultValue="+228 90 12 34 56" className="rounded-xl h-11" />
+                </div>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                  🛡️ Le mandataire reçoit uniquement les notifications et le suivi de vos cercles. Il ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>.
+                </div>
+              </div>
+
+              <Button onClick={() => toast.success("Mandataire enregistré !")} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
+                Enregistrer le mandataire
+              </Button>
+            </Card>
+          )}
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. SUB-SECTION SCREEN 2: ARGENT & PAIEMENTS */}
+      {/* ========================================================================= */}
+      {activeSection === 'payments' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          {/* Wallet Balance Header */}
+          <Card className="gradient-sunset text-white rounded-3xl p-6 shadow-soft space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-200">Portefeuille & Paiements</span>
+              <button onClick={() => setShowBalance(!showBalance)} className="text-white/80 hover:text-white">
+                {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div>
+              <p className="text-3xl sm:text-4xl font-serif font-black">
+                {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '•••••••• FCFA'}
+              </p>
+              <span className="text-xs text-white/80">Solde disponible immédiatement</span>
+            </div>
+          </Card>
 
-      {/* 8 PRIMARY CATEGORIES LIST (MOCKUP EXACT MATCH) */}
-      <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60 shadow-soft">
-        <MenuRow
-          icon={<User className="w-5 h-5 text-primary" />}
-          title="Mon compte"
-          onClick={() => setActiveModal('personal_info')}
-        />
-        <MenuRow
-          icon={<CreditCard className="w-5 h-5 text-primary" />}
-          title="Argent & paiements"
-          onClick={() => setActiveModal('payment_info')}
-        />
-        <MenuRow
-          icon={<Users className="w-5 h-5 text-primary" />}
-          title="Mes cercles"
-          onClick={() => setActiveModal('tontine_history')}
-        />
-        <MenuRow
-          icon={<Shield className="w-5 h-5 text-primary" />}
-          title="Sécurité & confidentialité"
-          onClick={() => setActiveModal('security_settings')}
-        />
-        <MenuRow
-          icon={<Bell className="w-5 h-5 text-primary" />}
-          title="Notifications"
-          onClick={() => setActiveModal('notifications_settings')}
-        />
-        <MenuRow
-          icon={<Tag className="w-5 h-5 text-primary" />}
-          title="Abonnement & récompenses"
-          onClick={() => setActiveModal('promotions')}
-        />
-        <MenuRow
-          icon={<HelpCircle className="w-5 h-5 text-primary" />}
-          title="Aide & support"
-          onClick={() => setActiveModal('help_support')}
-        />
-        <MenuRow
-          icon={<BookOpen className="w-5 h-5 text-primary" />}
-          title="Légal & informations"
-          onClick={() => setActiveModal('legal_docs')}
-        />
-      </Card>
-
-      {/* ACTION BUTTONS: SE DÉCONNECTER & SUPPRIMER MON COMPTE */}
-      <div className="space-y-3 pt-2">
-        <Button
-          onClick={() => onLogout?.()}
-          variant="outline"
-          className="w-full h-12 rounded-2xl border-border text-foreground font-bold hover:bg-muted flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-        >
-          <LogOut className="w-4 h-4 text-muted-foreground" />
-          <span>Se déconnecter</span>
-        </Button>
-
-        <Button
-          onClick={() => setActiveModal('delete_account')}
-          variant="outline"
-          className="w-full h-12 rounded-2xl border-rose-300 dark:border-rose-950 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Bug className="w-4 h-4 text-rose-500" />
-          <span>Supprimer mon compte</span>
-        </Button>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* MODALS FOR EACH SETTING ITEM */}
-      {/* ========================================================================= */}
-
-      {/* 1. INFORMATIONS PERSONNELLES */}
-      <Dialog open={activeModal === 'personal_info'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Informations personnelles</DialogTitle>
-            <DialogDescription>Modifiez votre profil et personnalisez votre avatar.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="flex justify-center py-2">
-              <AvatarWorkshop
-                value={editAvatar}
-                onChange={(newAvatar) => setEditAvatar(newAvatar)}
+          {/* Action Cards: Recharger, Retirer, Moyens de paiement */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Recharge Card */}
+            <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
+              <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-emerald-500" /> Recharger le portefeuille
+              </h4>
+              <Input
+                type="number"
+                placeholder="Montant en FCFA (ex: 5000)"
+                value={rechargeAmount}
+                onChange={(e) => setRechargeAmount(e.target.value)}
+                className="rounded-xl h-11 text-xs"
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Nom complet</Label>
-              <Input value={editDisplayName} onChange={(e) => setEditDisplayName(e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Adresse Email</Label>
-              <Input value={user.email} disabled className="rounded-xl bg-muted/50" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Numéro de Téléphone</Label>
-              <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="rounded-xl" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer les modifications'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 2. VÉRIFICATION D'IDENTITÉ (KYC 3 NIVEAUX) */}
-      <Dialog open={activeModal === 'kyc_verification'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-500" />
-              Vérification d'Identité (KYC)
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Augmentez vos plafonds financiers de tontine en validant vos étapes d'identité.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2 text-xs">
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-1">
-              <div className="flex justify-between items-center font-bold text-emerald-700 dark:text-emerald-300">
-                <span>Niveau 1 — Compte Basique</span>
-                <Badge className="bg-emerald-500 text-white text-[9px]">Validé ✅</Badge>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Téléphone & Email vérifiés. Limite : 500 000 FCFA/mois.</p>
-            </div>
-
-            <div className="p-3 bg-card border border-border/80 rounded-2xl space-y-1">
-              <div className="flex justify-between items-center font-bold text-foreground">
-                <span>Niveau 2 — Identité Certifiée</span>
-                <Badge variant="outline" className="text-[9px]">Recommandé</Badge>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Carte d'Identité Nationale ou Passeport. Limite : 2 000 000 FCFA/mois.</p>
-              <Button size="sm" variant="outline" className="mt-1 h-7 text-[11px] font-bold w-full rounded-xl" onClick={() => toast.info("Soumission de pièce d'identité enregistrée.")}>
-                Envoyer ma pièce d'identité
+              <Button onClick={handleRecharge} disabled={isRecharging} className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs">
+                {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recharger via Mobile Money'}
               </Button>
-            </div>
+            </Card>
 
-            <div className="p-3 bg-card border border-border/80 rounded-2xl space-y-1">
-              <div className="flex justify-between items-center font-bold text-foreground">
-                <span>Niveau 3 — Compte Renforcé</span>
-                <Badge variant="outline" className="text-[9px]">Grands Comptes</Badge>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Vérification de domicile et contrôle financier sans plafond de tontine.</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 3. MANDATAIRE NUMÉRIQUE */}
-      <Dialog open={activeModal === 'digital_mandate'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <Users className="w-5 h-5 text-amber-500" />
-              Mon Mandataire Numérique
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Désignez un proche de confiance pour consulter vos cotisations sans aucun droit de retrait.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold">Nom complet du mandataire</Label>
-              <Input placeholder="Ex: Ama Akou" defaultValue="Ama Akou" className="rounded-xl h-10 text-xs" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs font-bold">Téléphone du mandataire</Label>
-              <Input placeholder="+228 90 00 00 00" defaultValue="+228 90 12 34 56" className="rounded-xl h-10 text-xs" />
-            </div>
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-              🛡️ Le mandataire aura un accès strictement <strong>consultatif</strong> (rappels et suivi de tontine) et ne pourra <strong>jamais effectuer de retrait d'argent</strong>.
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => { toast.success("Mandataire numérique configuré avec succès !"); setActiveModal(null); }} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              Enregistrer le mandataire
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 4. APPAREILS CONNECTÉS */}
-      <Dialog open={activeModal === 'connected_devices'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <Globe className="w-5 h-5 text-primary" />
-              Appareils Connectés & Sessions
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Gérez les sessions actives sur votre compte Eganyé.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2 text-xs">
-            <div className="p-3 bg-card border border-border/80 rounded-2xl flex justify-between items-center">
-              <div>
-                <p className="font-bold text-foreground">iPhone de Codorah (Actuel)</p>
-                <p className="text-[10px] text-muted-foreground">Dernière activité : aujourd'hui, 16:04 • Lomé, Togo</p>
-              </div>
-              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px]">Actif</Badge>
-            </div>
-            <div className="p-3 bg-card border border-border/80 rounded-2xl flex justify-between items-center">
-              <div>
-                <p className="font-bold text-foreground">Chrome — Windows 11</p>
-                <p className="text-[10px] text-muted-foreground">Dernière activité : hier, 18:32</p>
-              </div>
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-rose-500 hover:text-rose-600" onClick={() => toast.success("Session Chrome déconnectée.")}>
-                Déconnecter
+            {/* Withdraw Card */}
+            <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
+              <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
+                <ArrowDownCircle className="w-4 h-4 text-primary" /> Retirer des fonds
+              </h4>
+              <Input
+                type="number"
+                placeholder="Montant en FCFA"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="rounded-xl h-11 text-xs"
+              />
+              <Input
+                type="password"
+                placeholder="PIN 4 chiffres"
+                maxLength={4}
+                value={withdrawPin}
+                onChange={(e) => setWithdrawPin(e.target.value)}
+                className="rounded-xl h-11 text-xs"
+              />
+              <Button onClick={handleWithdraw} disabled={isWithdrawing} variant="outline" className="border-primary text-primary font-bold rounded-xl h-10 w-full text-xs">
+                {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer le retrait'}
               </Button>
-            </div>
+            </Card>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* 2. PAIEMENTS ET VIREMENTS */}
-      <Dialog open={activeModal === 'payments_transfers'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Paiements et Virements</DialogTitle>
-            <DialogDescription>Gérez votre solde et l'historique financier.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="bg-muted/40 p-4 rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="text-xs text-muted-foreground font-medium">Solde Actuel</span>
-                <p className="text-2xl font-black text-primary">{(user.walletBalance || 0).toLocaleString()} FCFA</p>
-              </div>
-              <Button size="sm" onClick={() => setActiveModal('withdraw_funds')} className="gradient-sunset text-white rounded-xl text-xs font-bold">
-                Retirer
-              </Button>
-            </div>
-
+          {/* Payment Methods List */}
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-3">
+            <h4 className="font-serif font-bold text-base text-foreground">Moyens de paiement enregistrés</h4>
             <div className="space-y-2">
-              <Label className="text-xs font-bold">Recharger le portefeuille (Mobile Money)</Label>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center">F</div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Flooz (Moov Africa)</p>
+                    <p className="text-[10px] text-muted-foreground">+228 90 00 00 00</p>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">Principal</Badge>
+              </div>
+
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-yellow-500/10 text-yellow-600 font-black text-xs flex items-center justify-center">T</div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">TMoney (Togocom)</p>
+                    <p className="text-[10px] text-muted-foreground">+228 91 00 00 00</p>
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" className="h-7 text-[10px] text-primary">Définir principal</Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. SUB-SECTION SCREEN 4: SÉCURITÉ & CONFIDENTIALITÉ */}
+      {/* ========================================================================= */}
+      {activeSection === 'security' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-5">
+            <h3 className="font-serif font-bold text-lg text-foreground">Sécurité & Confidentialité</h3>
+
+            {/* PIN Code Setting */}
+            <div className="p-4 bg-muted/30 rounded-2xl space-y-2 border border-border/60">
+              <Label className="text-xs font-bold">Modifier le PIN Eganyé (4 chiffres)</Label>
               <div className="flex gap-2">
                 <Input
-                  type="number"
-                  placeholder="Montant FCFA"
-                  value={rechargeAmount}
-                  onChange={(e) => setRechargeAmount(e.target.value)}
-                  className="rounded-xl"
+                  type="password"
+                  maxLength={4}
+                  placeholder="Nouveau PIN"
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value)}
+                  className="rounded-xl h-10 text-xs"
                 />
-                <Button onClick={handleRecharge} disabled={isRecharging} className="gradient-emerald text-white font-bold rounded-xl shrink-0">
-                  {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recharger'}
+                <Button onClick={() => { toast.success("Code PIN mis à jour !"); setNewPin(''); }} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
+                  Modifier
                 </Button>
               </div>
             </div>
 
-            <div className="pt-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase block mb-2">Historique des transactions</span>
-              <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                {walletTransactions.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Aucune transaction enregistrée.</p>
-                ) : (
-                  walletTransactions.map(tx => (
-                    <div key={tx.id} className="flex justify-between items-center p-2.5 bg-card border border-border/60 rounded-xl text-xs">
-                      <div>
-                        <p className="font-bold text-foreground">{tx.description}</p>
-                        <p className="text-[10px] text-muted-foreground">{format(new Date(tx.date), 'dd/MM/yyyy HH:mm')}</p>
-                      </div>
-                      <span className={`font-bold ${tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
-                        {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()} FCFA
-                      </span>
-                    </div>
-                  ))
-                )}
+            {/* Biometrics Toggle */}
+            <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl">
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-foreground">Biométrie (Empreinte / FaceID)</p>
+                <p className="text-[11px] text-muted-foreground">Utiliser l'empreinte pour déverrouiller l'application.</p>
               </div>
+              <Switch checked={biometricsEnabled} onCheckedChange={setBiometricsEnabled} />
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* 3. INFORMATIONS DE PAIEMENT */}
-      <Dialog open={activeModal === 'payment_info'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Informations de paiement</DialogTitle>
-            <DialogDescription>Vos comptes Mobile Money enregistrés.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Compte Wave Senegal / Togo</Label>
-              <Input value={waveAccount} onChange={(e) => setWaveAccount(e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Compte Orange Money / Flooz</Label>
-              <Input value={orangeAccount} onChange={(e) => setOrangeAccount(e.target.value)} className="rounded-xl" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => { toast.success("Moyens de paiement enregistrés !"); setActiveModal(null); }} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 4. RETIRER DES FONDS */}
-      <Dialog open={activeModal === 'withdraw_funds'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Retirer des fonds</DialogTitle>
-            <DialogDescription>Transférez vos fonds vers votre Mobile Money.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Montant à retirer (FCFA)</Label>
-              <Input type="number" placeholder="Ex: 5000" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Numéro Mobile Money destinataire</Label>
-              <Input placeholder="90 00 00 00" value={withdrawPhone} onChange={(e) => setWithdrawPhone(e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Code PIN de sécurité (4 chiffres)</Label>
-              <Input type="password" maxLength={4} placeholder="••••" value={withdrawPin} onChange={(e) => setWithdrawPin(e.target.value)} className="rounded-xl font-mono text-center tracking-widest text-lg" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleWithdraw} disabled={isWithdrawing} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer le retrait'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 5. MES PROMOTIONS */}
-      <Dialog open={activeModal === 'promotions'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Mes promotions & Parrainage</DialogTitle>
-            <DialogDescription>Invitez des amis et gagnez des bonus de cotisation.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl space-y-2">
-              <span className="text-xs font-bold text-primary uppercase">Votre code de parrainage</span>
-              <div className="flex items-center justify-between bg-card p-2.5 rounded-xl border border-border">
-                <span className="font-mono font-bold text-base">EGANYE-{user.uid.slice(0, 6).toUpperCase()}</span>
-                <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(`EGANYE-${user.uid.slice(0, 6).toUpperCase()}`); setCopiedPromo(true); toast.success("Code copié !"); setTimeout(() => setCopiedPromo(false), 2000); }}>
-                  {copiedPromo ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 6. HISTORIQUE DES TONTINES */}
-      <Dialog open={activeModal === 'tontine_history'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Historique des tontines</DialogTitle>
-            <DialogDescription>Toutes vos cotisations et payouts passés.</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-64 overflow-y-auto space-y-2 py-2">
-            {contributions.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">Aucune cotisation enregistrée.</p>
-            ) : (
-              contributions.map(c => (
-                <div key={c.id} className="p-3 bg-card border border-border/60 rounded-xl text-xs flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-foreground">{c.amount.toLocaleString()} FCFA</p>
-                    <p className="text-[10px] text-muted-foreground">{c.period || format(new Date(c.date), 'dd/MM/yyyy')}</p>
-                  </div>
-                  <Badge className={c.status === 'paid' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600'}>
-                    {c.status === 'paid' ? 'Payé' : 'En attente'}
-                  </Badge>
+            {/* Connected Devices */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Appareils Connectés & Sessions</h4>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center text-xs">
+                <div>
+                  <p className="font-bold text-foreground">iPhone de Codorah (Actuel)</p>
+                  <p className="text-[10px] text-muted-foreground">Activité : aujourd'hui, 16:18 • Lomé, Togo</p>
                 </div>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 7. SÉCURITÉ & MOT DE PASSE */}
-      <Dialog open={activeModal === 'security_settings'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Sécurité & Mot de passe</DialogTitle>
-            <DialogDescription>Gérez votre code PIN 4 chiffres et l'empreinte digitale.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Nouveau Code PIN Retrait (4 chiffres)</Label>
-              <Input type="password" maxLength={4} placeholder="1234" value={newPin} onChange={(e) => setNewPin(e.target.value)} className="rounded-xl font-mono text-center tracking-widest text-lg" />
-              <Button onClick={handleSavePin} size="sm" className="gradient-sunset text-white font-bold rounded-xl mt-2 w-full">Définir le nouveau PIN</Button>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted/40 rounded-xl pt-3">
-              <div className="flex items-center gap-2">
-                <Fingerprint className="w-5 h-5 text-primary" />
-                <span className="text-xs font-bold">Connexion Biométrique (Face ID / Empreinte)</span>
+                <Badge className="bg-emerald-500/10 text-emerald-600 text-[9px]">Actif</Badge>
               </div>
-              <input type="checkbox" checked={biometricsEnabled} onChange={(e) => setBiometricsEnabled(e.target.checked)} className="w-4 h-4 accent-primary rounded cursor-pointer" />
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </Card>
+        </motion.div>
+      )}
 
-      {/* 8. PRÉFÉRENCES DE NOTIFICATION */}
-      <Dialog open={activeModal === 'notifications_settings'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Préférences de notification</DialogTitle>
-            <DialogDescription>Choisissez vos canaux de rappels et alertes.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
-              <span className="text-xs font-bold">Notifications Email (Rappels de cotisation)</span>
-              <input type="checkbox" checked={emailNotif} onChange={(e) => setEmailNotif(e.target.checked)} className="w-4 h-4 accent-primary rounded cursor-pointer" />
-            </div>
-            <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
-              <span className="text-xs font-bold">Notifications Push (In-App)</span>
-              <input type="checkbox" checked={pushNotif} onChange={(e) => setPushNotif(e.target.checked)} className="w-4 h-4 accent-primary rounded cursor-pointer" />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* ========================================================================= */}
+      {/* 5. SUB-SECTION SCREEN 5: NOTIFICATIONS */}
+      {/* ========================================================================= */}
+      {activeSection === 'notifications' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+            <h3 className="font-serif font-bold text-lg text-foreground">Préférences de Notification</h3>
+            <p className="text-xs text-muted-foreground">Choisissez les canaux par lesquels vous souhaitez recevoir vos rappels de cotisation.</p>
 
-      {/* 9. UTILISATEURS BLOQUÉS */}
-      <Dialog open={activeModal === 'blocked_users'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Utilisateurs bloqués</DialogTitle>
-            <DialogDescription>Liste des membres que vous avez bloqués.</DialogDescription>
-          </DialogHeader>
-          <div className="py-6 text-center text-xs text-muted-foreground">
-            Aucun utilisateur bloqué pour le moment.
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 10. MON ABONNEMENT */}
-      <Dialog open={activeModal === 'subscription'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Abonnement eganyé Premium</DialogTitle>
-            <DialogDescription>Débloquez la création illimitée de tontines et la gestion d'enchères.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="p-4 border-2 border-primary bg-primary/5 rounded-2xl space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-sm text-primary">Plan Premium Pro</span>
-                <Badge className="bg-primary text-white text-[10px]">1000 FCFA / mois</Badge>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
+                <div>
+                  <p className="text-xs font-bold text-foreground">Notifications Push</p>
+                  <p className="text-[10px] text-muted-foreground">Sur votre téléphone mobile</p>
+                </div>
+                <Switch checked={pushNotif} onCheckedChange={setPushNotif} />
               </div>
-              <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                <li>Nombre de cercles illimité</li>
-                <li>Mode enchères et tirage au sort automatique</li>
-                <li>Export des rapports comptables PDF</li>
-              </ul>
+
+              <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
+                <div>
+                  <p className="text-xs font-bold text-foreground">SMS</p>
+                  <p className="text-[10px] text-muted-foreground">Rappels directs par SMS</p>
+                </div>
+                <Switch checked={smsNotif} onCheckedChange={setSmsNotif} />
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
+                <div>
+                  <p className="text-xs font-bold text-foreground">Email</p>
+                  <p className="text-[10px] text-muted-foreground">Reçus et récapitulatifs mensuels</p>
+                </div>
+                <Switch checked={emailNotif} onCheckedChange={setEmailNotif} />
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
+                <div>
+                  <p className="text-xs font-bold text-foreground">WhatsApp</p>
+                  <p className="text-[10px] text-muted-foreground">Alertes et rappels automatisés</p>
+                </div>
+                <Switch checked={whatsAppNotif} onCheckedChange={setWhatsAppNotif} />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => { toast.success("Demande d'abonnement transmise !"); setActiveModal(null); }} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              Passer au Premium
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. SUB-SECTION SCREEN 7: AIDE & LÉGAL */}
+      {/* ========================================================================= */}
+      {(activeSection === 'support' || activeSection === 'legal') && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+            <h3 className="font-serif font-bold text-lg text-foreground">Aide, Support & Documents Légaux</h3>
+            <p className="text-xs text-muted-foreground">Consultez la réglementation des tontines collaboratives et contactez notre assistance.</p>
+            
+            <div className="space-y-2 pt-2 text-xs">
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter les CGU.")}>
+                <span className="font-bold">Conditions Générales d'Utilisation (CGU)</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter le Règlement des tontines.")}>
+                <span className="font-bold">Règlement Officiel des Tontines</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter la Politique de confidentialité.")}>
+                <span className="font-bold">Politique de Confidentialité & Données</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* DELETE ACCOUNT CONFIRMATION MODAL */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-rose-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Supprimer définitivement mon compte ?
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Cette action est irréversible. Toutes vos données seront effacées.
+            </DialogDescription>
+          </DialogHeader>
+
+          {groups.length > 0 ? (
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium space-y-1">
+              ⚠️ Vous avez actuellement <strong>{groups.length} cercle(s) actif(s)</strong>. Veuillez quitter ou régler vos cotisations avant de supprimer votre compte.
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground py-2">
+              Confirmez-vous la suppression immédiate de votre compte Eganyé ?
+            </p>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} className="rounded-xl text-xs">
+              Annuler
+            </Button>
+            <Button
+              disabled={groups.length > 0}
+              onClick={() => {
+                toast.success("Compte supprimé.");
+                setShowDeleteConfirm(false);
+                onLogout?.();
+              }}
+              className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold"
+            >
+              Supprimer mon compte
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* 11. AIDE ET SUPPORT */}
-      <Dialog open={activeModal === 'help_support'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Aide et support</DialogTitle>
-            <DialogDescription>Foire aux questions fréquentes.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 max-h-60 overflow-y-auto py-2 text-xs">
-            <div className="p-3 bg-muted/40 rounded-xl space-y-1">
-              <p className="font-bold text-foreground">Comment fonctionne la tontine eganyé ?</p>
-              <p className="text-muted-foreground">Chaque membre cotise à chaque période fixe. À la fin de chaque tour, le pot est versé au bénéficiaire selon l'ordre établi.</p>
-            </div>
-            <div className="p-3 bg-muted/40 rounded-xl space-y-1">
-              <p className="font-bold text-foreground">Les paiements sont-ils sécurisés ?</p>
-              <p className="text-muted-foreground">Oui, toutes les transactions sont enregistrées dans un grand livre comptable à partie double avec validation PIN 4 chiffres.</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 12. SUGGESTIONS ET AMÉLIORATIONS */}
-      <Dialog open={activeModal === 'suggestions'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Suggestions et améliorations</DialogTitle>
-            <DialogDescription>Partagez vos idées pour rendre eganyé encore meilleur !</DialogDescription>
-          </DialogHeader>
-          <div className="py-2 space-y-2">
-            <Textarea placeholder="Vos idées ou suggestions..." value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} className="rounded-xl h-28 text-xs" />
-          </div>
-          <DialogFooter>
-            <Button onClick={() => { toast.success("Merci pour vos suggestions !"); setFeedbackText(''); setActiveModal(null); }} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              Envoyer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 13. SIGNALER UN PROBLÈME */}
-      <Dialog open={activeModal === 'report_bug'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Signaler un problème</DialogTitle>
-            <DialogDescription>Décrivez le bogue ou le souci rencontré.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Input placeholder="Sujet du problème" value={bugSubject} onChange={(e) => setBugSubject(e.target.value)} className="rounded-xl" />
-            <Textarea placeholder="Description détaillée..." value={bugDescription} onChange={(e) => setBugDescription(e.target.value)} className="rounded-xl h-24 text-xs" />
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSendTicket} disabled={isSendingTicket} className="gradient-sunset text-white font-bold rounded-xl w-full">
-              {isSendingTicket ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Transmettre le signalement'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 14. DOCUMENTS LÉGAUX */}
-      <Dialog open={activeModal === 'legal_docs'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Documents légaux</DialogTitle>
-            <DialogDescription>Conditions d'utilisation et charte de confidentialité.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 py-2 text-xs text-muted-foreground">
-            <p className="font-bold text-foreground">Conditions Générales d'Utilisation (CGU)</p>
-            <p>L'utilisation de la plateforme eganyé implique l'acceptation sans réserve des règles de la tontine collaborative.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 15. TUTORIEL */}
-      <Dialog open={activeModal === 'tutorial'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Tutoriel d'utilisation</DialogTitle>
-            <DialogDescription>Guide rapide pour bien démarrer sur eganyé.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2 text-xs">
-            <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-xl">
-              <span className="font-bold text-primary">1.</span>
-              <p>Rechargez votre portefeuille numérique par Mobile Money (Wave, Orange Money, Moov, MTN).</p>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-xl">
-              <span className="font-bold text-primary">2.</span>
-              <p>Rejoignez un cercle public ou créez votre propre groupe de tontine.</p>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-xl">
-              <span className="font-bold text-primary">3.</span>
-              <p>Cotisez à chaque cycle et recevez l'intégralité du pot lorsque vient votre tour !</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 16. CONTACTER LE SUPPORT */}
-      <Dialog open={activeModal === 'contact_support'} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Contacter le support</DialogTitle>
-            <DialogDescription>Assistance disponible 7j/7.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2 text-xs">
-            <p className="text-muted-foreground">Une question sur un virement ou une cotisation ? Écrivez-nous à :</p>
-            <div className="p-3 bg-card border border-border/80 rounded-xl font-bold text-foreground flex items-center justify-between">
-              <span>support@eganye.app</span>
-              <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText('support@eganye.app'); toast.success("Email du support copié !"); }}>
-                <Copy className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// Menu Row Component
-function MenuRow({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }) {
-  return (
-    <div
-      onClick={onClick}
-      className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/40 transition-colors group"
-    >
-      <div className="flex items-center gap-3.5">
-        <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-105 transition-transform">
-          {icon}
-        </div>
-        <span className="font-semibold text-sm text-foreground">{title}</span>
-      </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
     </div>
   );
 }
