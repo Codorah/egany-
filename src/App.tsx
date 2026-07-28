@@ -79,6 +79,14 @@ export default function App() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     
+    // Hidden admin route detection (/admin or ?admin=true)
+    const isAdminRoute = window.location.pathname.includes('/admin') || params.get('admin') === 'true';
+    if (isAdminRoute && activeProfile) {
+      if (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') {
+        setView('admin');
+      }
+    }
+
     // Join logic
     const code = params.get('join');
     if (code) {
@@ -220,7 +228,7 @@ export default function App() {
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} />;
       case 'admin':
-        return activeProfile.role === 'admin' ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
+        return (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'contributions':
         return selectedGroup ? (
           <ContributionsManager group={selectedGroup} user={activeProfile} onBack={() => setView('dashboard')} />

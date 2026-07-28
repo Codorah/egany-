@@ -287,7 +287,7 @@ BEGIN
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    CASE WHEN new.email = 'diditanael@gmail.com' THEN 'admin' ELSE 'user' END
+    CASE WHEN new.email IN ('codorah@hotmail.com', 'diditanael@gmail.com') THEN 'admin' ELSE 'user' END
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
