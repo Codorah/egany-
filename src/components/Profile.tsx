@@ -685,6 +685,85 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       )}
 
       {/* ========================================================================= */}
+      {/* 3.B. SUB-SECTION SCREEN: MES CERCLES & GRAPHES */}
+      {/* ========================================================================= */}
+      {activeSection === 'circles' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-serif font-bold text-lg text-foreground">Mes Cercles de Tontine</h3>
+              <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 font-bold text-xs">
+                {groups?.length || 0} actif(s)
+              </Badge>
+            </div>
+            
+            <div className="p-4 bg-card border border-border/60 rounded-2xl space-y-3">
+              <h4 className="text-xs font-bold text-foreground">Statistiques de participation</h4>
+              <div className="flex items-end gap-2 h-32 pt-4">
+                {/* Empty Graphs (as requested by user: "mes cercles essaie de faire des graphes vides") */}
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex-1 flex flex-col justify-end gap-2 items-center group">
+                    <div className="w-full bg-muted/60 rounded-t-sm h-[15%] group-hover:bg-primary/50 transition-all duration-300"></div>
+                    <span className="text-[9px] text-muted-foreground font-medium uppercase">Mois {i+1}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">Aucune donnée suffisante pour générer les graphiques complets ce mois-ci.</p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Vos cercles actuels</h4>
+              {!groups || groups.length === 0 ? (
+                <div className="p-4 text-center bg-muted/30 rounded-2xl border border-border/60">
+                  <p className="text-xs text-muted-foreground">Vous n'êtes membre d'aucun cercle.</p>
+                  <Button variant="link" className="text-primary text-xs h-auto p-0 mt-1">Rejoindre un cercle</Button>
+                </div>
+              ) : (
+                groups.map((g: any) => (
+                  <div key={g.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center text-xs">
+                    <div>
+                      <p className="font-bold text-foreground">{g.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{g.contributionAmount.toLocaleString()} FCFA / {g.frequency}</p>
+                    </div>
+                    <Badge variant={g.status === 'active' ? 'default' : 'secondary'} className="text-[9px]">
+                      {g.status}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3.C. SUB-SECTION SCREEN: ABONNEMENT */}
+      {/* ========================================================================= */}
+      {activeSection === 'subscription' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
+          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
+            <h3 className="font-serif font-bold text-lg text-foreground">Abonnement & Avantages</h3>
+            
+            <div className="p-5 bg-gradient-to-br from-purple-500/10 to-primary/5 border border-purple-500/20 rounded-2xl space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <Badge className="bg-purple-500 text-white font-bold text-[10px] mb-2">Plan Actuel : Gratuit</Badge>
+                  <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">Eganyé Essentiel</h4>
+                  <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
+                    Accès de base aux cercles de tontine. Limité à 2 cercles simultanés et sans l'assistant IA avancé.
+                  </p>
+                </div>
+                <Award className="w-10 h-10 text-purple-500 opacity-50" />
+              </div>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft">
+                Passer à Eganyé Premium (1500 FCFA/mois)
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
       {/* 4. SUB-SECTION SCREEN 4: SÉCURITÉ & CONFIDENTIALITÉ */}
       {/* ========================================================================= */}
       {activeSection === 'security' && (
