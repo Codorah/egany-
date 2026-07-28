@@ -610,13 +610,23 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               exit={{ opacity: 0, x: -20 }}
               className="w-full"
             >
-              <AvatarWorkshop
-                value={avatar}
-                onChange={setAvatar}
-                onSave={handleFinishOnboarding}
-                isSaving={isCreatingAccount || isLoading}
-                saveLabel="Créer mon Compte eganyé !"
-              />
+              <div className="space-y-6">
+                <AvatarWorkshop
+                  value={avatar}
+                  onChange={setAvatar}
+                />
+                
+                <div className="pt-4">
+                  <Button
+                    onClick={handleFinishOnboarding}
+                    disabled={isCreatingAccount || isLoading}
+                    className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 flex items-center justify-center gap-2 glow-orange"
+                  >
+                    {isCreatingAccount || isLoading ? "Création en cours..." : "Créer mon Compte eganyé !"}
+                    {!(isCreatingAccount || isLoading) && <ArrowRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           )}
 
