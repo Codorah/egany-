@@ -10,6 +10,9 @@ interface AvatarWorkshopProps {
   photoURL?: string;
   name?: string;
   onPhotoUploaded?: (url: string) => void;
+  onSave?: () => void;
+  isSaving?: boolean;
+  saveLabel?: string;
 }
 
 export function AvatarWorkshop({ 

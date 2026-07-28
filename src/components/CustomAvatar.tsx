@@ -1,4 +1,4 @@
-import React from 'react';
+export type AvatarConfig = any;
 
 interface CustomAvatarProps {
   photoURL?: string;
