@@ -318,10 +318,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         </CardContent>
       </Card>
 
-      {/* SECTION 1: COMPTE */}
+      {/* SECTION 1: MON COMPTE */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          COMPTE
+          👤 MON COMPTE
         </h3>
         <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
           <MenuRow
@@ -330,25 +330,48 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             onClick={() => setActiveModal('personal_info')}
           />
           <MenuRow
-            icon={<CreditCard className="w-5 h-5 text-primary" />}
-            title="Paiements et Virements"
-            onClick={() => setActiveModal('payments_transfers')}
+            icon={<ShieldCheck className="w-5 h-5 text-emerald-500" />}
+            title="Vérification d'identité (KYC Niveaux 1-3)"
+            onClick={() => setActiveModal('kyc_verification')}
           />
           <MenuRow
-            icon={<Landmark className="w-5 h-5 text-primary" />}
-            title="Informations de paiement"
+            icon={<Users className="w-5 h-5 text-amber-500" />}
+            title="Mandataire Numérique"
+            onClick={() => setActiveModal('digital_mandate')}
+          />
+        </Card>
+      </div>
+
+      {/* SECTION 2: ARGENT & PAIEMENTS */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
+          💰 ARGENT & PAIEMENTS
+        </h3>
+        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
+          <MenuRow
+            icon={<Wallet className="w-5 h-5 text-primary" />}
+            title="Portefeuille & Moyens de paiement"
             onClick={() => setActiveModal('payment_info')}
+          />
+          <MenuRow
+            icon={<CreditCard className="w-5 h-5 text-primary" />}
+            title="Historique des transactions"
+            onClick={() => setActiveModal('payments_transfers')}
           />
           <MenuRow
             icon={<ArrowDownCircle className="w-5 h-5 text-primary" />}
             title="Retirer des fonds"
             onClick={() => setActiveModal('withdraw_funds')}
           />
-          <MenuRow
-            icon={<Tag className="w-5 h-5 text-primary" />}
-            title="Mes promotions"
-            onClick={() => setActiveModal('promotions')}
-          />
+        </Card>
+      </div>
+
+      {/* SECTION 3: MES CERCLES */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
+          🔄 MES CERCLES
+        </h3>
+        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
           <MenuRow
             icon={<History className="w-5 h-5 text-primary" />}
             title="Historique des tontines"
@@ -357,21 +380,21 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         </Card>
       </div>
 
-      {/* SECTION 2: SÉCURITÉ & PRÉFÉRENCES */}
+      {/* SECTION 4: SÉCURITÉ & CONFIDENTIALITÉ */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          SÉCURITÉ & PRÉFÉRENCES
+          🔐 SÉCURITÉ & CONFIDENTIALITÉ
         </h3>
         <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
           <MenuRow
             icon={<Shield className="w-5 h-5 text-primary" />}
-            title="Sécurité & Mot de passe"
+            title="Sécurité du compte & Code PIN"
             onClick={() => setActiveModal('security_settings')}
           />
           <MenuRow
-            icon={<Bell className="w-5 h-5 text-primary" />}
-            title="Préférences de notification"
-            onClick={() => setActiveModal('notifications_settings')}
+            icon={<Globe className="w-5 h-5 text-primary" />}
+            title="Appareils connectés & Sessions"
+            onClick={() => setActiveModal('connected_devices')}
           />
           <MenuRow
             icon={<Ban className="w-5 h-5 text-primary" />}
@@ -381,58 +404,70 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         </Card>
       </div>
 
-      {/* BANNER: MON ABONNEMENT */}
-      <div 
-        onClick={() => setActiveModal('subscription')}
-        className="cursor-pointer gradient-sunset p-5 rounded-3xl shadow-soft text-white flex items-center justify-between group transition-all hover:opacity-95"
-      >
-        <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-white/20 backdrop-blur-xs rounded-2xl">
-            <Award className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h4 className="font-bold text-base leading-snug">Mon Abonnement</h4>
-            <p className="text-xs text-white/80 font-medium">Plan Trial Gratuit (Passer au Premium)</p>
-          </div>
-        </div>
-        <ChevronRight className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform" />
-      </div>
-
-      {/* SECTION 3: APPLICATION */}
+      {/* SECTION 5: NOTIFICATIONS */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
-          APPLICATION
+          🔔 NOTIFICATIONS
+        </h3>
+        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
+          <MenuRow
+            icon={<Bell className="w-5 h-5 text-primary" />}
+            title="Préférences de notification (Push / SMS / Email)"
+            onClick={() => setActiveModal('notifications_settings')}
+          />
+        </Card>
+      </div>
+
+      {/* ABONNEMENT BANNER */}
+      <Card className="gradient-sunset text-white rounded-3xl p-5 shadow-soft border border-white/20">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
+              Mon Abonnement
+            </span>
+            <h4 className="text-base font-serif font-black">Plan d'essai Gratuit</h4>
+            <p className="text-xs text-white/80">Profitez de toutes les fonctionnalités d'épargne.</p>
+          </div>
+          <Button
+            onClick={() => setActiveModal('promotions')}
+            size="sm"
+            className="bg-white text-primary hover:bg-white/90 font-bold rounded-2xl h-10 px-4 text-xs shrink-0 cursor-pointer shadow-xs"
+          >
+            Voir les offres
+          </Button>
+        </div>
+      </Card>
+
+      {/* SECTION 7: AIDE & LÉGAL */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-2">
+          🆘 AIDE & LÉGAL
         </h3>
         <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 divide-y divide-border/60">
           <MenuRow
             icon={<HelpCircle className="w-5 h-5 text-primary" />}
-            title="Aide et support"
+            title="Centre d'aide & FAQ"
             onClick={() => setActiveModal('help_support')}
           />
           <MenuRow
             icon={<Lightbulb className="w-5 h-5 text-primary" />}
-            title="Suggestions et améliorations"
-            onClick={() => setActiveModal('suggestions')}
-          />
-          <MenuRow
-            icon={<Bug className="w-5 h-5 text-primary" />}
-            title="Signaler un problème"
-            onClick={() => setActiveModal('report_bug')}
-          />
-          <MenuRow
-            icon={<ShieldCheck className="w-5 h-5 text-primary" />}
-            title="Documents légaux"
-            onClick={() => setActiveModal('legal_docs')}
-          />
-          <MenuRow
-            icon={<BookOpen className="w-5 h-5 text-primary" />}
-            title="Tutoriel"
+            title="Tutoriels & Découverte"
             onClick={() => setActiveModal('tutorial')}
           />
           <MenuRow
             icon={<Mail className="w-5 h-5 text-primary" />}
             title="Contacter le support"
             onClick={() => setActiveModal('contact_support')}
+          />
+          <MenuRow
+            icon={<Bug className="w-5 h-5 text-primary" />}
+            title="Signaler un problème"
+            onClick={() => setActiveModal('report_issue')}
+          />
+          <MenuRow
+            icon={<BookOpen className="w-5 h-5 text-primary" />}
+            title="Documents légaux & Règlement des tontines"
+            onClick={() => setActiveModal('legal_docs')}
           />
         </Card>
       </div>
@@ -485,6 +520,115 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer les modifications'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. VÉRIFICATION D'IDENTITÉ (KYC 3 NIVEAUX) */}
+      <Dialog open={activeModal === 'kyc_verification'} onOpenChange={() => setActiveModal(null)}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              Vérification d'Identité (KYC)
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Augmentez vos plafonds financiers de tontine en validant vos étapes d'identité.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-1">
+              <div className="flex justify-between items-center font-bold text-emerald-700 dark:text-emerald-300">
+                <span>Niveau 1 — Compte Basique</span>
+                <Badge className="bg-emerald-500 text-white text-[9px]">Validé ✅</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Téléphone & Email vérifiés. Limite : 500 000 FCFA/mois.</p>
+            </div>
+
+            <div className="p-3 bg-card border border-border/80 rounded-2xl space-y-1">
+              <div className="flex justify-between items-center font-bold text-foreground">
+                <span>Niveau 2 — Identité Certifiée</span>
+                <Badge variant="outline" className="text-[9px]">Recommandé</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Carte d'Identité Nationale ou Passeport. Limite : 2 000 000 FCFA/mois.</p>
+              <Button size="sm" variant="outline" className="mt-1 h-7 text-[11px] font-bold w-full rounded-xl" onClick={() => toast.info("Soumission de pièce d'identité enregistrée.")}>
+                Envoyer ma pièce d'identité
+              </Button>
+            </div>
+
+            <div className="p-3 bg-card border border-border/80 rounded-2xl space-y-1">
+              <div className="flex justify-between items-center font-bold text-foreground">
+                <span>Niveau 3 — Compte Renforcé</span>
+                <Badge variant="outline" className="text-[9px]">Grands Comptes</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Vérification de domicile et contrôle financier sans plafond de tontine.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 3. MANDATAIRE NUMÉRIQUE */}
+      <Dialog open={activeModal === 'digital_mandate'} onOpenChange={() => setActiveModal(null)}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              Mon Mandataire Numérique
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Désignez un proche de confiance pour consulter vos cotisations sans aucun droit de retrait.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Nom complet du mandataire</Label>
+              <Input placeholder="Ex: Ama Akou" defaultValue="Ama Akou" className="rounded-xl h-10 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Téléphone du mandataire</Label>
+              <Input placeholder="+228 90 00 00 00" defaultValue="+228 90 12 34 56" className="rounded-xl h-10 text-xs" />
+            </div>
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+              🛡️ Le mandataire aura un accès strictement <strong>consultatif</strong> (rappels et suivi de tontine) et ne pourra <strong>jamais effectuer de retrait d'argent</strong>.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => { toast.success("Mandataire numérique configuré avec succès !"); setActiveModal(null); }} className="gradient-sunset text-white font-bold rounded-xl w-full">
+              Enregistrer le mandataire
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 4. APPAREILS CONNECTÉS */}
+      <Dialog open={activeModal === 'connected_devices'} onOpenChange={() => setActiveModal(null)}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <Globe className="w-5 h-5 text-primary" />
+              Appareils Connectés & Sessions
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Gérez les sessions actives sur votre compte Eganyé.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-card border border-border/80 rounded-2xl flex justify-between items-center">
+              <div>
+                <p className="font-bold text-foreground">iPhone de Codorah (Actuel)</p>
+                <p className="text-[10px] text-muted-foreground">Dernière activité : aujourd'hui, 16:04 • Lomé, Togo</p>
+              </div>
+              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px]">Actif</Badge>
+            </div>
+            <div className="p-3 bg-card border border-border/80 rounded-2xl flex justify-between items-center">
+              <div>
+                <p className="font-bold text-foreground">Chrome — Windows 11</p>
+                <p className="text-[10px] text-muted-foreground">Dernière activité : hier, 18:32</p>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-rose-500 hover:text-rose-600" onClick={() => toast.success("Session Chrome déconnectée.")}>
+                Déconnecter
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

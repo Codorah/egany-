@@ -783,3 +783,17 @@ BEGIN
   WHERE group_id = p_group_id AND user_id = p_user_id;
 END;
 $$;
+
+-- ============================================================================
+-- MIGRATION COMPLÉMENTAIRE DE STRUCTURE (Abonnements, KYC, Mandataire)
+-- ============================================================================
+
+ALTER TABLE public.profiles 
+  ADD COLUMN IF NOT EXISTS kyc_level integer DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS kyc_verified_at timestamptz,
+  ADD COLUMN IF NOT EXISTS mandate_name text,
+  ADD COLUMN IF NOT EXISTS mandate_phone text,
+  ADD COLUMN IF NOT EXISTS mandate_permissions text[] DEFAULT ARRAY['view_contributions', 'receive_reminders'],
+  ADD COLUMN IF NOT EXISTS subscription_plan text DEFAULT 'free',
+  ADD COLUMN IF NOT EXISTS subscription_expires_at timestamptz;
+
