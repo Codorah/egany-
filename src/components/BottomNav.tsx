@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, Users, User, ShieldCheck, PlusCircle, CalendarDays, Store, Bot } from 'lucide-react';
+import { LayoutGrid, Users, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BottomNavProps {
@@ -25,77 +25,56 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
     }
   };
 
-  // Nav items configuration
   const navItems = [
     {
       id: 'dashboard',
-      label: t('dashboard'),
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      label: 'Accueil',
+      icon: <LayoutGrid className="w-5 h-5" />,
     },
     {
-      id: 'calendar',
-      label: t('calendar'),
-      icon: <CalendarDays className="w-5 h-5" />,
-    },
-    {
-      id: 'marketplace',
-      label: t('marketplace') || 'Services',
-      icon: <Store className="w-5 h-5" />,
-    },
-    {
-      id: 'ai-assistant',
-      label: t('ai_assistant') || 'Copilote',
-      icon: <Bot className="w-5 h-5" />,
+      id: 'search-groups',
+      label: 'Mes Cercles',
+      icon: <Users className="w-5 h-5" />,
     },
     {
       id: 'profile',
-      label: t('profile'),
+      label: 'Profil',
       icon: <User className="w-5 h-5" />,
     }
   ];
 
-  // If user is admin, add admin tab
-  if (user?.role === 'admin') {
-    navItems.splice(1, 0, {
-      id: 'admin',
-      label: 'Admin',
-      icon: <ShieldCheck className="w-5 h-5" />,
-    });
-  }
-
-  // Position classes depending on simulated phone vs real mobile viewport
   const containerClasses = isSimulated
-    ? "sticky bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex justify-around items-center px-4 z-40 shadow-[0_-4px_12px_rgba(75,46,5,0.06)]"
-    : "fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex justify-around items-center px-4 z-40 shadow-[0_-4px_12px_rgba(75,46,5,0.06)] md:hidden";
+    ? "sticky bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-6 z-40 border-t border-border/80"
+    : "fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md flex justify-around items-center px-6 z-40 border-t border-border/80 md:hidden";
 
   return (
     <div className={containerClasses}>
       {navItems.map((item) => {
-        const isActive = currentView === item.id;
+        const isActive = currentView === item.id || (item.id === 'search-groups' && (currentView === 'group-details' || currentView === 'contributions'));
         return (
           <button
             key={item.id}
             onClick={() => handleNav(item.id)}
-            className="flex flex-col items-center justify-center flex-1 h-full relative group cursor-pointer"
+            className="flex flex-col items-center justify-center flex-1 h-full relative cursor-pointer group py-1.5 transition-transform active:scale-95"
           >
-            <div className={`p-1 rounded-xl transition-all duration-300 relative ${
+            <div className={`p-1.5 rounded-2xl transition-all duration-300 relative flex items-center justify-center ${
               isActive
-                ? 'text-brand scale-110'
-                : 'text-ink-soft hover:text-brand'
+                ? 'text-primary bg-primary/15 font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}>
               {item.icon}
               {isActive && (
                 <motion.div
-                  layoutId="activeBottomNavIndicator"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  layoutId="activeNavTabIndicator"
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-1 rounded-full bg-primary glow-orange"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
             </div>
-            <span className={`text-[9px] font-bold mt-1 transition-all duration-300 ${
+            <span className={`text-[11px] mt-1 tracking-tight transition-all duration-200 ${
               isActive
-                ? 'text-brand font-black'
-                : 'text-ink-soft font-medium'
+                ? 'text-primary font-extrabold'
+                : 'text-muted-foreground font-medium'
             }`}>
               {item.label}
             </span>

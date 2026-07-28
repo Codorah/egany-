@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle, Search } from 'lucide-react';
+import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle, Search, Sparkles, CreditCard, PiggyBank } from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { DashboardCharts } from './DashboardCharts';
@@ -21,27 +21,26 @@ interface DashboardProps {
   onNavigate?: (view: string) => void;
 }
 
-// Framer Motion Animation Configurations for Mobile-Native Feel
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.05,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 16, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
       type: 'spring',
-      stiffness: 110,
-      damping: 15,
+      stiffness: 120,
+      damping: 16,
     },
   },
 };
@@ -63,98 +62,82 @@ const hoverScaleVariants = {
 
 export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab, onNavigate }: DashboardProps) {
   const { t } = useLanguage();
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-8 pb-12"
     >
       {/* Header and Welcome */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/30 p-6 rounded-3xl border border-border/60"
       >
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">{t('dashboard_greeting')}, {user.displayName} 👋</h1>
-          <p className="text-xs text-muted-foreground font-medium">{t('dashboard_subtitle')}</p>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
+              {t('dashboard_greeting')}, {user.displayName} 👋
+            </h1>
+            {user.role === 'admin' && (
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
+                Admin
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground font-medium">
+            {t('dashboard_subtitle')}
+          </p>
         </div>
-        <div className="shrink-0 sm:block hidden">
+        <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
           <CreateGroupDialog />
         </div>
       </motion.div>
 
-      {/* Quick Actions (Actions rapides) */}
-      <motion.div
-        variants={itemVariants}
-        className="space-y-3"
-      >
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('quick_actions')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Virtual Wallet & Financial Card Banner */}
+      <motion.div variants={itemVariants}>
+        <div className="relative overflow-hidden rounded-3xl gradient-card p-6 sm:p-8 text-white shadow-elevated border border-amber-900/40">
+          {/* Subtle decorative shapes */}
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute right-1/4 -top-12 w-48 h-48 rounded-full bg-orange-500/10 blur-2xl pointer-events-none" />
 
-          {/* Action 1: Recharge Wallet */}
-          <motion.div
-            variants={hoverScaleVariants}
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => onNavigateToProfileTab?.('wallet')}
-            className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-secondary/30 transition-all"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-secondary/10 text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-300">
-                <Wallet className="w-5 h-5" />
+          <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-center gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-amber-200/80 text-xs font-bold uppercase tracking-wider">
+                <Wallet className="w-4 h-4 text-primary" />
+                <span>Portefeuille Numérique eganyé</span>
               </div>
               <div>
-                <h3 className="font-serif font-bold text-base text-foreground">{t('recharge_wallet_title')}</h3>
-                <p className="text-[11px] text-muted-foreground font-medium">{t('recharge_wallet_desc')}</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all" />
-          </motion.div>
-
-          {/* Action 2: Create Group */}
-          <CreateGroupDialog
-            trigger={
-              <motion.div
-                variants={hoverScaleVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-brand/30 transition-all"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="p-3 rounded-2xl bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white transition-all duration-300">
-                    <PlusCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-serif font-bold text-base text-foreground">{t('create_new_circle')}</h3>
-                    <p className="text-[11px] text-muted-foreground font-medium">{t('create_circle_desc')}</p>
-                  </div>
+                <span className="text-xs text-amber-100/70 font-medium">Solde Disponible</span>
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-white">
+                    {(user.walletBalance || 0).toLocaleString()}
+                  </span>
+                  <span className="text-sm font-bold text-amber-300">FCFA</span>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-brand group-hover:translate-x-1 transition-all" />
-              </motion.div>
-            }
-          />
-
-          {/* Action 3: Search Public Groups */}
-          <motion.div
-            variants={hoverScaleVariants}
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => onNavigate?.('search-groups')}
-            className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-eganye-gold/40 transition-all"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-eganye-gold/10 text-eganye-gold group-hover:bg-eganye-gold group-hover:text-white transition-all duration-300">
-                <Search className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-serif font-bold text-base text-foreground">{t('search_circles')}</h3>
-                <p className="text-[11px] text-muted-foreground font-medium">{t('search_circle_desc')}</p>
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-eganye-gold group-hover:translate-x-1 transition-all" />
-          </motion.div>
 
+            {/* Quick Actions inside Card Banner */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                onClick={() => onNavigateToProfileTab?.('wallet')}
+                className="gradient-sunset text-white font-bold rounded-2xl h-11 px-5 shadow-xs hover:opacity-95 text-xs flex items-center gap-2 cursor-pointer border border-white/20"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Recharger Solde</span>
+              </Button>
+              <Button
+                onClick={() => onNavigate?.('search-groups')}
+                variant="outline"
+                className="bg-white/10 text-white hover:bg-white/20 font-bold rounded-2xl h-11 px-4 text-xs border border-white/20 flex items-center gap-2 cursor-pointer backdrop-blur-xs"
+              >
+                <Search className="w-4 h-4 text-amber-300" />
+                <span>Rechercher Tontine</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -164,46 +147,47 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         className="grid grid-cols-1 sm:grid-cols-3 gap-5"
       >
         {/* Score Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-secondary text-white border-none overflow-hidden relative shadow-md rounded-3xl h-full">
+        <motion.div whileHover={{ y: -2 }} className="h-full">
+          <Card className="glass-card border-emerald-500/20 shadow-soft rounded-3xl h-full overflow-hidden relative group">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-white/80">{t('reputation_score')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold">{user.reputationScore}</span>
-                <span className="text-xs font-bold text-white/80">/ 100</span>
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>{t('reputation_score')}</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              </CardTitle>
+              <div className="flex items-baseline gap-1.5 mt-2">
+                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
+                  {user.reputationScore}
+                </span>
+                <span className="text-xs font-bold text-muted-foreground">/ 100</span>
               </div>
             </CardHeader>
             <CardContent>
-              <Progress value={user.reputationScore} className="h-1.5 bg-white/25" />
-              <p className="mt-4 text-[11px] font-medium text-white/95 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-eganye-gold" />
+              <Progress value={user.reputationScore} className="h-2 bg-emerald-500/15" />
+              <p className="mt-3 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
                 {t('excellent_reliability')}
               </p>
             </CardContent>
-            <div className="absolute -right-4 -bottom-4 text-white/10">
-              <ShieldCheck className="w-28 h-28" />
-            </div>
           </Card>
         </motion.div>
 
         {/* Total Saved Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-card border border-border shadow-sm rounded-3xl h-full">
+        <motion.div whileHover={{ y: -2 }} className="h-full">
+          <Card className="glass-card shadow-soft rounded-3xl h-full overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('total_saved')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold text-foreground">{user.totalSaved.toLocaleString()}</span>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                <span>{t('total_saved')}</span>
+                <PiggyBank className="w-4 h-4 text-primary" />
+              </CardTitle>
+              <div className="flex items-baseline gap-1.5 mt-2">
+                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
+                  {user.totalSaved.toLocaleString()}
+                </span>
                 <span className="text-xs font-bold text-muted-foreground">FCFA</span>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-secondary font-bold">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
                 <TrendingUp className="w-4 h-4" />
                 +12% {t('savings_accumulated')}
               </div>
@@ -212,21 +196,23 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         </motion.div>
 
         {/* Active Groups Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-card border border-border shadow-sm rounded-3xl h-full">
+        <motion.div whileHover={{ y: -2 }} className="h-full">
+          <Card className="glass-card shadow-soft rounded-3xl h-full overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('active_groups')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold text-foreground">{groups.length}</span>
+              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                <span>{t('active_groups')}</span>
+                <Users className="w-4 h-4 text-primary" />
+              </CardTitle>
+              <div className="flex items-baseline gap-1.5 mt-2">
+                <span className="text-3xl sm:text-4xl font-serif font-black text-foreground">
+                  {groups.length}
+                </span>
                 <span className="text-xs font-bold text-muted-foreground">{t('circles_unit')}</span>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold">
-                <Users className="w-4 h-4 text-brand" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                <Users className="w-3.5 h-3.5 text-primary" />
                 {user.groupsJoined || groups.length} {t('circles_joined')}
               </div>
             </CardContent>
@@ -248,9 +234,55 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         <DashboardCharts user={user} groups={groups} />
       </motion.div>
 
+      {/* Community Cultural Showcase Banner */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative h-44 rounded-3xl overflow-hidden shadow-soft group border border-border/60">
+          <img
+            src="/onboarding-mamas.png"
+            alt="Mamans commerçantes et tontine"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col justify-end">
+            <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Épargne Solidaire</span>
+            <h3 className="text-sm sm:text-base font-serif font-bold text-white leading-snug">
+              La Tontine des Mamans & Commerçantes
+            </h3>
+            <p className="text-[11px] text-white/80 line-clamp-1">
+              Faites fructifier vos revenus de marché en toute confiance.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative h-44 rounded-3xl overflow-hidden shadow-soft group border border-border/60">
+          <img
+            src="/young-savers.png"
+            alt="Jeunes épargnants africains"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col justify-end">
+            <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">Avenir & Projets</span>
+            <h3 className="text-sm sm:text-base font-serif font-bold text-white leading-snug">
+              Une Jeunesse Prospère qui Construit
+            </h3>
+            <p className="text-[11px] text-white/80 line-clamp-1">
+              Épargnez entre amis pour financer vos idées et entreprises.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Active Circles Section */}
-      <motion.div variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-serif font-bold text-foreground">{t('active_circles')}</h2>
+      <motion.div variants={itemVariants} className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-serif font-black text-foreground tracking-tight">
+              {t('active_circles')}
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium">Vos groupes de tontine en cours</p>
+          </div>
+          <CreateGroupDialog />
+        </div>
+
         {groups.length === 0 ? (
           <CreateGroupDialog
             trigger={
@@ -268,71 +300,87 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => (
-              <motion.div
-                key={group.id}
-                variants={hoverScaleVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="h-full"
-              >
-                <Card
-                  className="h-full transition-all cursor-pointer group bg-card border border-border rounded-3xl overflow-hidden shadow-sm hover:shadow-md"
-                  onClick={() => onSelectGroup(group.id)}
+            {groups.map((group) => {
+              const progressPct = Math.round((group.currentPayoutIndex / Math.max(group.members.length, 1)) * 100);
+              return (
+                <motion.div
+                  key={group.id}
+                  variants={hoverScaleVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  className="h-full"
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <Badge className={`font-sans font-bold text-[10px] rounded-full px-2.5 py-0.5 ${group.status === 'active' ? 'bg-secondary/10 text-secondary border border-secondary/20' : 'bg-muted text-muted-foreground'}`}>
-                        {group.status === 'active' ? t('status_active') : t('status_completed')}
-                      </Badge>
-                      <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded-md uppercase font-sans tracking-wide">{t(`freq_${group.frequency}`)}</span>
-                    </div>
-                    <CardTitle className="mt-3 font-serif text-lg font-bold text-foreground group-hover:text-brand transition-colors">{group.name}</CardTitle>
-                    <CardDescription className="line-clamp-2 text-xs text-muted-foreground mt-1">{group.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-0">
-                    <div className="flex justify-between text-xs font-semibold border-b border-border pb-2">
-                      <span className="text-muted-foreground">{t('contribution_label')}</span>
-                      <span className="text-foreground">{group.contributionAmount.toLocaleString()} {group.currency}</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-semibold border-b border-border pb-2">
-                      <span className="text-muted-foreground">{t('members')}</span>
-                      <span className="text-foreground">{group.members.length} {t('participants')}</span>
-                    </div>
-                    <div className="pt-1">
-                      <div className="flex justify-between text-[11px] font-bold mb-1">
-                        <span className="text-muted-foreground">{t('cycle_progress')}</span>
-                        <span className="text-secondary">{Math.round((group.currentPayoutIndex / group.members.length) * 100)}%</span>
+                  <Card
+                    className="h-full transition-all cursor-pointer group glass-card rounded-3xl overflow-hidden shadow-soft hover:shadow-elevated hover:border-primary/40 relative flex flex-col justify-between"
+                    onClick={() => onSelectGroup(group.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-center">
+                        <Badge className={`font-sans font-bold text-[10px] rounded-full px-2.5 py-0.5 ${
+                          group.status === 'active' 
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {group.status === 'active' ? t('status_active') : t('status_completed')}
+                        </Badge>
+                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                          {t(`freq_${group.frequency}`)}
+                        </span>
                       </div>
-                      <Progress value={(group.currentPayoutIndex / group.members.length) * 100} className="h-1.5" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        className="w-full text-xs font-bold rounded-xl h-9 border-border text-foreground hover:bg-muted cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onManageContributions(group.id);
-                        }}
-                      >
-                        {user.uid === group.creatorId || user.role === 'admin' ? t('manage') : t('my_contributions')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between hover:bg-brand hover:text-white transition-colors text-xs font-bold rounded-xl h-9 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectGroup(group.id);
-                        }}
-                      >
-                        {t('details')}
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      <CardTitle className="mt-3 font-serif text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                        {group.name}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2 text-xs text-muted-foreground mt-1">
+                        {group.description || 'Cercle de tontine collaborative.'}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4 pt-0">
+                      <div className="flex justify-between text-xs font-semibold border-b border-border/60 pb-2">
+                        <span className="text-muted-foreground">{t('contribution_label')}</span>
+                        <span className="text-foreground font-bold">{group.contributionAmount.toLocaleString()} {group.currency}</span>
+                      </div>
+
+                      <div className="flex justify-between text-xs font-semibold border-b border-border/60 pb-2">
+                        <span className="text-muted-foreground">{t('members')}</span>
+                        <span className="text-foreground font-bold">{group.members.length} {t('participants')}</span>
+                      </div>
+
+                      <div className="pt-1">
+                        <div className="flex justify-between text-[11px] font-bold mb-1.5">
+                          <span className="text-muted-foreground">{t('cycle_progress')}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{progressPct}%</span>
+                        </div>
+                        <Progress value={progressPct} className="h-2 bg-muted" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          className="w-full text-xs font-bold rounded-xl h-9 border-border text-foreground hover:bg-muted cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onManageContributions(group.id);
+                          }}
+                        >
+                          {user.uid === group.creatorId || user.role === 'admin' ? t('manage') : t('my_contributions')}
+                        </Button>
+                        <Button
+                          className="w-full justify-between gradient-sunset text-white transition-opacity hover:opacity-90 text-xs font-bold rounded-xl h-9 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectGroup(group.id);
+                          }}
+                        >
+                          <span>{t('details')}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </motion.div>

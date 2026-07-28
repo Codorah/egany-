@@ -125,22 +125,22 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
   const slides = [
     {
-      title: "Épargnez ensemble, sans tracas",
-      description: "Digitalisez vos cercles d'épargne (tontines). Créez des groupes sécurisés et suivez les versements en temps réel.",
-      icon: <Users2 className="w-12 h-12 text-brand" />,
-      color: "from-brand/10 to-brand/5"
+      title: "La Tontine des Mamans & Commerçantes",
+      description: "Digitalisez vos cercles d'épargne en toute sécurité. Cotisez ensemble et suivez chaque versement en toute transparence depuis votre téléphone.",
+      image: "/onboarding-mamas.png",
+      color: "from-amber-500/15 to-orange-500/5"
     },
     {
-      title: "Automatisation Paydunya",
-      description: "Alimentez votre portefeuille virtuel avec Wave, Orange Money ou MTN, et laissez eganyé prélever automatiquement vos cotisations.",
-      icon: <Zap className="w-12 h-12 text-secondary" />,
-      color: "from-secondary/10 to-secondary/5"
+      title: "Une Jeunesse Prospère qui Épargne",
+      description: "Étudiants, jeunes entrepreneurs et travailleurs : créez des cercles d'épargne flexibles, suivez vos cotisations et réalisez vos projets.",
+      image: "/young-savers.png",
+      color: "from-emerald-500/15 to-teal-500/5"
     },
     {
-      title: "Bâtissez votre Réputation",
-      description: "Chaque versement à l'heure augmente votre Score de Réputation financière pour débloquer de plus grands financements.",
-      icon: <TrendingUp className="w-12 h-12 text-eganye-gold" />,
-      color: "from-eganye-gold/10 to-eganye-gold/5"
+      title: "Encaissez par Mobile Money (Wave, Orange, MTN)",
+      description: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
+      image: "/vendor-success.png",
+      color: "from-orange-500/15 to-amber-500/5"
     }
   ];
 
@@ -196,8 +196,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   };
 
   return (
-    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:pt-8 md:pb-8 relative overflow-hidden md:rounded-3xl md:shadow-xl md:border border-border transition-all duration-500 ${
-      step === 3 ? 'md:max-w-3xl' : 'md:max-w-md'
+    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-10 md:pt-10 md:pb-10 relative overflow-hidden md:rounded-[2.5rem] md:shadow-[0_0_60px_rgba(0,0,0,0.05)] transition-all duration-500 ${
+      step === 3 ? 'md:max-w-4xl' : 'md:max-w-xl'
     }`}>
 
       {/* Background aesthetic blobs */}
@@ -354,13 +354,18 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className={`p-8 rounded-3xl bg-gradient-to-br ${slides[slideIndex].color} border border-border flex flex-col items-center text-center space-y-4`}
+                  className={`p-6 rounded-3xl bg-gradient-to-br ${slides[slideIndex].color} border border-border flex flex-col items-center text-center space-y-4 overflow-hidden`}
                 >
-                  <div className="p-4 bg-card rounded-2xl shadow-sm">
-                    {slides[slideIndex].icon}
+                  <div className="w-full h-48 sm:h-56 rounded-2xl overflow-hidden shadow-md relative border border-white/20">
+                    <img
+                      src={slides[slideIndex].image}
+                      alt={slides[slideIndex].title}
+                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
-                  <h3 className="text-xl font-extrabold text-foreground">{slides[slideIndex].title}</h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed max-w-xs">{slides[slideIndex].description}</p>
+                  <h3 className="text-lg sm:text-xl font-serif font-black text-foreground">{slides[slideIndex].title}</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed max-w-sm font-medium">{slides[slideIndex].description}</p>
                 </motion.div>
               </AnimatePresence>
 
