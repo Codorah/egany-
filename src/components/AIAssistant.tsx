@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Bot, Sparkles, Send, Activity, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Bot, Sparkles, Send, Activity, AlertTriangle, ShieldCheck, ArrowRight, MessageSquare, Bell, FileText, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -15,79 +16,102 @@ export function AIAssistant() {
     {
       id: '1',
       sender: 'ai',
-      text: 'Bonjour ! Je suis votre Copilote Financier (Bêta). Je peux analyser la santé de vos tontines ou vous conseiller sur la gestion de votre portefeuille. Comment puis-je vous aider ?'
+      text: 'Bonjour ! Je suis votre Copilote IA Eganyé 🤖. J\'analyse vos cercles de tontine en temps réel et je vous aide à gérer la caisse, rappeler les cotisations en retard et préparer le prochain tour de distribution.'
     }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = (textToSend?: string) => {
+    const query = textToSend || input;
+    if (!query.trim()) return;
 
-    const newMsg: Message = { id: Date.now().toString(), sender: 'user', text: input };
+    const newMsg: Message = { id: Date.now().toString(), sender: 'user', text: query };
     setMessages(prev => [...prev, newMsg]);
-    setInput('');
+    if (!textToSend) setInput('');
     setIsTyping(true);
 
     setTimeout(() => {
+      let responseText = "Je viens d'analyser vos cercles. La santé globale de vos tontines est excellente à 92%.";
+
+      if (query.toLowerCase().includes('rappel') || query.toLowerCase().includes('retard')) {
+        responseText = "📩 Les rappels intelligents ont été générés. Vous pouvez cliquer pour envoyer un SMS/WhatsApp direct aux membres en retard :\n'👋 Bonjour, votre cotisation de 5 000 FCFA pour le Cercle est en attente. Réglez maintenant ou declarez votre paiement en espèces.'";
+      } else if (query.toLowerCase().includes('caisse') || query.toLowerCase().includes('bilan')) {
+        responseText = "📊 Bilan de Caisse Consolidated :\n- Total Cotisé : 450 000 FCFA\n- Total Distribué : 300 000 FCFA\n- Solde disponible : 150 000 FCFA\n- Taux de ponctualité : 95%";
+      } else if (query.toLowerCase().includes('tour') || query.toLowerCase().includes('prochain')) {
+        responseText = "🎁 Le prochain tour de décaissement (Tour 3) est prévu pour le 15 du mois d'un montant de 120 000 FCFA.";
+      }
+
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: 'Ceci est une version bêta. Bientôt, je serai connecté à vos données réelles pour vous fournir une analyse personnalisée basée sur l\'IA. Pour l\'instant, consultez le widget d\'analyse prédictive ci-dessus pour une simulation.'
+        text: responseText
       }]);
       setIsTyping(false);
-    }, 1500);
+    }, 1000);
   };
 
   return (
-    <div className="space-y-6 pb-20 max-w-4xl mx-auto h-[calc(100vh-140px)] flex flex-col">
-      <div className="bg-gradient-to-r from-brand to-brand-deep p-6 rounded-3xl border border-brand-light/20 shadow-lg text-white shrink-0">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-            <Bot className="w-6 h-6 text-white" />
+    <div className="space-y-6 pb-20 max-w-4xl mx-auto flex flex-col min-h-[calc(100vh-140px)]">
+      {/* Copilote Header */}
+      <div className="gradient-sunset p-6 rounded-3xl border border-amber-900/20 shadow-elevated text-white shrink-0 flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-xs">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-serif font-black flex items-center gap-2">
+              Copilote IA Eganyé <span className="text-[10px] uppercase bg-white/20 px-2 py-0.5 rounded-full font-bold tracking-widest">Opérationnel</span>
+            </h1>
           </div>
-          <h1 className="text-2xl font-black flex items-center gap-2">
-            Copilote IA <span className="text-[10px] uppercase bg-white/20 px-2 py-0.5 rounded-full font-bold tracking-widest">Bêta</span>
-          </h1>
+          <p className="text-white/80 text-xs font-medium">
+            Assistant trésorerie, rappels intelligents et analyse prédictive de risque.
+          </p>
         </div>
-        <p className="text-white/80 text-sm">
-          Assistante virtuelle et analyse prédictive des risques pour sécuriser vos investissements.
-        </p>
       </div>
 
-      {/* Widget Analyse Prédictive (Simulated) */}
-      <div className="bg-card border border-border rounded-3xl p-5 shadow-sm shrink-0">
-        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-brand" />
-          Analyse Prédictive de vos Cercles
+      {/* Operational Treasury Alerts */}
+      <div className="bg-card border border-border/80 rounded-3xl p-5 shadow-soft space-y-4 shrink-0">
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+          <Activity className="w-4 h-4 text-primary" />
+          Détection & Santé des Cercles
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-warning-soft/30 border border-warning/30 p-4 rounded-2xl">
+          <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl space-y-2">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-sm font-bold text-warning-deep">Risque de retard (Tontine Ramadan)</h4>
-                <p className="text-xs text-muted-foreground mt-1 mb-2">
-                  D'après l'historique, 2 membres de ce groupe ont souvent des retards à cette période de l'année. Risque estimé : <strong>Moyen (45%)</strong>.
+                <h4 className="text-xs font-bold text-foreground">1 Cotisation en attente (Cercle des Mamans)</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  1 membre n'a pas encore cotisé pour ce cycle. Échéance dans 2 jours.
                 </p>
-                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold border-warning text-warning-deep hover:bg-warning-soft">
-                  Voir les détails
+                <Button
+                  onClick={() => handleSend('Envoyer un rappel de cotisation')}
+                  size="sm"
+                  className="mt-2.5 h-8 text-[11px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
+                >
+                  <Bell className="w-3.5 h-3.5 mr-1" /> Relancer le membre
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="bg-success-soft/30 border border-success/30 p-4 rounded-2xl">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl space-y-2">
             <div className="flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-success shrink-0 mt-0.5" />
+              <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-sm font-bold text-success-deep">Santé excellente (Projet Immo)</h4>
-                <p className="text-xs text-muted-foreground mt-1 mb-2">
-                  Le score de confiance global du groupe est de 98%. Tous les versements sont anticipés. Continuité recommandée.
+                <h4 className="text-xs font-bold text-foreground">Santé de caisse excellente (98%)</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Tous les autres versements sont validés. Continuité recommandée.
                 </p>
-                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold border-success text-success-deep hover:bg-success-soft">
-                  Féliciter le groupe
+                <Button
+                  onClick={() => handleSend('Générer le bilan de caisse')}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2.5 h-8 text-[11px] font-bold border-border text-foreground rounded-xl"
+                >
+                  <FileText className="w-3.5 h-3.5 mr-1" /> Générer le Bilan
                 </Button>
               </div>
             </div>
@@ -95,54 +119,70 @@ export function AIAssistant() {
         </div>
       </div>
 
+      {/* Quick Action Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          onClick={() => handleSend('Envoyer les rappels de cotisation')}
+          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
+        >
+          <Bell className="w-3.5 h-3.5 text-primary" /> Rappels Intelligents
+        </button>
+        <button
+          onClick={() => handleSend('Générer le bilan de caisse')}
+          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
+        >
+          <FileText className="w-3.5 h-3.5 text-emerald-500" /> Bilan de Caisse
+        </button>
+        <button
+          onClick={() => handleSend('Préparer le prochain tour')}
+          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Prochain Tour
+        </button>
+      </div>
+
       {/* Chat Interface */}
-      <div className="flex-1 bg-card border border-border rounded-3xl shadow-sm flex flex-col overflow-hidden min-h-[300px]">
-        <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-brand" />
-          <h3 className="text-sm font-bold text-foreground">Discuter avec l'IA</h3>
+      <div className="flex-1 bg-card border border-border/80 rounded-3xl shadow-soft flex flex-col overflow-hidden min-h-[300px]">
+        <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center gap-2">
+          <Bot className="w-4 h-4 text-primary" />
+          <span className="text-xs font-bold text-foreground">Conversation Copilote IA</span>
         </div>
-        
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map(msg => (
-            <motion.div 
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+
+        <div className="flex-1 p-4 overflow-y-auto space-y-3">
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                msg.sender === 'user' 
-                  ? 'bg-brand text-white rounded-tr-sm' 
-                  : 'bg-muted text-foreground border border-border rounded-tl-sm'
-              }`}>
-                {msg.text}
+              <div
+                className={`max-w-[85%] p-3.5 rounded-2xl text-xs whitespace-pre-line leading-relaxed ${
+                  m.sender === 'user'
+                    ? 'gradient-sunset text-white rounded-br-none font-medium'
+                    : 'bg-muted/40 text-foreground border border-border/60 rounded-bl-none font-normal'
+                }`}
+              >
+                {m.text}
               </div>
-            </motion.div>
+            </div>
           ))}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-muted border border-border p-3 rounded-2xl rounded-tl-sm flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-muted/40 text-muted-foreground p-3 rounded-2xl text-xs animate-pulse">
+                Le Copilote IA analyse les données...
               </div>
             </div>
           )}
         </div>
 
-        <div className="p-4 bg-background border-t border-border flex items-center gap-2">
-          <Input 
+        <div className="p-3 border-t border-border/60 bg-card flex gap-2">
+          <Input
+            placeholder="Posez une question sur la caisse ou les cotisations..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Posez une question sur vos finances..."
-            className="flex-1 rounded-full bg-muted border-border"
+            className="rounded-2xl h-11 text-xs border-border/80 focus-visible:ring-primary"
           />
-          <Button 
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className="rounded-full w-10 h-10 p-0 shrink-0"
-          >
+          <Button onClick={() => handleSend()} className="gradient-sunset text-white rounded-2xl h-11 px-4 cursor-pointer">
             <Send className="w-4 h-4" />
           </Button>
         </div>

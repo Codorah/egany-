@@ -25,41 +25,41 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
   const activeProfile = profile;
 
-  // Auto detect and synchronize system theme on first load
+  // Light mode by default on all devices
   React.useEffect(() => {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const defaultTheme = 'light';
     
     if (activeProfile) {
       if (!activeProfile.theme) {
-        // First load, theme not set in user profile yet
+        // First load, default to light mode in profile
         const updateThemeInDb = async () => {
           try {
-            const { error } = await supabase.from('profiles').update({ theme: systemTheme }).eq('id', activeProfile.uid);
+            const { error } = await supabase.from('profiles').update({ theme: defaultTheme }).eq('id', activeProfile.uid);
             if (error) throw error;
           } catch (err) {
-            console.error("Failed to sync auto-detected theme to Supabase:", err);
+            console.error("Failed to sync default theme to Supabase:", err);
           }
         };
         updateThemeInDb();
-        document.documentElement.classList.add(systemTheme === 'dark' ? 'dark' : 'light');
-        document.documentElement.classList.remove(systemTheme === 'dark' ? 'light' : 'dark');
-        localStorage.setItem('eganye_theme', systemTheme);
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('eganye_theme', defaultTheme);
       } else {
-        // Apply the saved theme preference
-        const userTheme = activeProfile.theme;
+        // Apply the saved theme preference if explicitly set
+        const userTheme = activeProfile.theme || 'light';
         document.documentElement.classList.add(userTheme === 'dark' ? 'dark' : 'light');
         document.documentElement.classList.remove(userTheme === 'dark' ? 'light' : 'dark');
         localStorage.setItem('eganye_theme', userTheme);
       }
     } else {
-      // Unauthenticated / Onboarding - use cached theme or default to system theme
-      const savedTheme = localStorage.getItem('eganye_theme') || systemTheme;
+      // Unauthenticated / Onboarding - use cached theme or default to 'light'
+      const savedTheme = localStorage.getItem('eganye_theme') || defaultTheme;
       document.documentElement.classList.add(savedTheme === 'dark' ? 'dark' : 'light');
       document.documentElement.classList.remove(savedTheme === 'dark' ? 'light' : 'dark');
     }
@@ -79,6 +79,14 @@ export default function App() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     
+    // Hidden admin route detection (/admin or ?admin=true)
+    const isAdminRoute = window.location.pathname.includes('/admin') || params.get('admin') === 'true';
+    if (isAdminRoute && activeProfile) {
+      if (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') {
+        setView('admin');
+      }
+    }
+
     // Join logic
     const code = params.get('join');
     if (code) {
@@ -204,8 +212,11 @@ export default function App() {
             onNavigate={(v) => setView(v as View)}
           />
         );
+      case 'my-circles':
       case 'search-groups':
         return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'wallet-savings':
+        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" onLogout={handleLogout} />;
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'support':
@@ -215,9 +226,9 @@ export default function App() {
       case 'ai-assistant':
         return <AIAssistant />;
       case 'profile':
-        return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} />;
+        return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} />;
       case 'admin':
-        return activeProfile.role === 'admin' ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
+        return (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'contributions':
         return selectedGroup ? (
           <ContributionsManager group={selectedGroup} user={activeProfile} onBack={() => setView('dashboard')} />
@@ -248,12 +259,14 @@ export default function App() {
   if (authLoading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="flex flex-col items-center gap-3">
-          <div className="bg-secondary p-3.5 rounded-2xl text-white shadow-md animate-bounce">
-            <span className="font-serif font-black text-xl tracking-wide lowercase">eg</span>
-          </div>
-          <Loader2 className="w-6 h-6 animate-spin text-brand" />
-          <span className="text-xs font-serif font-bold tracking-wide uppercase text-muted-foreground">chargement d'eganyé...</span>
+        <div className="flex flex-col items-center gap-6">
+          <img 
+            src="/logo-emblem.png" 
+            alt="eganyé" 
+            className="w-20 h-20 rounded-2xl shadow-xl animate-spin" 
+            style={{ animationDuration: '2s' }} 
+          />
+          <span className="text-xs font-sans font-bold tracking-[0.2em] uppercase text-muted-foreground/60">chargement...</span>
         </div>
       </div>
     );

@@ -125,22 +125,22 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
   const slides = [
     {
-      title: "Épargnez ensemble, sans tracas",
-      description: "Digitalisez vos cercles d'épargne (tontines). Créez des groupes sécurisés et suivez les versements en temps réel.",
-      icon: <Users2 className="w-12 h-12 text-brand" />,
-      color: "from-brand/10 to-brand/5"
+      title: "La Tontine des Mamans & Commerçantes",
+      description: "Digitalisez vos cercles d'épargne en toute sécurité. Cotisez ensemble et suivez chaque versement en toute transparence depuis votre téléphone.",
+      image: "/onboarding-mamas.png",
+      color: "from-amber-500/15 to-orange-500/5"
     },
     {
-      title: "Automatisation Paydunya",
-      description: "Alimentez votre portefeuille virtuel avec Wave, Orange Money ou MTN, et laissez eganyé prélever automatiquement vos cotisations.",
-      icon: <Zap className="w-12 h-12 text-secondary" />,
-      color: "from-secondary/10 to-secondary/5"
+      title: "Une Jeunesse Prospère qui Épargne",
+      description: "Étudiants, jeunes entrepreneurs et travailleurs : créez des cercles d'épargne flexibles, suivez vos cotisations et réalisez vos projets.",
+      image: "/young-savers.png",
+      color: "from-emerald-500/15 to-teal-500/5"
     },
     {
-      title: "Bâtissez votre Réputation",
-      description: "Chaque versement à l'heure augmente votre Score de Réputation financière pour débloquer de plus grands financements.",
-      icon: <TrendingUp className="w-12 h-12 text-eganye-gold" />,
-      color: "from-eganye-gold/10 to-eganye-gold/5"
+      title: "Encaissez par Mobile Money (Wave, Orange, MTN)",
+      description: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
+      image: "/vendor-success.png",
+      color: "from-orange-500/15 to-amber-500/5"
     }
   ];
 
@@ -196,13 +196,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   };
 
   return (
-    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:pt-8 md:pb-8 relative overflow-hidden md:rounded-3xl md:shadow-xl md:border border-border transition-all duration-500 ${
-      step === 3 ? 'md:max-w-3xl' : 'md:max-w-md'
+    <div className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-10 md:pt-10 md:pb-10 relative overflow-hidden md:rounded-2xl md:shadow-elevated transition-all duration-500 ${
+      step === 3 ? 'md:max-w-4xl' : 'md:max-w-xl'
     }`}>
 
-      {/* Background aesthetic blobs */}
-      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[40%] bg-brand/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[40%] bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle background accent — very light, not distracting */}
+      <div className="absolute top-[-30%] right-[-20%] w-[50%] h-[40%] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
 
       {/* Progress Indicators */}
       {step > 0 && step < 4 && (
@@ -275,12 +274,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               <img
                 src="/logo-emblem.png"
                 alt="eganyé"
-                className="mx-auto w-16 h-16 rounded-[20px] shadow-lg"
+                className="mx-auto w-20 h-20 rounded-2xl shadow-soft"
               />
 
               <div className="space-y-2">
-                <h1 className="text-4xl font-serif font-extrabold text-foreground tracking-wide lowercase">eganyé</h1>
-                <p className="text-brand font-sans font-bold tracking-widest text-xs uppercase">{t('onboarding_subtitle') || 'Épargner mieux, grandir ensemble.'}</p>
+                <h1 className="text-3xl font-serif font-black text-foreground tracking-wide lowercase">eganyé</h1>
+                <p className="text-brand font-sans font-bold tracking-widest text-[11px] uppercase">{t('onboarding_subtitle') || 'Épargner mieux, grandir ensemble.'}</p>
               </div>
 
               <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
@@ -290,7 +289,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               <div className="space-y-3 pt-4">
                 <Button
                   onClick={() => setStep(1)}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 glow-orange transition-all flex items-center justify-center gap-2"
                 >
                   Découvrir eganyé
                   <ArrowRight className="w-4 h-4" />
@@ -354,13 +353,17 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className={`p-8 rounded-3xl bg-gradient-to-br ${slides[slideIndex].color} border border-border flex flex-col items-center text-center space-y-4`}
+                  className={`p-5 rounded-2xl bg-card border border-border flex flex-col items-center text-center space-y-4 overflow-hidden shadow-soft`}
                 >
-                  <div className="p-4 bg-card rounded-2xl shadow-sm">
-                    {slides[slideIndex].icon}
+                  <div className="w-full h-44 sm:h-52 rounded-xl overflow-hidden shadow-soft relative">
+                    <img
+                      src={slides[slideIndex].image}
+                      alt={slides[slideIndex].title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <h3 className="text-xl font-extrabold text-foreground">{slides[slideIndex].title}</h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed max-w-xs">{slides[slideIndex].description}</p>
+                  <h3 className="text-lg sm:text-xl font-serif font-black text-foreground">{slides[slideIndex].title}</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed max-w-sm font-medium">{slides[slideIndex].description}</p>
                 </motion.div>
               </AnimatePresence>
 
@@ -426,7 +429,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     <Input
                       id="ob_name"
                       placeholder="Ex: Fatou Sy"
-                      className="rounded-xl h-11 border-border focus-visible:ring-primary"
+                      className="rounded-xl h-12 border-border focus-visible:ring-primary text-sm"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                     />
@@ -458,7 +461,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                       id="ob_pass"
                       type={showPassword ? "text" : "password"}
                       placeholder="Min. 6 caractères"
-                      className="rounded-xl h-11 pr-10 border-border focus-visible:ring-primary"
+                      className="rounded-xl h-12 pr-10 border-border focus-visible:ring-primary text-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />

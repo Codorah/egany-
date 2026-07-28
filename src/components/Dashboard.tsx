@@ -1,16 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Users, TrendingUp, ShieldCheck, ArrowRight, Wallet, PlusCircle, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { 
+  Users, 
+  TrendingUp, 
+  ShieldCheck, 
+  ArrowRight, 
+  Wallet, 
+  PlusCircle, 
+  Search, 
+  Sparkles, 
+  PiggyBank, 
+  Calendar, 
+  Gift, 
+  Clock, 
+  Info, 
+  CheckCircle2, 
+  AlertCircle,
+  Banknote
+} from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { DashboardCharts } from './DashboardCharts';
 import { DashboardNotifications } from './DashboardNotifications';
 import { EmptyState } from './ui/EmptyState';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { format, differenceInDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface DashboardProps {
   user: UserProfile;
@@ -21,220 +41,261 @@ interface DashboardProps {
   onNavigate?: (view: string) => void;
 }
 
-// Framer Motion Animation Configurations for Mobile-Native Feel
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.05,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 16, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
       type: 'spring',
-      stiffness: 110,
-      damping: 15,
+      stiffness: 120,
+      damping: 16,
     },
-  },
-};
-
-const hoverScaleVariants = {
-  hover: {
-    y: -4,
-    scale: 1.015,
-    transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 20,
-    },
-  },
-  tap: {
-    scale: 0.98,
   },
 };
 
 export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab, onNavigate }: DashboardProps) {
   const { t } = useLanguage();
+  const [showReliabilityInfo, setShowReliabilityInfo] = useState(false);
+
+  // Financial calculations for "Mon Argent"
+  const availableBalance = user.walletBalance || 0;
+  const totalSaved = user.totalSaved || 0;
+  
+  // Calculate total committed money in active circles
+  const committedInTontines = groups.reduce((acc, g) => acc + (g.contributionAmount * Math.max(g.currentPayoutIndex, 1)), 0);
+
+  // Find next upcoming contribution & next expected payout
+  const activeGroups = groups.filter(g => g.status === 'active');
+  const nextGroupToPay = activeGroups[0] || null;
+  
+  // Next payout circle
+  const nextPayoutGroup = activeGroups.find(g => {
+    const userIndexInOrder = g.payoutOrder.indexOf(user.uid);
+    return userIndexInOrder >= g.currentPayoutIndex;
+  }) || activeGroups[0] || null;
+
+  const nextPayoutAmount = nextPayoutGroup ? (nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length) : 0;
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-6 pb-16"
     >
-      {/* Header and Welcome */}
+      {/* Header — Clean, no background box */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
       >
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">{t('dashboard_greeting')}, {user.displayName} 👋</h1>
-          <p className="text-xs text-muted-foreground font-medium">{t('dashboard_subtitle')}</p>
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
+              Bonjour {user.displayName} 👋
+            </h1>
+            {user.role === 'admin' && (
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
+                Admin
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground font-medium">
+            Voici ce qui se passe dans vos cercles aujourd'hui.
+          </p>
         </div>
-        <div className="shrink-0 sm:block hidden">
+        <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
           <CreateGroupDialog />
         </div>
       </motion.div>
 
-      {/* Quick Actions (Actions rapides) */}
-      <motion.div
-        variants={itemVariants}
-        className="space-y-3"
-      >
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('quick_actions')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          {/* Action 1: Recharge Wallet */}
-          <motion.div
-            variants={hoverScaleVariants}
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => onNavigateToProfileTab?.('wallet')}
-            className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-secondary/30 transition-all"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-secondary/10 text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-300">
-                <Wallet className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-serif font-bold text-base text-foreground">{t('recharge_wallet_title')}</h3>
-                <p className="text-[11px] text-muted-foreground font-medium">{t('recharge_wallet_desc')}</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all" />
-          </motion.div>
-
-          {/* Action 2: Create Group */}
-          <CreateGroupDialog
-            trigger={
-              <motion.div
-                variants={hoverScaleVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-brand/30 transition-all"
+      {/* Mon Portefeuille — Compact single card matching mockup */}
+      <motion.div variants={itemVariants}>
+        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted-foreground">Mon portefeuille</span>
+              <Button
+                onClick={() => onNavigate?.('wallet-savings')}
+                variant="ghost"
+                size="sm"
+                className="text-[11px] font-bold text-primary h-7 px-2 cursor-pointer"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="p-3 rounded-2xl bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white transition-all duration-300">
-                    <PlusCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-serif font-bold text-base text-foreground">{t('create_new_circle')}</h3>
-                    <p className="text-[11px] text-muted-foreground font-medium">{t('create_circle_desc')}</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-brand group-hover:translate-x-1 transition-all" />
-              </motion.div>
-            }
-          />
+                Voir tout
+              </Button>
+            </div>
 
-          {/* Action 3: Search Public Groups */}
-          <motion.div
-            variants={hoverScaleVariants}
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => onNavigate?.('search-groups')}
-            className="cursor-pointer bg-card p-4 rounded-3xl border border-border shadow-sm flex items-center justify-between group hover:border-eganye-gold/40 transition-all"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-eganye-gold/10 text-eganye-gold group-hover:bg-eganye-gold group-hover:text-white transition-all duration-300">
-                <Search className="w-5 h-5" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Solde disponible</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-primary">
+                  {availableBalance.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
               </div>
-              <div>
-                <h3 className="font-serif font-bold text-base text-foreground">{t('search_circles')}</h3>
-                <p className="text-[11px] text-muted-foreground font-medium">{t('search_circle_desc')}</p>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Épargne total</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {totalSaved.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">En attente de recevoir</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {nextPayoutAmount.toLocaleString()} <span className="text-[10px] font-sans text-muted-foreground">FCFA</span>
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Cercles actifs</span>
+                <p className="text-xl sm:text-2xl font-serif font-black text-foreground">
+                  {groups.length}
+                </p>
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-eganye-gold group-hover:translate-x-1 transition-all" />
-          </motion.div>
 
+            <div className="flex gap-2 pt-1">
+              <Button
+                onClick={() => onNavigate?.('wallet-savings')}
+                size="sm"
+                className="gradient-sunset text-white font-bold rounded-xl h-9 text-xs cursor-pointer flex-1"
+              >
+                <Wallet className="w-3.5 h-3.5 mr-1.5" /> Recharger
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* 4 ACTIONABLE CARDS */}
+      <motion.div variants={itemVariants} className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Prochaines actions
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1: Prochaine Cotisation */}
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <Clock className="w-4 h-4" /> Prochaine Cotisation
+              </span>
+              {nextGroupToPay && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                  {nextGroupToPay.frequency}
+                </Badge>
+              )}
+            </div>
+
+            {nextGroupToPay ? (
+              <>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-foreground">{nextGroupToPay.name}</h3>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-2xl font-black text-foreground">
+                      {nextGroupToPay.contributionAmount.toLocaleString()}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-bold">{nextGroupToPay.currency}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Échéance : {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    onClick={() => onManageContributions(nextGroupToPay.id)}
+                    className="gradient-sunset text-white font-bold rounded-xl h-9 text-xs cursor-pointer shadow-xs"
+                  >
+                    Cotiser
+                  </Button>
+                  <Button
+                    onClick={() => onManageContributions(nextGroupToPay.id)}
+                    variant="outline"
+                    className="border-border text-foreground hover:bg-muted font-bold rounded-xl h-9 text-xs cursor-pointer"
+                  >
+                    Espèces
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center">Aucune cotisation en attente.</p>
+            )}
+          </Card>
+
+          {/* Card 2: Mon Prochain Tour */}
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <Gift className="w-4 h-4" /> Mon Prochain Tour (Gain)
+              </span>
+              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+                Distribution
+              </Badge>
+            </div>
+
+            {nextPayoutGroup ? (
+              <div>
+                <h3 className="font-serif font-bold text-base text-foreground">{nextPayoutGroup.name}</h3>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {(nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-bold">{nextPayoutGroup.currency}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Date estimée : {format(new Date(nextPayoutGroup.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center">Rejoignez un cercle pour planifier votre tour.</p>
+            )}
+          </Card>
+
+          {/* Card 3: Score de Fiabilité (Explicable) */}
+          <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Score de Fiabilité
+              </span>
+              <button
+                onClick={() => setShowReliabilityInfo(true)}
+                className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
+              >
+                <Info className="w-3.5 h-3.5" /> Détails
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-serif font-black text-foreground">{user.reputationScore}</span>
+                <span className="text-xs text-muted-foreground font-bold">/ 100</span>
+              </div>
+              <Progress value={user.reputationScore} className="h-2 bg-emerald-500/15" />
+              <div className="space-y-1 pt-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Paiements à l'heure</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">100%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Cercles complétés</span>
+                  <span className="font-bold text-foreground">{user.groupsJoined || groups.length}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </motion.div>
 
-      {/* Overview Stat Cards */}
-      <motion.div
-        variants={itemVariants}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-5"
-      >
-        {/* Score Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-secondary text-white border-none overflow-hidden relative shadow-md rounded-3xl h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-white/80">{t('reputation_score')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold">{user.reputationScore}</span>
-                <span className="text-xs font-bold text-white/80">/ 100</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Progress value={user.reputationScore} className="h-1.5 bg-white/25" />
-              <p className="mt-4 text-[11px] font-medium text-white/95 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-eganye-gold" />
-                {t('excellent_reliability')}
-              </p>
-            </CardContent>
-            <div className="absolute -right-4 -bottom-4 text-white/10">
-              <ShieldCheck className="w-28 h-28" />
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Total Saved Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-card border border-border shadow-sm rounded-3xl h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('total_saved')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold text-foreground">{user.totalSaved.toLocaleString()}</span>
-                <span className="text-xs font-bold text-muted-foreground">FCFA</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-secondary font-bold">
-                <TrendingUp className="w-4 h-4" />
-                +12% {t('savings_accumulated')}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Active Groups Card */}
-        <motion.div
-          whileHover={{ y: -2, transition: { duration: 0.2 } }}
-          className="h-full"
-        >
-          <Card className="bg-card border border-border shadow-sm rounded-3xl h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('active_groups')}</CardTitle>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-serif font-extrabold text-foreground">{groups.length}</span>
-                <span className="text-xs font-bold text-muted-foreground">{t('circles_unit')}</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold">
-                <Users className="w-4 h-4 text-brand" />
-                {user.groupsJoined || groups.length} {t('circles_joined')}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
-
-      {/* Notifications and Alerts Section */}
+      {/* Notifications & Alerts Section */}
       <motion.div variants={itemVariants}>
         <DashboardNotifications
           userId={user.uid}
@@ -243,14 +304,54 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         />
       </motion.div>
 
+      {/* Cultural Community Banner */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative h-36 rounded-2xl overflow-hidden shadow-soft group">
+          <img
+            src="/onboarding-mamas.png"
+            alt="Mamans commerçantes et tontine"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 flex flex-col justify-end">
+            <span className="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Épargne Solidaire</span>
+            <h3 className="text-sm font-serif font-bold text-white leading-snug">
+              La Tontine des Mamans & Commerçantes
+            </h3>
+          </div>
+        </div>
+
+        <div className="relative h-36 rounded-2xl overflow-hidden shadow-soft group">
+          <img
+            src="/young-savers.png"
+            alt="Jeunes épargnants africains"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 flex flex-col justify-end">
+            <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">Avenir & Projets</span>
+            <h3 className="text-sm font-serif font-bold text-white leading-snug">
+              Une Jeunesse Prospère qui Construit
+            </h3>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Chart Section */}
       <motion.div variants={itemVariants}>
         <DashboardCharts user={user} groups={groups} />
       </motion.div>
 
       {/* Active Circles Section */}
-      <motion.div variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-serif font-bold text-foreground">{t('active_circles')}</h2>
+      <motion.div variants={itemVariants} className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-serif font-black text-foreground tracking-tight">
+              {t('active_circles')}
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium">Vos groupes de tontine en cours</p>
+          </div>
+          <CreateGroupDialog />
+        </div>
+
         {groups.length === 0 ? (
           <CreateGroupDialog
             trigger={
@@ -267,75 +368,130 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             }
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => (
-              <motion.div
-                key={group.id}
-                variants={hoverScaleVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="h-full"
-              >
-                <Card
-                  className="h-full transition-all cursor-pointer group bg-card border border-border rounded-3xl overflow-hidden shadow-sm hover:shadow-md"
-                  onClick={() => onSelectGroup(group.id)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {groups.map((group) => {
+              const progressPct = Math.round((group.currentPayoutIndex / Math.max(group.members.length, 1)) * 100);
+              return (
+                <motion.div
+                  key={group.id}
+                  whileHover={{ y: -4 }}
+                  className="h-full"
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <Badge className={`font-sans font-bold text-[10px] rounded-full px-2.5 py-0.5 ${group.status === 'active' ? 'bg-secondary/10 text-secondary border border-secondary/20' : 'bg-muted text-muted-foreground'}`}>
-                        {group.status === 'active' ? t('status_active') : t('status_completed')}
-                      </Badge>
-                      <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded-md uppercase font-sans tracking-wide">{t(`freq_${group.frequency}`)}</span>
-                    </div>
-                    <CardTitle className="mt-3 font-serif text-lg font-bold text-foreground group-hover:text-brand transition-colors">{group.name}</CardTitle>
-                    <CardDescription className="line-clamp-2 text-xs text-muted-foreground mt-1">{group.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-0">
-                    <div className="flex justify-between text-xs font-semibold border-b border-border pb-2">
-                      <span className="text-muted-foreground">{t('contribution_label')}</span>
-                      <span className="text-foreground">{group.contributionAmount.toLocaleString()} {group.currency}</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-semibold border-b border-border pb-2">
-                      <span className="text-muted-foreground">{t('members')}</span>
-                      <span className="text-foreground">{group.members.length} {t('participants')}</span>
-                    </div>
-                    <div className="pt-1">
-                      <div className="flex justify-between text-[11px] font-bold mb-1">
-                        <span className="text-muted-foreground">{t('cycle_progress')}</span>
-                        <span className="text-secondary">{Math.round((group.currentPayoutIndex / group.members.length) * 100)}%</span>
+                  <Card
+                    className="h-full transition-all cursor-pointer group glass-card rounded-2xl overflow-hidden shadow-soft hover:shadow-elevated hover:border-primary/30 relative flex flex-col justify-between"
+                    onClick={() => onSelectGroup(group.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-center">
+                        <Badge className={`font-sans font-bold text-[10px] rounded-full px-2.5 py-0.5 ${
+                          group.status === 'active' 
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {group.status === 'active' ? t('status_active') : t('status_completed')}
+                        </Badge>
+                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                          {t(`freq_${group.frequency}`)}
+                        </span>
                       </div>
-                      <Progress value={(group.currentPayoutIndex / group.members.length) * 100} className="h-1.5" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        className="w-full text-xs font-bold rounded-xl h-9 border-border text-foreground hover:bg-muted cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onManageContributions(group.id);
-                        }}
-                      >
-                        {user.uid === group.creatorId || user.role === 'admin' ? t('manage') : t('my_contributions')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between hover:bg-brand hover:text-white transition-colors text-xs font-bold rounded-xl h-9 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectGroup(group.id);
-                        }}
-                      >
-                        {t('details')}
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      <CardTitle className="mt-3 font-serif text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                        {group.name}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2 text-xs text-muted-foreground mt-1">
+                        {group.description || 'Cercle de tontine collaborative.'}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4 pt-0">
+                      <div className="flex justify-between text-xs font-semibold border-b border-border/60 pb-2">
+                        <span className="text-muted-foreground">{t('contribution_label')}</span>
+                        <span className="text-foreground font-bold">{group.contributionAmount.toLocaleString()} {group.currency}</span>
+                      </div>
+
+                      <div className="flex justify-between text-xs font-semibold border-b border-border/60 pb-2">
+                        <span className="text-muted-foreground">{t('members')}</span>
+                        <span className="text-foreground font-bold">{group.members.length} {t('participants')}</span>
+                      </div>
+
+                      <div className="pt-1">
+                        <div className="flex justify-between text-[11px] font-bold mb-1.5">
+                          <span className="text-muted-foreground">{t('cycle_progress')}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{progressPct}%</span>
+                        </div>
+                        <Progress value={progressPct} className="h-2 bg-muted" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          className="w-full text-xs font-bold rounded-xl h-9 border-border text-foreground hover:bg-muted cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onManageContributions(group.id);
+                          }}
+                        >
+                          {user.uid === group.creatorId || user.role === 'admin' ? t('manage') : t('my_contributions')}
+                        </Button>
+                        <Button
+                          className="w-full justify-between gradient-sunset text-white transition-opacity hover:opacity-90 text-xs font-bold rounded-xl h-9 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectGroup(group.id);
+                          }}
+                        >
+                          <span>{t('details')}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </motion.div>
+
+      {/* Reliability Score Info Modal */}
+      <Dialog open={showReliabilityInfo} onOpenChange={setShowReliabilityInfo}>
+        <DialogContent className="max-w-md rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-serif font-bold flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              Comment est calculé votre Score de Fiabilité ?
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Votre score mesure votre régularité et renforce la confiance des cercles.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-emerald-700 dark:text-emerald-300">
+                <span>Paiements à l'heure</span>
+                <span>+50 Pts</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Chaque versement effectué avant l'échéance augmente directement votre score.</p>
+            </div>
+
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-primary">
+                <span>Ancienneté & Cercles Complétés</span>
+                <span>+30 Pts</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Terminer un cycle complet de tontine sans aucun incident valorise votre profil.</p>
+            </div>
+
+            <div className="p-3 bg-muted/40 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between font-bold text-foreground">
+                <span>Pénalité de Retard</span>
+                <span className="text-rose-500">-15 Pts / retard</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Les retards répétés diminuent temporairement votre niveau de fiabilité.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
