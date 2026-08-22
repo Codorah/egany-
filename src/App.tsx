@@ -226,7 +226,7 @@ export default function App() {
       case 'marketplace':
         return <Marketplace user={activeProfile} />;
       case 'ai-assistant':
-        return <AIAssistant />;
+        return <AIAssistant user={activeProfile} groups={groups} />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':
