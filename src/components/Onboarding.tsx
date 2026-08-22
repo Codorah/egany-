@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   CustomAvatar,
@@ -22,7 +22,8 @@ import {
   Globe2,
   Eye,
   EyeOff,
-  Fingerprint
+  Fingerprint,
+  MailCheck
 } from 'lucide-react';
 import { signInWithGoogle, signInWithEmail, supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -61,6 +62,15 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   // Avatar State
   const [avatar, setAvatar] = useState<AvatarConfig>({ ...DEFAULT_AVATAR });
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // Email OTP verification (step 4) — Supabase sends a code via the
+  // "Confirm signup" template's {{ .Token }} instead of a magic link.
+  // Length is set by this project's Auth config (currently 8 digits).
+  const OTP_LENGTH = 8;
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleLogin = async () => {
     if (!email.includes('@')) {
@@ -156,28 +166,17 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         options: { data: { display_name: displayName } }
       });
       if (error) throw error;
+
       if (!data.session) {
-        throw new Error("Confirmation d'email requise côté Supabase (Authentication > Providers > Email > désactiver 'Confirm email' pour une création de compte instantanée).");
+        // Email confirmation is on: no session yet, Supabase has emailed a
+        // 6-digit code. Move to the verification step instead of failing.
+        setOtpDigits(Array(OTP_LENGTH).fill(''));
+        setStep(4);
+        toast.success(`Un code à ${OTP_LENGTH} chiffres a été envoyé à ${email}.`);
+        return;
       }
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          avatar_config: avatar,
-          language,
-          theme,
-          biometrics_enabled: !!biometricsEnabled,
-        })
-        .eq('id', data.user!.id);
-      if (updateError) throw updateError;
-
-      if (biometricsEnabled) {
-        localStorage.setItem('eganye_biometrics_enrolled', 'true');
-        localStorage.setItem('eganye_biometrics_username', displayName);
-      }
-
-      toast.success("Votre compte eganyé a été créé avec succès !");
-      onComplete();
+      await finalizeAccountSetup(data.user!.id);
     } catch (err: any) {
       console.error("Signup error:", err);
       const msg = (err?.message || '').toLowerCase();
@@ -193,6 +192,93 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     } finally {
       setIsCreatingAccount(false);
     }
+  };
+
+  const finalizeAccountSetup = async (userId: string) => {
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        avatar_config: avatar,
+        language,
+        theme,
+        biometrics_enabled: !!biometricsEnabled,
+      })
+      .eq('id', userId);
+    if (updateError) throw updateError;
+
+    if (biometricsEnabled) {
+      localStorage.setItem('eganye_biometrics_enrolled', 'true');
+      localStorage.setItem('eganye_biometrics_username', displayName);
+    }
+
+    toast.success("Votre compte eganyé a été créé avec succès !");
+    onComplete();
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = otpDigits.join('');
+    if (code.length !== OTP_LENGTH) {
+      toast.error(`Veuillez saisir les ${OTP_LENGTH} chiffres du code.`);
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'signup' });
+      if (error) throw error;
+      await finalizeAccountSetup(data.user!.id);
+    } catch (err: any) {
+      console.error("OTP verification error:", err);
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('expired') || msg.includes('invalid')) {
+        toast.error("Code incorrect ou expiré. Vérifiez le code ou renvoyez-en un nouveau.");
+      } else {
+        toast.error(`Erreur de vérification : ${err?.message || err}`);
+      }
+      setOtpDigits(Array(OTP_LENGTH).fill(''));
+      otpInputRefs.current[0]?.focus();
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setIsResendingOtp(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+      toast.success("Nouveau code envoyé !");
+    } catch (err: any) {
+      console.error("OTP resend error:", err);
+      toast.error(`Impossible de renvoyer le code : ${err?.message || err}`);
+    } finally {
+      setIsResendingOtp(false);
+    }
+  };
+
+  const handleOtpDigitChange = (index: number, rawValue: string) => {
+    const value = rawValue.replace(/\D/g, '').slice(-1);
+    setOtpDigits(prev => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+    if (value && index < OTP_LENGTH - 1) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    e.preventDefault();
+    setOtpDigits(Array(OTP_LENGTH).fill('').map((_, i) => pasted[i] || ''));
+    otpInputRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
   };
 
   return (
@@ -219,7 +305,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
       {/* Top Bar for Nav */}
       <div className="z-10 flex items-center justify-between">
-        {step > 0 && step < 4 ? (
+        {step > 0 && step < 5 ? (
           <Button variant="ghost" size="icon" onClick={handlePrevStep} className="rounded-full hover:bg-muted">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Button>
@@ -630,6 +716,64 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
             </motion.div>
           )}
 
+          {/* Step 4: Email OTP Verification */}
+          {step === 4 && (
+            <motion.div
+              key="otp"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2 text-center">
+                <div className="mx-auto w-14 h-14 rounded-2xl bg-success-soft text-secondary flex items-center justify-center">
+                  <MailCheck className="w-7 h-7" />
+                </div>
+                <h2 className="text-2xl font-black text-foreground tracking-tight">Vérifiez votre email</h2>
+                <p className="text-muted-foreground text-xs px-4">
+                  Entrez le code à {OTP_LENGTH} chiffres envoyé à <span className="font-bold text-foreground">{email}</span>
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5">
+                {otpDigits.map((digit, index) => (
+                  <Input
+                    key={index}
+                    ref={(el) => { otpInputRefs.current[index] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpDigitChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onPaste={handleOtpPaste}
+                    className="w-8 h-10 text-center text-base font-black rounded-lg focus-visible:ring-primary"
+                  />
+                ))}
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <Button
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifyingOtp || isCreatingAccount}
+                  className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 flex items-center justify-center gap-2 glow-orange"
+                >
+                  {isVerifyingOtp ? "Vérification..." : "Vérifier le code"}
+                  {!isVerifyingOtp && <ArrowRight className="w-4 h-4" />}
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={isResendingOtp}
+                  className="w-full text-center text-xs font-bold text-secondary hover:underline disabled:opacity-50 cursor-pointer"
+                >
+                  {isResendingOtp ? "Envoi en cours..." : "Je n'ai pas reçu de code — Renvoyer"}
+                </button>
+              </div>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </div>
 
@@ -644,13 +788,6 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         }}
         mode="register"
       />
-
-      {/* Footer Branding */}
-      <div className="mt-auto text-center">
-        <p className="text-[9px] text-muted-foreground font-medium">
-          Comptes sécurisés par Supabase Authentication. eganyé PWA v1.0.0
-        </p>
-      </div>
     </div>
   );
 }

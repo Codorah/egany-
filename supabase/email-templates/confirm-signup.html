@@ -1,0 +1,42 @@
+<!--
+  Template "Confirm signup" — Supabase Dashboard > Authentication > Email Templates.
+  Sujet suggéré : Votre code de vérification eganyé
+  Variable clé : {{ .Token }} (code à 6 chiffres). Ne pas retirer — c'est ce que
+  l'app demande à l'utilisateur de saisir (voir handleVerifyOtp dans Onboarding.tsx).
+-->
+<div style="background-color:#F7F3EE;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:420px;margin:0 auto;background-color:#FFFFFF;border-radius:24px;overflow:hidden;border:1px solid #ECE5DC;">
+    <tr>
+      <td style="background:linear-gradient(135deg,#E67E22,#D35400);padding:28px 32px;text-align:center;">
+        <span style="font-size:22px;font-weight:900;color:#FFFFFF;letter-spacing:-0.02em;">eganyé</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 32px 8px;text-align:center;">
+        <h1 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#1A1310;">Vérifiez votre email</h1>
+        <p style="margin:0;font-size:14px;line-height:1.5;color:#6B5F54;">
+          Utilisez ce code pour confirmer la création de votre compte eganyé. Il expire dans 5 minutes.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 32px;text-align:center;">
+        <div style="display:inline-block;background-color:#FDF3E9;border:1.5px solid #F0D9BC;border-radius:16px;padding:18px 28px;">
+          <span style="font-size:34px;font-weight:900;letter-spacing:0.35em;color:#D35400;font-family:'Courier New',monospace;">{{ .Token }}</span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 32px;text-align:center;">
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#9A8C7E;">
+          Vous n'avez pas demandé la création d'un compte eganyé ? Ignorez simplement cet email.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 32px;background-color:#FAF7F3;text-align:center;border-top:1px solid #ECE5DC;">
+        <span style="font-size:11px;color:#B3A493;">© eganyé — La tontine digitale pour l'Afrique</span>
+      </td>
+    </tr>
+  </table>
+</div>
