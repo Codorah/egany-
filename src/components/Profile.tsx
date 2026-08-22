@@ -132,6 +132,41 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   // Delete account confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Legal documents (previously dead buttons showing a toast and nothing else)
+  const [legalDoc, setLegalDoc] = useState<'cgu' | 'reglement' | 'confidentialite' | null>(null);
+  const legalDocs = {
+    cgu: {
+      title: "Conditions Générales d'Utilisation",
+      body: [
+        "Eganyé est une plateforme numérique de gestion de tontines (cercles d'épargne rotative). En créant un compte, vous acceptez d'utiliser le service conformément à sa finalité : organiser et suivre des cotisations entre membres d'un même cercle.",
+        "Vous êtes responsable de l'exactitude des informations fournies lors de votre inscription et de la vérification d'identité. Un compte non vérifié ne peut ni créer ni rejoindre de cercle.",
+        "Chaque cercle est régi par les paramètres définis par son créateur (montant, fréquence, méthode de distribution, pénalités de retard). En rejoignant un cercle, vous acceptez ces conditions spécifiques.",
+        "Le portefeuille virtuel Eganyé permet de recharger et de retirer des fonds via Mobile Money. Eganyé n'est pas un établissement bancaire et les fonds détenus ne portent pas intérêt.",
+        "Eganyé se réserve le droit de suspendre un compte en cas d'usage frauduleux, de non-respect répété des engagements de cotisation, ou de fourniture de fausses informations d'identité.",
+      ],
+    },
+    reglement: {
+      title: 'Règlement Officiel des Tontines',
+      body: [
+        "Une tontine (ou cercle d'épargne rotative) regroupe des membres qui cotisent un même montant à intervalle régulier ; à chaque cycle, l'intégralité du pot est versée à un seul bénéficiaire selon l'ordre défini.",
+        "Trois méthodes de distribution existent : séquentielle (ordre fixe défini à la création), tirage au sort (bénéficiaire désigné aléatoirement pour chaque cycle), ou enchères (les membres peuvent proposer un rabais sur le pot, redistribué aux autres).",
+        "Un retard de cotisation au-delà du délai de grâce défini par le créateur du cercle entraîne l'application de la pénalité configurée (montant fixe ou pourcentage par jour de retard), prélevée automatiquement dès que le solde du portefeuille le permet.",
+        "Le créateur d'un cercle (ou un administrateur) est seul habilité à déclencher la distribution des fonds d'un cycle et à valider les demandes d'adhésion.",
+        "Un cercle est clôturé lorsque tous les membres ont reçu leur tour, ou manuellement par son créateur.",
+      ],
+    },
+    confidentialite: {
+      title: 'Politique de Confidentialité & Données',
+      body: [
+        "Eganyé collecte les données nécessaires au fonctionnement du service : informations d'identité (nom, téléphone, email, pièce d'identité pour la vérification KYC), données financières (cotisations, transactions, solde), et données d'usage.",
+        "Vos données financières sont chiffrées et ne sont accessibles qu'à vous-même et aux administrateurs habilités du cercle concerné. Votre pièce d'identité est stockée dans un espace privé, consultable uniquement par vous et par l'équipe de vérification.",
+        "Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec nos prestataires techniques strictement nécessaires (hébergement, paiement Mobile Money, envoi d'emails) pour le fonctionnement du service.",
+        "Vous pouvez à tout moment demander la suppression de votre compte depuis Paramètres. La suppression retire votre profil ; certaines données comptables peuvent être conservées à des fins d'audit conformément aux obligations légales.",
+        "Pour toute question relative à vos données, contactez le support depuis la section Aide.",
+      ],
+    },
+  } as const;
+
   // KYC (identity verification) state
   const [kycSubmission, setKycSubmission] = useState<KycSubmission | null>(null);
   const [kycLoading, setKycLoading] = useState(true);
@@ -332,59 +367,72 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       id: 'account',
       title: 'Mon compte',
       description: 'Gérez vos informations personnelles et votre identité.',
-      icon: <User className="w-5 h-5 text-amber-600" />,
-      color: 'bg-amber-50 dark:bg-amber-500/10'
-    },
-    {
-      id: 'payments',
-      title: 'Argent & paiements',
-      description: 'Gérez vos moyens de paiement, transferts et retraits.',
-      icon: <Wallet className="w-5 h-5 text-emerald-600" />,
-      color: 'bg-emerald-50 dark:bg-emerald-500/10'
-    },
-    {
-      id: 'circles',
-      title: 'Mes cercles',
-      description: 'Gérez vos tontines, vos préférences et invitations.',
-      icon: <Users className="w-5 h-5 text-orange-600" />,
-      color: 'bg-orange-50 dark:bg-orange-500/10'
+      icon: <User className="w-4.5 h-4.5 text-amber-600" />,
+      color: 'bg-amber-50 dark:bg-amber-500/10',
+      group: 'Compte & sécurité'
     },
     {
       id: 'security',
       title: 'Sécurité & confidentialité',
       description: 'Sécurisez votre compte et gérez vos données.',
-      icon: <Shield className="w-5 h-5 text-blue-600" />,
-      color: 'bg-blue-50 dark:bg-blue-500/10'
+      icon: <Shield className="w-4.5 h-4.5 text-blue-600" />,
+      color: 'bg-blue-50 dark:bg-blue-500/10',
+      group: 'Compte & sécurité'
     },
     {
-      id: 'notifications',
-      title: 'Notifications & communication',
-      description: 'Choisissez comment vous recevez les notifications.',
-      icon: <Bell className="w-5 h-5 text-amber-600" />,
-      color: 'bg-amber-50 dark:bg-amber-500/10'
+      id: 'payments',
+      title: 'Argent & paiements',
+      description: 'Gérez vos moyens de paiement, transferts et retraits.',
+      icon: <Wallet className="w-4.5 h-4.5 text-emerald-600" />,
+      color: 'bg-emerald-50 dark:bg-emerald-500/10',
+      group: 'Argent & cercles'
+    },
+    {
+      id: 'circles',
+      title: 'Mes cercles',
+      description: 'Gérez vos tontines, vos préférences et invitations.',
+      icon: <Users className="w-4.5 h-4.5 text-orange-600" />,
+      color: 'bg-orange-50 dark:bg-orange-500/10',
+      group: 'Argent & cercles'
     },
     {
       id: 'subscription',
       title: 'Abonnement & récompenses',
       description: 'Gérez votre abonnement et vos avantages.',
-      icon: <Award className="w-5 h-5 text-purple-600" />,
-      color: 'bg-purple-50 dark:bg-purple-500/10'
+      icon: <Award className="w-4.5 h-4.5 text-purple-600" />,
+      color: 'bg-purple-50 dark:bg-purple-500/10',
+      group: 'Argent & cercles'
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications & communication',
+      description: 'Choisissez comment vous recevez les notifications.',
+      icon: <Bell className="w-4.5 h-4.5 text-amber-600" />,
+      color: 'bg-amber-50 dark:bg-amber-500/10',
+      group: 'Général'
     },
     {
       id: 'support',
       title: 'Aide & support',
       description: 'Trouvez de l\'aide, des tutoriels ou contactez le support.',
-      icon: <HelpCircle className="w-5 h-5 text-teal-600" />,
-      color: 'bg-teal-50 dark:bg-teal-500/10'
+      icon: <HelpCircle className="w-4.5 h-4.5 text-teal-600" />,
+      color: 'bg-teal-50 dark:bg-teal-500/10',
+      group: 'Général'
     },
     {
       id: 'legal',
       title: 'Légal & informations',
       description: 'Consultez les conditions, politiques et documents légaux.',
-      icon: <BookOpen className="w-5 h-5 text-slate-600" />,
-      color: 'bg-slate-50 dark:bg-slate-500/10'
+      icon: <BookOpen className="w-4.5 h-4.5 text-slate-600" />,
+      color: 'bg-slate-50 dark:bg-slate-500/10',
+      group: 'Général'
     }
   ];
+
+  const categoryGroups = ['Compte & sécurité', 'Argent & cercles', 'Général'].map((groupName) => ({
+    name: groupName,
+    items: mainCategories.filter((c) => c.group === groupName),
+  }));
 
   return (
     <div className="space-y-8 pb-20 max-w-6xl mx-auto">
@@ -427,11 +475,17 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                 <div className="space-y-1">
                   <div className="flex items-center justify-center gap-2">
                     <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
-                      Compte vérifié
-                    </Badge>
+                    {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
+                      <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
+                        Compte vérifié
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] font-bold">
+                        Identité non vérifiée
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">+228 90 00 00 00</p>
+                  <p className="text-xs text-muted-foreground font-medium">{user.phone || 'Téléphone non renseigné'}</p>
                   <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
                 </div>
               </div>
@@ -454,7 +508,9 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
 
               <div className="pt-2 border-t border-border/60 text-xs text-muted-foreground flex justify-between items-center">
                 <span>Membre depuis</span>
-                <span className="font-bold text-foreground">12 Mai 2024</span>
+                <span className="font-bold text-foreground">
+                  {user.createdAt ? format(new Date(user.createdAt), 'dd MMMM yyyy', { locale: fr }) : '—'}
+                </span>
               </div>
 
               {/* Support Card in Sidebar */}
@@ -475,55 +531,46 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               </div>
             </Card>
 
-            {/* Right Main Category Cards (9 Cards Grid on Desktop / List on Mobile) */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mainCategories.map((cat) => (
-                  <motion.div
-                    key={cat.id}
-                    whileHover={{ y: -3 }}
-                    onClick={() => setActiveSection(cat.id)}
-                    className="cursor-pointer"
-                  >
-                    <Card className="glass-card rounded-2xl p-4 border border-border shadow-soft hover:shadow-elevated hover:border-primary/30 transition-all flex items-start gap-3 h-full">
-                      <div className={`p-2.5 rounded-xl ${cat.color} shrink-0`}>
-                        {cat.icon}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-sans font-bold text-sm text-foreground">{cat.title}</h3>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            {/* Right column: grouped settings list — compact, scannable rows
+                instead of 9 equal-height tiles (the flat grid became a long
+                scroll of near-identical cards on mobile). */}
+            <div className="lg:col-span-2 space-y-5">
+              {categoryGroups.map((group) => (
+                <div key={group.name} className="space-y-2">
+                  <h3 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground px-1">
+                    {group.name}
+                  </h3>
+                  <Card className="rounded-2xl border border-border shadow-soft overflow-hidden py-0 gap-0">
+                    {group.items.map((cat, idx) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveSection(cat.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer ${
+                          idx > 0 ? 'border-t border-border/60' : ''
+                        }`}
+                      >
+                        <div className={`p-2 rounded-xl ${cat.color} shrink-0`}>
+                          {cat.icon}
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-1">
-                          {cat.description}
-                        </p>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-
-                {/* Red Card: Supprimer mon compte */}
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="cursor-pointer"
-                >
-                  <Card className="rounded-2xl p-4 border border-rose-200 dark:border-rose-950 bg-rose-50/80 dark:bg-rose-950/20 shadow-soft hover:shadow-elevated transition-all flex items-start gap-3 h-full">
-                    <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 shrink-0">
-                      <Trash2 className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-sans font-bold text-sm text-rose-600 dark:text-rose-400">Supprimer mon compte</h3>
-                        <ChevronRight className="w-4 h-4 text-rose-400" />
-                      </div>
-                      <p className="text-[11px] text-rose-600/80 dark:text-rose-400/80 leading-relaxed line-clamp-1">
-                        Supprimez définitivement votre compte Eganyé.
-                      </p>
-                    </div>
+                        <span className="flex-1 font-bold text-sm text-foreground">{cat.title}</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))}
                   </Card>
-                </motion.div>
-              </div>
+                </div>
+              ))}
+
+              {/* Destructive action — kept visually separate from the groups above */}
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-rose-200 dark:border-rose-950 bg-rose-50/80 dark:bg-rose-950/20 hover:bg-rose-100/80 dark:hover:bg-rose-950/40 transition-colors cursor-pointer text-left"
+              >
+                <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 shrink-0">
+                  <Trash2 className="w-4.5 h-4.5" />
+                </div>
+                <span className="flex-1 font-bold text-sm text-rose-600 dark:text-rose-400">Supprimer mon compte</span>
+                <ChevronRight className="w-4 h-4 text-rose-400 shrink-0" />
+              </button>
 
               {/* Full-width Logout Button */}
               <Button
@@ -993,15 +1040,15 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             <p className="text-xs text-muted-foreground">Consultez la réglementation des tontines collaboratives et contactez notre assistance.</p>
             
             <div className="space-y-2 pt-2 text-xs">
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter les CGU.")}>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('cgu')}>
                 <span className="font-bold">Conditions Générales d'Utilisation (CGU)</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter le Règlement des tontines.")}>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('reglement')}>
                 <span className="font-bold">Règlement Officiel des Tontines</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => toast.info("Consulter la Politique de confidentialité.")}>
+              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('confidentialite')}>
                 <span className="font-bold">Politique de Confidentialité & Données</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
@@ -1009,6 +1056,26 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
           </Card>
         </motion.div>
       )}
+
+      {/* Legal document viewer — was previously a toast.info() and nothing else */}
+      <Dialog open={legalDoc !== null} onOpenChange={(open) => !open && setLegalDoc(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl">
+          {legalDoc && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-serif text-lg font-bold text-foreground">
+                  {legalDocs[legalDoc].title}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 text-xs text-muted-foreground leading-relaxed pt-1">
+                {legalDocs[legalDoc].body.map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* DELETE ACCOUNT CONFIRMATION MODAL */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
