@@ -797,3 +797,132 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS subscription_plan text DEFAULT 'free',
   ADD COLUMN IF NOT EXISTS subscription_expires_at timestamptz;
 
+-- ============================================================================
+-- 5. TRAITEMENT SERVEUR DES COTISATIONS DUES (pénalités & prélèvement auto)
+-- ============================================================================
+-- Équivalent serveur de src/hooks/useWalletDebitor.ts : auparavant, le
+-- prélèvement automatique et la pénalité de retard d'un membre ne
+-- s'exécutaient que si CE membre avait lui-même l'app ouverte. pg_cron
+-- exécute désormais cette même logique pour tout le monde, périodiquement.
+
+CREATE OR REPLACE FUNCTION public.process_due_contributions()
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_cont record;
+  v_member_name text;
+  v_current_balance numeric;
+  v_pending_penalty numeric;
+  v_total_due numeric;
+  v_days_late integer;
+  v_penalty_amount numeric;
+  v_grace integer;
+  v_ledger_result jsonb;
+  v_penalty_note text;
+BEGIN
+  FOR v_cont IN
+    SELECT c.*, g.name AS group_name, g.currency AS group_currency,
+           g.grace_period, g.penalty_type, g.penalty_rate,
+           g.penalty_amount AS group_penalty_amount
+    FROM public.contributions c
+    JOIN public.groups g ON g.id = c.group_id
+    WHERE g.status = 'active' AND c.status IN ('pending', 'late')
+  LOOP
+    SELECT display_name, wallet_balance INTO v_member_name, v_current_balance
+    FROM public.profiles WHERE id = v_cont.user_id;
+
+    IF NOT FOUND THEN
+      CONTINUE;
+    END IF;
+
+    v_pending_penalty := CASE WHEN v_cont.penalty_status = 'pending' THEN COALESCE(v_cont.penalty_applied, 0) ELSE 0 END;
+    v_total_due := v_cont.amount + v_pending_penalty;
+
+    IF v_current_balance >= v_total_due THEN
+      v_penalty_note := CASE WHEN v_pending_penalty > 0
+        THEN ' (dont ' || v_pending_penalty || ' ' || v_cont.group_currency || ' de pénalité de retard)'
+        ELSE '' END;
+
+      v_ledger_result := public.execute_financial_transaction(
+        p_idempotency_key := 'debit_' || v_cont.id::text,
+        p_user_id := v_cont.user_id,
+        p_amount := v_total_due,
+        p_currency := v_cont.group_currency,
+        p_description := 'Cotisation automatique - ' || v_cont.group_name || ' (' || COALESCE(v_cont.period, 'Période') || ')' || v_penalty_note,
+        p_action_type := 'contribution_payment',
+        p_debit_account := 'user_wallet:' || v_cont.user_id,
+        p_credit_account := 'tontine_group:' || v_cont.group_id,
+        p_contribution_id := v_cont.id,
+        p_group_id := v_cont.group_id
+      );
+
+      IF (v_ledger_result->>'success')::boolean THEN
+        IF v_pending_penalty > 0 THEN
+          UPDATE public.contributions SET penalty_status = 'paid' WHERE id = v_cont.id;
+        END IF;
+
+        INSERT INTO public.wallet_transactions (user_id, amount, type, description, status, payment_method, reference)
+        VALUES (v_cont.user_id, -v_total_due, 'contribution_debit',
+          'Cotisation automatique - ' || v_cont.group_name || ' (' || COALESCE(v_cont.period, 'Période') || ')' || v_penalty_note,
+          'completed', 'wallet', COALESCE(v_ledger_result->>'transactionId', v_cont.id::text));
+
+        INSERT INTO public.notifications (user_id, title, message, type, link)
+        VALUES (v_cont.user_id, 'Cotisation prélevée - ' || v_cont.group_name,
+          'Votre cotisation de ' || v_total_due || ' ' || v_cont.group_currency || ' a été prélevée de votre portefeuille pour la période ' || COALESCE(v_cont.period, '') || v_penalty_note || '.',
+          'payout', '/group/' || v_cont.group_id);
+
+        INSERT INTO public.messages (group_id, user_id, user_name, is_system, content)
+        VALUES (v_cont.group_id, NULL, 'Système Tontine', true,
+          '📢 ' || v_member_name || ' a réglé sa cotisation de ' || v_total_due || ' ' || v_cont.group_currency || ' pour la période ' || COALESCE(v_cont.period, '') || ' par prélèvement automatique !');
+      END IF;
+
+    ELSIF NOT v_cont.notified_insufficient THEN
+      v_grace := COALESCE(v_cont.grace_period, 0);
+      v_days_late := GREATEST(0, (CURRENT_DATE - v_cont.date::date));
+
+      IF v_days_late <= v_grace THEN
+        v_penalty_amount := 0;
+      ELSIF v_cont.penalty_type = 'percentage' THEN
+        v_penalty_amount := GREATEST(0, ROUND(v_cont.amount * (COALESCE(v_cont.penalty_rate, 0) / 100) * v_days_late));
+      ELSE
+        v_penalty_amount := GREATEST(0, COALESCE(v_cont.group_penalty_amount, 0));
+      END IF;
+
+      UPDATE public.contributions SET
+        status = 'late',
+        notified_insufficient = true,
+        penalty_applied = CASE WHEN v_penalty_amount > 0 THEN v_penalty_amount ELSE penalty_applied END,
+        penalty_status = CASE WHEN v_penalty_amount > 0 THEN 'pending' ELSE penalty_status END
+      WHERE id = v_cont.id;
+
+      v_penalty_note := CASE WHEN v_penalty_amount > 0
+        THEN ' Une pénalité de retard de ' || v_penalty_amount || ' ' || v_cont.group_currency || ' a été appliquée.'
+        ELSE '' END;
+
+      INSERT INTO public.notifications (user_id, title, message, type, link)
+      VALUES (v_cont.user_id, '⚠️ Solde Insuffisant - ' || v_cont.group_name,
+        'Le prélèvement de ' || v_cont.amount || ' ' || v_cont.group_currency || ' a échoué car le solde de votre portefeuille est insuffisant (' || v_current_balance || ' ' || v_cont.group_currency || ').' || ' Veuillez recharger.' || v_penalty_note,
+        'reminder', '/profile');
+
+      INSERT INTO public.messages (group_id, user_id, user_name, is_system, content)
+      VALUES (v_cont.group_id, NULL, 'Système Tontine', true,
+        '⚠️ Alerte : Le prélèvement automatique de ' || v_cont.amount || ' ' || v_cont.group_currency || ' de ' || v_member_name || ' a échoué (solde de portefeuille insuffisant).' || v_penalty_note);
+    END IF;
+  END LOOP;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.process_due_contributions() FROM PUBLIC, anon, authenticated;
+
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+DO $$
+BEGIN
+  PERFORM cron.unschedule('process-due-contributions');
+EXCEPTION WHEN OTHERS THEN
+  NULL;
+END $$;
+
+SELECT cron.schedule('process-due-contributions', '*/15 * * * *', $$SELECT public.process_due_contributions();$$);
+
