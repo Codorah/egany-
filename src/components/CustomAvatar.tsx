@@ -1,11 +1,10 @@
-export type AvatarConfig = any;
+export type AvatarConfig = string;
 
 interface CustomAvatarProps {
   photoURL?: string;
   name?: string;
   className?: string;
   size?: number;
-  config?: any;
 }
 
 export function CustomAvatar({ photoURL, name = 'User', className = '', size = 80 }: CustomAvatarProps) {
@@ -24,7 +23,7 @@ export function CustomAvatar({ photoURL, name = 'User', className = '', size = 8
   const charCode = name.charCodeAt(0) || 65;
   const selectedGradient = gradients[charCode % gradients.length];
 
-  if (photoURL && photoURL.startsWith('http')) {
+  if (photoURL && (photoURL.startsWith('http') || photoURL.startsWith('data:'))) {
     return (
       <img
         src={photoURL}

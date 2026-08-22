@@ -1045,6 +1045,32 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS phone text;
 
 -- ============================================================================
+-- 9. VRAI AVATAR (photo ou illustration) — remplace le flux base64 cassé
+-- ============================================================================
+-- L'ancien flux "Téléverser une photo" ne faisait que lire le fichier côté
+-- client (FileReader.readAsDataURL) sans jamais le persister réellement : la
+-- data URI finissait dans avatar_config (jsonb), puis mapProfileRow la
+-- ré-encapsulait avec JSON.stringify(...), ajoutant un guillemet de tête qui
+-- cassait le test `startsWith('http')` de CustomAvatar — la photo ne
+-- s'affichait donc plus jamais après un rechargement. avatar_config est
+-- laissé tel quel (non supprimé, plus utilisé).
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url text;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "avatars_storage_select_public" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_storage_insert_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_storage_update_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_storage_delete_own" ON storage.objects;
+
+CREATE POLICY "avatars_storage_select_public" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+CREATE POLICY "avatars_storage_insert_own" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "avatars_storage_update_own" ON storage.objects FOR UPDATE USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "avatars_storage_delete_own" ON storage.objects FOR DELETE USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ============================================================================
 -- 8. TIRAGE AU SORT PERSISTÉ (mode "draw")
 -- ============================================================================
 -- Auparavant purement client (useState + Math.random() dans GroupDetails.tsx) :

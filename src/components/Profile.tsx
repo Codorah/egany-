@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +60,7 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
 import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
-import { CustomAvatar, AvatarConfig, DEFAULT_AVATAR } from './CustomAvatar';
+import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
 
 interface ProfileProps {
@@ -88,15 +88,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   const [showBalance, setShowBalance] = useState(true);
 
   // Avatar state
-  const initialAvatarConfig = useMemo(() => {
-    if (user.photoURL) {
-      try {
-        return { ...DEFAULT_AVATAR, ...JSON.parse(user.photoURL) };
-      } catch (e) {}
-    }
-    return { ...DEFAULT_AVATAR };
-  }, [user.photoURL]);
-  const [editAvatar, setEditAvatar] = useState<AvatarConfig>(initialAvatarConfig);
+  const [editAvatar, setEditAvatar] = useState<AvatarConfig>(user.photoURL || '');
 
   // Security & Toggles states
   const [newPin, setNewPin] = useState('');
@@ -259,7 +251,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       const { error } = await supabase.from('profiles').update({
         display_name: editDisplayName,
         language: editLanguage,
-        avatar_config: editAvatar,
+        avatar_url: editAvatar || null,
         first_name: editFirstName.trim() || null,
         last_name: editLastName.trim() || null,
         date_of_birth: editDateOfBirth || null,
@@ -626,6 +618,8 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                 <AvatarWorkshop
                   value={editAvatar}
                   onChange={(newAvatar) => setEditAvatar(newAvatar)}
+                  name={editDisplayName || user.displayName}
+                  userId={user.uid}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

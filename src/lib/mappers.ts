@@ -1,18 +1,12 @@
 import { Contribution, Group, GroupDocument, KycSubmission, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
 import { LedgerEntry, AuditLog } from '@/lib/ledger';
 
-/**
- * Postgres stores the avatar builder config as real jsonb (`avatar_config`),
- * but every consumer (CustomAvatar, AvatarWorkshop, Onboarding, Profile) still
- * expects `UserProfile.photoURL` as a JSON *string*, exactly like the old
- * Firestore field. Mapping at this boundary avoids touching those files.
- */
 export function mapProfileRow(row: Record<string, any>): UserProfile {
   return {
     uid: row.id,
     email: row.email,
     displayName: row.display_name,
-    photoURL: row.avatar_config ? JSON.stringify(row.avatar_config) : undefined,
+    photoURL: row.avatar_url ?? undefined,
     reputationScore: row.reputation_score,
     totalSaved: Number(row.total_saved),
     groupsJoined: row.groups_joined,

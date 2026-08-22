@@ -615,14 +615,8 @@ export function AdminDashboard() {
                         <TableRow key={u.uid} className="hover:bg-muted/50 transition-colors">
                           <TableCell className="pl-6 font-bold text-foreground">
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-full overflow-hidden border border-brand/20 flex items-center justify-center bg-muted shrink-0">
-                                {u.photoURL ? (
-                                  <CustomAvatar config={u.photoURL} size={36} />
-                                ) : (
-                                  <div className="w-full h-full bg-brand/10 flex items-center justify-center font-bold text-brand text-xs">
-                                    {u.displayName.charAt(0)}
-                                  </div>
-                                )}
+                              <div className="h-9 w-9 rounded-full overflow-hidden shrink-0">
+                                <CustomAvatar photoURL={u.photoURL} name={u.displayName} size={36} />
                               </div>
                               <span className="text-xs truncate max-w-[120px]">{u.displayName}</span>
                             </div>

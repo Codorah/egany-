@@ -1,10 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  CustomAvatar,
-  AvatarConfig,
-  DEFAULT_AVATAR
-} from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { BiometricPrompt } from './BiometricPrompt';
 import { Button } from '@/components/ui/button';
@@ -60,7 +55,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   };
 
   // Avatar State
-  const [avatar, setAvatar] = useState<AvatarConfig>({ ...DEFAULT_AVATAR });
+  const [avatar, setAvatar] = useState<string>('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   // Email OTP verification (step 4) — Supabase sends a code via the
@@ -198,7 +193,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        avatar_config: avatar,
+        avatar_url: avatar || null,
         language,
         theme,
         biometrics_enabled: !!biometricsEnabled,
@@ -700,6 +695,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <AvatarWorkshop
                   value={avatar}
                   onChange={setAvatar}
+                  name={displayName}
+                  allowPhotoUpload={false}
                 />
                 
                 <div className="pt-4">
