@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Group, UserProfile } from '@/types';
 import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,6 +35,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const [drawnBeneficiaryId, setDrawnBeneficiaryId] = React.useState<string | null>(null);
   const [isDistributing, setIsDistributing] = React.useState(false);
   const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
+  const [auctionDiscount, setAuctionDiscount] = React.useState('');
 
   const isCreator = profile?.uid === group.creatorId;
   const isAdmin = profile?.role === 'admin';
@@ -78,6 +81,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       const result = await executePayoutDisbursement({
         groupId: group.id,
         beneficiaryId: beneficiaryToDistribute,
+        discountAmount: group.distributionMethod === 'auction' ? (Number(auctionDiscount) || 0) : 0,
         adminUserId: profile.uid
       });
       if (!result.success) {
@@ -85,6 +89,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       }
       toast.success(result.message);
       setDrawnBeneficiaryId(null);
+      setAuctionDiscount('');
     } catch (error: any) {
       console.error('Distribution error:', error);
       toast.error(error.message || "Erreur lors de la distribution du cycle.");
@@ -229,21 +234,70 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           {/* Highlight Card for Next Beneficiary */}
-          <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                🥇 Prochain Bénéficiaire (Tour {group.currentPayoutIndex + 1})
-              </span>
-              <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
-              <p className="text-xs text-white/90">
-                Date : {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
-              </p>
+          {beneficiaryToDistribute ? (
+            <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
+                  🥇 Prochain Bénéficiaire (Tour {group.currentPayoutIndex + 1})
+                </span>
+                <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
+                <p className="text-xs text-white/90">
+                  Date : {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">Montant Net Prévu</span>
+                <p className="text-2xl font-black text-white">{totalPot.toLocaleString()} {group.currency}</p>
+              </div>
             </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">Montant Net Prévu</span>
-              <p className="text-2xl font-black text-white">{totalPot.toLocaleString()} {group.currency}</p>
+          ) : (
+            <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Tour {group.currentPayoutIndex + 1}
+                </span>
+                <h4 className="text-sm font-bold text-foreground">Tirage au sort requis</h4>
+                <p className="text-xs text-muted-foreground">Aucun bénéficiaire désigné pour ce cycle.</p>
+              </div>
+              {canManage && (
+                <Button onClick={handleDraw} className="shrink-0 rounded-xl">
+                  <Shuffle className="w-4 h-4 mr-2" />
+                  Tirer au sort
+                </Button>
+              )}
             </div>
-          </div>
+          )}
+
+          {canManage && group.status === 'active' && beneficiaryToDistribute && (
+            <div className="bg-card p-4 rounded-2xl border border-border space-y-3">
+              {group.distributionMethod === 'auction' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="auction_discount" className="text-xs font-bold text-foreground">
+                    Montant du rabais remporté à l'enchère (optionnel)
+                  </Label>
+                  <Input
+                    id="auction_discount"
+                    type="number"
+                    min={0}
+                    placeholder="0"
+                    value={auctionDiscount}
+                    onChange={(e) => setAuctionDiscount(e.target.value)}
+                    className="rounded-xl"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Ce montant sera déduit du pot puis redistribué équitablement entre les autres membres actifs.
+                  </p>
+                </div>
+              )}
+              <Button
+                onClick={() => setIsConfirmDistributeOpen(true)}
+                className="w-full gradient-sunset text-white font-bold rounded-xl h-11"
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Distribuer les fonds
+              </Button>
+            </div>
+          )}
 
           {/* Timeline List */}
           <div className="space-y-2 pt-2">
