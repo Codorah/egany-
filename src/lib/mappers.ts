@@ -21,6 +21,8 @@ export function mapProfileRow(row: Record<string, any>): UserProfile {
     fcmToken: row.fcm_token ?? undefined,
     pushEnabled: row.push_enabled,
     emailNotificationsEnabled: row.email_notifications_enabled,
+    smsNotificationsEnabled: row.sms_notifications_enabled,
+    whatsappNotificationsEnabled: row.whatsapp_notifications_enabled,
     kycLevel: row.kyc_level ?? 1,
     kycVerifiedAt: row.kyc_verified_at ?? undefined,
     mandateName: row.mandate_name ?? undefined,
@@ -30,6 +32,8 @@ export function mapProfileRow(row: Record<string, any>): UserProfile {
     lastName: row.last_name ?? undefined,
     dateOfBirth: row.date_of_birth ?? undefined,
     phone: row.phone ?? undefined,
+    subscriptionPlan: row.subscription_plan ?? undefined,
+    subscriptionExpiresAt: row.subscription_expires_at ?? undefined,
   };
 }
 

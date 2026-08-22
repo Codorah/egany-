@@ -98,6 +98,19 @@ export async function verifyUserPin(userId: string, enteredPin: string): Promise
   return data as PinVerificationResult;
 }
 
+export async function setUserPin(userId: string, newPin: string): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase.rpc('set_user_pin', {
+    p_user_id: userId,
+    p_new_pin: newPin,
+  });
+
+  if (error) {
+    console.error('setUserPin RPC error:', error);
+    return { success: false, message: error.message || 'Erreur lors de la mise à jour du code PIN.' };
+  }
+  return { success: true, message: 'Code PIN mis à jour !' };
+}
+
 /**
  * Reconciliation is a plain read + admin-gated write (no cross-table
  * atomicity needed), so unlike the two functions above it runs as regular

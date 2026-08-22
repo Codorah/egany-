@@ -1056,6 +1056,12 @@ ALTER TABLE public.profiles
 -- laissé tel quel (non supprimé, plus utilisé).
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url text;
 
+-- Notification channel preferences (SMS via Africa's Talking, WhatsApp via
+-- Twilio) — push_enabled/email_notifications_enabled already existed.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS sms_notifications_enabled boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS whatsapp_notifications_enabled boolean NOT NULL DEFAULT false;
+
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('avatars', 'avatars', true)
 ON CONFLICT (id) DO NOTHING;

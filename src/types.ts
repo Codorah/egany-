@@ -20,6 +20,8 @@ export interface UserProfile {
   fcmToken?: string;
   pushEnabled?: boolean;
   emailNotificationsEnabled?: boolean;
+  smsNotificationsEnabled?: boolean;
+  whatsappNotificationsEnabled?: boolean;
   kycLevel?: number;
   kycVerifiedAt?: string;
   mandateName?: string;
@@ -29,6 +31,8 @@ export interface UserProfile {
   lastName?: string;
   dateOfBirth?: string;
   phone?: string;
+  subscriptionPlan?: string;
+  subscriptionExpiresAt?: string;
 }
 
 export interface KycSubmission {

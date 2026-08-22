@@ -54,14 +54,16 @@ import {
 import { UserProfile, Group, Contribution, WalletTransaction, KycSubmission } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/lib/supabase';
+import { supabase, changePassword } from '@/lib/supabase';
 import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
+import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
 import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
+import { BiometricPrompt } from './BiometricPrompt';
+import { useBiometrics } from '@/hooks/useBiometrics';
 
 interface ProfileProps {
   user: UserProfile;
@@ -92,12 +94,15 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
 
   // Security & Toggles states
   const [newPin, setNewPin] = useState('');
+  const [isSavingPin, setIsSavingPin] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [biometricsEnabled, setBiometricsEnabled] = useState(user.biometricsEnabled || true);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const { isEnrolled: biometricsEnabled, disableBiometrics } = useBiometrics();
+  const [isBiometricPromptOpen, setIsBiometricPromptOpen] = useState(false);
   const [pushNotif, setPushNotif] = useState(user.pushEnabled ?? true);
-  const [smsNotif, setSmsNotif] = useState(true);
+  const [smsNotif, setSmsNotif] = useState(user.smsNotificationsEnabled ?? false);
   const [emailNotif, setEmailNotif] = useState(user.emailNotificationsEnabled ?? true);
-  const [whatsAppNotif, setWhatsAppNotif] = useState(false);
+  const [whatsAppNotif, setWhatsAppNotif] = useState(user.whatsappNotificationsEnabled ?? false);
   const [showScorePublic, setShowScorePublic] = useState(true);
   const [allowInvitations, setAllowInvitations] = useState(true);
 
@@ -242,6 +247,64 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       toast.error("Erreur lors de l'enregistrement du mandataire.");
     } finally {
       setIsSavingMandate(false);
+    }
+  };
+
+  const handleChangePin = async () => {
+    if (!/^\d{4}$/.test(newPin)) {
+      toast.error('Le code PIN doit comporter exactement 4 chiffres.');
+      return;
+    }
+    setIsSavingPin(true);
+    try {
+      const result = await setUserPin(user.uid, newPin);
+      if (!result.success) throw new Error(result.message);
+      toast.success(result.message);
+      setNewPin('');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour du code PIN.');
+    } finally {
+      setIsSavingPin(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    setIsSavingPassword(true);
+    try {
+      const { error } = await changePassword(newPassword);
+      if (error) throw error;
+      toast.success('Mot de passe mis à jour !');
+      setNewPassword('');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour du mot de passe.');
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
+  const handleToggleBiometrics = async (enable: boolean) => {
+    if (enable) {
+      setIsBiometricPromptOpen(true);
+      return;
+    }
+    disableBiometrics();
+    await supabase.from('profiles').update({ biometrics_enabled: false }).eq('id', user.uid);
+  };
+
+  const handleToggleNotificationChannel = async (
+    column: 'push_enabled' | 'sms_notifications_enabled' | 'email_notifications_enabled' | 'whatsapp_notifications_enabled',
+    setLocal: (value: boolean) => void,
+    value: boolean
+  ) => {
+    setLocal(value);
+    const { error } = await supabase.from('profiles').update({ [column]: value }).eq('id', user.uid);
+    if (error) {
+      setLocal(!value);
+      toast.error('Erreur lors de la sauvegarde de la préférence.');
     }
   };
 
@@ -942,14 +1005,32 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               <div className="flex gap-2">
                 <Input
                   type="password"
+                  inputMode="numeric"
                   maxLength={4}
                   placeholder="Nouveau PIN"
                   value={newPin}
-                  onChange={(e) => setNewPin(e.target.value)}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   className="rounded-xl h-10 text-xs"
                 />
-                <Button onClick={() => { toast.success("Code PIN mis à jour !"); setNewPin(''); }} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
-                  Modifier
+                <Button onClick={handleChangePin} disabled={isSavingPin} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
+                  {isSavingPin ? 'Envoi...' : 'Modifier'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Password Setting */}
+            <div className="p-4 bg-muted/30 rounded-2xl space-y-2 border border-border/60">
+              <Label className="text-xs font-bold">Modifier le mot de passe</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  placeholder="Nouveau mot de passe (6+ caractères)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="rounded-xl h-10 text-xs"
+                />
+                <Button onClick={handleChangePassword} disabled={isSavingPassword} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
+                  {isSavingPassword ? 'Envoi...' : 'Modifier'}
                 </Button>
               </div>
             </div>
@@ -958,25 +1039,25 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl">
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-foreground">Biométrie (Empreinte / FaceID)</p>
-                <p className="text-[11px] text-muted-foreground">Utiliser l'empreinte pour déverrouiller l'application.</p>
+                <p className="text-[11px] text-muted-foreground">Utiliser l'empreinte pour déverrouiller l'application sur cet appareil.</p>
               </div>
-              <Switch checked={biometricsEnabled} onCheckedChange={setBiometricsEnabled} />
-            </div>
-
-            {/* Connected Devices */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Appareils Connectés & Sessions</h4>
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center text-xs">
-                <div>
-                  <p className="font-bold text-foreground">iPhone de Codorah (Actuel)</p>
-                  <p className="text-[10px] text-muted-foreground">Activité : aujourd'hui, 16:18 • Lomé, Togo</p>
-                </div>
-                <Badge className="bg-emerald-500/10 text-emerald-600 text-[9px]">Actif</Badge>
-              </div>
+              <Switch checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />
             </div>
           </Card>
         </motion.div>
       )}
+
+      <BiometricPrompt
+        isOpen={isBiometricPromptOpen}
+        onClose={() => setIsBiometricPromptOpen(false)}
+        username={user.displayName}
+        mode="register"
+        onSuccess={async () => {
+          setIsBiometricPromptOpen(false);
+          await supabase.from('profiles').update({ biometrics_enabled: true }).eq('id', user.uid);
+          toast.success('Biométrie activée sur cet appareil !');
+        }}
+      />
 
       {/* ========================================================================= */}
       {/* 5. SUB-SECTION SCREEN 5: NOTIFICATIONS */}
@@ -991,9 +1072,12 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
                   <p className="text-xs font-bold text-foreground">Notifications Push</p>
-                  <p className="text-[10px] text-muted-foreground">Sur votre téléphone mobile</p>
+                  <p className="text-[10px] text-muted-foreground">Sur votre téléphone mobile — bientôt disponible</p>
                 </div>
-                <Switch checked={pushNotif} onCheckedChange={setPushNotif} />
+                <Switch
+                  checked={pushNotif}
+                  onCheckedChange={(v) => handleToggleNotificationChannel('push_enabled', setPushNotif, v)}
+                />
               </div>
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
@@ -1001,7 +1085,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   <p className="text-xs font-bold text-foreground">SMS</p>
                   <p className="text-[10px] text-muted-foreground">Rappels directs par SMS</p>
                 </div>
-                <Switch checked={smsNotif} onCheckedChange={setSmsNotif} />
+                <Switch
+                  checked={smsNotif}
+                  onCheckedChange={(v) => handleToggleNotificationChannel('sms_notifications_enabled', setSmsNotif, v)}
+                />
               </div>
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
@@ -1009,7 +1096,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   <p className="text-xs font-bold text-foreground">Email</p>
                   <p className="text-[10px] text-muted-foreground">Reçus et récapitulatifs mensuels</p>
                 </div>
-                <Switch checked={emailNotif} onCheckedChange={setEmailNotif} />
+                <Switch
+                  checked={emailNotif}
+                  onCheckedChange={(v) => handleToggleNotificationChannel('email_notifications_enabled', setEmailNotif, v)}
+                />
               </div>
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
@@ -1017,7 +1107,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   <p className="text-xs font-bold text-foreground">WhatsApp</p>
                   <p className="text-[10px] text-muted-foreground">Alertes et rappels automatisés</p>
                 </div>
-                <Switch checked={whatsAppNotif} onCheckedChange={setWhatsAppNotif} />
+                <Switch
+                  checked={whatsAppNotif}
+                  onCheckedChange={(v) => handleToggleNotificationChannel('whatsapp_notifications_enabled', setWhatsAppNotif, v)}
+                />
               </div>
             </div>
           </Card>

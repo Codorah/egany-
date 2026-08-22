@@ -32,7 +32,7 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('email_notifications_enabled, email')
+      .select('email_notifications_enabled, email, sms_notifications_enabled, whatsapp_notifications_enabled, phone')
       .eq('id', userId)
       .single();
     if (!profile) return;
@@ -45,6 +45,24 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.email, subject: title, message })
         }).catch((err) => console.warn('Email delivery failed:', err))
+      );
+    }
+    if (profile.sms_notifications_enabled && profile.phone) {
+      deliveries.push(
+        fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
+        }).catch((err) => console.warn('SMS delivery failed:', err))
+      );
+    }
+    if (profile.whatsapp_notifications_enabled && profile.phone) {
+      deliveries.push(
+        fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
+        }).catch((err) => console.warn('WhatsApp delivery failed:', err))
       );
     }
     await Promise.allSettled(deliveries);
