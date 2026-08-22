@@ -109,10 +109,17 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [rechargeAmount, setRechargeAmount] = useState('');
+  // Stable per-attempt idempotency keys: a retry after a failed request must
+  // reuse the same key (so the backend dedupes it if it actually went
+  // through), while editing the amount signals a genuinely new operation.
+  const rechargeIdempotencyKeyRef = React.useRef<string | null>(null);
+  useEffect(() => { rechargeIdempotencyKeyRef.current = null; }, [rechargeAmount]);
   const [isRecharging, setIsRecharging] = useState(false);
 
   // Withdrawal states
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const withdrawIdempotencyKeyRef = React.useRef<string | null>(null);
+  useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount]);
   const [withdrawMethod, setWithdrawMethod] = useState('flooz');
   const [withdrawPhone, setWithdrawPhone] = useState('+228 90 00 00 00');
   const [withdrawPin, setWithdrawPin] = useState('');
@@ -167,8 +174,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     }
     setIsRecharging(true);
     try {
+      if (!rechargeIdempotencyKeyRef.current) {
+        rechargeIdempotencyKeyRef.current = crypto.randomUUID();
+      }
       const result = await executeFinancialTransaction({
-        idempotencyKey: `recharge_${user.uid}_${Date.now()}`,
+        idempotencyKey: rechargeIdempotencyKeyRef.current,
         userId: user.uid,
         amount,
         currency: 'FCFA',
@@ -178,6 +188,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         creditAccount: `user_wallet:${user.uid}`
       });
       if (!result.success) throw new Error(result.message);
+      rechargeIdempotencyKeyRef.current = null;
       toast.success(`Portefeuille rechargé avec succès (+${amount.toLocaleString()} FCFA) !`);
       setRechargeAmount('');
     } catch (err: any) {
@@ -209,8 +220,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         setIsWithdrawing(false);
         return;
       }
+      if (!withdrawIdempotencyKeyRef.current) {
+        withdrawIdempotencyKeyRef.current = crypto.randomUUID();
+      }
       const result = await executeFinancialTransaction({
-        idempotencyKey: `withdraw_${user.uid}_${Date.now()}`,
+        idempotencyKey: withdrawIdempotencyKeyRef.current,
         userId: user.uid,
         amount,
         currency: 'FCFA',
@@ -220,6 +234,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         creditAccount: `mobile_money_${withdrawMethod}`
       });
       if (!result.success) throw new Error(result.message);
+      withdrawIdempotencyKeyRef.current = null;
       toast.success(`Retrait de ${amount.toLocaleString()} FCFA effectué !`);
       setWithdrawAmount('');
       setWithdrawPin('');
