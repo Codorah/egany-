@@ -2,12 +2,14 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { LayoutGrid, Users, Wallet, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CustomAvatar } from './CustomAvatar';
 
 interface BottomNavProps {
   user?: {
     uid: string;
     displayName: string;
     role?: string;
+    photoURL?: string;
   };
   currentView?: string;
   onNavigate?: (view: string) => void;
@@ -67,7 +69,13 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
             <div className={`relative flex items-center justify-center transition-colors duration-200 ${
               isActive ? 'text-primary' : 'text-muted-foreground'
             }`}>
-              <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
+              {item.id === 'profile' ? (
+                <div className={`rounded-full transition-all ${isActive ? 'ring-2 ring-primary' : 'ring-1 ring-border'}`}>
+                  <CustomAvatar photoURL={user.photoURL} name={user.displayName} size={22} />
+                </div>
+              ) : (
+                <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
+              )}
             </div>
             <span className={`text-[9px] mt-1 tracking-tight transition-colors duration-200 ${
               isActive

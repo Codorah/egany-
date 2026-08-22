@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
+import { CustomAvatar } from './CustomAvatar';
 
 interface GroupDetailsProps {
   group: Group;
@@ -568,6 +569,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 <div key={uid} className={`flex items-center justify-between p-2.5 rounded-lg ${index === 0 ? 'bg-brand/10' : ''}`}>
                   <div className="flex items-center gap-3">
                     <span className={`w-6 text-center text-xs font-black ${index === 0 ? 'text-brand' : 'text-muted-foreground'}`}>#{index + 1}</span>
+                    <CustomAvatar photoURL={members[uid]?.photoURL} name={memberName(uid)} size={28} />
                     <span className="text-sm font-medium">{memberName(uid)}</span>
                     {uid === profile?.uid && <Badge variant="outline" className="text-[9px]">Vous</Badge>}
                   </div>

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Check, X, UserMinus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CustomAvatar } from './CustomAvatar';
 
 interface MemberManagementProps {
   group: Group;
@@ -138,7 +139,10 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
             <p className="text-xs font-bold uppercase text-muted-foreground">Demandes en attente ({pendingMembers.length})</p>
             {pendingMembers.map((uid) => (
               <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg bg-brand/10 border-brand/20">
-                <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
+                <div className="flex items-center gap-2">
+                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || 'Membre'} size={28} />
+                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
+                </div>
                 <div className="flex gap-1.5">
                   <Button size="icon" variant="outline" className="h-8 w-8 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
                     {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
@@ -160,6 +164,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
             return (
               <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg">
                 <div className="flex items-center gap-2">
+                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || 'Membre'} size={28} />
                   <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
                   {isCreatorRow && <Badge variant="outline" className="text-[10px]">Créateur</Badge>}
                 </div>
