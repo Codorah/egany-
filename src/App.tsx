@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
@@ -68,6 +69,7 @@ export default function App() {
   const { groups, loading: groupsLoading } = useGroups(activeProfile?.uid);
   useReminders(activeProfile, groups);
   useWalletDebitor(activeProfile, groups);
+  const isOnline = useOnlineStatus();
   
   const [view, setView] = useState<View>('dashboard');
   const [profileTab, setProfileTab] = useState<string>('contributions');
@@ -311,6 +313,11 @@ export default function App() {
       onNavigate={(v) => setView(v as View)}
       onLogout={handleLogout}
     >
+      {!isOnline && (
+        <div className="bg-amber-500 text-white text-xs font-bold text-center py-2 px-4">
+          Vous êtes hors-ligne — les données affichées peuvent ne pas être à jour, et les actions financières (recharge, retrait, cotisation, création/adhésion de cercle) sont désactivées.
+        </div>
+      )}
       {renderView()}
       <Toaster />
     </Layout>

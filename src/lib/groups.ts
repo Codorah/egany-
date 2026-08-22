@@ -46,6 +46,14 @@ export interface JoinRequestResult {
  * Used by both the join-by-code/QR flow and public group search.
  */
 export async function requestToJoinGroup(group: Group, user: UserProfile): Promise<JoinRequestResult> {
+  if (!navigator.onLine) {
+    return {
+      success: false,
+      alreadyMember: false,
+      alreadyPending: false,
+      message: "Vous êtes hors-ligne. Rejoindre un cercle nécessite une connexion internet.",
+    };
+  }
   if (!isKycVerified(user)) {
     return {
       success: false,

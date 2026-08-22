@@ -240,6 +240,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   };
 
   const handleRecharge = async () => {
+    if (!navigator.onLine) {
+      toast.error("Vous êtes hors-ligne. La recharge nécessite une connexion internet.");
+      return;
+    }
     const amount = parseFloat(rechargeAmount);
     if (!amount || amount < 100) {
       toast.error("Veuillez saisir un montant valide (minimum 100 FCFA).");
@@ -272,6 +276,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   };
 
   const handleWithdraw = async () => {
+    if (!navigator.onLine) {
+      toast.error("Vous êtes hors-ligne. Le retrait nécessite une connexion internet.");
+      return;
+    }
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
       toast.error("Montant de retrait invalide.");

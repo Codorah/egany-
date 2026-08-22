@@ -67,6 +67,10 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const totalPot = group.contributionAmount * group.members.length;
 
   const handleDraw = async () => {
+    if (!navigator.onLine) {
+      toast.error("Vous êtes hors-ligne. Le tirage au sort nécessite une connexion internet.");
+      return;
+    }
     setIsDrawing(true);
     try {
       const result = await drawPayoutBeneficiary(group.id);
@@ -84,6 +88,10 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
 
   const handleConfirmDistribution = async () => {
     if (!profile || !beneficiaryToDistribute) return;
+    if (!navigator.onLine) {
+      toast.error("Vous êtes hors-ligne. La distribution des fonds nécessite une connexion internet.");
+      return;
+    }
     setIsDistributing(true);
     try {
       const result = await executePayoutDisbursement({

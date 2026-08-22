@@ -67,6 +67,13 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         });
 
+      // Without waitUntil, the SW can be torn down before this background
+      // revalidation (cache.put) finishes once the cached response has
+      // already been returned below — keep it alive until it settles.
+      if (cachedResponse) {
+        event.waitUntil(fetchPromise.catch(() => {}));
+      }
+
       return cachedResponse || fetchPromise;
     })
   );

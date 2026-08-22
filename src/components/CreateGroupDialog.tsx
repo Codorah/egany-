@@ -87,6 +87,10 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
   const isPrivate = watch('isPrivate');
 
   const onSubmit = async (values: FormValues) => {
+    if (!navigator.onLine) {
+      toast.error("Vous êtes hors-ligne. La création d'un cercle nécessite une connexion internet.");
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
