@@ -17,7 +17,7 @@ import { supabase } from '@/lib/supabase';
 import { mapProfileRow } from '@/lib/mappers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { executePayoutDisbursement } from '@/lib/disbursements';
+import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 
 interface GroupDetailsProps {
@@ -32,7 +32,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
   const [members, setMembers] = React.useState<Record<string, UserProfile>>({});
-  const [drawnBeneficiaryId, setDrawnBeneficiaryId] = React.useState<string | null>(null);
+  const [isDrawing, setIsDrawing] = React.useState(false);
   const [isDistributing, setIsDistributing] = React.useState(false);
   const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
   const [auctionDiscount, setAuctionDiscount] = React.useState('');
@@ -66,13 +66,21 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const scheduledBeneficiaryId = group.payoutOrder[group.currentPayoutIndex];
   const totalPot = group.contributionAmount * group.members.length;
 
-  const handleDraw = () => {
-    const remaining = group.payoutOrder.slice(group.currentPayoutIndex);
-    const picked = remaining[Math.floor(Math.random() * remaining.length)];
-    setDrawnBeneficiaryId(picked);
+  const handleDraw = async () => {
+    setIsDrawing(true);
+    try {
+      const result = await drawPayoutBeneficiary(group.id);
+      if (!result.success) throw new Error(result.message);
+      // The realtime `groups` subscription (useGroups) refetches and updates
+      // `group.drawnBeneficiaryId` — no local state to set here.
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du tirage au sort.");
+    } finally {
+      setIsDrawing(false);
+    }
   };
 
-  const beneficiaryToDistribute = group.distributionMethod === 'draw' ? drawnBeneficiaryId : scheduledBeneficiaryId;
+  const beneficiaryToDistribute = group.distributionMethod === 'draw' ? group.drawnBeneficiaryId : scheduledBeneficiaryId;
 
   const handleConfirmDistribution = async () => {
     if (!profile || !beneficiaryToDistribute) return;
@@ -88,7 +96,6 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         throw new Error(result.message);
       }
       toast.success(result.message);
-      setDrawnBeneficiaryId(null);
       setAuctionDiscount('');
     } catch (error: any) {
       console.error('Distribution error:', error);
@@ -260,9 +267,9 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 <p className="text-xs text-muted-foreground">Aucun bénéficiaire désigné pour ce cycle.</p>
               </div>
               {canManage && (
-                <Button onClick={handleDraw} className="shrink-0 rounded-xl">
+                <Button onClick={handleDraw} disabled={isDrawing} className="shrink-0 rounded-xl">
                   <Shuffle className="w-4 h-4 mr-2" />
-                  Tirer au sort
+                  {isDrawing ? 'Tirage en cours...' : 'Tirer au sort'}
                 </Button>
               )}
             </div>

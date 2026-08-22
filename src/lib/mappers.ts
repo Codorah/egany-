@@ -90,6 +90,7 @@ export function mapGroupRow(row: Record<string, any>, members: Record<string, an
     rules: row.rules ?? undefined,
     lastReminderSentAt: row.last_reminder_period ?? undefined,
     distributionMethod: row.distribution_method ?? undefined,
+    drawnBeneficiaryId: row.drawn_beneficiary_id ?? null,
     penaltyRate: row.penalty_rate ?? undefined,
     penaltyType: row.penalty_type ?? undefined,
     penaltyAmount: row.penalty_amount ?? undefined,

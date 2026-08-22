@@ -48,3 +48,18 @@ export async function executePayoutDisbursement(params: {
   }
   return data as { success: boolean; message: string; transactionId?: string };
 }
+
+/**
+ * Draws the beneficiary for a 'draw' distribution group. Persisted and
+ * idempotent server-side (draw_payout_beneficiary in schema.sql) — calling
+ * it again for a cycle that already has a draw just returns that same
+ * result, it never re-rolls.
+ */
+export async function drawPayoutBeneficiary(groupId: string): Promise<{ success: boolean; beneficiaryId?: string; message?: string }> {
+  const { data, error } = await supabase.rpc('draw_payout_beneficiary', { p_group_id: groupId });
+  if (error) {
+    console.error('drawPayoutBeneficiary RPC error:', error);
+    return { success: false, message: error.message };
+  }
+  return { success: true, beneficiaryId: data as string };
+}

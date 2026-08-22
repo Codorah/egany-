@@ -740,7 +740,7 @@ BEGIN
     WHEN 'bi-weekly' THEN interval '14 days'
     ELSE interval '30 days' END)::date;
 
-  UPDATE public.groups SET current_payout_index = v_next_index, next_payout_date = v_next_date, updated_at = now()
+  UPDATE public.groups SET current_payout_index = v_next_index, next_payout_date = v_next_date, drawn_beneficiary_id = NULL, updated_at = now()
   WHERE id = p_group_id;
 
   INSERT INTO public.payouts (group_id, user_id, amount, discount_amount, currency, cycle, transaction_id)
@@ -1043,4 +1043,53 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS last_name text,
   ADD COLUMN IF NOT EXISTS date_of_birth date,
   ADD COLUMN IF NOT EXISTS phone text;
+
+-- ============================================================================
+-- 8. TIRAGE AU SORT PERSISTÉ (mode "draw")
+-- ============================================================================
+-- Auparavant purement client (useState + Math.random() dans GroupDetails.tsx) :
+-- perdu au rechargement de page, et un admin pouvait retirer indéfiniment
+-- jusqu'à obtenir un résultat qui l'arrange. Le tirage est désormais persisté
+-- et ne peut plus être refait tant que le cycle courant n'a pas été distribué.
+
+ALTER TABLE public.groups ADD COLUMN IF NOT EXISTS drawn_beneficiary_id uuid REFERENCES public.profiles(id);
+
+CREATE OR REPLACE FUNCTION public.draw_payout_beneficiary(p_group_id uuid)
+RETURNS uuid
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_group record;
+  v_picked uuid;
+BEGIN
+  SELECT * INTO v_group FROM public.groups WHERE id = p_group_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Le cercle n''existe pas.';
+  END IF;
+
+  IF NOT (public.is_group_creator(p_group_id) OR public.is_admin()) THEN
+    RAISE EXCEPTION 'Non autorisé.';
+  END IF;
+
+  IF v_group.drawn_beneficiary_id IS NOT NULL THEN
+    RETURN v_group.drawn_beneficiary_id;
+  END IF;
+
+  SELECT user_id INTO v_picked
+  FROM public.group_members
+  WHERE group_id = p_group_id AND status = 'active' AND payout_position >= v_group.current_payout_index
+  ORDER BY random()
+  LIMIT 1;
+
+  IF v_picked IS NULL THEN
+    RAISE EXCEPTION 'Aucun membre éligible pour le tirage.';
+  END IF;
+
+  UPDATE public.groups SET drawn_beneficiary_id = v_picked WHERE id = p_group_id;
+  RETURN v_picked;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.draw_payout_beneficiary(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.draw_payout_beneficiary(uuid) TO authenticated;
 

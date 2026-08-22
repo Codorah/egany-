@@ -69,6 +69,7 @@ export interface Group {
   rules?: string;
   lastReminderSentAt?: string;
   distributionMethod?: 'sequential' | 'draw' | 'auction';
+  drawnBeneficiaryId?: string | null;
   penaltyRate?: number;
   penaltyType?: 'percentage' | 'fixed';
   penaltyAmount?: number;
