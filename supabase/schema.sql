@@ -1125,3 +1125,63 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.draw_payout_beneficiary(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.draw_payout_beneficiary(uuid) TO authenticated;
 
+-- ============================================================================
+-- 10. MARKETPLACE — catalogue réel + demandes persistées (remplace le mockup)
+-- ============================================================================
+-- Marketplace.tsx était un pur mockup : tableau de services codé en dur,
+-- handleAction() ne faisait qu'un `setTimeout` de 1.5s puis un toast — aucune
+-- demande n'était jamais enregistrée, alors que le texte promettait "notre
+-- partenaire vous contactera sous 24h".
+
+CREATE TABLE IF NOT EXISTS public.marketplace_services (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL UNIQUE,
+  description text NOT NULL,
+  provider text NOT NULL,
+  category text NOT NULL CHECK (category IN ('assurance', 'credit', 'equipement')),
+  icon_name text NOT NULL,
+  color_class text NOT NULL DEFAULT 'bg-brand',
+  requirements text[],
+  min_reputation_score integer,
+  action_label text NOT NULL DEFAULT 'Faire une demande',
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.marketplace_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  service_id uuid NOT NULL REFERENCES public.marketplace_services(id) ON DELETE CASCADE,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'contacted', 'approved', 'rejected')),
+  admin_notes text,
+  reviewed_by uuid REFERENCES public.profiles(id),
+  reviewed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_marketplace_requests_user ON public.marketplace_requests(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_marketplace_requests_status ON public.marketplace_requests(status);
+
+ALTER TABLE public.marketplace_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.marketplace_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "marketplace_services_select" ON public.marketplace_services;
+DROP POLICY IF EXISTS "marketplace_services_admin_write" ON public.marketplace_services;
+DROP POLICY IF EXISTS "marketplace_requests_select_own_or_admin" ON public.marketplace_requests;
+DROP POLICY IF EXISTS "marketplace_requests_insert_self" ON public.marketplace_requests;
+DROP POLICY IF EXISTS "marketplace_requests_update_admin_only" ON public.marketplace_requests;
+
+CREATE POLICY "marketplace_services_select" ON public.marketplace_services FOR SELECT USING (is_active = true OR public.is_admin());
+CREATE POLICY "marketplace_services_admin_write" ON public.marketplace_services FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "marketplace_requests_select_own_or_admin" ON public.marketplace_requests FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
+CREATE POLICY "marketplace_requests_insert_self" ON public.marketplace_requests FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "marketplace_requests_update_admin_only" ON public.marketplace_requests FOR UPDATE USING (public.is_admin());
+
+INSERT INTO public.marketplace_services (title, description, provider, category, icon_name, color_class, requirements, min_reputation_score, action_label)
+VALUES
+  ('Assurance Santé Tontine', 'Couverture médicale de base pour vous et votre famille. Payez mensuellement avec le solde de votre portefeuille.', 'Partenaire INAM / Assurances', 'assurance', 'ShieldPlus', 'bg-blue-500', ARRAY['Score de réputation 70+ (Tier A minimum)', 'Solde wallet: 2000 FCFA/mois'], 70, 'Souscrire à l''assurance'),
+  ('Micro-crédit Agricole', 'Financez vos semences et intrants pour la saison. Remboursement adossé à vos rentrées de tontine.', 'Fonds d''Appui Agricole', 'credit', 'Tractor', 'bg-green-600', ARRAY['Score de réputation 70+ (Tier A ou S)', 'Avoir terminé 1 cycle de tontine'], 70, 'Demander le crédit'),
+  ('Kit Solaire PAYGO', 'Équipez-vous en panneaux solaires. Le paiement fractionné est prélevé automatiquement sur vos tours de tontine.', 'EnergieTogo / Bboxx', 'equipement', 'Zap', 'bg-amber-500', ARRAY['Validation du gestionnaire du groupe'], NULL, 'Commander le kit'),
+  ('Épargne Retraite', 'Convertissez une partie de vos gains de tontine en une épargne retraite bloquée à fort rendement (7%/an).', 'Caisse de Retraite', 'assurance', 'TrendingUp', 'bg-purple-500', NULL, NULL, 'Ouvrir un compte retraite')
+ON CONFLICT (title) DO NOTHING;
+

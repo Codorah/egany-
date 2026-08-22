@@ -224,7 +224,7 @@ export default function App() {
       case 'support':
         return <Support user={activeProfile} onBack={() => setView('dashboard')} />;
       case 'marketplace':
-        return <Marketplace />;
+        return <Marketplace user={activeProfile} />;
       case 'ai-assistant':
         return <AIAssistant />;
       case 'profile':

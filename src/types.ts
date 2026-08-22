@@ -48,6 +48,32 @@ export interface KycSubmission {
   createdAt: string;
 }
 
+export interface MarketplaceService {
+  id: string;
+  title: string;
+  description: string;
+  provider: string;
+  category: 'assurance' | 'credit' | 'equipement';
+  iconName: string;
+  colorClass: string;
+  requirements?: string[];
+  minReputationScore?: number;
+  actionLabel: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface MarketplaceRequest {
+  id: string;
+  userId: string;
+  serviceId: string;
+  status: 'pending' | 'contacted' | 'approved' | 'rejected';
+  adminNotes?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+}
+
 export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';
 
 export interface Group {

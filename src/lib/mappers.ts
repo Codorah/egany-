@@ -1,4 +1,4 @@
-import { Contribution, Group, GroupDocument, KycSubmission, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
+import { Contribution, Group, GroupDocument, KycSubmission, MarketplaceRequest, MarketplaceService, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
 import { LedgerEntry, AuditLog } from '@/lib/ledger';
 
 export function mapProfileRow(row: Record<string, any>): UserProfile {
@@ -46,6 +46,36 @@ export function mapKycSubmissionRow(row: Record<string, any>): KycSubmission {
     documentPath: row.document_path,
     status: row.status,
     rejectionReason: row.rejection_reason ?? undefined,
+    reviewedBy: row.reviewed_by ?? undefined,
+    reviewedAt: row.reviewed_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+export function mapMarketplaceServiceRow(row: Record<string, any>): MarketplaceService {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    provider: row.provider,
+    category: row.category,
+    iconName: row.icon_name,
+    colorClass: row.color_class,
+    requirements: row.requirements ?? undefined,
+    minReputationScore: row.min_reputation_score ?? undefined,
+    actionLabel: row.action_label,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+  };
+}
+
+export function mapMarketplaceRequestRow(row: Record<string, any>): MarketplaceRequest {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    serviceId: row.service_id,
+    status: row.status,
+    adminNotes: row.admin_notes ?? undefined,
     reviewedBy: row.reviewed_by ?? undefined,
     reviewedAt: row.reviewed_at ?? undefined,
     createdAt: row.created_at,

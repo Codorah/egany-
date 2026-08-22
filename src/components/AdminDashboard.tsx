@@ -5,7 +5,9 @@ import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
 import { LedgerEntry, AuditLog, performFullSystemReconciliation } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
-import { KycSubmission } from '@/types';
+import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
+import { KycSubmission, MarketplaceRequest } from '@/types';
+import { notifyUser } from '@/lib/notify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -43,7 +45,8 @@ import {
   History,
   BadgeCheck,
   Eye,
-  X
+  X,
+  Store
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomAvatar } from './CustomAvatar';
@@ -86,6 +89,10 @@ export function AdminDashboard() {
   const [kycSubmissions, setKycSubmissions] = useState<(KycSubmission & { userName: string; userEmail: string })[]>([]);
   const [reviewingKycId, setReviewingKycId] = useState<string | null>(null);
 
+  // Marketplace request queue
+  const [marketplaceRequests, setMarketplaceRequests] = useState<(MarketplaceRequest & { userName: string; userEmail: string; serviceTitle: string })[]>([]);
+  const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -111,6 +118,7 @@ export function AdminDashboard() {
       else setReconReports((reconRows ?? []).map(mapReconciliationReportRow));
 
       setKycSubmissions(await fetchPendingKycSubmissions());
+      setMarketplaceRequests(await fetchPendingMarketplaceRequests());
 
     } catch (error) {
       handleAdminError(error, 'admin_collections');
@@ -168,6 +176,35 @@ export function AdminDashboard() {
       toast.error(error.message || "Erreur lors du traitement de la vérification.");
     } finally {
       setReviewingKycId(null);
+    }
+  };
+
+  const handleReviewMarketplaceRequest = async (requestId: string, status: 'contacted' | 'approved' | 'rejected', notifyUserId: string, serviceTitle: string) => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return;
+
+    setReviewingRequestId(requestId);
+    try {
+      const result = await updateMarketplaceRequestStatus({ requestId, status, reviewerId: authUser.id });
+      if (!result.success) throw new Error(result.message);
+      toast.success('Demande mise à jour.');
+      setMarketplaceRequests(prev => prev.filter(r => r.id !== requestId));
+
+      const statusMessages: Record<typeof status, string> = {
+        contacted: `Notre équipe vous a contacté au sujet de votre demande pour "${serviceTitle}".`,
+        approved: `Votre demande pour "${serviceTitle}" a été approuvée !`,
+        rejected: `Votre demande pour "${serviceTitle}" n'a pas pu être retenue.`,
+      };
+      await notifyUser({
+        userId: notifyUserId,
+        title: 'Marketplace — mise à jour de votre demande',
+        message: statusMessages[status],
+        type: 'system',
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors du traitement de la demande.');
+    } finally {
+      setReviewingRequestId(null);
     }
   };
 
@@ -518,7 +555,7 @@ export function AdminDashboard() {
 
       {/* --- DETAILED MANAGEMENT SECTIONS --- */}
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 max-w-2xl bg-muted p-1 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-3xl bg-muted p-1 rounded-2xl">
           <TabsTrigger value="users" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <User className="w-4 h-4" />
             {t('members')}
@@ -532,6 +569,13 @@ export function AdminDashboard() {
             KYC
             {kycSubmissions.length > 0 && (
               <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{kycSubmissions.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="marketplace" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
+            <Store className="w-4 h-4" />
+            Marketplace
+            {marketplaceRequests.length > 0 && (
+              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{marketplaceRequests.length}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="ledger" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
@@ -896,6 +940,71 @@ export function AdminDashboard() {
                           size="sm"
                           onClick={() => handleReviewKyc(sub.id, false)}
                           disabled={reviewingKycId === sub.id}
+                          className="h-9 w-9 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
+                          title="Refuser"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* TAB: MARKETPLACE REQUEST QUEUE */}
+        <TabsContent value="marketplace" className="mt-6">
+          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+            <CardHeader className="pb-4 bg-muted/30 border-b border-border">
+              <CardTitle className="text-lg font-serif font-bold text-foreground">
+                Demandes de services partenaires
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Traitez les demandes soumises depuis la Marketplace (assurance, crédit, équipement...).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {marketplaceRequests.length === 0 ? (
+                <p className="text-center py-12 text-muted-foreground text-xs font-medium">
+                  Aucune demande en attente.
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {marketplaceRequests.map((req) => (
+                    <div key={req.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold text-foreground">{req.serviceTitle}</p>
+                        <p className="text-[11px] text-muted-foreground">{req.userName} • {req.userEmail}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Soumis le {new Date(req.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReviewMarketplaceRequest(req.id, 'contacted', req.userId, req.serviceTitle)}
+                          disabled={reviewingRequestId === req.id}
+                          className="h-9 rounded-xl text-xs font-bold border-border"
+                        >
+                          Marquer contacté
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleReviewMarketplaceRequest(req.id, 'approved', req.userId, req.serviceTitle)}
+                          disabled={reviewingRequestId === req.id}
+                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1.5" />
+                          Approuver
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReviewMarketplaceRequest(req.id, 'rejected', req.userId, req.serviceTitle)}
+                          disabled={reviewingRequestId === req.id}
                           className="h-9 w-9 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
                           title="Refuser"
                         >
