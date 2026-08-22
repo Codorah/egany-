@@ -70,10 +70,11 @@ interface ProfileProps {
   groups: Group[];
   defaultTab?: string;
   onLogout?: () => void;
+  onNavigate?: (view: string) => void;
 }
 
-export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
-  const { t, setLanguage } = useLanguage();
+export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: ProfileProps) {
+  const { t, language, setLanguage } = useLanguage();
   
   // Navigation state: null = Root settings, string = active sub-category screen
   const [activeSection, setActiveSection] = useState<string | null>(defaultTab === 'wallet' ? 'payments' : null);
@@ -82,7 +83,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   // Form states
   const [editDisplayName, setEditDisplayName] = useState(user.displayName);
   const [editPhone, setEditPhone] = useState(user.phone || '');
-  const [editLanguage, setEditLanguage] = useState(user.language || 'fr');
   const [editFirstName, setEditFirstName] = useState(user.firstName || '');
   const [editLastName, setEditLastName] = useState(user.lastName || '');
   const [editDateOfBirth, setEditDateOfBirth] = useState(user.dateOfBirth || '');
@@ -103,8 +103,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   const [smsNotif, setSmsNotif] = useState(user.smsNotificationsEnabled ?? false);
   const [emailNotif, setEmailNotif] = useState(user.emailNotificationsEnabled ?? true);
   const [whatsAppNotif, setWhatsAppNotif] = useState(user.whatsappNotificationsEnabled ?? false);
-  const [showScorePublic, setShowScorePublic] = useState(true);
-  const [allowInvitations, setAllowInvitations] = useState(true);
 
   // Wallet & Transactions
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
@@ -175,6 +173,9 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   // Mandataire numérique (digital proxy) state
   const [mandateName, setMandateName] = useState(user.mandateName || '');
   const [mandatePhone, setMandatePhone] = useState(user.mandatePhone || '');
+  const [mandatePermissions, setMandatePermissions] = useState<string[]>(
+    user.mandatePermissions || ['view_contributions', 'receive_reminders']
+  );
   const [isSavingMandate, setIsSavingMandate] = useState(false);
 
   useEffect(() => {
@@ -240,6 +241,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       const { error } = await supabase.from('profiles').update({
         mandate_name: mandateName.trim() || null,
         mandate_phone: mandatePhone.trim() || null,
+        mandate_permissions: mandatePermissions,
       }).eq('id', user.uid);
       if (error) throw error;
       toast.success("Mandataire enregistré !");
@@ -313,7 +315,6 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
     try {
       const { error } = await supabase.from('profiles').update({
         display_name: editDisplayName,
-        language: editLanguage,
         avatar_url: editAvatar || null,
         first_name: editFirstName.trim() || null,
         last_name: editLastName.trim() || null,
@@ -576,13 +577,27 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                 </div>
                 <p className="text-[11px] text-muted-foreground">Contactez notre support disponible 7j/7.</p>
                 <Button
-                  onClick={() => setActiveSection('support')}
+                  onClick={() => onNavigate?.('support')}
                   variant="outline"
                   size="sm"
                   className="w-full text-xs font-bold rounded-xl h-8 border-border text-foreground hover:bg-muted"
                 >
                   Contacter le support
                 </Button>
+                <div className="flex gap-1.5 pt-0.5">
+                  <button
+                    onClick={() => onNavigate?.('support')}
+                    className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    <Lightbulb className="w-3 h-3" /> Suggérer
+                  </button>
+                  <button
+                    onClick={() => onNavigate?.('support')}
+                    className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    <Bug className="w-3 h-3" /> Signaler un bug
+                  </button>
+                </div>
               </div>
             </Card>
 
@@ -599,7 +614,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                     {group.items.map((cat, idx) => (
                       <button
                         key={cat.id}
-                        onClick={() => setActiveSection(cat.id)}
+                        onClick={() => cat.id === 'support' ? onNavigate?.('support') : setActiveSection(cat.id)}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer ${
                           idx > 0 ? 'border-t border-border/60' : ''
                         }`}
@@ -710,6 +725,23 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   <Label className="text-xs font-bold">Date de naissance</Label>
                   <Input type="date" value={editDateOfBirth} onChange={(e) => setEditDateOfBirth(e.target.value)} className="rounded-xl h-11" />
                 </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold">Langue</Label>
+                  <div className="grid grid-cols-4 gap-1 bg-muted p-1 rounded-xl">
+                    {(['fr', 'en', 'wo', 'bm'] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => setLanguage(lang)}
+                        className={`text-xs font-bold py-2 rounded-lg transition-all ${
+                          language === lang ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {lang.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
               <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">
                 {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
@@ -803,8 +835,26 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                   <Label className="text-xs font-bold">Numéro de téléphone</Label>
                   <Input value={mandatePhone} onChange={(e) => setMandatePhone(e.target.value)} className="rounded-xl h-11" />
                 </div>
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-xs font-bold">Droits accordés au mandataire</Label>
+                  <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
+                    <span className="text-xs text-foreground">Voir les cotisations</span>
+                    <Switch
+                      checked={mandatePermissions.includes('view_contributions')}
+                      onCheckedChange={(v) => setMandatePermissions(prev => v ? [...prev, 'view_contributions'] : prev.filter(p => p !== 'view_contributions'))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
+                    <span className="text-xs text-foreground">Recevoir les rappels de cotisation</span>
+                    <Switch
+                      checked={mandatePermissions.includes('receive_reminders')}
+                      onCheckedChange={(v) => setMandatePermissions(prev => v ? [...prev, 'receive_reminders'] : prev.filter(p => p !== 'receive_reminders'))}
+                    />
+                  </div>
+                </div>
+
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                  🛡️ Le mandataire reçoit uniquement les notifications et le suivi de vos cercles. Il ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>.
+                  🛡️ Le mandataire ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>, quels que soient les droits ci-dessus.
                 </div>
               </div>
 
@@ -882,32 +932,29 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             </Card>
           </div>
 
-          {/* Payment Methods List */}
+          {/* Transaction History — was fetched into walletTransactions but
+              never actually rendered anywhere in this component. */}
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-3">
-            <h4 className="font-serif font-bold text-base text-foreground">Moyens de paiement enregistrés</h4>
-            <div className="space-y-2">
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 font-black text-xs flex items-center justify-center">F</div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Flooz (Moov Africa)</p>
-                    <p className="text-[10px] text-muted-foreground">+228 90 00 00 00</p>
+            <h4 className="font-serif font-bold text-base text-foreground">Historique des transactions</h4>
+            {walletTransactions.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">Aucune transaction pour le moment.</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {walletTransactions.map((tx) => (
+                  <div key={tx.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">{tx.description}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {format(new Date(tx.date), 'dd MMM yyyy, HH:mm', { locale: fr })}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-black shrink-0 pl-3 ${tx.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-danger'}`}>
+                      {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()} FCFA
+                    </span>
                   </div>
-                </div>
-                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">Principal</Badge>
+                ))}
               </div>
-
-              <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-yellow-500/10 text-yellow-600 font-black text-xs flex items-center justify-center">T</div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">TMoney (Togocom)</p>
-                    <p className="text-[10px] text-muted-foreground">+228 91 00 00 00</p>
-                  </div>
-                </div>
-                <Button size="sm" variant="ghost" className="h-7 text-[10px] text-primary">Définir principal</Button>
-              </div>
-            </div>
+            )}
           </Card>
         </motion.div>
       )}
@@ -944,7 +991,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               {!groups || groups.length === 0 ? (
                 <div className="p-4 text-center bg-muted/30 rounded-2xl border border-border/60">
                   <p className="text-xs text-muted-foreground">Vous n'êtes membre d'aucun cercle.</p>
-                  <Button variant="link" className="text-primary text-xs h-auto p-0 mt-1">Rejoindre un cercle</Button>
+                  <Button variant="link" onClick={() => onNavigate?.('search-groups')} className="text-primary text-xs h-auto p-0 mt-1">Rejoindre un cercle</Button>
                 </div>
               ) : (
                 groups.map((g: any) => (
@@ -975,17 +1022,25 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             <div className="p-5 bg-gradient-to-br from-purple-500/10 to-primary/5 border border-purple-500/20 rounded-2xl space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <Badge className="bg-purple-500 text-white font-bold text-[10px] mb-2">Plan Actuel : Gratuit</Badge>
-                  <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">Eganyé Essentiel</h4>
+                  <Badge className="bg-purple-500 text-white font-bold text-[10px] mb-2">
+                    Plan Actuel : {user.subscriptionPlan === 'premium' ? 'Premium' : 'Gratuit'}
+                  </Badge>
+                  <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">
+                    {user.subscriptionPlan === 'premium' ? 'Eganyé Premium' : 'Eganyé Essentiel'}
+                  </h4>
                   <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
-                    Accès de base aux cercles de tontine. Limité à 2 cercles simultanés et sans l'assistant IA avancé.
+                    {user.subscriptionPlan === 'premium'
+                      ? `Abonnement actif${user.subscriptionExpiresAt ? ` jusqu'au ${format(new Date(user.subscriptionExpiresAt), 'dd MMMM yyyy', { locale: fr })}` : ''}.`
+                      : "Accès de base aux cercles de tontine."}
                   </p>
                 </div>
                 <Award className="w-10 h-10 text-purple-500 opacity-50" />
               </div>
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft">
-                Passer à Eganyé Premium (1500 FCFA/mois)
-              </Button>
+              {user.subscriptionPlan !== 'premium' && (
+                <Button disabled className="bg-purple-600/50 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft cursor-not-allowed">
+                  Eganyé Premium — Bientôt disponible
+                </Button>
+              )}
             </div>
           </Card>
         </motion.div>
@@ -1120,11 +1175,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
       {/* ========================================================================= */}
       {/* 6. SUB-SECTION SCREEN 7: AIDE & LÉGAL */}
       {/* ========================================================================= */}
-      {(activeSection === 'support' || activeSection === 'legal') && (
+      {activeSection === 'legal' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-            <h3 className="font-serif font-bold text-lg text-foreground">Aide, Support & Documents Légaux</h3>
-            <p className="text-xs text-muted-foreground">Consultez la réglementation des tontines collaboratives et contactez notre assistance.</p>
+            <h3 className="font-serif font-bold text-lg text-foreground">Documents Légaux</h3>
+            <p className="text-xs text-muted-foreground">Consultez la réglementation des tontines collaboratives et notre politique de confidentialité.</p>
             
             <div className="space-y-2 pt-2 text-xs">
               <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('cgu')}>

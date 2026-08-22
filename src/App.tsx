@@ -218,7 +218,7 @@ export default function App() {
       case 'search-groups':
         return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
       case 'wallet-savings':
-        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" onLogout={handleLogout} />;
+        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'support':
@@ -228,7 +228,7 @@ export default function App() {
       case 'ai-assistant':
         return <AIAssistant />;
       case 'profile':
-        return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} />;
+        return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':
         return (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'contributions':
