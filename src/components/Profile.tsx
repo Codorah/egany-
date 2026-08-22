@@ -79,8 +79,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
 
   // Form states
   const [editDisplayName, setEditDisplayName] = useState(user.displayName);
-  const [editPhone, setEditPhone] = useState('90 00 00 00');
+  const [editPhone, setEditPhone] = useState(user.phone || '');
   const [editLanguage, setEditLanguage] = useState(user.language || 'fr');
+  const [editFirstName, setEditFirstName] = useState(user.firstName || '');
+  const [editLastName, setEditLastName] = useState(user.lastName || '');
+  const [editDateOfBirth, setEditDateOfBirth] = useState(user.dateOfBirth || '');
   const [savingSettings, setSavingSettings] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
 
@@ -222,6 +225,10 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         display_name: editDisplayName,
         language: editLanguage,
         avatar_config: editAvatar,
+        first_name: editFirstName.trim() || null,
+        last_name: editLastName.trim() || null,
+        date_of_birth: editDateOfBirth || null,
+        phone: editPhone.trim() || null,
       }).eq('id', user.uid);
       if (error) throw error;
       toast.success("Informations personnelles enregistrées !");
@@ -569,11 +576,11 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Prénom</Label>
-                  <Input defaultValue="Codorah" className="rounded-xl h-11" />
+                  <Input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Nom</Label>
-                  <Input defaultValue="Kodjo" className="rounded-xl h-11" />
+                  <Input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Nom d'utilisateur / Pseudo</Label>
@@ -589,7 +596,7 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Date de naissance</Label>
-                  <Input type="date" defaultValue="1998-06-12" className="rounded-xl h-11" />
+                  <Input type="date" value={editDateOfBirth} onChange={(e) => setEditDateOfBirth(e.target.value)} className="rounded-xl h-11" />
                 </div>
               </div>
               <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">

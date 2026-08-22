@@ -25,6 +25,10 @@ export interface UserProfile {
   mandateName?: string;
   mandatePhone?: string;
   mandatePermissions?: string[];
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  phone?: string;
 }
 
 export interface KycSubmission {

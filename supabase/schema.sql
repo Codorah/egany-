@@ -1031,3 +1031,16 @@ DROP POLICY IF EXISTS "kyc_documents_storage_select_own_or_admin" ON storage.obj
 CREATE POLICY "kyc_documents_storage_insert_own" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'kyc-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
 CREATE POLICY "kyc_documents_storage_select_own_or_admin" ON storage.objects FOR SELECT USING (bucket_id = 'kyc-documents' AND ((storage.foldername(name))[1] = auth.uid()::text OR public.is_admin()));
 
+-- ============================================================================
+-- 7. IDENTITÉ DÉCLARATIVE DU PROFIL (Prénom, Nom, Date de naissance)
+-- ============================================================================
+-- Ces champs existaient dans l'UI (Profile.tsx, onglet "Informations
+-- personnelles") avec des valeurs d'exemple codées en dur, sans jamais avoir
+-- de colonne réelle derrière ni être sauvegardés.
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS first_name text,
+  ADD COLUMN IF NOT EXISTS last_name text,
+  ADD COLUMN IF NOT EXISTS date_of_birth date,
+  ADD COLUMN IF NOT EXISTS phone text;
+

@@ -32,6 +32,10 @@ export function mapProfileRow(row: Record<string, any>): UserProfile {
     mandateName: row.mandate_name ?? undefined,
     mandatePhone: row.mandate_phone ?? undefined,
     mandatePermissions: row.mandate_permissions ?? undefined,
+    firstName: row.first_name ?? undefined,
+    lastName: row.last_name ?? undefined,
+    dateOfBirth: row.date_of_birth ?? undefined,
+    phone: row.phone ?? undefined,
   };
 }
 
