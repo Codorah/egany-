@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { mapGroupRow } from './mappers';
 import { Group, UserProfile } from '@/types';
 import { notifyUser } from './notify';
+import { isKycVerified } from './kyc';
 
 /**
  * Fetches every group_members row for the given group rows and hydrates each
@@ -45,6 +46,14 @@ export interface JoinRequestResult {
  * Used by both the join-by-code/QR flow and public group search.
  */
 export async function requestToJoinGroup(group: Group, user: UserProfile): Promise<JoinRequestResult> {
+  if (!isKycVerified(user)) {
+    return {
+      success: false,
+      alreadyMember: false,
+      alreadyPending: false,
+      message: "Vérifiez votre identité (Profil > Vérification d'identité) avant de rejoindre un cercle.",
+    };
+  }
   if (group.members.includes(user.uid)) {
     return { success: false, alreadyMember: true, alreadyPending: false, message: "Vous êtes déjà membre de ce groupe." };
   }

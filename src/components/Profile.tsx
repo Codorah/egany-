@@ -51,7 +51,7 @@ import {
   Trash2,
   PhoneCall
 } from 'lucide-react';
-import { UserProfile, Group, Contribution, WalletTransaction } from '@/types';
+import { UserProfile, Group, Contribution, WalletTransaction, KycSubmission } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
@@ -59,6 +59,7 @@ import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin } from '@/lib/ledger';
+import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
 import { CustomAvatar, AvatarConfig, DEFAULT_AVATAR } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
 
@@ -128,6 +129,19 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
   // Delete account confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // KYC (identity verification) state
+  const [kycSubmission, setKycSubmission] = useState<KycSubmission | null>(null);
+  const [kycLoading, setKycLoading] = useState(true);
+  const [kycFullName, setKycFullName] = useState(user.displayName || '');
+  const [kycIdNumber, setKycIdNumber] = useState('');
+  const [kycFile, setKycFile] = useState<File | null>(null);
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+
+  // Mandataire numérique (digital proxy) state
+  const [mandateName, setMandateName] = useState(user.mandateName || '');
+  const [mandatePhone, setMandatePhone] = useState(user.mandatePhone || '');
+  const [isSavingMandate, setIsSavingMandate] = useState(false);
+
   useEffect(() => {
     const fetchTx = async () => {
       const { data } = await supabase
@@ -145,9 +159,61 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
         .order('date', { ascending: false });
       if (data) setContributions(data.map(mapContributionRow));
     };
+    const fetchKyc = async () => {
+      setKycLoading(true);
+      const submission = await fetchLatestKycSubmission(user.uid);
+      setKycSubmission(submission);
+      setKycLoading(false);
+    };
     fetchTx();
     fetchContribs();
+    fetchKyc();
   }, [user.uid]);
+
+  const handleSubmitKyc = async () => {
+    if (!kycFullName.trim()) {
+      toast.error("Veuillez saisir votre nom complet.");
+      return;
+    }
+    if (!kycFile) {
+      toast.error("Veuillez sélectionner une photo de votre pièce d'identité.");
+      return;
+    }
+    setIsSubmittingKyc(true);
+    try {
+      const result = await submitKycDocument({
+        userId: user.uid,
+        fullName: kycFullName.trim(),
+        idNumber: kycIdNumber.trim() || undefined,
+        file: kycFile,
+      });
+      if (!result.success) throw new Error(result.message);
+      toast.success(result.message);
+      setKycFile(null);
+      const submission = await fetchLatestKycSubmission(user.uid);
+      setKycSubmission(submission);
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'envoi du document.");
+    } finally {
+      setIsSubmittingKyc(false);
+    }
+  };
+
+  const handleSaveMandate = async () => {
+    setIsSavingMandate(true);
+    try {
+      const { error } = await supabase.from('profiles').update({
+        mandate_name: mandateName.trim() || null,
+        mandate_phone: mandatePhone.trim() || null,
+      }).eq('id', user.uid);
+      if (error) throw error;
+      toast.success("Mandataire enregistré !");
+    } catch (err: any) {
+      toast.error("Erreur lors de l'enregistrement du mandataire.");
+    } finally {
+      setIsSavingMandate(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSavingSettings(true);
@@ -537,41 +603,69 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
             <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-serif font-bold text-lg text-foreground">Vérification d'identité</h3>
-                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold text-xs">
-                  Niveau 2 sur 3
+                <Badge className={`font-bold text-xs border ${
+                  (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL
+                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                }`}>
+                  {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? 'Vérifié ✅' : `Niveau ${user.kycLevel ?? 1} sur 3`}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">Augmentez vos limites financières en vérifiant votre identité.</p>
+              <p className="text-xs text-muted-foreground">
+                Une pièce d'identité valide est nécessaire pour créer ou rejoindre un cercle de tontine.
+              </p>
 
-              <div className="space-y-3 pt-2">
+              {kycLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">🪪 Pièce d'Identité</p>
-                    <p className="text-[11px] text-muted-foreground">Carte nationale d'identité</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Vérifiée{user.kycVerifiedAt ? ` le ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : ''}
+                    </p>
                   </div>
                   <Badge className="bg-emerald-500 text-white text-[10px]">Vérifiée ✅</Badge>
                 </div>
-
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">👤 Selfie (Contrôle de vivacité)</p>
-                    <p className="text-[11px] text-muted-foreground">Vérifié le 12/07/2026</p>
-                  </div>
-                  <Badge className="bg-emerald-500 text-white text-[10px]">Vérifiée ✅</Badge>
-                </div>
-
+              ) : kycSubmission?.status === 'pending' ? (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-300">🏠 Adresse & Domicile</p>
-                    <p className="text-[11px] text-muted-foreground">Non fournie</p>
+                    <p className="text-xs font-bold text-amber-700 dark:text-amber-300">🪪 Pièce d'Identité</p>
+                    <p className="text-[11px] text-muted-foreground">Envoyée le {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
                   </div>
-                  <Badge className="bg-amber-500 text-white text-[10px]">En attente</Badge>
+                  <Badge className="bg-amber-500 text-white text-[10px]">En attente de validation</Badge>
                 </div>
-              </div>
-
-              <Button onClick={() => toast.info("Demande de mise à niveau KYC transmise.")} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-4">
-                Améliorer mon niveau
-              </Button>
+              ) : (
+                <div className="space-y-3 pt-2">
+                  {kycSubmission?.status === 'rejected' && (
+                    <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[11px] text-danger font-medium">
+                      ❌ Votre précédente soumission a été refusée{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. Veuillez soumettre à nouveau.
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold">Nom complet (tel que sur la pièce)</Label>
+                    <Input value={kycFullName} onChange={(e) => setKycFullName(e.target.value)} className="rounded-xl h-11" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold">Numéro de la pièce d'identité (optionnel)</Label>
+                    <Input value={kycIdNumber} onChange={(e) => setKycIdNumber(e.target.value)} className="rounded-xl h-11" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold">Photo de la carte nationale d'identité</Label>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setKycFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:text-xs file:font-bold"
+                    />
+                  </div>
+                  <Button onClick={handleSubmitKyc} disabled={isSubmittingKyc} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
+                    {isSubmittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Soumettre pour vérification'}
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
 
@@ -584,19 +678,19 @@ export function Profile({ user, groups, defaultTab, onLogout }: ProfileProps) {
               <div className="space-y-3 pt-2">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Nom complet du mandataire</Label>
-                  <Input defaultValue="Ama Akou" className="rounded-xl h-11" />
+                  <Input value={mandateName} onChange={(e) => setMandateName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">Numéro de téléphone</Label>
-                  <Input defaultValue="+228 90 12 34 56" className="rounded-xl h-11" />
+                  <Input value={mandatePhone} onChange={(e) => setMandatePhone(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
                   🛡️ Le mandataire reçoit uniquement les notifications et le suivi de vos cercles. Il ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>.
                 </div>
               </div>
 
-              <Button onClick={() => toast.success("Mandataire enregistré !")} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
-                Enregistrer le mandataire
+              <Button onClick={handleSaveMandate} disabled={isSavingMandate} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
+                {isSavingMandate ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer le mandataire'}
               </Button>
             </Card>
           )}

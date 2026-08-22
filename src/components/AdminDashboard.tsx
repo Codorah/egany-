@@ -4,6 +4,8 @@ import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationRepo
 import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
 import { LedgerEntry, AuditLog, performFullSystemReconciliation } from '@/lib/ledger';
+import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
+import { KycSubmission } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -38,7 +40,10 @@ import {
   ArrowDownLeft,
   Lock,
   Clock,
-  History
+  History,
+  BadgeCheck,
+  Eye,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomAvatar } from './CustomAvatar';
@@ -77,6 +82,10 @@ export function AdminDashboard() {
   const [reconReports, setReconReports] = useState<any[]>([]);
   const [isReconciling, setIsReconciling] = useState(false);
 
+  // KYC review queue
+  const [kycSubmissions, setKycSubmissions] = useState<(KycSubmission & { userName: string; userEmail: string })[]>([]);
+  const [reviewingKycId, setReviewingKycId] = useState<string | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -100,6 +109,8 @@ export function AdminDashboard() {
       const { data: reconRows, error: reconError } = await supabase.from('reconciliation_reports').select('*').order('timestamp', { ascending: false });
       if (reconError) console.warn("Reconciliation reports fetch failed:", reconError);
       else setReconReports((reconRows ?? []).map(mapReconciliationReportRow));
+
+      setKycSubmissions(await fetchPendingKycSubmissions());
 
     } catch (error) {
       handleAdminError(error, 'admin_collections');
@@ -131,6 +142,34 @@ export function AdminDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleViewKycDocument = async (documentPath: string) => {
+    const url = await getKycDocumentUrl(documentPath);
+    if (!url) {
+      toast.error("Impossible d'ouvrir le document.");
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleReviewKyc = async (submissionId: string, approve: boolean) => {
+    let rejectionReason: string | undefined;
+    if (!approve) {
+      rejectionReason = window.prompt("Motif du refus (visible par l'utilisateur) :") || undefined;
+      if (rejectionReason === undefined) return;
+    }
+    setReviewingKycId(submissionId);
+    try {
+      const result = await reviewKycSubmission({ submissionId, approve, rejectionReason });
+      if (!result.success) throw new Error(result.message);
+      toast.success(approve ? "Identité validée." : "Vérification refusée.");
+      setKycSubmissions(prev => prev.filter(s => s.id !== submissionId));
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du traitement de la vérification.");
+    } finally {
+      setReviewingKycId(null);
+    }
+  };
 
   const handleToggleRole = async (user: UserProfile) => {
     const newRole = user.role === 'admin' ? 'user' : 'admin';
@@ -479,7 +518,7 @@ export function AdminDashboard() {
 
       {/* --- DETAILED MANAGEMENT SECTIONS --- */}
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-xl bg-muted p-1 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-5 max-w-2xl bg-muted p-1 rounded-2xl">
           <TabsTrigger value="users" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <User className="w-4 h-4" />
             {t('members')}
@@ -487,6 +526,13 @@ export function AdminDashboard() {
           <TabsTrigger value="groups" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <GroupsIcon className="w-4 h-4" />
             {t('admin_tab_groups')}
+          </TabsTrigger>
+          <TabsTrigger value="kyc" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
+            <BadgeCheck className="w-4 h-4" />
+            KYC
+            {kycSubmissions.length > 0 && (
+              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{kycSubmissions.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="ledger" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <BookOpen className="w-4 h-4" />
@@ -804,7 +850,73 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* TAB 3: PLATFORM SETTINGS */}
+        {/* TAB 3: KYC IDENTITY VERIFICATION QUEUE */}
+        <TabsContent value="kyc" className="mt-6">
+          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+            <CardHeader className="pb-4 bg-muted/30 border-b border-border">
+              <CardTitle className="text-lg font-serif font-bold text-foreground">
+                File d'attente de vérification d'identité
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Approuvez ou refusez les pièces d'identité soumises par les membres avant qu'ils ne puissent créer ou rejoindre un cercle.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {kycSubmissions.length === 0 ? (
+                <p className="text-center py-12 text-muted-foreground text-xs font-medium">
+                  Aucune vérification en attente.
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {kycSubmissions.map((sub) => (
+                    <div key={sub.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold text-foreground">{sub.fullName}</p>
+                        <p className="text-[11px] text-muted-foreground">{sub.userName} • {sub.userEmail}</p>
+                        {sub.idNumber && <p className="text-[11px] text-muted-foreground">N° pièce : {sub.idNumber}</p>}
+                        <p className="text-[10px] text-muted-foreground">
+                          Soumis le {new Date(sub.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewKycDocument(sub.documentPath)}
+                          className="h-9 rounded-xl text-xs font-bold border-border"
+                        >
+                          <Eye className="w-3.5 h-3.5 mr-1.5" />
+                          Voir le document
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleReviewKyc(sub.id, true)}
+                          disabled={reviewingKycId === sub.id}
+                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1.5" />
+                          Valider
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReviewKyc(sub.id, false)}
+                          disabled={reviewingKycId === sub.id}
+                          className="h-9 w-9 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
+                          title="Refuser"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* TAB 4: PLATFORM SETTINGS */}
         <TabsContent value="settings" className="mt-6">
           <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
@@ -873,7 +985,7 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* TAB 4: DOUBLE-ENTRY LEDGER & AUDIT LOGS */}
+        {/* TAB 5: DOUBLE-ENTRY LEDGER & AUDIT LOGS */}
         <TabsContent value="ledger" className="mt-6 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             

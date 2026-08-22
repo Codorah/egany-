@@ -1,4 +1,4 @@
-import { Contribution, Group, GroupDocument, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
+import { Contribution, Group, GroupDocument, KycSubmission, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
 import { LedgerEntry, AuditLog } from '@/lib/ledger';
 
 /**
@@ -27,6 +27,26 @@ export function mapProfileRow(row: Record<string, any>): UserProfile {
     fcmToken: row.fcm_token ?? undefined,
     pushEnabled: row.push_enabled,
     emailNotificationsEnabled: row.email_notifications_enabled,
+    kycLevel: row.kyc_level ?? 1,
+    kycVerifiedAt: row.kyc_verified_at ?? undefined,
+    mandateName: row.mandate_name ?? undefined,
+    mandatePhone: row.mandate_phone ?? undefined,
+    mandatePermissions: row.mandate_permissions ?? undefined,
+  };
+}
+
+export function mapKycSubmissionRow(row: Record<string, any>): KycSubmission {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    fullName: row.full_name,
+    idNumber: row.id_number ?? undefined,
+    documentPath: row.document_path,
+    status: row.status,
+    rejectionReason: row.rejection_reason ?? undefined,
+    reviewedBy: row.reviewed_by ?? undefined,
+    reviewedAt: row.reviewed_at ?? undefined,
+    createdAt: row.created_at,
   };
 }
 

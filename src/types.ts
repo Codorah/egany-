@@ -20,6 +20,24 @@ export interface UserProfile {
   fcmToken?: string;
   pushEnabled?: boolean;
   emailNotificationsEnabled?: boolean;
+  kycLevel?: number;
+  kycVerifiedAt?: string;
+  mandateName?: string;
+  mandatePhone?: string;
+  mandatePermissions?: string[];
+}
+
+export interface KycSubmission {
+  id: string;
+  userId: string;
+  fullName: string;
+  idNumber?: string;
+  documentPath: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
 }
 
 export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';

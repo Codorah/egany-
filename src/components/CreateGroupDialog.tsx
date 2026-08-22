@@ -28,6 +28,7 @@ import { SignaturePad } from './SignaturePad';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
+import { KYC_VERIFIED_LEVEL } from '@/lib/kyc';
 
 const formSchema = z.object({
   name: z.string().min(2, "Le nom du groupe doit avoir au moins 2 caractères."),
@@ -90,6 +91,17 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
     if (!user) return;
 
     try {
+      const { data: profileRow, error: profileError } = await supabase
+        .from('profiles')
+        .select('kyc_level')
+        .eq('id', user.id)
+        .single();
+      if (profileError) throw profileError;
+      if ((profileRow?.kyc_level ?? 1) < KYC_VERIFIED_LEVEL) {
+        toast.error("Vérifiez votre identité (Profil > Vérification d'identité) avant de créer un cercle.");
+        return;
+      }
+
       const joinCode = Math.random().toString(36).substring(2, 10).toUpperCase();
       const startDate = new Date(values.startDate).toISOString();
       const groupData = {

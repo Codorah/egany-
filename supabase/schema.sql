@@ -926,3 +926,108 @@ END $$;
 
 SELECT cron.schedule('process-due-contributions', '*/15 * * * *', $$SELECT public.process_due_contributions();$$);
 
+-- ============================================================================
+-- 6. VÉRIFICATION D'IDENTITÉ (KYC) — upload + validation manuelle par un admin
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.kyc_submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  full_name text NOT NULL,
+  id_number text,
+  document_path text NOT NULL,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  rejection_reason text,
+  reviewed_by uuid REFERENCES public.profiles(id),
+  reviewed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_kyc_submissions_user ON public.kyc_submissions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_kyc_submissions_status ON public.kyc_submissions(status);
+
+ALTER TABLE public.kyc_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "kyc_submissions_select_own_or_admin" ON public.kyc_submissions;
+DROP POLICY IF EXISTS "kyc_submissions_insert_self" ON public.kyc_submissions;
+DROP POLICY IF EXISTS "kyc_submissions_update_admin_only" ON public.kyc_submissions;
+
+CREATE POLICY "kyc_submissions_select_own_or_admin" ON public.kyc_submissions FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
+CREATE POLICY "kyc_submissions_insert_self" ON public.kyc_submissions FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "kyc_submissions_update_admin_only" ON public.kyc_submissions FOR UPDATE USING (public.is_admin());
+
+-- Helper mirroring is_admin()/is_group_member() style, used to gate group
+-- creation/joining below.
+CREATE OR REPLACE FUNCTION public.is_kyc_verified()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND kyc_level >= 2
+  );
+$$;
+
+-- Admin-only review action: approves/rejects a submission and, on approval,
+-- promotes the profile's kyc_level so is_kyc_verified() unlocks.
+CREATE OR REPLACE FUNCTION public.review_kyc_submission(
+  p_submission_id uuid,
+  p_approve boolean,
+  p_rejection_reason text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_sub record;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Non autorisé.');
+  END IF;
+
+  SELECT * INTO v_sub FROM public.kyc_submissions WHERE id = p_submission_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Soumission introuvable.');
+  END IF;
+
+  IF p_approve THEN
+    UPDATE public.kyc_submissions SET status = 'approved', reviewed_by = auth.uid(), reviewed_at = now(), rejection_reason = NULL
+    WHERE id = p_submission_id;
+
+    UPDATE public.profiles SET kyc_level = GREATEST(kyc_level, 2), kyc_verified_at = now()
+    WHERE id = v_sub.user_id;
+
+    INSERT INTO public.notifications (user_id, title, message, type)
+    VALUES (v_sub.user_id, '✅ Identité vérifiée', 'Votre pièce d''identité a été validée. Vous pouvez maintenant créer ou rejoindre des cercles de tontine.', 'system');
+  ELSE
+    UPDATE public.kyc_submissions SET status = 'rejected', reviewed_by = auth.uid(), reviewed_at = now(), rejection_reason = p_rejection_reason
+    WHERE id = p_submission_id;
+
+    INSERT INTO public.notifications (user_id, title, message, type)
+    VALUES (v_sub.user_id, '❌ Vérification refusée', COALESCE('Votre vérification d''identité a été refusée : ' || p_rejection_reason, 'Votre vérification d''identité a été refusée.'), 'system');
+  END IF;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Soumission traitée.');
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.review_kyc_submission(uuid, boolean, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.review_kyc_submission(uuid, boolean, text) TO authenticated;
+
+-- Gate group creation/joining behind KYC verification.
+DROP POLICY IF EXISTS "groups_insert_self_as_creator" ON public.groups;
+CREATE POLICY "groups_insert_self_as_creator" ON public.groups FOR INSERT WITH CHECK (creator_id = auth.uid() AND public.is_kyc_verified());
+
+DROP POLICY IF EXISTS "group_members_insert_self" ON public.group_members;
+CREATE POLICY "group_members_insert_self" ON public.group_members FOR INSERT WITH CHECK (user_id = auth.uid() AND public.is_kyc_verified());
+
+-- Private storage bucket for uploaded ID documents.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('kyc-documents', 'kyc-documents', false)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "kyc_documents_storage_insert_own" ON storage.objects;
+DROP POLICY IF EXISTS "kyc_documents_storage_select_own_or_admin" ON storage.objects;
+
+CREATE POLICY "kyc_documents_storage_insert_own" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'kyc-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "kyc_documents_storage_select_own_or_admin" ON storage.objects FOR SELECT USING (bucket_id = 'kyc-documents' AND ((storage.foldername(name))[1] = auth.uid()::text OR public.is_admin()));
+
