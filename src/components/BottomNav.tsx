@@ -51,8 +51,8 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
   ];
 
   const containerClasses = isSimulated
-    ? "sticky bottom-0 left-0 right-0 h-[60px] glass-nav flex justify-around items-center px-2 z-40"
-    : "fixed bottom-0 left-0 right-0 h-[60px] glass-nav flex justify-around items-center px-2 z-40 md:hidden";
+    ? "sticky bottom-0 left-0 right-0 h-[calc(60px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] glass-nav flex justify-around items-center px-2 z-40"
+    : "fixed bottom-0 left-0 right-0 h-[calc(60px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] glass-nav flex justify-around items-center px-2 z-40 md:hidden";
 
   return (
     <div className={containerClasses}>

@@ -62,6 +62,7 @@ import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/le
 import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
+import { LanguageSwitcher } from './ui/LanguageSwitcher';
 import { BiometricPrompt } from './BiometricPrompt';
 import { useBiometrics } from '@/hooks/useBiometrics';
 
@@ -727,20 +728,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label className="text-xs font-bold">Langue</Label>
-                  <div className="grid grid-cols-4 gap-1 bg-muted p-1 rounded-xl">
-                    {(['fr', 'en', 'wo', 'bm'] as const).map((lang) => (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => setLanguage(lang)}
-                        className={`text-xs font-bold py-2 rounded-lg transition-all ${
-                          language === lang ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {lang.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
+                  <LanguageSwitcher value={language} onChange={setLanguage} variant="grid" />
                 </div>
               </div>
               <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">

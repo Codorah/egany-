@@ -25,7 +25,7 @@ export function Layout({ children, user, view, onNavigate, onLogout }: LayoutPro
       <div className="flex-1 flex flex-col w-full min-w-0">
         <Navbar user={user} onNavigate={onNavigate} onLogout={onLogout} />
 
-        <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 md:px-8 md:py-8 pb-24 md:pb-8 overflow-x-hidden">
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8 overflow-x-hidden">
           {children}
         </main>
       </div>

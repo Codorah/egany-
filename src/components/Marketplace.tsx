@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle, RefreshCw, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest } from '@/lib/marketplace';
@@ -99,7 +99,7 @@ export function Marketplace({ user }: MarketplaceProps) {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
+      <div className="glass-card p-6 rounded-3xl shadow-soft">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-brand/10 rounded-xl">
             <Store className="w-6 h-6 text-brand" />
@@ -112,67 +112,58 @@ export function Marketplace({ user }: MarketplaceProps) {
       </div>
 
       {services.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6 bg-card border border-border rounded-3xl">
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6 glass-card rounded-3xl shadow-soft">
           <PackageSearch className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm font-bold text-foreground">Aucun service disponible pour le moment</p>
           <p className="text-xs text-muted-foreground max-w-xs">Revenez bientôt : de nouveaux partenaires seront ajoutés régulièrement.</p>
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {services.map((service) => {
-          const Icon = ICONS[service.iconName] || Store;
-          const existingRequest = requestForService(service.id);
-          return (
-            <div
-              key={service.id}
-              className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow flex flex-col justify-between cursor-pointer"
-              onClick={() => setSelectedService(service)}
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <div className={`p-3 rounded-2xl ${service.colorClass} shadow-sm shrink-0`}>
-                  <Icon className="w-8 h-8 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {services.map((service) => {
+            const Icon = ICONS[service.iconName] || Store;
+            const existingRequest = requestForService(service.id);
+            return (
+              <div
+                key={service.id}
+                className="glass-card rounded-2xl p-5 shadow-soft hover:shadow-elevated transition-shadow flex flex-col justify-between cursor-pointer"
+                onClick={() => setSelectedService(service)}
+              >
+                <div className="flex items-start gap-4 mb-4">
+                  <div className={`p-3 rounded-2xl ${service.colorClass} shadow-xs shrink-0`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-lg leading-tight">{service.title}</h3>
+                    <p className="text-xs text-brand font-semibold mt-1">{service.provider}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-lg leading-tight">{service.title}</h3>
-                  <p className="text-xs text-brand font-semibold mt-1">{service.provider}</p>
-                </div>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-2">
+                  {service.description}
+                </p>
+                {existingRequest ? (
+                  <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${statusLabels[existingRequest.status].className}`}>
+                    Demande : {statusLabels[existingRequest.status].label}
+                  </div>
+                ) : (
+                  <Button variant="outline" className="w-full font-bold border-brand/30 text-brand hover:bg-brand/10 h-11">
+                    Voir les détails <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-2">
-                {service.description}
-              </p>
-              {existingRequest ? (
-                <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${statusLabels[existingRequest.status].className}`}>
-                  Demande : {statusLabels[existingRequest.status].label}
-                </div>
-              ) : (
-                <Button variant="outline" className="w-full font-bold border-brand/30 text-brand hover:bg-brand/10">
-                  Voir les détails <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
-      <AnimatePresence>
-        {selectedService && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card w-full max-w-md rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-            >
-              <div className={`${selectedService.colorClass} p-6 text-white relative`}>
-                <button
-                  onClick={() => setSelectedService(null)}
-                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 transition-colors"
-                >
-                  ✕
-                </button>
-                {React.createElement(ICONS[selectedService.iconName] || Store, { className: 'w-8 h-8 text-white' })}
-                <h2 className="text-2xl font-black mt-4">{selectedService.title}</h2>
+      <Dialog open={!!selectedService} onOpenChange={(open) => !open && setSelectedService(null)}>
+        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 [&_[data-slot=dialog-close]]:text-white [&_[data-slot=dialog-close]]:hover:bg-white/20">
+          {selectedService && (
+            <>
+              <div className={`${selectedService.colorClass} p-6 pt-2 text-white`}>
+                <DialogHeader>
+                  {React.createElement(ICONS[selectedService.iconName] || Store, { className: 'w-8 h-8 text-white' })}
+                  <DialogTitle className="text-2xl font-black mt-4 text-white">{selectedService.title}</DialogTitle>
+                </DialogHeader>
                 <p className="opacity-90 text-sm mt-1">{selectedService.provider}</p>
               </div>
 
@@ -225,10 +216,10 @@ export function Marketplace({ user }: MarketplaceProps) {
                   </>
                 )}
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

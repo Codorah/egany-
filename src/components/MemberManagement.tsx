@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, Check, X, UserMinus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomAvatar } from './CustomAvatar';
+import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 
 interface MemberManagementProps {
   group: Group;
@@ -25,6 +26,7 @@ const roleLabels: Record<GroupMemberRole, string> = {
 export function MemberManagement({ group, currentUserId }: MemberManagementProps) {
   const [profiles, setProfiles] = React.useState<Record<string, UserProfile>>({});
   const [busyUid, setBusyUid] = React.useState<string | null>(null);
+  const [excludeTarget, setExcludeTarget] = React.useState<string | null>(null);
 
   const pendingMembers = group.pendingMembers || [];
   const allUids = React.useMemo(
@@ -87,13 +89,17 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     }
   };
 
-  const handleExclude = async (uid: string) => {
+  const handleExcludeRequest = (uid: string) => {
     if (uid === group.creatorId) {
       toast.error("Le créateur du cercle ne peut pas être exclu.");
       return;
     }
-    if (!confirm(`Exclure ${profiles[uid]?.displayName || 'ce membre'} du cercle ? Cette action est irréversible.`)) return;
+    setExcludeTarget(uid);
+  };
 
+  const handleExcludeConfirm = async () => {
+    const uid = excludeTarget;
+    if (!uid) return;
     setBusyUid(uid);
     try {
       const { error } = await supabase.from('group_members').delete().eq('group_id', group.id).eq('user_id', uid);
@@ -105,6 +111,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       toast.error("Erreur lors de l'exclusion.");
     } finally {
       setBusyUid(null);
+      setExcludeTarget(null);
     }
   };
 
@@ -143,11 +150,11 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                   <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || 'Membre'} size={28} />
                   <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
                 </div>
-                <div className="flex gap-1.5">
-                  <Button size="icon" variant="outline" className="h-8 w-8 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline" className="h-11 w-11 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
                     {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="outline" className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title="Refuser">
+                  <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title="Refuser">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -180,7 +187,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                     </SelectContent>
                   </Select>
                   {!isCreatorRow && (
-                    <Button size="icon" variant="outline" className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExclude(uid)} title="Exclure">
+                    <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title="Exclure">
                       <UserMinus className="h-4 w-4" />
                     </Button>
                   )}
@@ -190,6 +197,17 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
           })}
         </div>
       </CardContent>
+
+      <ConfirmationBottomSheet
+        isOpen={!!excludeTarget}
+        onClose={() => setExcludeTarget(null)}
+        onConfirm={handleExcludeConfirm}
+        title={`Exclure ${excludeTarget ? (profiles[excludeTarget]?.displayName || 'ce membre') : ''} ?`}
+        description="Cette personne perdra immédiatement l'accès au cercle et à son historique de cotisations. Cette action est irréversible."
+        type="destructive"
+        confirmLabel="Oui, exclure"
+        isLoading={!!excludeTarget && busyUid === excludeTarget}
+      />
     </Card>
   );
 }

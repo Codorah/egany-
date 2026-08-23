@@ -2,11 +2,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Group, UserProfile } from '@/types';
-import { ArrowLeft, CheckCircle2, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
@@ -153,15 +152,14 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
+        <Button variant="ghost" onClick={onBack} className="flex items-center gap-2 h-11">
           <ArrowLeft className="w-4 h-4" />
           Retour
         </Button>
-        <Button 
-          variant={showChat ? "default" : "outline"} 
-          size="sm" 
+        <Button
+          variant={showChat ? "default" : "outline"}
           onClick={() => setShowChat(!showChat)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 h-11"
         >
           <MessageSquare className="w-4 h-4" />
           {showChat ? "Masquer le Chat" : "Afficher le Chat"}
@@ -317,7 +315,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     placeholder="0"
                     value={auctionDiscount}
                     onChange={(e) => setAuctionDiscount(e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl h-11"
                   />
                   <p className="text-[10px] text-muted-foreground">
                     Ce montant sera déduit du pot puis redistribué équitablement entre les autres membres actifs.
@@ -388,7 +386,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       </Card>
 
       {group.rules && (
-        <Card>
+        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Règlement du cercle</CardTitle>
           </CardHeader>
@@ -399,7 +397,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
       )}
 
       {/* Share & QR Code Card */}
-      <Card className="border-brand/20 bg-brand/10 overflow-hidden">
+      <Card className="rounded-2xl border-brand/20 bg-brand/10 overflow-hidden shadow-soft">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             
@@ -518,62 +516,8 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ordre de Payout & Statut</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Rang</TableHead>
-                <TableHead>Membre</TableHead>
-                <TableHead>Date prévue</TableHead>
-                <TableHead className="text-right">Statut</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {group.payoutOrder.map((memberId, index) => (
-                <TableRow key={memberId} className={index === group.currentPayoutIndex ? 'bg-primary/5' : ''}>
-                  <TableCell className="font-medium">#{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
-                        {memberId.charAt(0)}
-                      </div>
-                      <span>{memberName(memberId)}</span>
-                      {index === group.currentPayoutIndex && (
-                        <Badge variant="outline" className="ml-2 text-[10px] h-4">Actuel</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(group.startDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {index < group.currentPayoutIndex ? (
-                      <div className="flex items-center justify-end gap-1 text-secondary text-sm">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Payé
-                      </div>
-                    ) : index === group.currentPayoutIndex ? (
-                      <div className="flex items-center justify-end gap-1 text-blue-600 text-sm">
-                        <Clock className="w-4 h-4" />
-                        En attente
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">À venir</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
       {group.members.length > 1 && (
-        <Card>
+        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Trophy className="w-4 h-4 text-brand" />

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarWorkshop } from './AvatarWorkshop';
+import { LanguageSwitcher } from './ui/LanguageSwitcher';
 import { BiometricPrompt } from './BiometricPrompt';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -314,36 +315,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         ) : <div />}
 
         {step === 0 && (
-          <div className="flex gap-1 bg-muted p-1 rounded-full border border-border">
-            <button
-              type="button"
-              className={`h-8 text-xs rounded-full px-3 font-bold cursor-pointer transition-all ${language === 'fr' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-              onClick={() => setLanguage('fr')}
-            >
-              FR
-            </button>
-            <button
-              type="button"
-              className={`h-8 text-xs rounded-full px-3 font-bold cursor-pointer transition-all ${language === 'en' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-              onClick={() => setLanguage('en')}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              className={`h-8 text-xs rounded-full px-3 font-bold cursor-pointer transition-all ${language === 'wo' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-              onClick={() => setLanguage('wo')}
-            >
-              WO
-            </button>
-            <button
-              type="button"
-              className={`h-8 text-xs rounded-full px-3 font-bold cursor-pointer transition-all ${language === 'bm' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-              onClick={() => setLanguage('bm')}
-            >
-              BM
-            </button>
-          </div>
+          <LanguageSwitcher value={language} onChange={setLanguage} variant="pill" />
         )}
       </div>
 
@@ -588,36 +560,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
                   <div className="space-y-1">
                     <Label className="font-bold text-foreground text-[10px] uppercase">Langue</Label>
-                    <div className="grid grid-cols-4 gap-1 bg-muted p-1 rounded-lg">
-                      <button
-                        type="button"
-                        onClick={() => setLanguage('fr')}
-                        className={`text-[10px] font-bold py-2 rounded-md transition-all ${language === 'fr' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                      >
-                        FR
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLanguage('en')}
-                        className={`text-[10px] font-bold py-2 rounded-md transition-all ${language === 'en' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                      >
-                        EN
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLanguage('wo')}
-                        className={`text-[10px] font-bold py-2 rounded-md transition-all ${language === 'wo' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                      >
-                        WO
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLanguage('bm')}
-                        className={`text-[10px] font-bold py-2 rounded-md transition-all ${language === 'bm' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                      >
-                        BM
-                      </button>
-                    </div>
+                    <LanguageSwitcher value={language} onChange={setLanguage} variant="grid" />
                   </div>
                 </div>
 

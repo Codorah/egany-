@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldAlert, ArrowDown, CreditCard, Send, Wallet, X } from 'lucide-react';
+import { ShieldAlert, ArrowDown, CreditCard, Send, Wallet, X, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
 
 interface ConfirmationBottomSheetProps {
@@ -11,8 +11,9 @@ interface ConfirmationBottomSheetProps {
   description: string;
   amount?: number;
   currency?: string;
-  type?: 'debit' | 'transfer' | 'recharge' | 'generic';
+  type?: 'debit' | 'transfer' | 'recharge' | 'generic' | 'destructive';
   isLoading?: boolean;
+  confirmLabel?: string;
 }
 
 export function ConfirmationBottomSheet({
@@ -25,6 +26,7 @@ export function ConfirmationBottomSheet({
   currency = 'FCFA',
   type = 'generic',
   isLoading = false,
+  confirmLabel,
 }: ConfirmationBottomSheetProps) {
   // Prevent background scroll when open
   React.useEffect(() => {
@@ -81,13 +83,14 @@ export function ConfirmationBottomSheet({
               <div className="px-6 pt-2 pb-4 sm:pt-6 flex justify-between items-start">
                 <div className="flex items-center gap-2.5">
                   <div className={`p-2 rounded-xl ${
-                    type === 'debit'
+                    type === 'debit' || type === 'destructive'
                       ? 'bg-danger-soft text-danger'
                       : type === 'recharge'
                       ? 'bg-brand/10 text-brand'
                       : 'bg-success-soft text-secondary'
                   }`}>
                     {type === 'debit' && <ArrowDown className="w-5 h-5" />}
+                    {type === 'destructive' && <AlertTriangle className="w-5 h-5" />}
                     {type === 'recharge' && <Wallet className="w-5 h-5" />}
                     {type === 'transfer' && <Send className="w-5 h-5" />}
                     {type === 'generic' && <ShieldAlert className="w-5 h-5" />}
@@ -97,7 +100,7 @@ export function ConfirmationBottomSheet({
                       {title}
                     </h3>
                     <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {type === 'debit' ? 'Débit imminent' : type === 'recharge' ? 'Rechargement' : type === 'transfer' ? 'Virement/Cotisation' : 'Opération de paiement'}
+                      {type === 'debit' ? 'Débit imminent' : type === 'destructive' ? 'Action irréversible' : type === 'recharge' ? 'Rechargement' : type === 'transfer' ? 'Virement/Cotisation' : 'Opération de paiement'}
                     </p>
                   </div>
                 </div>
@@ -155,11 +158,13 @@ export function ConfirmationBottomSheet({
                   </div>
                 )}
 
-                {/* Secure / Protection Badge */}
-                <div className="flex items-center gap-2 text-[11px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
-                  <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
-                  <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
-                </div>
+                {/* Secure / Protection Badge — uniquement pertinent pour une opération financière */}
+                {amount !== undefined && (
+                  <div className="flex items-center gap-2 text-[11px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
+                    <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
+                    <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
+                  </div>
+                )}
               </div>
 
               {/* Actions Footer */}
@@ -176,7 +181,7 @@ export function ConfirmationBottomSheet({
                   onClick={onConfirm}
                   disabled={isLoading}
                   className={`w-full sm:order-2 rounded-2xl h-11 font-bold text-white ${
-                    type === 'debit'
+                    type === 'debit' || type === 'destructive'
                       ? 'bg-danger hover:bg-danger/90'
                       : type === 'recharge'
                       ? 'bg-brand hover:bg-brand/90'
@@ -189,7 +194,7 @@ export function ConfirmationBottomSheet({
                       Traitement...
                     </span>
                   ) : (
-                    'Oui, je confirme'
+                    confirmLabel || 'Oui, je confirme'
                   )}
                 </Button>
               </div>
