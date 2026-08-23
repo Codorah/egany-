@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Layout } from '@/components/Layout';
 import { Dashboard } from '@/components/Dashboard';
-import { GroupDetails } from '@/components/GroupDetails';
-import { Profile } from '@/components/Profile';
-import { JoinGroup } from '@/components/JoinGroup';
-import { AdminDashboard } from '@/components/AdminDashboard';
-import { ContributionsManager } from '@/components/ContributionsManager';
-import { SearchGroups } from '@/components/SearchGroups';
-import { CalendarView } from '@/components/CalendarView';
-import { Support } from '@/components/Support';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
-import { Marketplace } from '@/components/Marketplace';
-import { AIAssistant } from '@/components/AIAssistant';
 import { Toaster } from '@/components/ui/sonner';
+
+// Lazy-loaded: kept out of the main bundle since Dashboard/Onboarding are
+// the only screens needed for first paint (logged-in home, logged-out auth).
+const GroupDetails = lazy(() => import('@/components/GroupDetails').then((m) => ({ default: m.GroupDetails })));
+const Profile = lazy(() => import('@/components/Profile').then((m) => ({ default: m.Profile })));
+const JoinGroup = lazy(() => import('@/components/JoinGroup').then((m) => ({ default: m.JoinGroup })));
+const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const ContributionsManager = lazy(() => import('@/components/ContributionsManager').then((m) => ({ default: m.ContributionsManager })));
+const SearchGroups = lazy(() => import('@/components/SearchGroups').then((m) => ({ default: m.SearchGroups })));
+const CalendarView = lazy(() => import('@/components/CalendarView').then((m) => ({ default: m.CalendarView })));
+const Support = lazy(() => import('@/components/Support').then((m) => ({ default: m.Support })));
+const Marketplace = lazy(() => import('@/components/Marketplace').then((m) => ({ default: m.Marketplace })));
+const AIAssistant = lazy(() => import('@/components/AIAssistant').then((m) => ({ default: m.AIAssistant })));
 import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
@@ -337,7 +340,13 @@ export default function App() {
           Vous êtes hors-ligne — les données affichées peuvent ne pas être à jour, et les actions financières (recharge, retrait, cotisation, création/adhésion de cercle) sont désactivées.
         </div>
       )}
-      {renderView()}
+      <Suspense fallback={
+        <div className="flex justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      }>
+        {renderView()}
+      </Suspense>
       <Toaster />
     </Layout>
   );

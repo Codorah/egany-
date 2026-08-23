@@ -13,9 +13,6 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContributionsManagerProps {
@@ -208,7 +205,8 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const totalDistributed = payouts.reduce((sum, p) => sum + p.amount, 0);
   const availableFunds = totalCollected - totalDistributed;
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const XLSX = await import('xlsx');
     const rows = filteredContributions.map((c) => ({
       [t('member')]: c.userName || t('member'),
       Email: c.userEmail || '',
@@ -226,10 +224,14 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     toast.success(t('excel_generated'));
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
     const doc = new jsPDF();
     doc.text(`Rapport des cotisations - ${group.name}`, 14, 15);
-    
+
     const tableColumn = [t('member'), "Email", t('period'), `${t('amount')} (${group.currency})`, t('status'), t('date')];
     const tableRows: any[] = [];
 

@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { CustomAvatar } from './CustomAvatar';
+import QRCode from 'qrcode';
 
 interface GroupDetailsProps {
   group: Group;
@@ -37,6 +38,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
   const [auctionDiscount, setAuctionDiscount] = React.useState('');
   const [treasuryBalance, setTreasuryBalance] = React.useState<number | null>(null);
+  const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
 
   const isCreator = profile?.uid === group.creatorId;
   const isAdmin = profile?.role === 'admin';
@@ -79,6 +81,19 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
     };
     fetchTreasury();
   }, [group.id]);
+
+  // Génération locale du QR code (plus de dépendance à api.qrserver.com,
+  // qui exposait le lien d'invitation à un tiers et ne fonctionnait pas hors-ligne).
+  React.useEffect(() => {
+    if (!group.joinCode) return;
+    QRCode.toDataURL(`${window.location.origin}/?join=${group.joinCode}`, {
+      width: 180,
+      margin: 1,
+      color: { dark: '#4B2E05', light: '#00000000' },
+    })
+      .then(setQrDataUrl)
+      .catch((err) => console.error('QR code generation failed:', err));
+  }, [group.joinCode]);
 
   const memberName = (uid: string) => members[uid]?.displayName || `Membre ${uid.slice(0, 6)}`;
 
@@ -498,11 +513,17 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
             {/* Right Sub-panel: Scanable QR Code */}
             <div className="md:col-span-4 flex flex-col items-center justify-center bg-card p-4 rounded-2xl border border-border/60 shadow-inner space-y-2">
               <div className="relative border-4 border-foreground rounded-xl p-1.5 bg-card">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/?join=${group.joinCode}`)}`}
-                  alt="Code QR d'invitation"
-                  className="w-32 h-32 md:w-36 md:h-36"
-                />
+                {qrDataUrl ? (
+                  <img
+                    src={qrDataUrl}
+                    alt="Code QR d'invitation"
+                    className="w-32 h-32 md:w-36 md:h-36"
+                  />
+                ) : (
+                  <div className="w-32 h-32 md:w-36 md:h-36 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                )}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-brand p-1.5 rounded-lg border-2 border-white shadow-md">
                   <QrCode className="w-5 h-5 text-foreground" />
                 </div>

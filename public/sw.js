@@ -1,10 +1,14 @@
-const CACHE_NAME = 'egayne-pwa-cache-v1';
+const CACHE_NAME = 'egayne-pwa-cache-v2';
+// Only paths guaranteed to exist as-is in the production build: the built
+// JS/CSS bundles are hashed (e.g. /assets/index-abc123.js) and unknown ahead
+// of time, so they're picked up organically by the fetch handler below on
+// first load instead of being precached here. The old list included dev-only
+// source paths (/src/main.tsx, /src/App.tsx) that 404 in production, which
+// made cache.addAll() reject and the install event fail outright — meaning
+// offline mode never actually activated once deployed.
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css',
   '/manifest.json'
 ];
 
