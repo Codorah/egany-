@@ -1,9 +1,9 @@
 import React from 'react';
-import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles } from 'lucide-react';
+import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from './NotificationBell';
 import { CustomAvatar } from './CustomAvatar';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage, LanguageCode } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +26,15 @@ interface NavbarProps {
   onNavigate?: (view: string) => void;
 }
 
+const LANGUAGE_LABELS: { code: LanguageCode; label: string }[] = [
+  { code: 'fr', label: 'Français' },
+  { code: 'en', label: 'English' },
+  { code: 'ee', label: 'Éwé' },
+  { code: 'kbp', label: 'Kabiyè' },
+];
+
 export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [isDark, setIsDark] = React.useState(false);
 
   React.useEffect(() => {
@@ -73,6 +80,30 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
 
         {/* Action Items */}
         <div className="flex items-center gap-3">
+          {/* Language switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <button
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                title="Changer de langue"
+              >
+                <Languages className="w-4 h-4" />
+              </button>
+            } />
+            <DropdownMenuContent className="w-44 rounded-2xl p-2 shadow-elevated border-border/80" align="end">
+              {LANGUAGE_LABELS.map(({ code, label }) => (
+                <DropdownMenuItem
+                  key={code}
+                  onClick={() => setLanguage(code)}
+                  className="rounded-xl cursor-pointer flex items-center justify-between"
+                >
+                  <span className={`font-medium ${language === code ? 'text-primary font-bold' : ''}`}>{label}</span>
+                  {language === code && <Check className="w-3.5 h-3.5 text-primary" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Quick theme toggle */}
           <button
             onClick={toggleTheme}

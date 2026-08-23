@@ -1,4 +1,4 @@
-const CACHE_NAME = 'egayne-pwa-cache-v2';
+const CACHE_NAME = 'egayne-pwa-cache-v3';
 // Only paths guaranteed to exist as-is in the production build: the built
 // JS/CSS bundles are hashed (e.g. /assets/index-abc123.js) and unknown ahead
 // of time, so they're picked up organically by the fetch handler below on
@@ -67,8 +67,10 @@ self.addEventListener('fetch', (event) => {
         })
         .catch((err) => {
           console.warn('[Service Worker] Network fetch failed, falling back to cache.', err);
-          // Return cache if network fails (offline consultation mode)
-          return cachedResponse;
+          // If there's no cached response either, resolving to undefined here
+          // makes event.respondWith() throw "Failed to convert value to
+          // 'Response'" — always hand back a real Response.
+          return cachedResponse || new Response('', { status: 503, statusText: 'Offline' });
         });
 
       // Without waitUntil, the SW can be torn down before this background
