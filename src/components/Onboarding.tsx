@@ -682,7 +682,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-1.5">
+              <div className="grid grid-cols-4 gap-2.5 max-w-[300px] mx-auto">
                 {otpDigits.map((digit, index) => (
                   <Input
                     key={index}
@@ -695,7 +695,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     onChange={(e) => handleOtpDigitChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onPaste={handleOtpPaste}
-                    className="w-8 h-10 text-center text-base font-black rounded-lg focus-visible:ring-primary"
+                    className="w-full h-12 text-center text-lg font-black rounded-xl focus-visible:ring-primary"
                   />
                 ))}
               </div>

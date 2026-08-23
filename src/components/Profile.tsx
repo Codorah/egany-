@@ -49,7 +49,11 @@ import {
   EyeOff,
   RefreshCw,
   Trash2,
-  PhoneCall
+  PhoneCall,
+  Upload,
+  XCircle,
+  AlertTriangle,
+  IdCard
 } from 'lucide-react';
 import { UserProfile, Group, Contribution, WalletTransaction, KycSubmission } from '@/types';
 import { format } from 'date-fns';
@@ -424,64 +428,64 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       id: 'account',
       title: 'Mon compte',
       description: 'Gérez vos informations personnelles et votre identité.',
-      icon: <User className="w-4.5 h-4.5 text-amber-600" />,
-      color: 'bg-amber-50 dark:bg-amber-500/10',
+      icon: <User className="w-4.5 h-4.5 text-brand" />,
+      color: 'bg-brand/10',
       group: 'Compte & sécurité'
     },
     {
       id: 'security',
       title: 'Sécurité & confidentialité',
       description: 'Sécurisez votre compte et gérez vos données.',
-      icon: <Shield className="w-4.5 h-4.5 text-blue-600" />,
-      color: 'bg-blue-50 dark:bg-blue-500/10',
+      icon: <Shield className="w-4.5 h-4.5 text-brand" />,
+      color: 'bg-brand/10',
       group: 'Compte & sécurité'
     },
     {
       id: 'payments',
       title: 'Argent & paiements',
       description: 'Gérez vos moyens de paiement, transferts et retraits.',
-      icon: <Wallet className="w-4.5 h-4.5 text-emerald-600" />,
-      color: 'bg-emerald-50 dark:bg-emerald-500/10',
+      icon: <Wallet className="w-4.5 h-4.5 text-secondary" />,
+      color: 'bg-secondary/10',
       group: 'Argent & cercles'
     },
     {
       id: 'circles',
       title: 'Mes cercles',
       description: 'Gérez vos tontines, vos préférences et invitations.',
-      icon: <Users className="w-4.5 h-4.5 text-orange-600" />,
-      color: 'bg-orange-50 dark:bg-orange-500/10',
+      icon: <Users className="w-4.5 h-4.5 text-secondary" />,
+      color: 'bg-secondary/10',
       group: 'Argent & cercles'
     },
     {
       id: 'subscription',
       title: 'Abonnement & récompenses',
       description: 'Gérez votre abonnement et vos avantages.',
-      icon: <Award className="w-4.5 h-4.5 text-purple-600" />,
-      color: 'bg-purple-50 dark:bg-purple-500/10',
+      icon: <Award className="w-4.5 h-4.5 text-secondary" />,
+      color: 'bg-secondary/10',
       group: 'Argent & cercles'
     },
     {
       id: 'notifications',
       title: 'Notifications & communication',
       description: 'Choisissez comment vous recevez les notifications.',
-      icon: <Bell className="w-4.5 h-4.5 text-amber-600" />,
-      color: 'bg-amber-50 dark:bg-amber-500/10',
+      icon: <Bell className="w-4.5 h-4.5 text-muted-foreground" />,
+      color: 'bg-muted',
       group: 'Général'
     },
     {
       id: 'support',
       title: 'Aide & support',
       description: 'Trouvez de l\'aide, des tutoriels ou contactez le support.',
-      icon: <HelpCircle className="w-4.5 h-4.5 text-teal-600" />,
-      color: 'bg-teal-50 dark:bg-teal-500/10',
+      icon: <HelpCircle className="w-4.5 h-4.5 text-muted-foreground" />,
+      color: 'bg-muted',
       group: 'Général'
     },
     {
       id: 'legal',
       title: 'Légal & informations',
       description: 'Consultez les conditions, politiques et documents légaux.',
-      icon: <BookOpen className="w-4.5 h-4.5 text-slate-600" />,
-      color: 'bg-slate-50 dark:bg-slate-500/10',
+      icon: <BookOpen className="w-4.5 h-4.5 text-muted-foreground" />,
+      color: 'bg-muted',
       group: 'Général'
     }
   ];
@@ -747,7 +751,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                     ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                     : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
                 }`}>
-                  {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? 'Vérifié ✅' : `Niveau ${user.kycLevel ?? 1} sur 3`}
+                  {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
+                    <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Vérifié</span>
+                  ) : `Niveau ${user.kycLevel ?? 1} sur 3`}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -760,27 +766,34 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 </div>
               ) : (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">🪪 Pièce d'Identité</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Vérifiée{user.kycVerifiedAt ? ` le ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : ''}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <IdCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Pièce d'Identité</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Vérifiée{user.kycVerifiedAt ? ` le ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : ''}
+                      </p>
+                    </div>
                   </div>
-                  <Badge className="bg-emerald-500 text-white text-[10px]">Vérifiée ✅</Badge>
+                  <Badge className="bg-emerald-500 text-white text-[10px] flex items-center gap-1"><Check className="w-3 h-3" /> Vérifiée</Badge>
                 </div>
               ) : kycSubmission?.status === 'pending' ? (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-300">🪪 Pièce d'Identité</p>
-                    <p className="text-[11px] text-muted-foreground">Envoyée le {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
+                  <div className="flex items-center gap-2">
+                    <IdCard className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Pièce d'Identité</p>
+                      <p className="text-[11px] text-muted-foreground">Envoyée le {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
+                    </div>
                   </div>
                   <Badge className="bg-amber-500 text-white text-[10px]">En attente de validation</Badge>
                 </div>
               ) : (
                 <div className="space-y-3 pt-2">
                   {kycSubmission?.status === 'rejected' && (
-                    <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[11px] text-danger font-medium">
-                      ❌ Votre précédente soumission a été refusée{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. Veuillez soumettre à nouveau.
+                    <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[11px] text-danger font-medium flex items-start gap-2">
+                      <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>Votre précédente soumission a été refusée{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. Veuillez soumettre à nouveau.</span>
                     </div>
                   )}
                   <div className="space-y-1.5">
@@ -793,12 +806,29 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold">Photo de la carte nationale d'identité</Label>
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => setKycFile(e.target.files?.[0] || null)}
-                      className="w-full text-xs text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:text-xs file:font-bold"
-                    />
+                    <label
+                      htmlFor="kyc_file_input"
+                      className="flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-border hover:border-brand/50 hover:bg-brand/5 transition-colors cursor-pointer"
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${kycFile ? 'bg-success-soft text-secondary' : 'bg-muted text-muted-foreground'}`}>
+                        {kycFile ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-foreground truncate">
+                          {kycFile ? kycFile.name : 'Choisir une photo ou un PDF'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {kycFile ? 'Appuyez pour changer de fichier' : 'JPG, PNG ou PDF, recto de la pièce'}
+                        </p>
+                      </div>
+                      <input
+                        id="kyc_file_input"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setKycFile(e.target.files?.[0] || null)}
+                        className="sr-only"
+                      />
+                    </label>
                   </div>
                   <Button onClick={handleSubmitKyc} disabled={isSubmittingKyc} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
                     {isSubmittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Soumettre pour vérification'}
@@ -841,8 +871,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                  🛡️ Le mandataire ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>, quels que soient les droits ci-dessus.
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>Le mandataire ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>, quels que soient les droits ci-dessus.</span>
                 </div>
               </div>
 
@@ -1220,8 +1251,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           </DialogHeader>
 
           {groups.length > 0 ? (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium space-y-1">
-              ⚠️ Vous avez actuellement <strong>{groups.length} cercle(s) actif(s)</strong>. Veuillez quitter ou régler vos cotisations avant de supprimer votre compte.
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>Vous avez actuellement <strong>{groups.length} cercle(s) actif(s)</strong>. Veuillez quitter ou régler vos cotisations avant de supprimer votre compte.</span>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground py-2">

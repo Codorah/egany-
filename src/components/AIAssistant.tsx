@@ -111,7 +111,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
   };
 
   return (
-    <div className="space-y-6 pb-20 max-w-4xl mx-auto flex flex-col min-h-[calc(100vh-140px)]">
+    <div className="space-y-6 pb-20 max-w-4xl mx-auto flex flex-col min-h-[calc(100dvh-140px)]">
       {/* Copilote Header */}
       <div className="gradient-sunset p-6 rounded-3xl border border-amber-900/20 shadow-elevated text-white shrink-0 flex items-center justify-between">
         <div className="space-y-1">

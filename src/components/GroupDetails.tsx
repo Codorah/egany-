@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Group, UserProfile } from '@/types';
-import { ArrowLeft, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check, Shuffle, Gift, Trophy, RotateCcw, Landmark, Circle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InviteMemberDialog } from './InviteMemberDialog';
@@ -270,8 +270,8 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           {beneficiaryToDistribute ? (
             <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                  🥇 Prochain Bénéficiaire (Tour {group.currentPayoutIndex + 1})
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200 flex items-center gap-1">
+                  <Trophy className="w-3 h-3" /> Prochain Bénéficiaire (Tour {group.currentPayoutIndex + 1})
                 </span>
                 <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
                 <p className="text-xs text-white/90">
@@ -372,10 +372,11 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     <span className="text-xs font-black text-foreground">
                       {totalPot.toLocaleString()} {group.currency}
                     </span>
-                    <span className={`block text-[10px] font-bold ${
+                    <span className={`flex items-center justify-end gap-1 text-[10px] font-bold ${
                       isPast ? 'text-emerald-600' : isCurrent ? 'text-primary' : 'text-muted-foreground'
                     }`}>
-                      {isPast ? '✅ Payé' : isCurrent ? '🟠 Prochain' : '⚪ Attente'}
+                      {isPast ? <CheckCircle className="w-3 h-3" /> : isCurrent ? <Clock className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                      {isPast ? 'Payé' : isCurrent ? 'Prochain' : 'Attente'}
                     </span>
                   </div>
                 </div>
