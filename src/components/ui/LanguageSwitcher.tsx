@@ -4,8 +4,8 @@ import { LanguageCode } from '@/contexts/LanguageContext';
 const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'fr', label: 'FR' },
   { code: 'en', label: 'EN' },
-  { code: 'wo', label: 'WO' },
-  { code: 'bm', label: 'BM' },
+  { code: 'ee', label: 'EWE' },
+  { code: 'kbp', label: 'KBY' },
 ];
 
 interface LanguageSwitcherProps {
