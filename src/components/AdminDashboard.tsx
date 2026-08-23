@@ -217,8 +217,9 @@ export function AdminDashboard() {
   const handleToggleRole = async (user: UserProfile) => {
     const newRole = user.role === 'admin' ? 'user' : 'admin';
     try {
-      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', user.uid);
+      const { data, error } = await supabase.from('profiles').update({ role: newRole }).eq('id', user.uid).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Action non autorisée.');
       toast.success(`${t('admin_role_updated')}: ${user.displayName} → ${newRole}`);
 
       setUsers(prev => prev.map(u => u.uid === user.uid ? { ...u, role: newRole } : u));
@@ -236,8 +237,9 @@ export function AdminDashboard() {
       // Removes the profile row only (deleting the underlying Supabase Auth
       // account requires a service-role server call, same limitation as the
       // old Firestore version which only ever removed the profile document).
-      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Action non autorisée.');
       toast.success(`${t('admin_user_deleted')}: ${name}`);
       setUsers(prev => prev.filter(u => u.uid !== userId));
       if (editingUser?.uid === userId) {
@@ -251,8 +253,9 @@ export function AdminDashboard() {
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
     if (!confirm(t('admin_confirm_delete_group'))) return;
     try {
-      const { error } = await supabase.from('groups').delete().eq('id', groupId);
+      const { data, error } = await supabase.from('groups').delete().eq('id', groupId).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Action non autorisée.');
       toast.success(`${t('admin_group_deleted')}: ${groupName}`);
       setGroups(prev => prev.filter(g => g.id !== groupId));
     } catch (error) {
@@ -275,11 +278,12 @@ export function AdminDashboard() {
     const finalWallet = Math.max(0, Number(walletInput));
 
     try {
-      const { error } = await supabase.from('profiles').update({
+      const { data, error } = await supabase.from('profiles').update({
         reputation_score: finalRep,
         wallet_balance: finalWallet
-      }).eq('id', editingUser.uid);
+      }).eq('id', editingUser.uid).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Action non autorisée.');
 
       toast.success(`${t('admin_profile_adjusted')}: ${editingUser.displayName}`);
       

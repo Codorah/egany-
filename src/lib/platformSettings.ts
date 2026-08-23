@@ -25,7 +25,7 @@ export async function updatePlatformSettings(
   patch: Partial<PlatformSettings>,
   updatedBy: string
 ): Promise<{ success: boolean; message?: string }> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('platform_settings')
     .update({
       ...(patch.maintenanceMode !== undefined ? { maintenance_mode: patch.maintenanceMode } : {}),
@@ -33,8 +33,12 @@ export async function updatePlatformSettings(
       updated_at: new Date().toISOString(),
       updated_by: updatedBy,
     })
-    .eq('id', 1);
+    .eq('id', 1)
+    .select('id');
 
   if (error) return { success: false, message: error.message };
+  // RLS silently matches zero rows instead of erroring when the caller isn't
+  // actually an admin — surface that as a failure rather than a false success.
+  if (!data || data.length === 0) return { success: false, message: 'Action non autorisée.' };
   return { success: true };
 }

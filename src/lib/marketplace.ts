@@ -57,7 +57,7 @@ export async function updateMarketplaceRequestStatus(params: {
   reviewerId: string;
   adminNotes?: string;
 }): Promise<{ success: boolean; message: string }> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('marketplace_requests')
     .update({
       status: params.status,
@@ -65,9 +65,18 @@ export async function updateMarketplaceRequestStatus(params: {
       reviewed_at: new Date().toISOString(),
       admin_notes: params.adminNotes || null,
     })
-    .eq('id', params.requestId);
+    .eq('id', params.requestId)
+    .select('id');
   if (error) {
     return { success: false, message: error.message };
+  }
+  // A denied-by-RLS update matches zero rows without ever raising `error` —
+  // without this check a non-admin session silently no-ops while the caller
+  // still sees a success toast (this is exactly what happened in production:
+  // the bootstrap admin account could open the admin panel but its profile
+  // row had never actually been promoted to role='admin').
+  if (!data || data.length === 0) {
+    return { success: false, message: "Action non autorisée ou demande introuvable." };
   }
   return { success: true, message: 'Demande mise à jour.' };
 }

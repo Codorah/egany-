@@ -56,7 +56,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
+export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement }) {
   const [open, setOpen] = React.useState(false);
   const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
