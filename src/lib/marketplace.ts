@@ -8,8 +8,8 @@ export async function fetchActiveServices(): Promise<MarketplaceService[]> {
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: true });
-  if (error || !data) return [];
-  return data.map(mapMarketplaceServiceRow);
+  if (error) throw error;
+  return (data ?? []).map(mapMarketplaceServiceRow);
 }
 
 export async function fetchMyMarketplaceRequests(userId: string): Promise<MarketplaceRequest[]> {
@@ -18,8 +18,8 @@ export async function fetchMyMarketplaceRequests(userId: string): Promise<Market
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-  if (error || !data) return [];
-  return data.map(mapMarketplaceRequestRow);
+  if (error) throw error;
+  return (data ?? []).map(mapMarketplaceRequestRow);
 }
 
 export async function submitMarketplaceRequest(params: {

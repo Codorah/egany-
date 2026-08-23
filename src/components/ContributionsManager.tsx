@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapContributionRow, mapPayoutRow, mapProfileRow } from '@/lib/mappers';
+import { executeFinancialTransaction } from '@/lib/ledger';
 import { Group, UserProfile, Contribution, Payout } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -141,7 +142,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
 
   const handleRegisterPayment = async (userId: string, userName: string, userEmail?: string) => {
     try {
-      const { error } = await supabase.from('contributions').insert({
+      const { data: inserted, error } = await supabase.from('contributions').insert({
         group_id: group.id,
         user_id: userId,
         user_name: userName,
@@ -150,8 +151,28 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
         status: 'paid',
         date: new Date().toISOString(),
         period: formatPeriod(new Date())
-      });
+      }).select().single();
       if (error) throw error;
+
+      // Paiement déclaré en espèces par le gestionnaire — l'argent ne vient
+      // jamais du portefeuille in-app du membre (debitAccount != user_wallet:*
+      // pour ne pas déclencher la déduction de solde côté RPC), mais doit
+      // quand même apparaître dans le registre comptable double-entrée pour
+      // que la réconciliation admin le voie.
+      const ledgerResult = await executeFinancialTransaction({
+        idempotencyKey: `manual_cash_${inserted.id}`,
+        userId,
+        amount: group.contributionAmount,
+        currency: group.currency || 'FCFA',
+        description: `Cotisation enregistrée manuellement (espèces) - ${group.name} (${formatPeriod(new Date())})`,
+        actionType: 'contribution_payment',
+        debitAccount: `external_cash:${userId}`,
+        creditAccount: `tontine_group:${group.id}`,
+      });
+      if (!ledgerResult.success) {
+        console.error('Ledger entry failed for manual payment:', ledgerResult.message);
+      }
+
       toast.success(`${t('payment_registered_for')} ${userName}`);
     } catch (error) {
       console.error("Error registering payment:", error);

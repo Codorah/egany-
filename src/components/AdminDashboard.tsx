@@ -6,6 +6,7 @@ import { UserProfile, Group } from '@/types';
 import { LedgerEntry, AuditLog, performFullSystemReconciliation } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
+import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -75,9 +76,10 @@ export function AdminDashboard() {
   const [walletInput, setWalletInput] = useState<number>(0);
   const [isSavingUserChanges, setIsSavingUserChanges] = useState(false);
 
-  // Platform simulation configurations
+  // Platform settings (persisted in public.platform_settings, enforced app-wide)
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [allowSignups, setAllowSignups] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Ledger & Reconciliation States
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
@@ -119,6 +121,10 @@ export function AdminDashboard() {
 
       setKycSubmissions(await fetchPendingKycSubmissions());
       setMarketplaceRequests(await fetchPendingMarketplaceRequests());
+
+      const settings = await fetchPlatformSettings();
+      setMaintenanceMode(settings.maintenanceMode);
+      setAllowSignups(settings.allowSignups);
 
     } catch (error) {
       handleAdminError(error, 'admin_collections');
@@ -347,10 +353,6 @@ export function AdminDashboard() {
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-brand text-primary-foreground text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full">
                 {t('admin_super_admin_space')}
-              </span>
-              <span className="bg-secondary/20 border border-secondary/30 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-secondary rounded-full animate-ping" />
-                Live Supabase Connected
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-serif font-black tracking-tight text-[#F5E6D3]">
@@ -1040,12 +1042,22 @@ export function AdminDashboard() {
                     <p className="text-xs font-bold text-foreground">{t('admin_maintenance_sim')}</p>
                     <p className="text-[10px] text-muted-foreground">{t('admin_maintenance_sim_desc')}</p>
                   </div>
-                  <Button 
+                  <Button
                     variant={maintenanceMode ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => {
-                      setMaintenanceMode(!maintenanceMode);
-                      toast.info(`${t('admin_maintenance_mode')} ${!maintenanceMode ? t('admin_enabled') : t('admin_disabled')}`);
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const next = !maintenanceMode;
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const result = await updatePlatformSettings({ maintenanceMode: next }, authData.user?.id || '');
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer ce réglage.");
+                        return;
+                      }
+                      setMaintenanceMode(next);
+                      toast.info(`${t('admin_maintenance_mode')} ${next ? t('admin_enabled') : t('admin_disabled')}`);
                     }}
                     className={`h-8 font-bold text-xs rounded-xl cursor-pointer ${maintenanceMode ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border'}`}
                   >
@@ -1059,12 +1071,22 @@ export function AdminDashboard() {
                     <p className="text-xs font-bold text-foreground">{t('admin_allow_signups')}</p>
                     <p className="text-[10px] text-muted-foreground">{t('admin_allow_signups_desc')}</p>
                   </div>
-                  <Button 
+                  <Button
                     variant={allowSignups ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => {
-                      setAllowSignups(!allowSignups);
-                      toast.info(`${t('admin_signups_word')} ${!allowSignups ? t('admin_open_fem') : t('admin_closed_fem')}`);
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const next = !allowSignups;
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const result = await updatePlatformSettings({ allowSignups: next }, authData.user?.id || '');
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer ce réglage.");
+                        return;
+                      }
+                      setAllowSignups(next);
+                      toast.info(`${t('admin_signups_word')} ${next ? t('admin_open_fem') : t('admin_closed_fem')}`);
                     }}
                     className={`h-8 font-bold text-xs rounded-xl cursor-pointer ${allowSignups ? 'bg-secondary hover:bg-secondary/90 text-white' : 'border-border'}`}
                   >
@@ -1104,17 +1126,40 @@ export function AdminDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-5">
-                  <div className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-muted border border-border">
-                    <div className="w-12 h-12 rounded-full bg-success-soft flex items-center justify-center text-secondary mb-2">
-                      <Lock className="w-6 h-6 text-secondary" />
-                    </div>
-                    <span className="text-xs font-black text-secondary uppercase tracking-wide">
-                      {t('admin_ledger_reconciled')}
-                    </span>
-                    <p className="text-[10px] text-muted-foreground mt-1 max-w-xs leading-normal">
-                      {t('admin_no_discrepancy')}
-                    </p>
-                  </div>
+                  {(() => {
+                    const latestReport = reconReports[0];
+                    const hasDiscrepancy = !!latestReport && Number(latestReport.totalDiscrepancies) > 0;
+                    if (!latestReport) {
+                      return (
+                        <div className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-muted border border-border">
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-2">
+                            <Clock className="w-6 h-6" />
+                          </div>
+                          <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">
+                            Aucune vérification effectuée
+                          </span>
+                          <p className="text-[10px] text-muted-foreground mt-1 max-w-xs leading-normal">
+                            Lancez une réconciliation pour comparer les soldes déclarés au registre comptable réel.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className={`flex flex-col items-center justify-center text-center p-4 rounded-2xl border ${hasDiscrepancy ? 'bg-danger/10 border-danger/20' : 'bg-muted border-border'}`}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${hasDiscrepancy ? 'bg-danger/15 text-danger' : 'bg-success-soft text-secondary'}`}>
+                          {hasDiscrepancy ? <AlertTriangle className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                        </div>
+                        <span className={`text-xs font-black uppercase tracking-wide ${hasDiscrepancy ? 'text-danger' : 'text-secondary'}`}>
+                          {hasDiscrepancy ? 'Écart détecté' : t('admin_ledger_reconciled')}
+                        </span>
+                        <p className="text-[10px] text-muted-foreground mt-1 max-w-xs leading-normal">
+                          {hasDiscrepancy
+                            ? `${Number(latestReport.totalDiscrepancies).toLocaleString()} FCFA d'écart au dernier contrôle (${new Date(latestReport.timestamp).toLocaleString()}).`
+                            : t('admin_no_discrepancy')}
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-dashed">
@@ -1127,11 +1172,21 @@ export function AdminDashboard() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-dashed">
                       <span className="text-muted-foreground">{t('admin_accounting_gaps')}</span>
-                      <span className="font-bold text-secondary">0 FCFA</span>
+                      <span className={`font-bold ${reconReports[0] && Number(reconReports[0].totalDiscrepancies) > 0 ? 'text-danger' : 'text-secondary'}`}>
+                        {reconReports[0] ? Number(reconReports[0].totalDiscrepancies).toLocaleString() : '—'} FCFA
+                      </span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">{t('admin_recon_status')}</span>
-                      <Badge className="bg-secondary/15 text-secondary border-none text-[9px] px-1.5 font-bold">100% OK</Badge>
+                      {reconReports[0] ? (
+                        Number(reconReports[0].totalDiscrepancies) > 0 ? (
+                          <Badge className="bg-danger/15 text-danger border-none text-[9px] px-1.5 font-bold">ÉCART</Badge>
+                        ) : (
+                          <Badge className="bg-secondary/15 text-secondary border-none text-[9px] px-1.5 font-bold">100% OK</Badge>
+                        )
+                      ) : (
+                        <Badge className="bg-muted text-muted-foreground border-none text-[9px] px-1.5 font-bold">NON VÉRIFIÉ</Badge>
+                      )}
                     </div>
                   </div>
 

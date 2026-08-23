@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+function bufferToBase64(buffer: ArrayBuffer): string {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+
+function base64ToBuffer(base64: string): Uint8Array {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
 export interface BiometricResult {
   success: boolean;
   message: string;
@@ -92,8 +100,10 @@ export function useBiometrics() {
           });
 
           if (credential) {
+            const pkCredential = credential as PublicKeyCredential;
             localStorage.setItem('eganye_biometrics_enrolled', 'true');
             localStorage.setItem('eganye_biometrics_username', username);
+            localStorage.setItem('eganye_biometrics_credential_id', bufferToBase64(pkCredential.rawId));
             setIsEnrolled(true);
             setIsAuthenticating(false);
             return {
@@ -150,17 +160,24 @@ export function useBiometrics() {
         return !!result.verified;
       }
 
-      // 2. Web standard WebAuthn authenticator check
+      // 2. Web standard WebAuthn authenticator check — constrained to the
+      // specific credential enrolled for this account, not "any platform
+      // authenticator present on this device".
       if (window.PublicKeyCredential && navigator.credentials) {
         try {
           const challenge = new Uint8Array(32);
           window.crypto.getRandomValues(challenge);
 
+          const storedCredentialId = localStorage.getItem('eganye_biometrics_credential_id');
+
           const credential = await navigator.credentials.get({
             publicKey: {
               challenge,
               userVerification: "required",
-              timeout: 60000
+              timeout: 60000,
+              ...(storedCredentialId
+                ? { allowCredentials: [{ id: base64ToBuffer(storedCredentialId), type: 'public-key' as const }] }
+                : {})
             }
           });
           setIsAuthenticating(false);
@@ -186,6 +203,7 @@ export function useBiometrics() {
   const disableBiometrics = () => {
     localStorage.removeItem('eganye_biometrics_enrolled');
     localStorage.removeItem('eganye_biometrics_username');
+    localStorage.removeItem('eganye_biometrics_credential_id');
     setIsEnrolled(false);
     toast.info("Authentification biométrique désactivée.");
   };

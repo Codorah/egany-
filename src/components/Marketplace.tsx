@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle } from 'lucide-react';
+import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle, RefreshCw, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
@@ -29,17 +29,26 @@ export function Marketplace({ user }: MarketplaceProps) {
   const [services, setServices] = useState<MarketplaceService[]>([]);
   const [myRequests, setMyRequests] = useState<MarketplaceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadData = async () => {
-    const [svc, reqs] = await Promise.all([
-      fetchActiveServices(),
-      fetchMyMarketplaceRequests(user.uid),
-    ]);
-    setServices(svc);
-    setMyRequests(reqs);
-    setLoading(false);
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const [svc, reqs] = await Promise.all([
+        fetchActiveServices(),
+        fetchMyMarketplaceRequests(user.uid),
+      ]);
+      setServices(svc);
+      setMyRequests(reqs);
+    } catch (err) {
+      console.error('Marketplace loadData error:', err);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -75,6 +84,19 @@ export function Marketplace({ user }: MarketplaceProps) {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-6">
+        <AlertCircle className="w-8 h-8 text-danger" />
+        <p className="text-sm font-bold text-foreground">Impossible de charger le Marketplace</p>
+        <p className="text-xs text-muted-foreground max-w-xs">Vérifiez votre connexion et réessayez.</p>
+        <Button variant="outline" size="sm" onClick={loadData} className="mt-2 font-bold">
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Réessayer
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-20">
       <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
@@ -89,6 +111,13 @@ export function Marketplace({ user }: MarketplaceProps) {
         </p>
       </div>
 
+      {services.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6 bg-card border border-border rounded-3xl">
+          <PackageSearch className="w-8 h-8 text-muted-foreground" />
+          <p className="text-sm font-bold text-foreground">Aucun service disponible pour le moment</p>
+          <p className="text-xs text-muted-foreground max-w-xs">Revenez bientôt : de nouveaux partenaires seront ajoutés régulièrement.</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {services.map((service) => {
           const Icon = ICONS[service.iconName] || Store;
@@ -124,6 +153,7 @@ export function Marketplace({ user }: MarketplaceProps) {
           );
         })}
       </div>
+      )}
 
       <AnimatePresence>
         {selectedService && (

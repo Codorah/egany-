@@ -231,7 +231,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactNode }) {
                 <SelectContent>
                   <SelectItem value="sequential">Rotation séquentielle</SelectItem>
                   <SelectItem value="draw">Tirage au sort</SelectItem>
-                  <SelectItem value="auction">Enchères (bientôt disponible)</SelectItem>
+                  <SelectItem value="auction">Enchères</SelectItem>
                 </SelectContent>
               </Select>
             </div>

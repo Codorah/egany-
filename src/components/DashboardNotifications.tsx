@@ -22,6 +22,7 @@ interface DashboardNotificationsProps {
   userId: string;
   onManageContributions: (groupId: string) => void;
   onSelectGroup: (groupId: string) => void;
+  onNavigateToProfileTab?: (tab: string) => void;
 }
 
 // Framer motion variants for container and items to get high-quality stagger entry
@@ -64,7 +65,8 @@ const itemVariants = {
 export function DashboardNotifications({
   userId,
   onManageContributions,
-  onSelectGroup
+  onSelectGroup,
+  onNavigateToProfileTab
 }: DashboardNotificationsProps) {
   const { notifications, loading, markAsRead, deleteNotification } = useNotifications(userId);
   const [filter, setFilter] = useState<'all' | 'late' | 'payout'>('all');
@@ -124,23 +126,24 @@ export function DashboardNotifications({
     };
   };
 
-  // Tries to extract group id or code from links or message if possible
+  // Notification producers (useReminders, useWalletDebitor, groups.ts, MemberManagement)
+  // all set link as "/group/{id}" or "/profile" — route on that real format.
   const handleActionClick = (notif: any) => {
-    // Standard links or fallback to contributions management
-    if (notif.link) {
-      // E.g., link looks like "group-details:group_123"
-      const parts = notif.link.split(':');
-      if (parts[0] === 'group-details' && parts[1]) {
-        onSelectGroup(parts[1]);
-        return;
+    const link: string = notif.link || '';
+    const groupMatch = link.match(/^\/group\/(.+)$/);
+    if (groupMatch) {
+      const groupId = groupMatch[1];
+      if (isLateAlert(notif)) {
+        onManageContributions(groupId);
+      } else {
+        onSelectGroup(groupId);
       }
-      if (parts[0] === 'contributions' && parts[1]) {
-        onManageContributions(parts[1]);
-        return;
-      }
+      return;
     }
-    // Fallback: search for words in title or message to redirect
-    // By default, open profile or contributions
+    if (link === '/profile' && onNavigateToProfileTab) {
+      onNavigateToProfileTab('wallet');
+      return;
+    }
     onManageContributions('');
   };
 

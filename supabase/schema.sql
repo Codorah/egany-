@@ -474,7 +474,8 @@ CREATE OR REPLACE FUNCTION public.execute_financial_transaction(
   p_debit_account text,
   p_credit_account text,
   p_contribution_id uuid DEFAULT NULL,
-  p_group_id uuid DEFAULT NULL
+  p_group_id uuid DEFAULT NULL,
+  p_ip text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
@@ -532,7 +533,7 @@ BEGIN
   VALUES (p_idempotency_key, v_transaction_id, p_user_id, p_amount, p_action_type);
 
   INSERT INTO public.audit_logs (user_id, action, details, ip, device, status, idempotency_key)
-  VALUES (p_user_id, p_action_type, p_description || ' | Débit [' || p_debit_account || '] / Crédit [' || p_credit_account || '] de ' || p_amount || ' ' || p_currency, '197.221.34.8', 'Serveur Supabase', 'success', p_idempotency_key);
+  VALUES (p_user_id, p_action_type, p_description || ' | Débit [' || p_debit_account || '] / Crédit [' || p_credit_account || '] de ' || p_amount || ' ' || p_currency, COALESCE(p_ip, 'Non disponible'), 'Serveur Supabase', 'success', p_idempotency_key);
 
   IF p_contribution_id IS NOT NULL AND p_group_id IS NOT NULL THEN
     UPDATE public.contributions SET
@@ -547,7 +548,7 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'message', 'Transaction financière approuvée et enregistrée.', 'transactionId', v_transaction_id);
 EXCEPTION WHEN others THEN
   INSERT INTO public.audit_logs (user_id, action, details, ip, device, status, idempotency_key)
-  VALUES (p_user_id, p_action_type, 'ÉCHEC : ' || p_description || ' | Erreur: ' || sqlerrm, '197.221.34.8', 'Serveur Supabase', 'failure', p_idempotency_key);
+  VALUES (p_user_id, p_action_type, 'ÉCHEC : ' || p_description || ' | Erreur: ' || sqlerrm, COALESCE(p_ip, 'Non disponible'), 'Serveur Supabase', 'failure', p_idempotency_key);
   RETURN jsonb_build_object('success', false, 'message', sqlerrm);
 END;
 $$;
@@ -1184,4 +1185,32 @@ VALUES
   ('Kit Solaire PAYGO', 'Équipez-vous en panneaux solaires. Le paiement fractionné est prélevé automatiquement sur vos tours de tontine.', 'EnergieTogo / Bboxx', 'equipement', 'Zap', 'bg-amber-500', ARRAY['Validation du gestionnaire du groupe'], NULL, 'Commander le kit'),
   ('Épargne Retraite', 'Convertissez une partie de vos gains de tontine en une épargne retraite bloquée à fort rendement (7%/an).', 'Caisse de Retraite', 'assurance', 'TrendingUp', 'bg-purple-500', NULL, NULL, 'Ouvrir un compte retraite')
 ON CONFLICT (title) DO NOTHING;
+
+-- ============================================================================
+-- 11. PARAMÈTRES DE LA PLATEFORME (mode maintenance, inscriptions)
+-- ============================================================================
+-- Les interrupteurs "Mode maintenance" / "Autoriser les inscriptions" dans
+-- AdminDashboard ne faisaient auparavant que changer un useState local + un
+-- toast — rien n'était persisté ni jamais vérifié ailleurs dans l'app. Table
+-- singleton (une seule ligne, id=1) lue par tout le monde (y compris anon,
+-- car Onboarding doit vérifier allow_signups avant même la connexion) et
+-- modifiable uniquement par un admin.
+
+CREATE TABLE IF NOT EXISTS public.platform_settings (
+  id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  maintenance_mode boolean NOT NULL DEFAULT false,
+  allow_signups boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid REFERENCES public.profiles(id)
+);
+
+INSERT INTO public.platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "platform_settings_select_all" ON public.platform_settings;
+DROP POLICY IF EXISTS "platform_settings_update_admin_only" ON public.platform_settings;
+
+CREATE POLICY "platform_settings_select_all" ON public.platform_settings FOR SELECT USING (true);
+CREATE POLICY "platform_settings_update_admin_only" ON public.platform_settings FOR UPDATE USING (public.is_admin()) WITH CHECK (public.is_admin());
 

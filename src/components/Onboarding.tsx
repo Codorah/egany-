@@ -21,6 +21,7 @@ import {
   MailCheck
 } from 'lucide-react';
 import { signInWithGoogle, signInWithEmail, supabase } from '@/lib/supabase';
+import { fetchPlatformSettings } from '@/lib/platformSettings';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -152,6 +153,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const handleFinishOnboarding = async () => {
     setIsCreatingAccount(true);
     try {
+      const { allowSignups } = await fetchPlatformSettings();
+      if (!allowSignups) {
+        toast.error("Les inscriptions sont temporairement suspendues. Réessayez plus tard.");
+        return;
+      }
+
       // The bootstrap admin email + base profile row are handled server-side
       // by the on_auth_user_created trigger (supabase/migrations/0001_init.sql) —
       // we only need to fill in what onboarding itself collected.

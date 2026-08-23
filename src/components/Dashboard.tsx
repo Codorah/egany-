@@ -19,9 +19,11 @@ import {
   Gift, 
   Clock, 
   Info, 
-  CheckCircle2, 
+  CheckCircle2,
   AlertCircle,
-  Banknote
+  Banknote,
+  Store,
+  Bot
 } from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
@@ -169,6 +171,35 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         </Card>
       </motion.div>
 
+      {/* Marketplace & Assistant IA — seul point d'entrée mobile vers ces deux
+          écrans (le menu desktop n'est pas visible sur mobile) */}
+      <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => onNavigate?.('marketplace')}
+          className="glass-card rounded-2xl p-4 shadow-soft flex items-center gap-3 text-left cursor-pointer hover:bg-muted/40 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Store className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-foreground">Marketplace</p>
+            <p className="text-[10px] text-muted-foreground truncate">Services entre membres</p>
+          </div>
+        </button>
+        <button
+          onClick={() => onNavigate?.('ai-assistant')}
+          className="glass-card rounded-2xl p-4 shadow-soft flex items-center gap-3 text-left cursor-pointer hover:bg-muted/40 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-foreground">Assistant IA</p>
+            <p className="text-[10px] text-muted-foreground truncate">Bilan de caisse, rappels</p>
+          </div>
+        </button>
+      </motion.div>
+
       {/* 4 ACTIONABLE CARDS */}
       <motion.div variants={itemVariants} className="space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -296,6 +327,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           userId={user.uid}
           onManageContributions={onManageContributions}
           onSelectGroup={onSelectGroup}
+          onNavigateToProfileTab={onNavigateToProfileTab}
         />
       </motion.div>
 

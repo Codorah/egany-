@@ -27,16 +27,31 @@ export interface AuditLog {
   idempotencyKey?: string;
 }
 
-export function getDeviceInfo() {
+export async function getDeviceInfo(): Promise<{ device: string; ip: string }> {
   if (typeof window === 'undefined') {
-    return { device: 'Server Environment', ip: '127.0.0.1' };
+    return { device: 'Server Environment', ip: 'Non disponible' };
   }
   const ua = window.navigator.userAgent;
   let device = 'Navigateur Web';
   if (ua.includes('Mobi')) device = 'Appareil Mobile';
   if (ua.includes('Android')) device = 'Android App Core';
   else if (ua.includes('iPhone') || ua.includes('iPad')) device = 'iOS App Core';
-  return { device: `${device} (${window.navigator.platform || 'Unknown OS'})`, ip: '197.221.34.8' };
+
+  let ip = 'Non disponible';
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.ip) ip = data.ip;
+    }
+  } catch {
+    // Réseau indisponible ou requête bloquée — on ne fabrique jamais une IP de substitution.
+  }
+
+  return { device: `${device} (${window.navigator.platform || 'Unknown OS'})`, ip };
 }
 
 /**
@@ -57,6 +72,7 @@ export async function executeFinancialTransaction(params: {
   creditAccount: string;
   metadata?: { contributionId?: string; groupId?: string };
 }): Promise<{ success: boolean; message: string; transactionId?: string }> {
+  const { ip } = await getDeviceInfo();
   const { data, error } = await supabase.rpc('execute_financial_transaction', {
     p_idempotency_key: params.idempotencyKey,
     p_user_id: params.userId,
@@ -68,6 +84,7 @@ export async function executeFinancialTransaction(params: {
     p_credit_account: params.creditAccount,
     p_contribution_id: params.metadata?.contributionId ?? null,
     p_group_id: params.metadata?.groupId ?? null,
+    p_ip: ip,
   });
 
   if (error) {
@@ -119,7 +136,7 @@ export async function setUserPin(userId: string, newPin: string): Promise<{ succ
  * protects it correctly for a genuinely admin-only caller.
  */
 export async function performFullSystemReconciliation() {
-  const { ip, device } = getDeviceInfo();
+  const { ip, device } = await getDeviceInfo();
 
   try {
     const { data: profiles, error: profilesError } = await supabase

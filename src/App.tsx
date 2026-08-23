@@ -22,6 +22,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
+import { fetchPlatformSettings } from '@/lib/platformSettings';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -70,6 +71,11 @@ export default function App() {
   useReminders(activeProfile, groups);
   useWalletDebitor(activeProfile, groups);
   const isOnline = useOnlineStatus();
+
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  React.useEffect(() => {
+    fetchPlatformSettings().then((s) => setMaintenanceMode(s.maintenanceMode));
+  }, []);
   
   const [view, setView] = useState<View>('dashboard');
   const [profileTab, setProfileTab] = useState<string>('contributions');
@@ -270,6 +276,19 @@ export default function App() {
           />
           <span className="text-xs font-sans font-bold tracking-[0.2em] uppercase text-muted-foreground/60">chargement...</span>
         </div>
+      </div>
+    );
+  }
+
+  const isAdminUser = activeProfile?.role === 'admin' || activeProfile?.email === 'codorah@hotmail.com';
+  if (maintenanceMode && !isAdminUser) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground px-6 text-center gap-4">
+        <img src="/logo-emblem.png" alt="eganyé" className="w-16 h-16 rounded-2xl shadow-xl" />
+        <h1 className="text-xl font-serif font-black">Maintenance en cours</h1>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          eganyé est temporairement indisponible pour une opération de maintenance. Revenez dans quelques instants.
+        </p>
       </div>
     );
   }

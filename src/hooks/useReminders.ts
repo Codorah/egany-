@@ -39,7 +39,6 @@ export function useReminders(profile: UserProfile | null, groups: Group[]) {
             );
 
             await Promise.all(notificationsBatch);
-            console.log(`Sent reminders for group ${group.name}`);
           } catch (error) {
             console.error(`Error triggering reminders for group ${group.id}:`, error);
           }

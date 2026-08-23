@@ -281,7 +281,7 @@ export function BiometricPrompt({
 
             {/* Footnote */}
             <p className="text-[9px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
-              Conforme au protocole sécurisé SHA-256 de Capacitor Biometrics & WebAuthn API.
+              Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics).
             </p>
 
           </div>

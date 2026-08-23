@@ -37,6 +37,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   const [isDistributing, setIsDistributing] = React.useState(false);
   const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
   const [auctionDiscount, setAuctionDiscount] = React.useState('');
+  const [treasuryBalance, setTreasuryBalance] = React.useState<number | null>(null);
 
   const isCreator = profile?.uid === group.creatorId;
   const isAdmin = profile?.role === 'admin';
@@ -61,6 +62,24 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
     };
     fetchMembers();
   }, [group.members]);
+
+  // Caisse réelle = cotisations payées - montants déjà distribués, calculée
+  // de la même façon que ContributionsManager.tsx (évite d'afficher deux
+  // chiffres différents pour "l'argent dans la caisse" selon l'écran).
+  React.useEffect(() => {
+    const fetchTreasury = async () => {
+      const [{ data: contribRows }, { data: payoutRows }] = await Promise.all([
+        supabase.from('contributions').select('amount, status').eq('group_id', group.id),
+        supabase.from('payouts').select('amount').eq('group_id', group.id),
+      ]);
+      const collected = (contribRows ?? [])
+        .filter((c) => c.status === 'paid')
+        .reduce((sum, c) => sum + Number(c.amount), 0);
+      const distributed = (payoutRows ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
+      setTreasuryBalance(collected - distributed);
+    };
+    fetchTreasury();
+  }, [group.id]);
 
   const memberName = (uid: string) => members[uid]?.displayName || `Membre ${uid.slice(0, 6)}`;
 
@@ -207,7 +226,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
             <div className="bg-muted/30 p-3 rounded-xl">
               <span className="text-[10px] font-bold uppercase text-muted-foreground block">Caisse Actuelle</span>
               <p className="text-lg font-black text-primary mt-0.5">
-                {(group.contributionAmount * group.currentPayoutIndex).toLocaleString()} {group.currency}
+                {treasuryBalance !== null ? treasuryBalance.toLocaleString() : '...'} {group.currency}
               </p>
             </div>
             <div className="bg-muted/30 p-3 rounded-xl">
