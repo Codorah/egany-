@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Users, Wallet, User } from 'lucide-react';
+import { LayoutGrid, Users, Wallet, Landmark } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CustomAvatar } from './CustomAvatar';
 
 interface BottomNavProps {
   user?: {
@@ -27,26 +26,28 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
     }
   };
 
+  // Le Profil reste accessible via le menu du Navbar (avatar en haut) — ce
+  // slot met en avant Ma Banque, la fonctionnalité la plus demandée.
   const navItems = [
     {
       id: 'dashboard',
-      label: 'Accueil',
+      label: t('nav_home'),
       icon: LayoutGrid,
     },
     {
       id: 'my-circles',
-      label: 'Cercles',
+      label: t('nav_circles'),
       icon: Users,
     },
     {
       id: 'wallet-savings',
-      label: 'Épargne',
+      label: t('nav_savings'),
       icon: Wallet,
     },
     {
-      id: 'profile',
-      label: 'Profil',
-      icon: User,
+      id: 'my-bank',
+      label: t('my_bank'),
+      icon: Landmark,
     }
   ];
 
@@ -69,13 +70,7 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
             <div className={`relative flex items-center justify-center transition-colors duration-200 ${
               isActive ? 'text-primary' : 'text-muted-foreground'
             }`}>
-              {item.id === 'profile' ? (
-                <div className={`rounded-full transition-all ${isActive ? 'ring-2 ring-primary' : 'ring-1 ring-border'}`}>
-                  <CustomAvatar photoURL={user.photoURL} name={user.displayName} size={22} />
-                </div>
-              ) : (
-                <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
-              )}
+              <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
             </div>
             <span className={`text-[9px] mt-1 tracking-tight transition-colors duration-200 ${
               isActive

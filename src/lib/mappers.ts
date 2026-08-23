@@ -1,4 +1,4 @@
-import { Contribution, Group, GroupDocument, KycSubmission, MarketplaceRequest, MarketplaceService, Message, Notification, Payout, UserProfile, WalletTransaction } from '@/types';
+import { Contribution, Group, GroupDocument, KycSubmission, MarketplaceRequest, MarketplaceService, Message, Notification, Payout, PersonalVault, UserProfile, WalletTransaction } from '@/types';
 import { LedgerEntry, AuditLog } from '@/lib/ledger';
 
 export function mapProfileRow(row: Record<string, any>): UserProfile {
@@ -34,6 +34,21 @@ export function mapProfileRow(row: Record<string, any>): UserProfile {
     phone: row.phone ?? undefined,
     subscriptionPlan: row.subscription_plan ?? undefined,
     subscriptionExpiresAt: row.subscription_expires_at ?? undefined,
+    bankTier: row.bank_tier ?? 'none',
+    bankSubscriptionExpiresAt: row.bank_subscription_expires_at ?? undefined,
+  };
+}
+
+export function mapPersonalVaultRow(row: Record<string, any>): PersonalVault {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    description: row.description ?? undefined,
+    balance: Number(row.balance),
+    lockDays: row.lock_days,
+    unlockAt: row.unlock_at,
+    createdAt: row.created_at,
   };
 }
 

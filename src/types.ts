@@ -33,6 +33,19 @@ export interface UserProfile {
   phone?: string;
   subscriptionPlan?: string;
   subscriptionExpiresAt?: string;
+  bankTier?: 'none' | 'starter' | 'growth' | 'unlimited';
+  bankSubscriptionExpiresAt?: string;
+}
+
+export interface PersonalVault {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  balance: number;
+  lockDays: number;
+  unlockAt: string;
+  createdAt: string;
 }
 
 export interface KycSubmission {

@@ -17,6 +17,7 @@ const CalendarView = lazy(() => import('@/components/CalendarView').then((m) => 
 const Support = lazy(() => import('@/components/Support').then((m) => ({ default: m.Support })));
 const Marketplace = lazy(() => import('@/components/Marketplace').then((m) => ({ default: m.Marketplace })));
 const AIAssistant = lazy(() => import('@/components/AIAssistant').then((m) => ({ default: m.AIAssistant })));
+const MyBank = lazy(() => import('@/components/MyBank').then((m) => ({ default: m.MyBank })));
 import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
@@ -30,7 +31,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
@@ -236,6 +237,8 @@ export default function App() {
         return <Marketplace user={activeProfile} />;
       case 'ai-assistant':
         return <AIAssistant user={activeProfile} groups={groups} />;
+      case 'my-bank':
+        return <MyBank user={activeProfile} />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':

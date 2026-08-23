@@ -2350,6 +2350,428 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Error while updating.',
     ee: 'Vodada dzɔ le trɔtrɔ me.',
     kbp: 'Kɩdɛkɛdɩm yekiɣu taa.'
+  },
+
+  // Dashboard — hardcoded strings audit
+  admin_badge_short: {
+    fr: 'Admin',
+    en: 'Admin',
+    ee: 'Dziɖula',
+    kbp: 'Ñʋʋdʋ'
+  },
+  view_all: {
+    fr: 'Voir tout',
+    en: 'View all',
+    ee: 'Kpɔ Katã',
+    kbp: 'Cɔnɩ pɩ-tɩŋa'
+  },
+  available_balance: {
+    fr: 'Solde disponible',
+    en: 'Available balance',
+    ee: 'Ga si li',
+    kbp: 'Liidiye ɖɩŋ ŋgʋ kɩ-wɛɛ yɔ'
+  },
+  to_receive: {
+    fr: 'À recevoir',
+    en: 'To receive',
+    ee: 'Woaxɔ',
+    kbp: 'Kɩ-caɣ mʋʋ'
+  },
+  circles_active_short: {
+    fr: 'Cercles actifs',
+    en: 'Active circles',
+    ee: 'Habɔbɔ siwo le dɔwɔm',
+    kbp: 'Tontinaa wena awɛ ñʋʋ taa'
+  },
+  marketplace_shortcut_desc: {
+    fr: 'Services entre membres',
+    en: 'Services between members',
+    ee: 'Subɔsubɔdɔ le xɔ́wo dome',
+    kbp: 'Lɩmaɣza mʋyaa hazɩyɛ'
+  },
+  ai_assistant_shortcut_desc: {
+    fr: 'Bilan de caisse, rappels',
+    en: 'Treasury summary, reminders',
+    ee: 'Gadzikpɔƒe kpuiƒoƒo, ŋkuɖodzi',
+    kbp: 'Liidiye kɩlaʋ, ñɔɔzʋʋ'
+  },
+  next_contribution: {
+    fr: 'Prochaine Cotisation',
+    en: 'Next Contribution',
+    ee: 'Gaxexlẽ Si Gbɔna',
+    kbp: 'Liidiye haʋ ŋgʋ kɩ-kɔŋ yɔ'
+  },
+  contribute_now: {
+    fr: 'Cotiser',
+    en: 'Contribute',
+    ee: 'Xe Gaxexlẽ',
+    kbp: 'Fɛ liidiye haʋ'
+  },
+  cash_label: {
+    fr: 'Espèces',
+    en: 'Cash',
+    ee: 'Ga Home',
+    kbp: 'Liidiye kaɖaɣ'
+  },
+  no_pending_contribution: {
+    fr: 'Aucune cotisation en attente.',
+    en: 'No pending contribution.',
+    ee: 'Gaxexlẽ aɖeke mele lalam o.',
+    kbp: 'Liidiye haʋ naɖɩyɛ fɛyɩ ka taɣ taa.'
+  },
+  next_payout_turn: {
+    fr: 'Mon Prochain Tour (Gain)',
+    en: 'My Next Turn (Payout)',
+    ee: 'Nye Turn Si Gbɔna (Viɖe)',
+    kbp: 'Man kɩyakʋ ŋga kɩ-kɔŋ yɔ (Sʋʋ)'
+  },
+  distribution_label: {
+    fr: 'Distribution',
+    en: 'Distribution',
+    ee: 'Mavomavo',
+    kbp: 'Liidiye lɩʋ'
+  },
+  deadline_prefix: {
+    fr: 'Échéance :',
+    en: 'Deadline:',
+    ee: 'Ɣeyiɣi si wòle be woade:',
+    kbp: 'Alɩwaatʋ ŋga kɩ-caɣ:'
+  },
+  estimated_date_prefix: {
+    fr: 'Date estimée :',
+    en: 'Estimated date:',
+    ee: 'Ŋkeke si wobu:',
+    kbp: 'Kɩyakʋ ŋga papɩzɩɣ yɔ:'
+  },
+  join_circle_to_plan: {
+    fr: 'Rejoignez un cercle pour planifier votre tour.',
+    en: 'Join a circle to plan your turn.',
+    ee: 'Ge ɖe habɔbɔ me be nàɖo wò turn ɖoɖo.',
+    kbp: 'Kpɛndɩ tontine se ŋ-ñɔɔzɩ ño-kɩyakʋ.'
+  },
+  reliability_score: {
+    fr: 'Score de Fiabilité',
+    en: 'Reliability Score',
+    ee: 'Dzikpɔkpɔ Xexlẽme',
+    kbp: 'Lidaʋ kɩlaʋ'
+  },
+  payments_on_time: {
+    fr: "Paiements à l'heure",
+    en: 'On-time payments',
+    ee: 'Fexexlẽ si wowɔ le Ɣeyiɣi Nyuitɔ dzi',
+    kbp: 'Fenaɣ ñɔɔzʋʋ alɩwaatʋ taa'
+  },
+  circles_completed: {
+    fr: 'Cercles complétés',
+    en: 'Circles completed',
+    ee: 'Habɔbɔ siwo wu enu',
+    kbp: 'Tontinaa wena pɩ-tɛma yɔ'
+  },
+  your_active_tontines: {
+    fr: 'Vos groupes de tontine en cours',
+    en: 'Your ongoing tontine groups',
+    ee: 'Wò tontine habɔbɔ siwo le dɔwɔm',
+    kbp: 'Ño-tontinaa wena awɛ ñʋʋ taa yɔ'
+  },
+  default_circle_description: {
+    fr: 'Cercle de tontine collaborative.',
+    en: 'Collaborative tontine circle.',
+    ee: 'Tontine habɔbɔ si wɔa dɔ ɖekae.',
+    kbp: 'Tontine ŋgʋ pɩ-kpɛndʋʋ yɔ.'
+  },
+  reliability_modal_title: {
+    fr: 'Comment est calculé votre Score de Fiabilité ?',
+    en: 'How is your Reliability Score calculated?',
+    ee: 'Aleke wobua wò Dzikpɔkpɔ Xexlẽme?',
+    kbp: 'Ɛzɩma pɔ-kalɩɣ ño-lidaʋ kɩlaʋ?'
+  },
+  reliability_modal_desc: {
+    fr: 'Votre score mesure votre régularité et renforce la confiance des cercles.',
+    en: 'Your score measures your consistency and strengthens circle trust.',
+    ee: 'Wò xexlẽme dzidzena wò nuwɔwɔ ɖoɖo eye wòdoa ŋusẽ na habɔbɔwo ƒe kakaɖedzi.',
+    kbp: 'Ño-kɩlaʋ kɩ-kalɩɣ ño-lakasɩ tam-tam nɛ kɩ-ɖɔɔsɩ tontinaa lidaʋ.'
+  },
+  reliability_pts_ontime_desc: {
+    fr: "Chaque versement effectué avant l'échéance augmente directement votre score.",
+    en: 'Each payment made before the deadline directly increases your score.',
+    ee: 'Fexexlẽ ɖesiaɖe si nàwɔ hafi ɣeyiɣi la nade la doa wò xexlẽme ɖe edzi tẽe.',
+    kbp: 'Fenaɣ ñɔɔzʋʋ ŋgʋ kɩ-lakɩ ɖooo kɩyakʋ ŋga kɩ-caɣ yɔ, kɩ-tasɩɣ ño-kɩlaʋ yɔɔ tɔntɔ.'
+  },
+  reliability_seniority: {
+    fr: 'Ancienneté & Cercles Complétés',
+    en: 'Seniority & Completed Circles',
+    ee: 'Ɣeyiɣi Didi & Habɔbɔ Siwo Wu Enu',
+    kbp: 'Alɩwaatʋ didiye nɛ tontinaa wena pɩ-tɛma yɔ'
+  },
+  reliability_seniority_desc: {
+    fr: 'Terminer un cycle complet de tontine sans aucun incident valorise votre profil.',
+    en: 'Completing a full tontine cycle without incident boosts your profile.',
+    ee: 'Tontine ƒe ɣeyiɣi blibo nuwuwu nyuie doa asixɔxɔ na wò ŋkɔmeɖeɖe.',
+    kbp: 'Ño-tontine kɩyɛ kʋɖʋm tɛzʋʋ kʋñɔŋ fɛyɩ yɔ, kɩ-ɖɔɔsɩ ma-ɖɔkɔtɔ.'
+  },
+  reliability_penalty: {
+    fr: 'Pénalité de Retard',
+    en: 'Late Penalty',
+    ee: 'Tsitsi Tohehe',
+    kbp: 'Kɩgbɛdɩŋ tɔlɩm'
+  },
+  reliability_penalty_pts: {
+    fr: '-15 Pts / retard',
+    en: '-15 Pts / late payment',
+    ee: '-Xexlẽme 15 / tsitsi',
+    kbp: '-Kɩlaʋ 15 / kɩgbɛdɩŋ'
+  },
+  reliability_penalty_desc: {
+    fr: 'Les retards répétés diminuent temporairement votre niveau de fiabilité.',
+    en: 'Repeated late payments temporarily lower your reliability level.',
+    ee: 'Tsitsi gbe gbe ɖiɖia wò dzikpɔkpɔ gome vie.',
+    kbp: 'Kɩgbɛdɩŋ tam-tam kɩ-yebiɣ ño-lidaʋ kɩlaʋ alɩwaatʋ nɖɩyɛ taa.'
+  },
+  banner_savings_label: {
+    fr: 'Épargne Solidaire',
+    en: 'Solidarity Savings',
+    ee: 'Gadzraɖo Ɖekawɔwɔ',
+    kbp: 'Kpɛndʋʋ marali'
+  },
+  banner_mamas_title: {
+    fr: 'La Tontine des Mamans & Commerçantes',
+    en: 'The Mothers & Traders Tontine',
+    ee: 'Nɔviwo & Asitsalawo ƒe Tontine',
+    kbp: 'Ðaanaa nɛ laɖaa tontine'
+  },
+  banner_future_label: {
+    fr: 'Avenir & Projets',
+    en: 'Future & Projects',
+    ee: 'Etsɔ Si Gbɔna & Ɖoɖowo',
+    kbp: 'Sɔsɔɔ alɩwaatʋ nɛ lɩmaɣza'
+  },
+  banner_youth_title: {
+    fr: 'Une Jeunesse Prospère qui Construit',
+    en: 'A Thriving Youth Building the Future',
+    ee: 'Sɔhɛwo Siwo Le Nu Tum Nyuie',
+    kbp: 'Pɩyaɣ mʋyaa mba pɔ-maɣ yɔ'
+  },
+
+  // Ma Banque
+  my_bank: {
+    fr: 'Ma Banque',
+    en: 'My Bank',
+    ee: 'Nye Gaxɔ',
+    kbp: 'Man liidiye kpou'
+  },
+  my_bank_subtitle: {
+    fr: 'Bloquez votre épargne le temps qu\'il faut, pas le temps que vous voulez.',
+    en: 'Lock your savings for as long as it takes, not as long as you want.',
+    ee: 'Do gaxɔ wò gadzraɖo teƒe si wòhiã, menye teƒe si nèdi o.',
+    kbp: 'Ha ño-marali alɩwaatʋ ŋga kɩ-pɔzʋʋ yɔ, pɩ-tɩɩ kɛ ŋga n-sɔɔlɩ yɔ.'
+  },
+  bank_no_subscription_title: {
+    fr: "Débloquez l'accès à Ma Banque",
+    en: 'Unlock access to My Bank',
+    ee: 'Ʋu Mɔnu Na Nye Gaxɔ',
+    kbp: 'Mʋ waɖɛ man liidiye kpou'
+  },
+  bank_no_subscription_desc: {
+    fr: "Choisissez un palier pour commencer à créer vos banques personnelles à délai bloqué.",
+    en: 'Choose a tier to start creating your locked personal banks.',
+    ee: 'Tia asixɔxɔ ɖeka be nàdze wò gaxɔ bubuawo si le blɔkɔm wɔwɔ gɔme.',
+    kbp: 'Lɩzɩ kɩlɩzɩ nakʋyʋ se ŋ-paɣzɩ ño-kpou haʋ.'
+  },
+  bank_tier_starter: {
+    fr: '1 à 5 banques',
+    en: '1 to 5 banks',
+    ee: 'Gaxɔ 1 vaseɖe 5',
+    kbp: 'Kpou 1 halɩ 5'
+  },
+  bank_tier_growth: {
+    fr: '6 à 20 banques',
+    en: '6 to 20 banks',
+    ee: 'Gaxɔ 6 vaseɖe 20',
+    kbp: 'Kpou 6 halɩ 20'
+  },
+  bank_tier_unlimited: {
+    fr: '21 banques et plus',
+    en: '21 banks and more',
+    ee: 'Gaxɔ 21 kple wu nenema',
+    kbp: 'Kpou 21 nɛ pɩ-yɔɔ'
+  },
+  bank_subscribe_cta: {
+    fr: "S'abonner",
+    en: 'Subscribe',
+    ee: 'Bu Eŋu',
+    kbp: 'Kpaɣ tʋmɩyɛ'
+  },
+  bank_per_month: {
+    fr: '/ mois',
+    en: '/ month',
+    ee: '/ ɣleti',
+    kbp: '/ fenaɣ'
+  },
+  bank_create_new: {
+    fr: 'Créer une banque',
+    en: 'Create a bank',
+    ee: 'Wɔ Gaxɔ Yeye',
+    kbp: 'Ma kpou kɩfaŋa'
+  },
+  bank_name_label: {
+    fr: 'Nom de la banque',
+    en: 'Bank name',
+    ee: 'Gaxɔ Ŋkɔ',
+    kbp: 'Kpou hɩɖɛ'
+  },
+  bank_name_placeholder: {
+    fr: 'Ex: Achat voiture, Fonds urgence...',
+    en: 'e.g. Car purchase, Emergency fund...',
+    ee: 'Kpɔɖeŋu: Ʋu Ƒle, Kuxi Ga...',
+    kbp: 'Ɛzɩ: Kɛɛ yabʋ, Kaɖɛ liidiye...'
+  },
+  bank_description_label: {
+    fr: 'Description (optionnel)',
+    en: 'Description (optional)',
+    ee: 'Numeɖeɖe (Menye Nyanya O)',
+    kbp: 'Tɔm yɔɔdʋʋ (pɩ-tɩɩ kɛ kɩ-cɛyʋʋ)'
+  },
+  bank_lock_days_label: {
+    fr: 'Délai de blocage (jours)',
+    en: 'Lock duration (days)',
+    ee: 'Blɔkɔ Ɣeyiɣi (Ŋkekewo)',
+    kbp: 'Kɩyakʋ ñɔɔzʋʋ (kɩyakʋ)'
+  },
+  bank_lock_days_hint: {
+    fr: "L'argent déposé sera totalement bloqué jusqu'à cette échéance.",
+    en: 'Deposited money will be fully locked until this deadline.',
+    ee: 'Ga si nàde eme la ablɔkɔ keŋkeŋ vaseɖe ɣeyiɣi sia.',
+    kbp: 'Liidiye ŋgʋ n-sɔnzɩɣ yɔ kɩ-ñɔɔzɩ tam halɩ kɩyakʋ ŋga.'
+  },
+  bank_create_confirm: {
+    fr: 'Créer la banque',
+    en: 'Create the bank',
+    ee: 'Wɔ Gaxɔ La',
+    kbp: 'Ma kpou'
+  },
+  bank_locked_until: {
+    fr: 'Bloquée jusqu\'au',
+    en: 'Locked until',
+    ee: 'Ablɔkɔ vaseɖe',
+    kbp: 'Pɩ-ñɔɔzɩ halɩ'
+  },
+  bank_unlocked_label: {
+    fr: 'Débloquée',
+    en: 'Unlocked',
+    ee: 'Woʋui',
+    kbp: 'Pɩ-mʋʋ'
+  },
+  bank_deposit_cta: {
+    fr: 'Déposer',
+    en: 'Deposit',
+    ee: 'De Ga',
+    kbp: 'Sɔnzɩ'
+  },
+  bank_withdraw_cta: {
+    fr: 'Retirer',
+    en: 'Withdraw',
+    ee: 'Ɖe Le Eme',
+    kbp: 'Kpeɣ'
+  },
+  bank_relock_cta: {
+    fr: 'Re-bloquer',
+    en: 'Lock again',
+    ee: 'Gblɔkɔe Ake',
+    kbp: 'Tasɩ ñɔɔzʋʋ'
+  },
+  bank_delete_cta: {
+    fr: 'Supprimer',
+    en: 'Delete',
+    ee: 'Tutu',
+    kbp: 'Ɖɩzɩ'
+  },
+  bank_empty_title: {
+    fr: "Vous n'avez pas encore de banque",
+    en: "You don't have a bank yet",
+    ee: 'Mèsu gaxɔ haɖe o',
+    kbp: 'Kpou naɖɩyɛ fɛyɩ ño-cɔlɔ fɛyɛ'
+  },
+  bank_empty_desc: {
+    fr: 'Créez votre première banque pour commencer à épargner sans y toucher avant terme.',
+    en: 'Create your first bank to start saving without touching it before the deadline.',
+    ee: 'Wɔ wò gaxɔ gbãtɔ be nàdze gadzraɖo gɔme mègaka asi eŋu hafi ɣeyiɣi la nade o.',
+    kbp: 'Ma ño-kpou kajalaɣ se ŋ-paɣzɩ marʋʋ nɛ ŋ-tɩɩ kpeɣu pɩ-taa ɖooo kɩyakʋ ŋga kɩ-caɣ yɔ.'
+  },
+  bank_current_tier: {
+    fr: 'Votre palier actuel',
+    en: 'Your current tier',
+    ee: 'Wò Asixɔxɔ Fifitɔ',
+    kbp: 'Ño-kɩlɩzɩ lɛɛlɛɛyɔ'
+  },
+  bank_vaults_used: {
+    fr: 'banques utilisées',
+    en: 'banks used',
+    ee: 'gaxɔ siwo woka zã',
+    kbp: 'kpou pɩ-lakɩ'
+  },
+  bank_upgrade_cta: {
+    fr: 'Changer de palier',
+    en: 'Change tier',
+    ee: 'Trɔ Asixɔxɔ',
+    kbp: 'Yekiɣ kɩlɩzɩ'
+  },
+
+  // Bottom nav labels
+  nav_home: {
+    fr: 'Accueil',
+    en: 'Home',
+    ee: 'Aƒe',
+    kbp: 'Ñʋʋdʋ'
+  },
+  nav_circles: {
+    fr: 'Cercles',
+    en: 'Circles',
+    ee: 'Habɔbɔwo',
+    kbp: 'Tontinaa'
+  },
+  nav_savings: {
+    fr: 'Épargne',
+    en: 'Savings',
+    ee: 'Gadzraɖo',
+    kbp: 'Marali'
+  },
+
+  // Navbar (top bar)
+  nav_switch_lang: {
+    fr: 'Changer de langue',
+    en: 'Switch language',
+    ee: 'Trɔ Gbe',
+    kbp: 'Yekiɣ kʋnʋŋ'
+  },
+  nav_theme_light: {
+    fr: 'Passer en mode clair',
+    en: 'Switch to light mode',
+    ee: 'Trɔ yi kekeli me',
+    kbp: 'Yekiɣ kɩjɛyɩtʋ taa'
+  },
+  nav_theme_dark: {
+    fr: 'Passer en mode sombre',
+    en: 'Switch to dark mode',
+    ee: 'Trɔ yi viviti me',
+    kbp: 'Yekiɣ kɩsɩɩmtʋ taa'
+  },
+  nav_login: {
+    fr: 'Se connecter',
+    en: 'Log in',
+    ee: 'Ge Ɖe Eme',
+    kbp: 'Kpɛndɩ'
+  },
+  nav_tagline: {
+    fr: 'Tontine & Épargne',
+    en: 'Tontine & Savings',
+    ee: 'Tontine & Gadzraɖo',
+    kbp: 'Tontine nɛ Marali'
+  },
+  nav_admin_badge: {
+    fr: 'Administrateur',
+    en: 'Administrator',
+    ee: 'Dziɖula',
+    kbp: 'Ñʋʋdʋ tʋ'
   }
 };
 

@@ -105,16 +105,16 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
-              Bonjour {user.displayName} 👋
+              {t('dashboard_greeting')} {user.displayName} 👋
             </h1>
             {user.role === 'admin' && (
               <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
-                Admin
+                {t('admin_badge_short')}
               </Badge>
             )}
           </div>
           <p className="text-xs text-muted-foreground font-medium">
-            Voici ce qui se passe dans vos cercles aujourd'hui.
+            {t('dashboard_subtitle')}
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
@@ -129,17 +129,17 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <CardContent className="p-5 space-y-5 relative">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white/80">Mon portefeuille</span>
+              <span className="text-xs font-bold text-white/80">{t('my_wallet')}</span>
               <button
                 onClick={() => onNavigate?.('wallet-savings')}
                 className="text-[11px] font-bold text-white/90 hover:text-white underline underline-offset-2 cursor-pointer"
               >
-                Voir tout
+                {t('view_all')}
               </button>
             </div>
 
             <div>
-              <span className="text-[10px] font-semibold text-white/70 uppercase tracking-wide">Solde disponible</span>
+              <span className="text-[10px] font-semibold text-white/70 uppercase tracking-wide">{t('available_balance')}</span>
               <p className="text-4xl font-serif font-black text-white mt-0.5">
                 {availableBalance.toLocaleString()} <span className="text-sm font-sans text-white/70">FCFA</span>
               </p>
@@ -147,15 +147,15 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
 
             <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="shrink-0 bg-white/15 backdrop-blur-xs rounded-2xl px-3 py-2 space-y-0.5 min-w-[110px]">
-                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">Épargne totale</span>
+                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">{t('total_saved')}</span>
                 <p className="text-sm font-black text-white">{totalSaved.toLocaleString()} <span className="text-[9px] font-sans text-white/60">FCFA</span></p>
               </div>
               <div className="shrink-0 bg-white/15 backdrop-blur-xs rounded-2xl px-3 py-2 space-y-0.5 min-w-[110px]">
-                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">À recevoir</span>
+                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">{t('to_receive')}</span>
                 <p className="text-sm font-black text-white">{nextPayoutAmount.toLocaleString()} <span className="text-[9px] font-sans text-white/60">FCFA</span></p>
               </div>
               <div className="shrink-0 bg-white/15 backdrop-blur-xs rounded-2xl px-3 py-2 space-y-0.5 min-w-[90px]">
-                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">Cercles actifs</span>
+                <span className="text-[9px] font-semibold text-white/70 uppercase tracking-wide">{t('circles_active_short')}</span>
                 <p className="text-sm font-black text-white">{groups.length}</p>
               </div>
             </div>
@@ -165,7 +165,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               size="sm"
               className="bg-white text-primary hover:bg-white/90 font-bold rounded-xl h-9 text-xs cursor-pointer w-full"
             >
-              <Wallet className="w-3.5 h-3.5 mr-1.5" /> Recharger
+              <Wallet className="w-3.5 h-3.5 mr-1.5" /> {t('recharge')}
             </Button>
           </CardContent>
         </Card>
@@ -182,8 +182,8 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             <Store className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-foreground">Marketplace</p>
-            <p className="text-[10px] text-muted-foreground truncate">Services entre membres</p>
+            <p className="text-xs font-bold text-foreground">{t('marketplace')}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{t('marketplace_shortcut_desc')}</p>
           </div>
         </button>
         <button
@@ -194,8 +194,8 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             <Bot className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-foreground">Assistant IA</p>
-            <p className="text-[10px] text-muted-foreground truncate">Bilan de caisse, rappels</p>
+            <p className="text-xs font-bold text-foreground">{t('ai_assistant')}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{t('ai_assistant_shortcut_desc')}</p>
           </div>
         </button>
       </motion.div>
@@ -203,7 +203,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
       {/* 4 ACTIONABLE CARDS */}
       <motion.div variants={itemVariants} className="space-y-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Prochaines actions
+          {t('quick_actions')}
         </h2>
 
         {/* Horizontal swipe on mobile (native app feel) instead of a plain
@@ -213,7 +213,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden shrink-0 snap-start w-[82vw] sm:w-[320px] md:w-auto md:shrink">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Clock className="w-4 h-4" /> Prochaine Cotisation
+                <Clock className="w-4 h-4" /> {t('next_contribution')}
               </span>
               {nextGroupToPay && (
                 <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
@@ -233,7 +233,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                     <span className="text-xs text-muted-foreground font-bold">{nextGroupToPay.currency}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Échéance : {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                    {t('deadline_prefix')} {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -241,19 +241,19 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                     onClick={() => onManageContributions(nextGroupToPay.id)}
                     className="gradient-sunset text-white font-bold rounded-xl h-9 text-xs cursor-pointer shadow-xs"
                   >
-                    Cotiser
+                    {t('contribute_now')}
                   </Button>
                   <Button
                     onClick={() => onManageContributions(nextGroupToPay.id)}
                     variant="outline"
                     className="border-border text-foreground hover:bg-muted font-bold rounded-xl h-9 text-xs cursor-pointer"
                   >
-                    Espèces
+                    {t('cash_label')}
                   </Button>
                 </div>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground py-4 text-center">Aucune cotisation en attente.</p>
+              <p className="text-xs text-muted-foreground py-4 text-center">{t('no_pending_contribution')}</p>
             )}
           </Card>
 
@@ -261,10 +261,10 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden shrink-0 snap-start w-[82vw] sm:w-[320px] md:w-auto md:shrink">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <Gift className="w-4 h-4" /> Mon Prochain Tour (Gain)
+                <Gift className="w-4 h-4" /> {t('next_payout_turn')}
               </span>
               <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
-                Distribution
+                {t('distribution_label')}
               </Badge>
             </div>
 
@@ -278,11 +278,11 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                   <span className="text-xs text-muted-foreground font-bold">{nextPayoutGroup.currency}</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Date estimée : {format(new Date(nextPayoutGroup.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+                  {t('estimated_date_prefix')} {format(new Date(nextPayoutGroup.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
                 </p>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground py-4 text-center">Rejoignez un cercle pour planifier votre tour.</p>
+              <p className="text-xs text-muted-foreground py-4 text-center">{t('join_circle_to_plan')}</p>
             )}
           </Card>
 
@@ -290,13 +290,13 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           <Card className="glass-card rounded-2xl p-5 shadow-soft space-y-3 relative overflow-hidden shrink-0 snap-start w-[82vw] sm:w-[320px] md:w-auto md:shrink">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Score de Fiabilité
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> {t('reliability_score')}
               </span>
               <button
                 onClick={() => setShowReliabilityInfo(true)}
                 className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
               >
-                <Info className="w-3.5 h-3.5" /> Détails
+                <Info className="w-3.5 h-3.5" /> {t('details')}
               </button>
             </div>
 
@@ -308,11 +308,11 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               <Progress value={user.reputationScore} className="h-2 bg-emerald-500/15" />
               <div className="space-y-1 pt-1 text-[11px] text-muted-foreground">
                 <div className="flex items-center justify-between">
-                  <span>Paiements à l'heure</span>
+                  <span>{t('payments_on_time')}</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">100%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Cercles complétés</span>
+                  <span>{t('circles_completed')}</span>
                   <span className="font-bold text-foreground">{user.groupsJoined || groups.length}</span>
                 </div>
               </div>
@@ -342,9 +342,9 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent p-5 flex flex-col justify-end">
-            <span className="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Épargne Solidaire</span>
+            <span className="text-[9px] font-bold text-amber-300 uppercase tracking-widest">{t('banner_savings_label')}</span>
             <h3 className="text-base font-serif font-bold text-white leading-snug max-w-[80%]">
-              La Tontine des Mamans & Commerçantes
+              {t('banner_mamas_title')}
             </h3>
           </div>
         </div>
@@ -356,9 +356,9 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent p-4 flex flex-col justify-end">
-            <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">Avenir & Projets</span>
+            <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">{t('banner_future_label')}</span>
             <h3 className="text-sm font-serif font-bold text-white leading-snug">
-              Une Jeunesse Prospère qui Construit
+              {t('banner_youth_title')}
             </h3>
           </div>
         </div>
@@ -376,7 +376,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             <h2 className="text-xl font-serif font-black text-foreground tracking-tight">
               {t('active_circles')}
             </h2>
-            <p className="text-xs text-muted-foreground font-medium">Vos groupes de tontine en cours</p>
+            <p className="text-xs text-muted-foreground font-medium">{t('your_active_tontines')}</p>
           </div>
           <CreateGroupDialog />
         </div>
@@ -427,7 +427,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                         {group.name}
                       </CardTitle>
                       <CardDescription className="line-clamp-2 text-xs text-muted-foreground mt-1">
-                        {group.description || 'Cercle de tontine collaborative.'}
+                        {group.description || t('default_circle_description')}
                       </CardDescription>
                     </CardHeader>
 
@@ -487,36 +487,36 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           <DialogHeader>
             <DialogTitle className="text-lg font-serif font-bold flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />
-              Comment est calculé votre Score de Fiabilité ?
+              {t('reliability_modal_title')}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Votre score mesure votre régularité et renforce la confiance des cercles.
+              {t('reliability_modal_desc')}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-3 py-2 text-xs">
             <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1">
               <div className="flex items-center justify-between font-bold text-emerald-700 dark:text-emerald-300">
-                <span>Paiements à l'heure</span>
+                <span>{t('payments_on_time')}</span>
                 <span>+50 Pts</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">Chaque versement effectué avant l'échéance augmente directement votre score.</p>
+              <p className="text-[11px] text-muted-foreground">{t('reliability_pts_ontime_desc')}</p>
             </div>
 
             <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl space-y-1">
               <div className="flex items-center justify-between font-bold text-primary">
-                <span>Ancienneté & Cercles Complétés</span>
+                <span>{t('reliability_seniority')}</span>
                 <span>+30 Pts</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">Terminer un cycle complet de tontine sans aucun incident valorise votre profil.</p>
+              <p className="text-[11px] text-muted-foreground">{t('reliability_seniority_desc')}</p>
             </div>
 
             <div className="p-3 bg-muted/40 rounded-2xl space-y-1">
               <div className="flex items-center justify-between font-bold text-foreground">
-                <span>Pénalité de Retard</span>
-                <span className="text-rose-500">-15 Pts / retard</span>
+                <span>{t('reliability_penalty')}</span>
+                <span className="text-rose-500">{t('reliability_penalty_pts')}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">Les retards répétés diminuent temporairement votre niveau de fiabilité.</p>
+              <p className="text-[11px] text-muted-foreground">{t('reliability_penalty_desc')}</p>
             </div>
           </div>
         </DialogContent>

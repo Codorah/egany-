@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CalendarDays, User, ShieldCheck, Store, Bot } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, User, ShieldCheck, Store, Bot, Landmark } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SidebarProps {
@@ -45,6 +45,11 @@ export function Sidebar({ user, currentView = 'dashboard', onNavigate }: Sidebar
       icon: <Bot className="w-5 h-5" />,
     },
     {
+      id: 'my-bank',
+      label: t('my_bank'),
+      icon: <Landmark className="w-5 h-5" />,
+    },
+    {
       id: 'profile',
       label: t('profile'),
       icon: <User className="w-5 h-5" />,
@@ -52,7 +57,7 @@ export function Sidebar({ user, currentView = 'dashboard', onNavigate }: Sidebar
   ];
 
   if (user?.role === 'admin') {
-    navItems.splice(4, 0, {
+    navItems.splice(5, 0, {
       id: 'admin',
       label: t('admin_panel') || 'Admin',
       icon: <ShieldCheck className="w-5 h-5" />,

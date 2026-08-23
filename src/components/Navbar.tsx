@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages, Check } from 'lucide-react';
+import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages, Check, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from './NotificationBell';
 import { CustomAvatar } from './CustomAvatar';
@@ -73,7 +73,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
               eganyé
             </span>
             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mt-0.5">
-              Tontine & Épargne
+              {t('nav_tagline')}
             </span>
           </div>
         </div>
@@ -85,7 +85,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
             <DropdownMenuTrigger render={
               <button
                 className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                title="Changer de langue"
+                title={t('nav_switch_lang')}
               >
                 <Languages className="w-4 h-4" />
               </button>
@@ -108,7 +108,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
           <button
             onClick={toggleTheme}
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            title={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
+            title={isDark ? t('nav_theme_light') : t('nav_theme_dark')}
           >
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
           </button>
@@ -133,12 +133,18 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     {user.role === 'admin' && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                        <Sparkles className="w-3 h-3" /> Administrateur
+                        <Sparkles className="w-3 h-3" /> {t('nav_admin_badge')}
                       </span>
                     )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="my-1" />
+                {(user.role === 'admin' || user.email === 'codorah@hotmail.com') && (
+                  <DropdownMenuItem onClick={() => onNavigate?.('admin')} className="rounded-xl cursor-pointer">
+                    <ShieldCheck className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-bold">{t('admin_panel') || 'Administration'}</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onNavigate?.('profile')} className="rounded-xl cursor-pointer">
                   <UserCircle className="mr-2 h-4 w-4 text-primary" />
                   <span className="font-medium">{t('profile')}</span>
@@ -160,7 +166,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
             </DropdownMenu>
           ) : (
             <Button className="gradient-sunset text-white font-bold rounded-xl shadow-xs hover:opacity-95" onClick={() => onNavigate?.('dashboard')}>
-              Se connecter
+              {t('nav_login')}
             </Button>
           )}
         </div>

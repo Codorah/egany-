@@ -1360,3 +1360,278 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
+-- ============================================================================
+-- 13. MA BANQUE — tirelires personnelles bloquées, avec délai réel
+-- ============================================================================
+-- L'idée : un membre dépose de l'argent dans une "banque" avec un délai
+-- (ex: 1 mois) ; l'argent est réellement bloqué jusqu'à l'échéance, contre
+-- l'habitude de "casser sa tirelire" avant terme. Accès payant par palier
+-- (nombre de banques simultanées), distinct de tout abonnement du site.
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS bank_tier text NOT NULL DEFAULT 'none' CHECK (bank_tier IN ('none', 'starter', 'growth', 'unlimited')),
+  ADD COLUMN IF NOT EXISTS bank_subscription_expires_at timestamptz;
+
+CREATE TABLE IF NOT EXISTS public.personal_vaults (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  balance numeric NOT NULL DEFAULT 0,
+  lock_days integer NOT NULL CHECK (lock_days > 0),
+  unlock_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_personal_vaults_user ON public.personal_vaults(user_id, created_at DESC);
+
+ALTER TABLE public.personal_vaults ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "personal_vaults_owner_or_admin" ON public.personal_vaults;
+CREATE POLICY "personal_vaults_owner_or_admin" ON public.personal_vaults FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
+-- Pas de policy INSERT/UPDATE/DELETE directe : tout passe par les RPC
+-- ci-dessous (SECURITY DEFINER) pour garantir le respect du plafond
+-- d'abonnement et le blocage réel des fonds pendant le délai.
+
+CREATE OR REPLACE FUNCTION public.bank_tier_max_vaults(p_tier text)
+RETURNS integer
+LANGUAGE sql IMMUTABLE
+AS $$
+  SELECT CASE p_tier
+    WHEN 'starter' THEN 5
+    WHEN 'growth' THEN 20
+    WHEN 'unlimited' THEN 999
+    ELSE 0
+  END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.bank_tier_price(p_tier text)
+RETURNS numeric
+LANGUAGE sql IMMUTABLE
+AS $$
+  SELECT CASE p_tier
+    WHEN 'starter' THEN 1000
+    WHEN 'growth' THEN 2500
+    WHEN 'unlimited' THEN 5000
+    ELSE 0
+  END;
+$$;
+
+-- Souscription (ou renouvellement) : débite le portefeuille pour de vrai,
+-- passe par le même registre comptable double-entrée que le reste de l'app.
+CREATE OR REPLACE FUNCTION public.subscribe_bank_tier(p_tier text)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_price numeric;
+  v_ledger_result jsonb;
+BEGIN
+  IF p_tier NOT IN ('starter', 'growth', 'unlimited') THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Palier invalide.');
+  END IF;
+
+  v_price := public.bank_tier_price(p_tier);
+
+  v_ledger_result := public.execute_financial_transaction(
+    p_idempotency_key := 'bank_sub_' || auth.uid()::text || '_' || to_char(now(), 'YYYYMMDD') || '_' || p_tier,
+    p_user_id := auth.uid(),
+    p_amount := v_price,
+    p_currency := 'FCFA',
+    p_description := 'Abonnement Ma Banque — palier ' || p_tier,
+    p_action_type := 'bank_subscription',
+    p_debit_account := 'user_wallet:' || auth.uid()::text,
+    p_credit_account := 'eganye_platform_revenue'
+  );
+
+  IF NOT (v_ledger_result->>'success')::boolean THEN
+    RETURN jsonb_build_object('success', false, 'message', v_ledger_result->>'message');
+  END IF;
+
+  UPDATE public.profiles SET
+    bank_tier = p_tier,
+    bank_subscription_expires_at = GREATEST(COALESCE(bank_subscription_expires_at, now()), now()) + interval '1 month'
+  WHERE id = auth.uid();
+
+  RETURN jsonb_build_object('success', true, 'message', 'Abonnement Ma Banque activé.');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.create_personal_vault(
+  p_name text,
+  p_description text,
+  p_lock_days integer
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_profile record;
+  v_vault_count integer;
+  v_max integer;
+  v_new_vault_id uuid;
+BEGIN
+  IF p_lock_days IS NULL OR p_lock_days <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le délai doit être supérieur à zéro jour.');
+  END IF;
+  IF p_name IS NULL OR length(trim(p_name)) = 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le nom de la banque est requis.');
+  END IF;
+
+  SELECT bank_tier, bank_subscription_expires_at INTO v_profile FROM public.profiles WHERE id = auth.uid();
+
+  IF v_profile.bank_tier = 'none' OR v_profile.bank_subscription_expires_at IS NULL OR v_profile.bank_subscription_expires_at < now() THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Abonnement Ma Banque inactif ou expiré. Souscrivez d''abord un palier.');
+  END IF;
+
+  SELECT count(*) INTO v_vault_count FROM public.personal_vaults WHERE user_id = auth.uid();
+  v_max := public.bank_tier_max_vaults(v_profile.bank_tier);
+
+  IF v_vault_count >= v_max THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Plafond de banques atteint pour votre palier (' || v_max || ').');
+  END IF;
+
+  INSERT INTO public.personal_vaults (user_id, name, description, lock_days, unlock_at)
+  VALUES (auth.uid(), trim(p_name), NULLIF(trim(coalesce(p_description, '')), ''), p_lock_days, now() + (p_lock_days || ' days')::interval)
+  RETURNING id INTO v_new_vault_id;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Banque créée.', 'vaultId', v_new_vault_id);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.deposit_to_vault(
+  p_vault_id uuid,
+  p_amount numeric
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_vault record;
+  v_ledger_result jsonb;
+BEGIN
+  IF p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le montant doit être supérieur à zéro.');
+  END IF;
+
+  SELECT * INTO v_vault FROM public.personal_vaults WHERE id = p_vault_id AND user_id = auth.uid() FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Banque introuvable.');
+  END IF;
+
+  v_ledger_result := public.execute_financial_transaction(
+    p_idempotency_key := 'vault_deposit_' || p_vault_id::text || '_' || extract(epoch from now())::text,
+    p_user_id := auth.uid(),
+    p_amount := p_amount,
+    p_currency := 'FCFA',
+    p_description := 'Dépôt dans la banque « ' || v_vault.name || ' »',
+    p_action_type := 'vault_deposit',
+    p_debit_account := 'user_wallet:' || auth.uid()::text,
+    p_credit_account := 'personal_vault:' || p_vault_id::text
+  );
+
+  IF NOT (v_ledger_result->>'success')::boolean THEN
+    RETURN jsonb_build_object('success', false, 'message', v_ledger_result->>'message');
+  END IF;
+
+  UPDATE public.personal_vaults SET balance = balance + p_amount WHERE id = p_vault_id;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Dépôt effectué.');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.withdraw_from_vault(
+  p_vault_id uuid,
+  p_amount numeric
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_vault record;
+  v_ledger_result jsonb;
+BEGIN
+  IF p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le montant doit être supérieur à zéro.');
+  END IF;
+
+  SELECT * INTO v_vault FROM public.personal_vaults WHERE id = p_vault_id AND user_id = auth.uid() FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Banque introuvable.');
+  END IF;
+
+  IF v_vault.unlock_at > now() THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Cette banque est encore bloquée jusqu''au ' || to_char(v_vault.unlock_at, 'DD/MM/YYYY HH24:MI') || '.');
+  END IF;
+
+  IF p_amount > v_vault.balance THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Solde insuffisant dans cette banque.');
+  END IF;
+
+  v_ledger_result := public.execute_financial_transaction(
+    p_idempotency_key := 'vault_withdraw_' || p_vault_id::text || '_' || extract(epoch from now())::text,
+    p_user_id := auth.uid(),
+    p_amount := p_amount,
+    p_currency := 'FCFA',
+    p_description := 'Retrait de la banque « ' || v_vault.name || ' »',
+    p_action_type := 'vault_withdrawal',
+    p_debit_account := 'personal_vault:' || p_vault_id::text,
+    p_credit_account := 'user_wallet:' || auth.uid()::text
+  );
+
+  IF NOT (v_ledger_result->>'success')::boolean THEN
+    RETURN jsonb_build_object('success', false, 'message', v_ledger_result->>'message');
+  END IF;
+
+  UPDATE public.personal_vaults SET balance = balance - p_amount WHERE id = p_vault_id;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Retrait effectué.');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.relock_vault(
+  p_vault_id uuid,
+  p_lock_days integer
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_vault record;
+BEGIN
+  IF p_lock_days IS NULL OR p_lock_days <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le délai doit être supérieur à zéro jour.');
+  END IF;
+
+  SELECT * INTO v_vault FROM public.personal_vaults WHERE id = p_vault_id AND user_id = auth.uid() FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Banque introuvable.');
+  END IF;
+
+  UPDATE public.personal_vaults SET lock_days = p_lock_days, unlock_at = now() + (p_lock_days || ' days')::interval
+  WHERE id = p_vault_id;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Banque re-bloquée.');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_empty_vault(p_vault_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_vault record;
+BEGIN
+  SELECT * INTO v_vault FROM public.personal_vaults WHERE id = p_vault_id AND user_id = auth.uid() FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Banque introuvable.');
+  END IF;
+  IF v_vault.balance > 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Videz la banque avant de la supprimer.');
+  END IF;
+
+  DELETE FROM public.personal_vaults WHERE id = p_vault_id;
+  RETURN jsonb_build_object('success', true, 'message', 'Banque supprimée.');
+END;
+$$;
+
