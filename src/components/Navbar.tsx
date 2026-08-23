@@ -56,11 +56,11 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
           className="flex items-center gap-2.5 cursor-pointer group select-none" 
           onClick={() => onNavigate?.('dashboard')}
         >
-          <div className="w-9 h-9 rounded-xl gradient-sunset p-0.5 shadow-xs transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
-            <div className="w-full h-full bg-background rounded-[10px] flex items-center justify-center">
-              <span className="font-serif font-black text-lg text-primary">e</span>
-            </div>
-          </div>
+          <img
+            src="/logo-emblem.png"
+            alt="eganyé"
+            className="w-9 h-9 shrink-0 transition-transform duration-300 group-hover:scale-105"
+          />
           <div className="flex flex-col">
             <span className="text-xl font-serif font-black tracking-tight text-foreground lowercase leading-none">
               eganyé
