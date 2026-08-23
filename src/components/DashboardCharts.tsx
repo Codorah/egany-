@@ -18,28 +18,31 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, Wallet, Landmark, Calendar, ChevronDown } from 'lucide-react';
+import { useLanguage, LanguageCode } from '@/contexts/LanguageContext';
 
 interface DashboardChartsProps {
   user: UserProfile;
   groups: Group[];
 }
 
-const MONTHS_FR = [
-  'Janv', 'Févr', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'
-];
-
-const getMonthName = (dateString: string) => {
-  try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return 'Autre';
-    return `${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`;
-  } catch {
-    return 'Autre';
-  }
+const MONTHS_BY_LANG: Record<LanguageCode, string[]> = {
+  fr: ['Janv', 'Févr', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  ee: ['Dzv', 'Dzd', 'Ted', 'Afɔ', 'Dam', 'Mas', 'Sia', 'Deasi', 'Any', 'Kel', 'Ade', 'Dzm'],
+  kbp: ['Oza', 'Ake', 'Maa', 'Ave', 'Mee', 'Zui', 'Zul', 'Aou', 'Sep', 'Okt', 'Noo', 'Dee'],
 };
 
 export function DashboardCharts({ user, groups }: DashboardChartsProps) {
+  const { t, language } = useLanguage();
+  const getMonthName = (dateString: string) => {
+    try {
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return t('chart_none');
+      return `${MONTHS_BY_LANG[language][d.getMonth()]} ${d.getFullYear()}`;
+    } catch {
+      return t('chart_none');
+    }
+  };
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
@@ -145,7 +148,10 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
     }
 
     return data;
-  }, [transactions, user.walletBalance]);
+  }, [transactions, user.walletBalance, language]);
+
+  const paidLabel = t('status_paid');
+  const pendingLabel = t('status_pending');
 
   // 2. Process group monthly contributions
   const contributionData = useMemo(() => {
@@ -166,8 +172,8 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
         const monthName = getMonthName(d.toISOString());
         return {
           name: monthName,
-          "Payé": 0,
-          "En attente": baseAmount,
+          [paidLabel]: 0,
+          [pendingLabel]: baseAmount,
         };
       });
     }
@@ -193,10 +199,10 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
     return Object.keys(monthlyGroups)
       .map(month => ({
         name: month,
-        "Payé": monthlyGroups[month].paid,
-        "En attente": monthlyGroups[month].pending
+        [paidLabel]: monthlyGroups[month].paid,
+        [pendingLabel]: monthlyGroups[month].pending
       }));
-  }, [contributions, selectedGroupId, groups]);
+  }, [contributions, selectedGroupId, groups, language, paidLabel, pendingLabel]);
 
   // Total calculated statistics
   const currentGroup = groups.find(g => g.id === selectedGroupId);
@@ -221,10 +227,10 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
         <div>
           <CardTitle className="font-serif text-lg font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-secondary" />
-            Analyses d'Épargne & Cotisations
+            {t('chart_title')}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground font-medium">
-            Visualisez la croissance de vos fonds et le statut des cotisations.
+            {t('chart_subtitle')}
           </CardDescription>
         </div>
 
@@ -234,13 +240,13 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
               value="balance"
               className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
-              Balance Globale
+              {t('chart_tab_balance')}
             </TabsTrigger>
             <TabsTrigger
               value="contributions"
               className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
             >
-              Cotisations du Cercle
+              {t('chart_tab_contributions')}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -262,7 +268,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Solde Portefeuille</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_wallet_balance')}</p>
                   <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.walletBalance)}</p>
                 </div>
               </div>
@@ -271,7 +277,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                   <Landmark className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Épargné</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_total_saved')}</p>
                   <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.totalSaved)}</p>
                 </div>
               </div>
@@ -280,11 +286,11 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">Dernière Transaction</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_last_transaction')}</p>
                   <p className="font-serif font-bold text-sm text-foreground">
                     {transactions.length > 0
-                      ? new Date(transactions[transactions.length - 1].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                      : 'Aucune'}
+                      ? new Date(transactions[transactions.length - 1].date).toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })
+                      : t('chart_none')}
                   </p>
                 </div>
               </div>
@@ -317,7 +323,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     labelStyle={labelStyle}
-                    formatter={(value: any) => [formatCurrency(Number(value)), 'Solde']}
+                    formatter={(value: any) => [formatCurrency(Number(value)), t('chart_tooltip_balance')]}
                   />
                   <Line
                     type="monotone"
@@ -342,16 +348,16 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
             >
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase">Cercle d'Épargne :</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase">{t('chart_circle_label')}</span>
                 <div className="relative inline-block">
                   <select
                     value={selectedGroupId}
                     onChange={(e) => setSelectedGroupId(e.target.value)}
-                    aria-label="Cercle d'épargne"
-                    title="Cercle d'épargne"
+                    aria-label={t('chart_circle_label')}
+                    title={t('chart_circle_label')}
                     className="appearance-none bg-muted hover:bg-muted/70 transition-colors text-xs font-bold text-foreground pl-3 pr-8 py-1.5 rounded-xl border-none cursor-pointer focus:outline-none"
                   >
-                    <option value="all">Tous mes cercles</option>
+                    <option value="all">{t('chart_all_circles')}</option>
                     {groups.map((g) => (
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
@@ -362,7 +368,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
 
               {currentGroup && (
                 <div className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1 rounded-xl">
-                  Cotisation récurrente : {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
+                  {t('chart_recurring_contribution')} {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
                 </div>
               )}
             </div>
@@ -397,8 +403,8 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                     iconSize={8}
                     wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--foreground)' }}
                   />
-                  <Bar dataKey="Payé" fill="var(--secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey="En attente" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey={paidLabel} fill="var(--secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey={pendingLabel} fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

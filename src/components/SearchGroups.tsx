@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Search, Users, Loader2, Send } from 'lucide-react';
 import { EmptyState } from './ui/EmptyState';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SearchGroupsProps {
   user: UserProfile;
@@ -16,6 +17,7 @@ interface SearchGroupsProps {
 }
 
 export function SearchGroups({ user, onBack }: SearchGroupsProps) {
+  const { t } = useLanguage();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [term, setTerm] = useState('');
@@ -35,7 +37,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
         setGroups(hydrated.filter((g) => !g.members.includes(user.uid)));
       } catch (error) {
         console.error('Error searching public groups:', error);
-        toast.error('Erreur lors de la recherche de cercles.');
+        toast.error(t('sg_search_error'));
       } finally {
         setLoading(false);
       }
@@ -62,7 +64,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
       }
     } catch (error) {
       console.error('Error requesting to join:', error);
-      toast.error("Erreur lors de la demande d'adhésion.");
+      toast.error(t('jg_join_request_error'));
     } finally {
       setRequestingId(null);
     }
@@ -75,15 +77,15 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Rechercher un cercle public</h1>
-          <p className="text-muted-foreground text-sm">Trouvez une tontine ouverte à rejoindre parmi les cercles publics.</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('sg_page_title')}</h1>
+          <p className="text-muted-foreground text-sm">{t('sg_page_subtitle')}</p>
         </div>
       </div>
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Rechercher par nom ou description..."
+          placeholder={t('sg_search_placeholder')}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           className="pl-9"
@@ -97,8 +99,8 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="Aucun cercle public trouvé"
-          description="Il n'y a aucun cercle public correspondant à votre recherche pour le moment."
+          title={t('sg_empty_title')}
+          description={t('sg_empty_desc')}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -109,17 +111,17 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-base">{group.name}</CardTitle>
-                    <Badge variant="outline" className="text-[10px]">{group.frequency}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{t(`freq_${group.frequency}`)}</Badge>
                   </div>
                   <CardDescription className="line-clamp-2 text-xs">{group.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground">Cotisation</span>
+                    <span className="text-muted-foreground">{t('contribution_label')}</span>
                     <span>{group.contributionAmount.toLocaleString()} {group.currency}</span>
                   </div>
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground">Participants</span>
+                    <span className="text-muted-foreground">{t('participants')}</span>
                     <span>{group.members.length}{group.maxMembers ? ` / ${group.maxMembers}` : ''}</span>
                   </div>
                   <Button
@@ -132,7 +134,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                     ) : (
                       <Send className="w-4 h-4 mr-2" />
                     )}
-                    {isPending ? 'Demande envoyée' : 'Demander à rejoindre'}
+                    {isPending ? t('sg_request_sent_label') : t('jg_request_to_join_cta')}
                   </Button>
                 </CardContent>
               </Card>

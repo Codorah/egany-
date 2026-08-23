@@ -209,11 +209,11 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
   const handleSubmitKyc = async () => {
     if (!kycFullName.trim()) {
-      toast.error("Veuillez saisir votre nom complet.");
+      toast.error(t('prof_enter_full_name'));
       return;
     }
     if (!kycFile) {
-      toast.error("Veuillez sélectionner une photo de votre pièce d'identité.");
+      toast.error(t('prof_select_id_photo'));
       return;
     }
     setIsSubmittingKyc(true);
@@ -230,7 +230,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       const submission = await fetchLatestKycSubmission(user.uid);
       setKycSubmission(submission);
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'envoi du document.");
+      toast.error(err.message || t('prof_kyc_send_error'));
     } finally {
       setIsSubmittingKyc(false);
     }
@@ -245,9 +245,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         mandate_permissions: mandatePermissions,
       }).eq('id', user.uid);
       if (error) throw error;
-      toast.success("Mandataire enregistré !");
+      toast.success(t('prof_mandate_saved'));
     } catch (err: any) {
-      toast.error("Erreur lors de l'enregistrement du mandataire.");
+      toast.error(t('prof_mandate_save_error'));
     } finally {
       setIsSavingMandate(false);
     }
@@ -255,7 +255,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
   const handleChangePin = async () => {
     if (!/^\d{4}$/.test(newPin)) {
-      toast.error('Le code PIN doit comporter exactement 4 chiffres.');
+      toast.error(t('prof_pin_exactly_4'));
       return;
     }
     setIsSavingPin(true);
@@ -265,7 +265,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       toast.success(result.message);
       setNewPin('');
     } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de la mise à jour du code PIN.');
+      toast.error(err.message || t('prof_pin_update_error'));
     } finally {
       setIsSavingPin(false);
     }
@@ -273,17 +273,17 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères.');
+      toast.error(t('prof_pw_min_6'));
       return;
     }
     setIsSavingPassword(true);
     try {
       const { error } = await changePassword(newPassword);
       if (error) throw error;
-      toast.success('Mot de passe mis à jour !');
+      toast.success(t('prof_pw_updated'));
       setNewPassword('');
     } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de la mise à jour du mot de passe.');
+      toast.error(err.message || t('prof_pw_update_error'));
     } finally {
       setIsSavingPassword(false);
     }
@@ -307,7 +307,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
     const { error } = await supabase.from('profiles').update({ [column]: value }).eq('id', user.uid);
     if (error) {
       setLocal(!value);
-      toast.error('Erreur lors de la sauvegarde de la préférence.');
+      toast.error(t('prof_pref_save_error'));
     }
   };
 
@@ -323,9 +323,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         phone: editPhone.trim() || null,
       }).eq('id', user.uid);
       if (error) throw error;
-      toast.success("Informations personnelles enregistrées !");
+      toast.success(t('prof_personal_info_saved'));
     } catch (err: any) {
-      toast.error("Erreur lors de la sauvegarde.");
+      toast.error(t('prof_save_error_generic'));
     } finally {
       setSavingSettings(false);
     }
@@ -333,12 +333,12 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
   const handleRecharge = async () => {
     if (!navigator.onLine) {
-      toast.error("Vous êtes hors-ligne. La recharge nécessite une connexion internet.");
+      toast.error(t('prof_offline_recharge'));
       return;
     }
     const amount = parseFloat(rechargeAmount);
     if (!amount || amount < 100) {
-      toast.error("Veuillez saisir un montant valide (minimum 100 FCFA).");
+      toast.error(t('prof_min_100'));
       return;
     }
     setIsRecharging(true);
@@ -352,30 +352,30 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         body: JSON.stringify({ amount, userId: user.uid, userName: user.displayName, userEmail: user.email }),
       });
       const data = await response.json();
-      if (!response.ok || !data.url) throw new Error(data.error || "Impossible de démarrer le paiement Paydunya.");
+      if (!response.ok || !data.url) throw new Error(data.error || t('prof_paydunya_start_error'));
       window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || "Échec de la recharge.");
+      toast.error(err.message || t('prof_recharge_error'));
       setIsRecharging(false);
     }
   };
 
   const handleWithdraw = async () => {
     if (!navigator.onLine) {
-      toast.error("Vous êtes hors-ligne. Le retrait nécessite une connexion internet.");
+      toast.error(t('prof_offline_withdraw'));
       return;
     }
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
-      toast.error("Montant de retrait invalide.");
+      toast.error(t('prof_invalid_withdraw_amount'));
       return;
     }
     if (amount > (user.walletBalance || 0)) {
-      toast.error("Solde insuffisant dans votre portefeuille.");
+      toast.error(t('prof_insufficient_balance'));
       return;
     }
     if (!withdrawPin) {
-      toast.error("Veuillez saisir votre code PIN de retrait.");
+      toast.error(t('prof_enter_withdraw_pin'));
       return;
     }
     setIsWithdrawing(true);
@@ -416,11 +416,11 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       });
 
       withdrawIdempotencyKeyRef.current = null;
-      toast.success(`Retrait de ${amount.toLocaleString()} FCFA demandé — vous recevrez l'argent sur ${withdrawMethod.toUpperCase()} sous peu.`);
+      toast.success(`${t('prof_withdraw_requested_prefix')} ${amount.toLocaleString()} FCFA ${t('prof_withdraw_requested_mid')} ${withdrawMethod.toUpperCase()} ${t('prof_withdraw_requested_suffix')}`);
       setWithdrawAmount('');
       setWithdrawPin('');
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors du retrait.");
+      toast.error(err.message || t('prof_withdraw_error'));
     } finally {
       setIsWithdrawing(false);
     }
@@ -430,71 +430,71 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
   const mainCategories = [
     {
       id: 'account',
-      title: 'Mon compte',
-      description: 'Gérez vos informations personnelles et votre identité.',
+      title: t('prof_cat_account_title'),
+      description: t('prof_cat_account_desc'),
       icon: <User className="w-4.5 h-4.5 text-brand" />,
       color: 'bg-brand/10',
-      group: 'Compte & sécurité'
+      group: t('prof_group_account_security')
     },
     {
       id: 'security',
-      title: 'Sécurité & confidentialité',
-      description: 'Sécurisez votre compte et gérez vos données.',
+      title: t('prof_cat_security_title'),
+      description: t('prof_cat_security_desc'),
       icon: <Shield className="w-4.5 h-4.5 text-brand" />,
       color: 'bg-brand/10',
-      group: 'Compte & sécurité'
+      group: t('prof_group_account_security')
     },
     {
       id: 'payments',
-      title: 'Argent & paiements',
-      description: 'Gérez vos moyens de paiement, transferts et retraits.',
+      title: t('prof_cat_payments_title'),
+      description: t('prof_cat_payments_desc'),
       icon: <Wallet className="w-4.5 h-4.5 text-secondary" />,
       color: 'bg-secondary/10',
-      group: 'Argent & cercles'
+      group: t('prof_group_money_circles')
     },
     {
       id: 'circles',
-      title: 'Mes cercles',
-      description: 'Gérez vos tontines, vos préférences et invitations.',
+      title: t('prof_cat_circles_title'),
+      description: t('prof_cat_circles_desc'),
       icon: <Users className="w-4.5 h-4.5 text-secondary" />,
       color: 'bg-secondary/10',
-      group: 'Argent & cercles'
+      group: t('prof_group_money_circles')
     },
     {
       id: 'subscription',
-      title: 'Abonnement & récompenses',
-      description: 'Gérez votre abonnement et vos avantages.',
+      title: t('prof_cat_subscription_title'),
+      description: t('prof_cat_subscription_desc'),
       icon: <Award className="w-4.5 h-4.5 text-secondary" />,
       color: 'bg-secondary/10',
-      group: 'Argent & cercles'
+      group: t('prof_group_money_circles')
     },
     {
       id: 'notifications',
-      title: 'Notifications & communication',
-      description: 'Choisissez comment vous recevez les notifications.',
+      title: t('prof_cat_notifications_title'),
+      description: t('prof_cat_notifications_desc'),
       icon: <Bell className="w-4.5 h-4.5 text-muted-foreground" />,
       color: 'bg-muted',
-      group: 'Général'
+      group: t('prof_group_general')
     },
     {
       id: 'support',
-      title: 'Aide & support',
-      description: 'Trouvez de l\'aide, des tutoriels ou contactez le support.',
+      title: t('prof_cat_support_title'),
+      description: t('prof_cat_support_desc'),
       icon: <HelpCircle className="w-4.5 h-4.5 text-muted-foreground" />,
       color: 'bg-muted',
-      group: 'Général'
+      group: t('prof_group_general')
     },
     {
       id: 'legal',
-      title: 'Légal & informations',
-      description: 'Consultez les conditions, politiques et documents légaux.',
+      title: t('prof_cat_legal_title'),
+      description: t('prof_cat_legal_desc'),
       icon: <BookOpen className="w-4.5 h-4.5 text-muted-foreground" />,
       color: 'bg-muted',
-      group: 'Général'
+      group: t('prof_group_general')
     }
   ];
 
-  const categoryGroups = ['Compte & sécurité', 'Argent & cercles', 'Général'].map((groupName) => ({
+  const categoryGroups = [t('prof_group_account_security'), t('prof_group_money_circles'), t('prof_group_general')].map((groupName) => ({
     name: groupName,
     items: mainCategories.filter((c) => c.group === groupName),
   }));
@@ -510,10 +510,10 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             className="flex items-center gap-2 text-xs font-bold text-foreground cursor-pointer hover:bg-muted h-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Retour aux Paramètres</span>
+            <span>{t('prof_back_to_settings')}</span>
           </Button>
           <span className="text-xs font-serif font-black text-primary uppercase tracking-wider">
-            {mainCategories.find(c => c.id === activeSection)?.title || 'Paramètres'}
+            {mainCategories.find(c => c.id === activeSection)?.title || t('settings')}
           </span>
         </div>
       )}
@@ -542,15 +542,15 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                     <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
                     {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
                       <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
-                        Compte vérifié
+                        {t('prof_account_verified')}
                       </Badge>
                     ) : (
                       <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] font-bold">
-                        Identité non vérifiée
+                        {t('prof_identity_not_verified')}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">{user.phone || 'Téléphone non renseigné'}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{user.phone || t('prof_phone_not_provided')}</p>
                   <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
                 </div>
               </div>
@@ -558,13 +558,13 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               {/* User Balance & Reputation */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="bg-muted/40 p-3 rounded-2xl border border-border/60 text-center space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Solde disponible</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('available_balance')}</span>
                   <p className="text-sm font-black text-primary">
                     {(user.walletBalance || 0).toLocaleString()} FCFA
                   </p>
                 </div>
                 <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center space-y-0.5">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Score de fiabilité</span>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{t('reliability_score')}</span>
                   <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                     {user.reputationScore} / 100
                   </p>
@@ -572,7 +572,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               </div>
 
               <div className="pt-2 border-t border-border/60 text-xs text-muted-foreground flex justify-between items-center">
-                <span>Membre depuis</span>
+                <span>{t('prof_member_since')}</span>
                 <span className="font-bold text-foreground">
                   {user.createdAt ? format(new Date(user.createdAt), 'dd MMMM yyyy', { locale: fr }) : '—'}
                 </span>
@@ -582,29 +582,29 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <div className="p-4 bg-muted/40 rounded-2xl border border-border/60 space-y-2">
                 <div className="flex items-center gap-2">
                   <PhoneCall className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-foreground">Besoin d'aide ?</span>
+                  <span className="text-xs font-bold text-foreground">{t('prof_need_help')}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">Contactez notre support disponible 7j/7.</p>
+                <p className="text-[11px] text-muted-foreground">{t('prof_support_desc_sidebar')}</p>
                 <Button
                   onClick={() => onNavigate?.('support')}
                   variant="outline"
                   size="sm"
                   className="w-full text-xs font-bold rounded-xl h-8 border-border text-foreground hover:bg-muted"
                 >
-                  Contacter le support
+                  {t('prof_contact_support')}
                 </Button>
                 <div className="flex gap-1.5 pt-0.5">
                   <button
                     onClick={() => onNavigate?.('support')}
                     className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                   >
-                    <Lightbulb className="w-3 h-3" /> Suggérer
+                    <Lightbulb className="w-3 h-3" /> {t('prof_suggest')}
                   </button>
                   <button
                     onClick={() => onNavigate?.('support')}
                     className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                   >
-                    <Bug className="w-3 h-3" /> Signaler un bug
+                    <Bug className="w-3 h-3" /> {t('prof_report_bug')}
                   </button>
                 </div>
               </div>
@@ -647,7 +647,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 shrink-0">
                   <Trash2 className="w-4.5 h-4.5" />
                 </div>
-                <span className="flex-1 font-bold text-sm text-rose-600 dark:text-rose-400">Supprimer mon compte</span>
+                <span className="flex-1 font-bold text-sm text-rose-600 dark:text-rose-400">{t('prof_delete_account')}</span>
                 <ChevronRight className="w-4 h-4 text-rose-400 shrink-0" />
               </button>
 
@@ -658,7 +658,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 className="w-full h-12 rounded-2xl border-border text-foreground font-bold hover:bg-muted flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
                 <LogOut className="w-4 h-4 text-muted-foreground" />
-                <span>Se déconnecter</span>
+                <span>{t('logout')}</span>
               </Button>
             </div>
           </div>
@@ -678,7 +678,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 activeSubTab === 'personal_info' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
               }`}
             >
-              1. Informations personnelles
+              {t('prof_tab_personal_info')}
             </button>
             <button
               onClick={() => setActiveSubTab('kyc')}
@@ -686,7 +686,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 activeSubTab === 'kyc' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
               }`}
             >
-              2. Vérification d'identité (KYC)
+              {t('prof_tab_kyc')}
             </button>
             <button
               onClick={() => setActiveSubTab('mandate')}
@@ -694,7 +694,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 activeSubTab === 'mandate' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
               }`}
             >
-              3. Mandataire numérique
+              {t('prof_tab_mandate')}
             </button>
           </div>
 
@@ -711,36 +711,36 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Prénom</Label>
+                  <Label className="text-xs font-bold">{t('prof_first_name')}</Label>
                   <Input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Nom</Label>
+                  <Label className="text-xs font-bold">{t('prof_last_name_label')}</Label>
                   <Input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Nom d'utilisateur / Pseudo</Label>
+                  <Label className="text-xs font-bold">{t('prof_username_nickname')}</Label>
                   <Input value={editDisplayName} onChange={(e) => setEditDisplayName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Adresse Email</Label>
+                  <Label className="text-xs font-bold">{t('prof_email_address_label')}</Label>
                   <Input value={user.email} disabled className="rounded-xl h-11 bg-muted/50" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Téléphone</Label>
+                  <Label className="text-xs font-bold">{t('prof_phone_label')}</Label>
                   <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Date de naissance</Label>
+                  <Label className="text-xs font-bold">{t('prof_date_of_birth')}</Label>
                   <Input type="date" value={editDateOfBirth} onChange={(e) => setEditDateOfBirth(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-bold">Langue</Label>
+                  <Label className="text-xs font-bold">{t('prof_language_label')}</Label>
                   <LanguageSwitcher value={language} onChange={setLanguage} variant="grid" />
                 </div>
               </div>
               <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">
-                {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
+                {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : t('save')}
               </Button>
             </Card>
           )}
@@ -749,19 +749,19 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           {activeSubTab === 'kyc' && (
             <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-serif font-bold text-lg text-foreground">Vérification d'identité</h3>
+                <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_kyc_title')}</h3>
                 <Badge className={`font-bold text-xs border ${
                   (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL
                     ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                     : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
                 }`}>
                   {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Vérifié</span>
-                  ) : `Niveau ${user.kycLevel ?? 1} sur 3`}
+                    <span className="flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_badge')}</span>
+                  ) : `${t('prof_kyc_level_prefix')} ${user.kycLevel ?? 1} ${t('prof_kyc_level_suffix')}`}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                Une pièce d'identité valide est nécessaire pour créer ou rejoindre un cercle de tontine.
+                {t('prof_kyc_desc')}
               </p>
 
               {kycLoading ? (
@@ -773,43 +773,43 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   <div className="flex items-center gap-2">
                     <IdCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Pièce d'Identité</p>
+                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{t('prof_id_document_label')}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        Vérifiée{user.kycVerifiedAt ? ` le ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : ''}
+                        {user.kycVerifiedAt ? `${t('prof_verified_on')} ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : t('prof_verified_word')}
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-emerald-500 text-white text-[10px] flex items-center gap-1"><Check className="w-3 h-3" /> Vérifiée</Badge>
+                  <Badge className="bg-emerald-500 text-white text-[10px] flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_word')}</Badge>
                 </div>
               ) : kycSubmission?.status === 'pending' ? (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <IdCard className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Pièce d'Identité</p>
-                      <p className="text-[11px] text-muted-foreground">Envoyée le {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">{t('prof_id_document_label')}</p>
+                      <p className="text-[11px] text-muted-foreground">{t('prof_sent_on')} {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
                     </div>
                   </div>
-                  <Badge className="bg-amber-500 text-white text-[10px]">En attente de validation</Badge>
+                  <Badge className="bg-amber-500 text-white text-[10px]">{t('prof_pending_validation')}</Badge>
                 </div>
               ) : (
                 <div className="space-y-3 pt-2">
                   {kycSubmission?.status === 'rejected' && (
                     <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[11px] text-danger font-medium flex items-start gap-2">
                       <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>Votre précédente soumission a été refusée{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. Veuillez soumettre à nouveau.</span>
+                      <span>{t('prof_kyc_rejected_prefix')}{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. {t('prof_kyc_resubmit')}</span>
                     </div>
                   )}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold">Nom complet (tel que sur la pièce)</Label>
+                    <Label className="text-xs font-bold">{t('prof_kyc_full_name_label')}</Label>
                     <Input value={kycFullName} onChange={(e) => setKycFullName(e.target.value)} className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold">Numéro de la pièce d'identité (optionnel)</Label>
+                    <Label className="text-xs font-bold">{t('prof_kyc_id_number_label')}</Label>
                     <Input value={kycIdNumber} onChange={(e) => setKycIdNumber(e.target.value)} className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold">Photo de la carte nationale d'identité</Label>
+                    <Label className="text-xs font-bold">{t('prof_kyc_photo_label')}</Label>
                     <label
                       htmlFor="kyc_file_input"
                       className="flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-border hover:border-brand/50 hover:bg-brand/5 transition-colors cursor-pointer"
@@ -819,10 +819,10 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-foreground truncate">
-                          {kycFile ? kycFile.name : 'Choisir une photo ou un PDF'}
+                          {kycFile ? kycFile.name : t('prof_choose_photo_pdf')}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {kycFile ? 'Appuyez pour changer de fichier' : 'JPG, PNG ou PDF, recto de la pièce'}
+                          {kycFile ? t('prof_tap_change_file') : t('prof_file_format_hint')}
                         </p>
                       </div>
                       <input
@@ -835,7 +835,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                     </label>
                   </div>
                   <Button onClick={handleSubmitKyc} disabled={isSubmittingKyc} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
-                    {isSubmittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Soumettre pour vérification'}
+                    {isSubmittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_submit_for_verification')}
                   </Button>
                 </div>
               )}
@@ -845,29 +845,29 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           {/* Sub-Tab 3: Mandataire numérique */}
           {activeSubTab === 'mandate' && (
             <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-              <h3 className="font-serif font-bold text-lg text-foreground">Mandataire numérique</h3>
-              <p className="text-xs text-muted-foreground">Désignez une personne de confiance pour vous aider à suivre vos cotisations (sans droit de retrait).</p>
+              <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_mandate_title')}</h3>
+              <p className="text-xs text-muted-foreground">{t('prof_mandate_desc')}</p>
 
               <div className="space-y-3 pt-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Nom complet du mandataire</Label>
+                  <Label className="text-xs font-bold">{t('prof_mandate_name_label')}</Label>
                   <Input value={mandateName} onChange={(e) => setMandateName(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Numéro de téléphone</Label>
+                  <Label className="text-xs font-bold">{t('prof_phone_number_label')}</Label>
                   <Input value={mandatePhone} onChange={(e) => setMandatePhone(e.target.value)} className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-1.5 pt-1">
-                  <Label className="text-xs font-bold">Droits accordés au mandataire</Label>
+                  <Label className="text-xs font-bold">{t('prof_mandate_rights_label')}</Label>
                   <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
-                    <span className="text-xs text-foreground">Voir les cotisations</span>
+                    <span className="text-xs text-foreground">{t('prof_view_contributions_perm')}</span>
                     <Switch
                       checked={mandatePermissions.includes('view_contributions')}
                       onCheckedChange={(v) => setMandatePermissions(prev => v ? [...prev, 'view_contributions'] : prev.filter(p => p !== 'view_contributions'))}
                     />
                   </div>
                   <div className="flex items-center justify-between p-3 bg-card border border-border/60 rounded-xl">
-                    <span className="text-xs text-foreground">Recevoir les rappels de cotisation</span>
+                    <span className="text-xs text-foreground">{t('prof_receive_reminders_perm')}</span>
                     <Switch
                       checked={mandatePermissions.includes('receive_reminders')}
                       onCheckedChange={(v) => setMandatePermissions(prev => v ? [...prev, 'receive_reminders'] : prev.filter(p => p !== 'receive_reminders'))}
@@ -877,12 +877,12 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>Le mandataire ne possède <strong>aucun accès à votre portefeuille ni aux retraits</strong>, quels que soient les droits ci-dessus.</span>
+                  <span>{t('prof_mandate_warning_prefix')} <strong>{t('prof_mandate_warning_bold')}</strong>{t('prof_mandate_warning_suffix')}</span>
                 </div>
               </div>
 
               <Button onClick={handleSaveMandate} disabled={isSavingMandate} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
-                {isSavingMandate ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer le mandataire'}
+                {isSavingMandate ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_save_mandate')}
               </Button>
             </Card>
           )}
@@ -897,7 +897,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           {/* Wallet Balance Header */}
           <Card className="gradient-sunset text-white rounded-3xl p-6 shadow-soft space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-200">Portefeuille & Paiements</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-200">{t('prof_wallet_payments_header')}</span>
               <button onClick={() => setShowBalance(!showBalance)} className="text-white/80 hover:text-white">
                 {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
@@ -906,7 +906,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <p className="text-3xl sm:text-4xl font-serif font-black">
                 {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '•••••••• FCFA'}
               </p>
-              <span className="text-xs text-white/80">Solde disponible immédiatement</span>
+              <span className="text-xs text-white/80">{t('prof_balance_available_now')}</span>
             </div>
           </Card>
 
@@ -915,42 +915,42 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             {/* Recharge Card */}
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-emerald-500" /> Recharger le portefeuille
+                <Plus className="w-4 h-4 text-emerald-500" /> {t('recharge_wallet_title')}
               </h4>
               <Input
                 type="number"
-                placeholder="Montant en FCFA (ex: 5000)"
+                placeholder={t('prof_amount_fcfa_placeholder')}
                 value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
               <Button onClick={handleRecharge} disabled={isRecharging} className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs">
-                {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Recharger via Mobile Money'}
+                {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_recharge_via_mobile_money')}
               </Button>
             </Card>
 
             {/* Withdraw Card */}
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
-                <ArrowDownCircle className="w-4 h-4 text-primary" /> Retirer des fonds
+                <ArrowDownCircle className="w-4 h-4 text-primary" /> {t('prof_withdraw_funds')}
               </h4>
               <Input
                 type="number"
-                placeholder="Montant en FCFA"
+                placeholder={t('prof_amount_fcfa_simple_placeholder')}
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
               <Input
                 type="password"
-                placeholder="PIN 4 chiffres"
+                placeholder={t('prof_pin_4digits_placeholder')}
                 maxLength={4}
                 value={withdrawPin}
                 onChange={(e) => setWithdrawPin(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
               <Button onClick={handleWithdraw} disabled={isWithdrawing} variant="outline" className="border-primary text-primary font-bold rounded-xl h-10 w-full text-xs">
-                {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer le retrait'}
+                {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_confirm_withdraw')}
               </Button>
             </Card>
           </div>
@@ -958,9 +958,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           {/* Transaction History — was fetched into walletTransactions but
               never actually rendered anywhere in this component. */}
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-3">
-            <h4 className="font-serif font-bold text-base text-foreground">Historique des transactions</h4>
+            <h4 className="font-serif font-bold text-base text-foreground">{t('prof_transaction_history')}</h4>
             {walletTransactions.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">Aucune transaction pour le moment.</p>
+              <p className="text-xs text-muted-foreground text-center py-4">{t('prof_no_transaction_now')}</p>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {walletTransactions.map((tx) => (
@@ -989,32 +989,32 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-serif font-bold text-lg text-foreground">Mes Cercles de Tontine</h3>
+              <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_my_tontine_circles')}</h3>
               <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 font-bold text-xs">
-                {groups?.length || 0} actif(s)
+                {groups?.length || 0} {t('prof_actif_suffix')}
               </Badge>
             </div>
-            
+
             <div className="p-4 bg-card border border-border/60 rounded-2xl space-y-3">
-              <h4 className="text-xs font-bold text-foreground">Statistiques de participation</h4>
+              <h4 className="text-xs font-bold text-foreground">{t('prof_participation_stats')}</h4>
               <div className="flex items-end gap-2 h-32 pt-4">
                 {/* Empty Graphs (as requested by user: "mes cercles essaie de faire des graphes vides") */}
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="flex-1 flex flex-col justify-end gap-2 items-center group">
                     <div className="w-full bg-muted/60 rounded-t-sm h-[15%] group-hover:bg-primary/50 transition-all duration-300"></div>
-                    <span className="text-[9px] text-muted-foreground font-medium uppercase">Mois {i+1}</span>
+                    <span className="text-[9px] text-muted-foreground font-medium uppercase">{t('prof_month_label')} {i+1}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center mt-2">Aucune donnée suffisante pour générer les graphiques complets ce mois-ci.</p>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">{t('prof_insufficient_data_charts')}</p>
             </div>
 
             <div className="space-y-2 pt-2">
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Vos cercles actuels</h4>
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('prof_current_circles')}</h4>
               {!groups || groups.length === 0 ? (
                 <div className="p-4 text-center bg-muted/30 rounded-2xl border border-border/60">
-                  <p className="text-xs text-muted-foreground">Vous n'êtes membre d'aucun cercle.</p>
-                  <Button variant="link" onClick={() => onNavigate?.('search-groups')} className="text-primary text-xs h-auto p-0 mt-1">Rejoindre un cercle</Button>
+                  <p className="text-xs text-muted-foreground">{t('prof_no_circle_member')}</p>
+                  <Button variant="link" onClick={() => onNavigate?.('search-groups')} className="text-primary text-xs h-auto p-0 mt-1">{t('join_group')}</Button>
                 </div>
               ) : (
                 groups.map((g: any) => (
@@ -1040,28 +1040,28 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       {activeSection === 'subscription' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-            <h3 className="font-serif font-bold text-lg text-foreground">Abonnement & Avantages</h3>
-            
+            <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_subscription_advantages')}</h3>
+
             <div className="p-5 bg-gradient-to-br from-purple-500/10 to-primary/5 border border-purple-500/20 rounded-2xl space-y-3">
               <div className="flex justify-between items-start">
                 <div>
                   <Badge className="bg-purple-500 text-white font-bold text-[10px] mb-2">
-                    Plan Actuel : {user.subscriptionPlan === 'premium' ? 'Premium' : 'Gratuit'}
+                    {t('prof_current_plan_label')} {user.subscriptionPlan === 'premium' ? t('prof_plan_premium') : t('prof_plan_free')}
                   </Badge>
                   <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">
-                    {user.subscriptionPlan === 'premium' ? 'Eganyé Premium' : 'Eganyé Essentiel'}
+                    {user.subscriptionPlan === 'premium' ? t('prof_eganye_premium') : t('prof_eganye_essential')}
                   </h4>
                   <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
                     {user.subscriptionPlan === 'premium'
-                      ? `Abonnement actif${user.subscriptionExpiresAt ? ` jusqu'au ${format(new Date(user.subscriptionExpiresAt), 'dd MMMM yyyy', { locale: fr })}` : ''}.`
-                      : "Accès de base aux cercles de tontine."}
+                      ? `${t('prof_subscription_active_prefix')}${user.subscriptionExpiresAt ? ` ${t('prof_subscription_active_until')} ${format(new Date(user.subscriptionExpiresAt), 'dd MMMM yyyy', { locale: fr })}` : ''}.`
+                      : t('prof_basic_access_desc')}
                   </p>
                 </div>
                 <Award className="w-10 h-10 text-purple-500 opacity-50" />
               </div>
               {user.subscriptionPlan !== 'premium' && (
                 <Button disabled className="bg-purple-600/50 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft cursor-not-allowed">
-                  Eganyé Premium — Bientôt disponible
+                  {t('prof_premium_coming_soon')}
                 </Button>
               )}
             </div>
@@ -1075,40 +1075,40 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       {activeSection === 'security' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-5">
-            <h3 className="font-serif font-bold text-lg text-foreground">Sécurité & Confidentialité</h3>
+            <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_security_privacy_title')}</h3>
 
             {/* PIN Code Setting */}
             <div className="p-4 bg-muted/30 rounded-2xl space-y-2 border border-border/60">
-              <Label className="text-xs font-bold">Modifier le PIN Eganyé (4 chiffres)</Label>
+              <Label className="text-xs font-bold">{t('prof_edit_pin_label')}</Label>
               <div className="flex gap-2">
                 <Input
                   type="password"
                   inputMode="numeric"
                   maxLength={4}
-                  placeholder="Nouveau PIN"
+                  placeholder={t('prof_new_pin_placeholder')}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   className="rounded-xl h-10 text-xs"
                 />
                 <Button onClick={handleChangePin} disabled={isSavingPin} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
-                  {isSavingPin ? 'Envoi...' : 'Modifier'}
+                  {isSavingPin ? t('sending_label') : t('edit_label')}
                 </Button>
               </div>
             </div>
 
             {/* Password Setting */}
             <div className="p-4 bg-muted/30 rounded-2xl space-y-2 border border-border/60">
-              <Label className="text-xs font-bold">Modifier le mot de passe</Label>
+              <Label className="text-xs font-bold">{t('prof_edit_password_label')}</Label>
               <div className="flex gap-2">
                 <Input
                   type="password"
-                  placeholder="Nouveau mot de passe (6+ caractères)"
+                  placeholder={t('prof_new_password_placeholder')}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="rounded-xl h-10 text-xs"
                 />
                 <Button onClick={handleChangePassword} disabled={isSavingPassword} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
-                  {isSavingPassword ? 'Envoi...' : 'Modifier'}
+                  {isSavingPassword ? t('sending_label') : t('edit_label')}
                 </Button>
               </div>
             </div>
@@ -1116,8 +1116,8 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             {/* Biometrics Toggle */}
             <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl">
               <div className="space-y-0.5">
-                <p className="text-xs font-bold text-foreground">Biométrie (Empreinte / FaceID)</p>
-                <p className="text-[11px] text-muted-foreground">Utiliser l'empreinte pour déverrouiller l'application sur cet appareil.</p>
+                <p className="text-xs font-bold text-foreground">{t('prof_biometrics_label')}</p>
+                <p className="text-[11px] text-muted-foreground">{t('prof_biometrics_desc')}</p>
               </div>
               <Switch checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />
             </div>
@@ -1133,7 +1133,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         onSuccess={async () => {
           setIsBiometricPromptOpen(false);
           await supabase.from('profiles').update({ biometrics_enabled: true }).eq('id', user.uid);
-          toast.success('Biométrie activée sur cet appareil !');
+          toast.success(t('prof_biometrics_enabled_toast'));
         }}
       />
 
@@ -1143,14 +1143,14 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       {activeSection === 'notifications' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-            <h3 className="font-serif font-bold text-lg text-foreground">Préférences de Notification</h3>
-            <p className="text-xs text-muted-foreground">Choisissez les canaux par lesquels vous souhaitez recevoir vos rappels de cotisation.</p>
+            <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_notif_preferences_title')}</h3>
+            <p className="text-xs text-muted-foreground">{t('prof_notif_preferences_desc')}</p>
 
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
-                  <p className="text-xs font-bold text-foreground">Notifications Push</p>
-                  <p className="text-[10px] text-muted-foreground">Sur votre téléphone mobile — bientôt disponible</p>
+                  <p className="text-xs font-bold text-foreground">{t('prof_push_notif')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('prof_push_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={pushNotif}
@@ -1160,8 +1160,8 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
-                  <p className="text-xs font-bold text-foreground">SMS</p>
-                  <p className="text-[10px] text-muted-foreground">Rappels directs par SMS</p>
+                  <p className="text-xs font-bold text-foreground">{t('sms_label')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('prof_sms_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={smsNotif}
@@ -1171,8 +1171,8 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
-                  <p className="text-xs font-bold text-foreground">Email</p>
-                  <p className="text-[10px] text-muted-foreground">Reçus et récapitulatifs mensuels</p>
+                  <p className="text-xs font-bold text-foreground">{t('email_label')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('prof_email_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={emailNotif}
@@ -1182,8 +1182,8 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
 
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
-                  <p className="text-xs font-bold text-foreground">WhatsApp</p>
-                  <p className="text-[10px] text-muted-foreground">Alertes et rappels automatisés</p>
+                  <p className="text-xs font-bold text-foreground">{t('whatsapp_label')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('prof_whatsapp_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={whatsAppNotif}
@@ -1201,20 +1201,20 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       {activeSection === 'legal' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-            <h3 className="font-serif font-bold text-lg text-foreground">Documents Légaux</h3>
-            <p className="text-xs text-muted-foreground">Consultez la réglementation des tontines collaboratives et notre politique de confidentialité.</p>
-            
+            <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_legal_documents_title')}</h3>
+            <p className="text-xs text-muted-foreground">{t('prof_legal_documents_desc')}</p>
+
             <div className="space-y-2 pt-2 text-xs">
               <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('cgu')}>
-                <span className="font-bold">Conditions Générales d'Utilisation (CGU)</span>
+                <span className="font-bold">{t('prof_cgu_label')}</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('reglement')}>
-                <span className="font-bold">Règlement Officiel des Tontines</span>
+                <span className="font-bold">{t('prof_reglement_label')}</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-muted/40" onClick={() => setLegalDoc('confidentialite')}>
-                <span className="font-bold">Politique de Confidentialité & Données</span>
+                <span className="font-bold">{t('prof_confidentialite_label')}</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
@@ -1247,38 +1247,38 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         <DialogContent className="max-w-md rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-rose-600 flex items-center gap-2">
-              <Trash2 className="w-5 h-5" /> Supprimer définitivement mon compte ?
+              <Trash2 className="w-5 h-5" /> {t('prof_delete_account_confirm_title')}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Cette action est irréversible. Toutes vos données seront effacées.
+              {t('prof_delete_account_irreversible')}
             </DialogDescription>
           </DialogHeader>
 
           {groups.length > 0 ? (
             <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>Vous avez actuellement <strong>{groups.length} cercle(s) actif(s)</strong>. Veuillez quitter ou régler vos cotisations avant de supprimer votre compte.</span>
+              <span>{t('prof_delete_blocked_prefix')} <strong>{groups.length} {t('prof_delete_blocked_suffix')}</strong>. {t('prof_delete_blocked_desc')}</span>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground py-2">
-              Confirmez-vous la suppression immédiate de votre compte Eganyé ?
+              {t('prof_delete_account_confirm_desc')}
             </p>
           )}
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} className="rounded-xl text-xs">
-              Annuler
+              {t('cancel')}
             </Button>
             <Button
               disabled={groups.length > 0}
               onClick={() => {
-                toast.success("Compte supprimé.");
+                toast.success(t('prof_account_deleted_toast'));
                 setShowDeleteConfirm(false);
                 onLogout?.();
               }}
               className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold"
             >
-              Supprimer mon compte
+              {t('prof_delete_account')}
             </Button>
           </DialogFooter>
         </DialogContent>

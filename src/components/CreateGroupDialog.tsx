@@ -29,35 +29,40 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
 import { KYC_VERIFIED_LEVEL } from '@/lib/kyc';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-const formSchema = z.object({
-  name: z.string().min(2, "Le nom du groupe doit avoir au moins 2 caractères."),
-  description: z.string().min(10, "La description doit avoir au moins 10 caractères."),
-  contributionAmount: z.number().min(100, "Le montant minimum est de 100."),
-  frequency: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
-  currency: z.string().min(1),
-  distributionMethod: z.enum(['sequential', 'draw', 'auction']),
-  maxMembers: z.number().min(2, "Il faut au moins 2 participants.").max(500),
-  startDate: z.string().min(1, "La date de début est requise."),
-  endDate: z.string().optional(),
-  rules: z.string().optional(),
-  isPrivate: z.boolean(),
-  penaltiesEnabled: z.boolean(),
-  penaltyType: z.enum(['fixed', 'percentage']),
-  penaltyAmount: z.number().min(0),
-  penaltyRate: z.number().min(0),
-  gracePeriod: z.number().min(0),
-  termsAccepted: z.boolean().refine(val => val === true, "Vous devez accepter les conditions."),
-  signature: z.string().min(1, "La signature électronique est requise."),
-}).refine((data) => !data.endDate || data.endDate >= data.startDate, {
-  message: "La date de fin doit être postérieure à la date de début.",
-  path: ["endDate"],
-});
+function buildFormSchema(t: (key: string) => string) {
+  return z.object({
+    name: z.string().min(2, t('cgd_err_name_min')),
+    description: z.string().min(10, t('cgd_err_description_min')),
+    contributionAmount: z.number().min(100, t('cgd_err_amount_min')),
+    frequency: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
+    currency: z.string().min(1),
+    distributionMethod: z.enum(['sequential', 'draw', 'auction']),
+    maxMembers: z.number().min(2, t('cgd_err_max_members_min')).max(500),
+    startDate: z.string().min(1, t('cgd_err_start_date_required')),
+    endDate: z.string().optional(),
+    rules: z.string().optional(),
+    isPrivate: z.boolean(),
+    penaltiesEnabled: z.boolean(),
+    penaltyType: z.enum(['fixed', 'percentage']),
+    penaltyAmount: z.number().min(0),
+    penaltyRate: z.number().min(0),
+    gracePeriod: z.number().min(0),
+    termsAccepted: z.boolean().refine(val => val === true, t('cgd_err_terms_required')),
+    signature: z.string().min(1, t('cgd_err_signature_required')),
+  }).refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    message: t('cgd_err_end_date_after_start'),
+    path: ["endDate"],
+  });
+}
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement }) {
+  const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
+  const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
   const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -88,7 +93,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
   const onSubmit = async (values: FormValues) => {
     if (!navigator.onLine) {
-      toast.error("Vous êtes hors-ligne. La création d'un cercle nécessite une connexion internet.");
+      toast.error(t('cgd_offline_error'));
       return;
     }
     const { data: { user } } = await supabase.auth.getUser();
@@ -102,7 +107,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
         .single();
       if (profileError) throw profileError;
       if ((profileRow?.kyc_level ?? 1) < KYC_VERIFIED_LEVEL) {
-        toast.error("Vérifiez votre identité (Profil > Vérification d'identité) avant de créer un cercle.");
+        toast.error(t('cgd_kyc_required_error'));
         return;
       }
 
@@ -144,12 +149,12 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
         .insert({ group_id: newGroup.id, user_id: user.id, status: 'active', payout_position: 0 });
       if (memberError) throw memberError;
 
-      toast.success("Cercle créé avec succès !");
+      toast.success(t('cgd_created_success'));
       setOpen(false);
       reset();
     } catch (error: any) {
       console.error("Error creating group:", error);
-      toast.error("Erreur lors de la création du groupe.");
+      toast.error(t('error_creating'));
     }
   };
 
@@ -162,29 +167,29 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
         {trigger ? undefined : (
           <>
             <Plus className="w-4.5 h-4.5" />
-            Nouveau Cercle
+            {t('cgd_new_circle_button')}
           </>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px] max-h-[85vh] overflow-y-auto rounded-3xl bg-card border border-border">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl font-bold text-foreground">Créer un nouveau cercle</DialogTitle>
+          <DialogTitle className="font-serif text-2xl font-bold text-foreground">{t('cgd_dialog_title')}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Configurez votre tontine digitale. Vous pourrez inviter des proches et automatiser les cotisations après sa création.
+            {t('cgd_dialog_desc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-xs font-bold text-foreground">Nom du cercle</Label>
-            <Input id="name" placeholder="Ex: Cotisation de Solidarité" {...register("name")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+            <Label htmlFor="name" className="text-xs font-bold text-foreground">{t('cgd_name_label')}</Label>
+            <Input id="name" placeholder={t('cgd_name_placeholder')} {...register("name")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
             {errors.name && <p className="text-[11px] text-danger font-semibold">{errors.name.message}</p>}
           </div>
           
           <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-xs font-bold text-foreground">Description / Objectif</Label>
-            <Textarea 
+            <Label htmlFor="description" className="text-xs font-bold text-foreground">{t('cgd_description_label')}</Label>
+            <Textarea
               id="description"
-              placeholder="Ex: Financer l'achat d'un terrain, équipement ou s'entraider pour des projets..." 
+              placeholder={t('cgd_description_placeholder')}
               className="resize-none rounded-xl border-border focus:ring-secondary h-20 text-xs" 
               {...register("description")}
               disabled={isSubmitting}
@@ -194,22 +199,22 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
  
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">Montant (FCFA)</Label>
+              <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">{t('cgd_amount_label')}</Label>
               <Input id="contributionAmount" type="number" {...register("contributionAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
               {errors.contributionAmount && <p className="text-[11px] text-danger font-semibold">{errors.contributionAmount.message}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="frequency" className="text-xs font-bold text-foreground">Fréquence</Label>
+              <Label htmlFor="frequency" className="text-xs font-bold text-foreground">{t('frequency')}</Label>
               <Select onValueChange={(val) => setValue("frequency", val as any)} disabled={isSubmitting}>
                 <SelectTrigger id="frequency" className="rounded-xl border-border">
-                  <SelectValue placeholder="Choisir" />
+                  <SelectValue placeholder={t('cgd_choose_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Quotidienne</SelectItem>
-                  <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                  <SelectItem value="bi-weekly">Bi-hebdomadaire</SelectItem>
-                  <SelectItem value="monthly">Mensuelle</SelectItem>
+                  <SelectItem value="daily">{t('freq_daily')}</SelectItem>
+                  <SelectItem value="weekly">{t('freq_weekly')}</SelectItem>
+                  <SelectItem value="bi-weekly">{t('freq_bi-weekly')}</SelectItem>
+                  <SelectItem value="monthly">{t('freq_monthly')}</SelectItem>
                 </SelectContent>
               </Select>
               {errors.frequency && <p className="text-[11px] text-danger font-semibold">{errors.frequency.message}</p>}
@@ -218,20 +223,20 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">Nombre de participants</Label>
+              <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">{t('cgd_max_members_label')}</Label>
               <Input id="maxMembers" type="number" {...register("maxMembers", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
               {errors.maxMembers && <p className="text-[11px] text-danger font-semibold">{errors.maxMembers.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="distributionMethod" className="text-xs font-bold text-foreground">Méthode de distribution</Label>
+              <Label htmlFor="distributionMethod" className="text-xs font-bold text-foreground">{t('cgd_distribution_method_label')}</Label>
               <Select defaultValue="sequential" onValueChange={(val) => setValue("distributionMethod", val as any)} disabled={isSubmitting}>
                 <SelectTrigger id="distributionMethod" className="rounded-xl border-border">
-                  <SelectValue placeholder="Choisir" />
+                  <SelectValue placeholder={t('cgd_choose_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sequential">Rotation séquentielle</SelectItem>
-                  <SelectItem value="draw">Tirage au sort</SelectItem>
-                  <SelectItem value="auction">Enchères</SelectItem>
+                  <SelectItem value="sequential">{t('cgd_dist_sequential')}</SelectItem>
+                  <SelectItem value="draw">{t('cgd_dist_draw')}</SelectItem>
+                  <SelectItem value="auction">{t('cgd_dist_auction')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -239,22 +244,22 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate" className="text-xs font-bold text-foreground">Date de début</Label>
+              <Label htmlFor="startDate" className="text-xs font-bold text-foreground">{t('cgd_start_date_label')}</Label>
               <Input id="startDate" type="date" {...register("startDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
               {errors.startDate && <p className="text-[11px] text-danger font-semibold">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate" className="text-xs font-bold text-foreground">Date de fin (optionnel)</Label>
+              <Label htmlFor="endDate" className="text-xs font-bold text-foreground">{t('cgd_end_date_label')}</Label>
               <Input id="endDate" type="date" {...register("endDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
               {errors.endDate && <p className="text-[11px] text-danger font-semibold">{errors.endDate.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="rules" className="text-xs font-bold text-foreground">Règles du cercle (optionnel)</Label>
+            <Label htmlFor="rules" className="text-xs font-bold text-foreground">{t('cgd_rules_label')}</Label>
             <Textarea
               id="rules"
-              placeholder="Ex: Tout retard de plus de 3 jours entraîne une pénalité. Toute exclusion nécessite un vote..."
+              placeholder={t('cgd_rules_placeholder')}
               className="resize-none rounded-xl border-border focus:ring-secondary h-16 text-xs"
               {...register("rules")}
               disabled={isSubmitting}
@@ -263,8 +268,8 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
           <div className="flex items-center justify-between bg-muted p-3.5 rounded-2xl border border-border">
             <div>
-              <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">Cercle privé</Label>
-              <p className="text-[10px] text-muted-foreground">Invisible dans la recherche publique ; rejoignable uniquement par lien, QR code ou code.</p>
+              <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">{t('cgd_private_circle_label')}</Label>
+              <p className="text-[10px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
             </div>
             <button
               id="isPrivate"
@@ -285,7 +290,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
           <div className="bg-muted p-3.5 rounded-2xl border border-border space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground">Pénalités de retard</Label>
+              <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground">{t('prof_late_penalties')}</Label>
               <button
                 id="penaltiesEnabled"
                 type="button"
@@ -311,20 +316,20 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                     onClick={() => setValue("penaltyType", "fixed")}
                     className={`text-[11px] font-bold py-1.5 rounded-md ${penaltyType === 'fixed' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
                   >
-                    Montant fixe
+                    {t('cgd_penalty_fixed_toggle')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setValue("penaltyType", "percentage")}
                     className={`text-[11px] font-bold py-1.5 rounded-md ${penaltyType === 'percentage' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
                   >
-                    Pourcentage / jour
+                    {t('cgd_penalty_percentage_toggle')}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="penaltyValue" className="text-[10px] font-bold text-muted-foreground uppercase">
-                      {penaltyType === 'fixed' ? 'Montant (FCFA)' : 'Taux (% / jour)'}
+                      {penaltyType === 'fixed' ? t('cgd_amount_label') : t('cgd_penalty_rate_label')}
                     </Label>
                     {penaltyType === 'fixed' ? (
                       <Input id="penaltyValue" type="number" {...register("penaltyAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
@@ -333,7 +338,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="gracePeriod" className="text-[10px] font-bold text-muted-foreground uppercase">Délai de grâce (jours)</Label>
+                    <Label htmlFor="gracePeriod" className="text-[10px] font-bold text-muted-foreground uppercase">{t('cgd_grace_period_label')}</Label>
                     <Input id="gracePeriod" type="number" {...register("gracePeriod", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
                   </div>
                 </div>
@@ -342,7 +347,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
           </div>
 
           <div className="bg-muted/50 p-4 rounded-xl border border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Validation Légale</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('cgd_legal_validation_title')}</h4>
             
             <div className="flex items-start gap-3">
               <input 
@@ -353,17 +358,17 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
               />
               <div className="space-y-1">
                 <Label htmlFor="terms" className="text-sm font-bold text-foreground cursor-pointer">
-                  J'accepte les conditions générales et la politique de gestion de tontine.
+                  {t('cgd_terms_label')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  En tant que gestionnaire, vous vous engagez à respecter les règles de transparence établies par égané.
+                  {t('cgd_terms_desc')}
                 </p>
                 {errors.termsAccepted && <span className="text-[10px] text-danger">{errors.termsAccepted.message}</span>}
               </div>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-border/50">
-              <Label className="text-sm font-bold text-foreground">Signature Électronique</Label>
+              <Label className="text-sm font-bold text-foreground">{t('cgd_signature_label')}</Label>
               <SignaturePad onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })} />
               {errors.signature && <span className="text-[10px] text-danger">{errors.signature.message}</span>}
             </div>
@@ -371,7 +376,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
 
           <DialogFooter className="pt-2">
             <Button type="submit" className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer" disabled={isSubmitting}>
-              {isSubmitting ? "Création en cours..." : "Créer le cercle d'épargne"}
+              {isSubmitting ? t('cgd_creating_ellipsis') : t('cgd_submit_cta')}
             </Button>
           </DialogFooter>
         </form>

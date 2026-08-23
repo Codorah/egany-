@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest, repayMarketplaceCredit } from '@/lib/marketplace';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MarketplaceProps {
   user: UserProfile;
@@ -20,13 +21,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Store,
 };
 
-const statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }> = {
-  pending: { label: 'En attente', className: 'bg-amber-500/10 text-amber-600' },
-  contacted: { label: 'Contacté', className: 'bg-blue-500/10 text-blue-600' },
-  approved: { label: 'Approuvé', className: 'bg-emerald-500/10 text-emerald-600' },
-  rejected: { label: 'Refusé', className: 'bg-rose-500/10 text-rose-600' },
-};
-
 // Plafond de crédit indicatif : 2x l'épargne totale déjà versée dans les
 // cercles de tontine, avec un plancher pour ne pas bloquer les nouveaux
 // membres. L'admin reste libre d'ajuster le montant final à l'approbation.
@@ -34,6 +28,13 @@ const CREDIT_FLOOR = 5000;
 const creditCap = (totalSaved: number) => Math.max(CREDIT_FLOOR, Math.round(totalSaved * 2));
 
 export function Marketplace({ user }: MarketplaceProps) {
+  const { t } = useLanguage();
+  const statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }> = {
+    pending: { label: t('status_pending'), className: 'bg-amber-500/10 text-amber-600' },
+    contacted: { label: t('mkt_status_contacted'), className: 'bg-blue-500/10 text-blue-600' },
+    approved: { label: t('mkt_status_approved'), className: 'bg-emerald-500/10 text-emerald-600' },
+    rejected: { label: t('mkt_status_rejected'), className: 'bg-rose-500/10 text-rose-600' },
+  };
   const [services, setServices] = useState<MarketplaceService[]>([]);
   const [myRequests, setMyRequests] = useState<MarketplaceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,11 +79,11 @@ export function Marketplace({ user }: MarketplaceProps) {
       const amount = parseFloat(creditAmount);
       const cap = creditCap(user.totalSaved);
       if (!amount || amount <= 0) {
-        toast.error('Veuillez indiquer le montant souhaité.');
+        toast.error(t('mkt_enter_amount_toast'));
         return;
       }
       if (amount > cap) {
-        toast.error(`Le montant demandé dépasse votre plafond indicatif de ${cap.toLocaleString()} FCFA.`);
+        toast.error(`${t('mkt_amount_exceeds_cap_prefix')} ${cap.toLocaleString()} FCFA.`);
         return;
       }
       requestedAmount = amount;
@@ -96,7 +97,7 @@ export function Marketplace({ user }: MarketplaceProps) {
       setCreditAmount('');
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'envoi de la demande.");
+      toast.error(err.message || t('mkt_send_request_error_toast'));
     } finally {
       setIsSubmitting(false);
     }
@@ -108,26 +109,26 @@ export function Marketplace({ user }: MarketplaceProps) {
     const amount = parseFloat(repayAmount);
     const remaining = (existingRequest.approvedAmount || 0) - existingRequest.repaidAmount;
     if (!amount || amount <= 0) {
-      toast.error('Veuillez indiquer le montant à rembourser.');
+      toast.error(t('mkt_enter_repay_amount_toast'));
       return;
     }
     if (amount > remaining) {
-      toast.error(`Ce montant dépasse le solde restant dû (${remaining.toLocaleString()} FCFA).`);
+      toast.error(`${t('mkt_amount_exceeds_remaining_prefix')} (${remaining.toLocaleString()} FCFA).`);
       return;
     }
     if (amount > user.walletBalance) {
-      toast.error('Solde du portefeuille insuffisant.');
+      toast.error(t('mkt_insufficient_wallet_toast'));
       return;
     }
     setIsRepaying(true);
     try {
       const result = await repayMarketplaceCredit({ requestId: existingRequest.id, amount });
       if (!result.success) throw new Error(result.message);
-      toast.success('Remboursement effectué !');
+      toast.success(t('mkt_repayment_done_toast'));
       setRepayAmount('');
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || 'Erreur lors du remboursement.');
+      toast.error(err.message || t('mkt_repayment_error_toast'));
     } finally {
       setIsRepaying(false);
     }
@@ -145,10 +146,10 @@ export function Marketplace({ user }: MarketplaceProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-6">
         <AlertCircle className="w-8 h-8 text-danger" />
-        <p className="text-sm font-bold text-foreground">Impossible de charger le Marketplace</p>
-        <p className="text-xs text-muted-foreground max-w-xs">Vérifiez votre connexion et réessayez.</p>
+        <p className="text-sm font-bold text-foreground">{t('mkt_load_error_title')}</p>
+        <p className="text-xs text-muted-foreground max-w-xs">{t('mkt_load_error_desc')}</p>
         <Button variant="outline" size="sm" onClick={loadData} className="mt-2 font-bold">
-          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Réessayer
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t('mkt_retry_cta')}
         </Button>
       </div>
     );
@@ -161,18 +162,18 @@ export function Marketplace({ user }: MarketplaceProps) {
           <div className="p-2 bg-brand/10 rounded-xl">
             <Store className="w-6 h-6 text-brand" />
           </div>
-          <h1 className="text-2xl font-black text-foreground">Services Annexes</h1>
+          <h1 className="text-2xl font-black text-foreground">{t('marketplace')}</h1>
         </div>
         <p className="text-muted-foreground text-sm">
-          Profitez de votre score de réputation pour accéder à des services financiers exclusifs au Togo et en Afrique de l'Ouest.
+          {t('mkt_header_subtitle')}
         </p>
       </div>
 
       {services.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6 glass-card rounded-3xl shadow-soft">
           <PackageSearch className="w-8 h-8 text-muted-foreground" />
-          <p className="text-sm font-bold text-foreground">Aucun service disponible pour le moment</p>
-          <p className="text-xs text-muted-foreground max-w-xs">Revenez bientôt : de nouveaux partenaires seront ajoutés régulièrement.</p>
+          <p className="text-sm font-bold text-foreground">{t('mkt_no_service_title')}</p>
+          <p className="text-xs text-muted-foreground max-w-xs">{t('mkt_no_service_desc')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -201,13 +202,13 @@ export function Marketplace({ user }: MarketplaceProps) {
                   <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${statusLabels[existingRequest.status].className}`}>
                     {existingRequest.status === 'approved' && service.category === 'credit' && existingRequest.approvedAmount != null
                       ? existingRequest.repaidAmount >= existingRequest.approvedAmount
-                        ? 'Crédit remboursé'
-                        : `Solde dû : ${(existingRequest.approvedAmount - existingRequest.repaidAmount).toLocaleString()} FCFA`
-                      : `Demande : ${statusLabels[existingRequest.status].label}`}
+                        ? t('mkt_credit_repaid_label')
+                        : `${t('mkt_balance_due_prefix')} ${(existingRequest.approvedAmount - existingRequest.repaidAmount).toLocaleString()} FCFA`
+                      : `${t('mkt_request_prefix')} ${statusLabels[existingRequest.status].label}`}
                   </div>
                 ) : (
                   <Button variant="outline" className="w-full font-bold border-brand/30 text-brand hover:bg-brand/10 h-11">
-                    Voir les détails <ChevronRight className="w-4 h-4 ml-1" />
+                    {t('view_details')} <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 )}
               </div>
@@ -235,7 +236,7 @@ export function Marketplace({ user }: MarketplaceProps) {
 
                 {selectedService.requirements && selectedService.requirements.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-xs font-bold uppercase text-foreground mb-3 tracking-wider">Pré-requis</h4>
+                    <h4 className="text-xs font-bold uppercase text-foreground mb-3 tracking-wider">{t('mkt_requirements_title')}</h4>
                     <ul className="space-y-2">
                       {selectedService.requirements.map((req, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -260,37 +261,37 @@ export function Marketplace({ user }: MarketplaceProps) {
                       <div className="space-y-4">
                         <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5">
                           <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Montant emprunté</span>
+                            <span className="text-muted-foreground">{t('mkt_borrowed_amount_label')}</span>
                             <span className="font-bold text-foreground">{existingRequest.approvedAmount!.toLocaleString()} FCFA</span>
                           </div>
                           <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Déjà remboursé</span>
+                            <span className="text-muted-foreground">{t('mkt_already_repaid_label')}</span>
                             <span className="font-bold text-secondary">{existingRequest.repaidAmount.toLocaleString()} FCFA</span>
                           </div>
                           <div className="flex justify-between text-sm pt-2 border-t border-brand/10">
-                            <span className="font-bold text-foreground">Solde restant dû</span>
+                            <span className="font-bold text-foreground">{t('mkt_remaining_balance_label')}</span>
                             <span className="font-black text-brand">{remaining.toLocaleString()} FCFA</span>
                           </div>
                           {existingRequest.repaymentDeadline && (
                             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
                               <CalendarClock className="w-3.5 h-3.5" />
-                              Échéance : {new Date(existingRequest.repaymentDeadline).toLocaleDateString()}
+                              {t('deadline_prefix')} {new Date(existingRequest.repaymentDeadline).toLocaleDateString()}
                             </div>
                           )}
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold">Montant à rembourser</Label>
+                          <Label className="text-xs font-bold">{t('mkt_amount_to_repay_label')}</Label>
                           <Input
                             type="number"
                             min={1}
                             max={remaining}
-                            placeholder={`Max ${remaining.toLocaleString()} FCFA`}
+                            placeholder={`${t('mkt_max_amount_prefix')} ${remaining.toLocaleString()} FCFA`}
                             value={repayAmount}
                             onChange={(e) => setRepayAmount(e.target.value)}
                             className="rounded-xl h-11"
                           />
                           <p className="text-[10px] text-muted-foreground">
-                            Solde de votre portefeuille : {user.walletBalance.toLocaleString()} FCFA. Vous pouvez rembourser en plusieurs fois.
+                            {t('mkt_wallet_balance_prefix')} {user.walletBalance.toLocaleString()} FCFA. {t('mkt_repay_multiple_times_suffix')}
                           </p>
                         </div>
                         <Button
@@ -299,7 +300,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                           disabled={isRepaying}
                         >
                           <Wallet className="w-4 h-4 mr-2" />
-                          {isRepaying ? 'Traitement...' : 'Rembourser'}
+                          {isRepaying ? t('mkt_processing_ellipsis') : t('mkt_repay_cta')}
                         </Button>
                       </div>
                     );
@@ -314,10 +315,10 @@ export function Marketplace({ user }: MarketplaceProps) {
                       <div className="bg-muted p-4 rounded-xl flex items-center gap-3 mb-2 text-sm">
                         <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
                         {isFullyRepaidCredit
-                          ? 'Ce crédit a été intégralement remboursé. Bravo !'
+                          ? t('mkt_credit_fully_repaid_message')
                           : selectedService.category === 'credit' && existingRequest.requestedAmount
-                          ? `Votre demande de ${existingRequest.requestedAmount.toLocaleString()} FCFA est ${statusLabels[existingRequest.status].label.toLowerCase()}.`
-                          : `Vous avez déjà une demande ${statusLabels[existingRequest.status].label.toLowerCase()} pour ce service.`}
+                          ? `${t('mkt_request_of_prefix')} ${existingRequest.requestedAmount.toLocaleString()} FCFA ${t('mkt_is_word')} ${statusLabels[existingRequest.status].label.toLowerCase()}.`
+                          : `${t('mkt_already_has_request_prefix')} ${statusLabels[existingRequest.status].label.toLowerCase()} ${t('mkt_already_has_request_suffix')}`}
                       </div>
                     );
                   }
@@ -327,7 +328,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                       <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3 mb-2">
                         <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                         <p className="text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
-                          Ce service nécessite un score de réputation d'au moins {selectedService.minReputationScore}. Le vôtre est actuellement {user.reputationScore}.
+                          {t('mkt_requires_score_prefix')} {selectedService.minReputationScore}. {t('mkt_your_score_is_suffix')} {user.reputationScore}.
                         </p>
                       </div>
                     );
@@ -337,25 +338,25 @@ export function Marketplace({ user }: MarketplaceProps) {
                     <>
                       {selectedService.category === 'credit' && (
                         <div className="space-y-1.5 mb-4">
-                          <Label className="text-xs font-bold">Montant souhaité (FCFA)</Label>
+                          <Label className="text-xs font-bold">{t('mkt_desired_amount_label')}</Label>
                           <Input
                             type="number"
                             min={1}
                             max={creditCap(user.totalSaved)}
-                            placeholder={`Jusqu'à ${creditCap(user.totalSaved).toLocaleString()} FCFA`}
+                            placeholder={`${t('mkt_up_to_prefix')} ${creditCap(user.totalSaved).toLocaleString()} FCFA`}
                             value={creditAmount}
                             onChange={(e) => setCreditAmount(e.target.value)}
                             className="rounded-xl h-11"
                           />
                           <p className="text-[10px] text-muted-foreground">
-                            Plafond indicatif basé sur votre épargne dans vos cercles ({user.totalSaved.toLocaleString()} FCFA) : {creditCap(user.totalSaved).toLocaleString()} FCFA. Le montant final est confirmé par notre équipe.
+                            {t('mkt_cap_info_prefix')} ({user.totalSaved.toLocaleString()} FCFA) : {creditCap(user.totalSaved).toLocaleString()} FCFA. {t('mkt_cap_info_suffix')}
                           </p>
                         </div>
                       )}
                       <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-start gap-3 mb-6">
                         <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                         <p className="text-xs text-brand-deep leading-relaxed">
-                          En soumettant cette demande, vous autorisez notre partenaire à consulter votre score de réputation eganyé pour la traiter.
+                          {t('mkt_consent_disclaimer')}
                         </p>
                       </div>
                       <Button
@@ -363,7 +364,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                         onClick={handleAction}
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Envoi en cours...' : selectedService.actionLabel}
+                        {isSubmitting ? t('sending_label') : selectedService.actionLabel}
                       </Button>
                     </>
                   );

@@ -11,19 +11,20 @@ import { Users, Check, X, UserMinus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomAvatar } from './CustomAvatar';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MemberManagementProps {
   group: Group;
   currentUserId: string;
 }
 
-const roleLabels: Record<GroupMemberRole, string> = {
-  member: 'Membre',
-  treasurer: 'Trésorier',
-  secretary: 'Secrétaire'
-};
-
 export function MemberManagement({ group, currentUserId }: MemberManagementProps) {
+  const { t } = useLanguage();
+  const roleLabels: Record<GroupMemberRole, string> = {
+    member: t('member'),
+    treasurer: t('mm_role_treasurer'),
+    secretary: t('mm_role_secretary')
+  };
   const [profiles, setProfiles] = React.useState<Record<string, UserProfile>>({});
   const [busyUid, setBusyUid] = React.useState<string | null>(null);
   const [excludeTarget, setExcludeTarget] = React.useState<string | null>(null);
@@ -64,11 +65,11 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       const profile = profiles[uid];
       await supabase.from('profiles').update({ groups_joined: (profile?.groupsJoined || 0) + 1 }).eq('id', uid);
 
-      await notify(uid, `Adhésion approuvée - ${group.name}`, `Votre demande pour rejoindre "${group.name}" a été acceptée. Bienvenue !`);
-      toast.success(`${profile?.displayName || 'Le membre'} a été accepté dans le cercle.`);
+      await notify(uid, `${t('mm_membership_approved_title')} ${group.name}`, `${t('mm_join_request_body_open')}${group.name}${t('mm_join_accepted_body_close')}`);
+      toast.success(`${profile?.displayName || t('mm_member_accepted_fallback')} ${t('mm_member_accepted_suffix')}`);
     } catch (error) {
       console.error('Error accepting member:', error);
-      toast.error("Erreur lors de l'acceptation.");
+      toast.error(t('mm_accept_error'));
     } finally {
       setBusyUid(null);
     }
@@ -79,11 +80,11 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     try {
       const { error } = await supabase.from('group_members').delete().eq('group_id', group.id).eq('user_id', uid);
       if (error) throw error;
-      await notify(uid, `Adhésion refusée - ${group.name}`, `Votre demande pour rejoindre "${group.name}" a été refusée par l'administrateur.`);
-      toast.success('Demande refusée.');
+      await notify(uid, `${t('mm_membership_rejected_title')} ${group.name}`, `${t('mm_join_request_body_open')}${group.name}${t('mm_join_rejected_body_close')}`);
+      toast.success(t('mm_request_rejected_toast'));
     } catch (error) {
       console.error('Error rejecting member:', error);
-      toast.error('Erreur lors du refus.');
+      toast.error(t('mm_reject_error'));
     } finally {
       setBusyUid(null);
     }
@@ -91,7 +92,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
 
   const handleExcludeRequest = (uid: string) => {
     if (uid === group.creatorId) {
-      toast.error("Le créateur du cercle ne peut pas être exclu.");
+      toast.error(t('mm_creator_cannot_be_excluded'));
       return;
     }
     setExcludeTarget(uid);
@@ -104,11 +105,11 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     try {
       const { error } = await supabase.from('group_members').delete().eq('group_id', group.id).eq('user_id', uid);
       if (error) throw error;
-      await notify(uid, `Exclusion - ${group.name}`, `Vous avez été exclu du cercle "${group.name}" par l'administrateur.`);
-      toast.success('Membre exclu du cercle.');
+      await notify(uid, `${t('mm_exclusion_title')} ${group.name}`, `${t('mm_exclusion_body_open')}${group.name}${t('mm_exclusion_body_close')}`);
+      toast.success(t('mm_member_excluded_toast'));
     } catch (error) {
       console.error('Error excluding member:', error);
-      toast.error("Erreur lors de l'exclusion.");
+      toast.error(t('mm_exclude_error'));
     } finally {
       setBusyUid(null);
       setExcludeTarget(null);
@@ -120,10 +121,10 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     try {
       const { error } = await supabase.from('group_members').update({ role }).eq('group_id', group.id).eq('user_id', uid);
       if (error) throw error;
-      toast.success(`Rôle mis à jour : ${roleLabels[role]}.`);
+      toast.success(`${t('mm_role_updated_prefix')} ${roleLabels[role]}.`);
     } catch (error) {
       console.error('Error updating member role:', error);
-      toast.error('Erreur lors du changement de rôle.');
+      toast.error(t('mm_role_change_error'));
     } finally {
       setBusyUid(null);
     }
@@ -136,25 +137,25 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Users className="w-4 h-4" />
-          Gestion des membres
+          {t('mm_management_title')}
         </CardTitle>
-        <CardDescription>Validez les demandes d'adhésion et gérez les rôles des membres du cercle.</CardDescription>
+        <CardDescription>{t('mm_management_desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {pendingMembers.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-bold uppercase text-muted-foreground">Demandes en attente ({pendingMembers.length})</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
             {pendingMembers.map((uid) => (
               <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg bg-brand/10 border-brand/20">
                 <div className="flex items-center gap-2">
-                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || 'Membre'} size={28} />
-                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
+                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || t('member')} size={28} />
+                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline" className="h-11 w-11 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title="Accepter">
+                  <Button size="icon" variant="outline" className="h-11 w-11 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title={t('mm_accept_title')}>
                     {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title="Refuser">
+                  <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title={t('mm_reject_title')}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -164,16 +165,16 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
         )}
 
         <div className="space-y-2">
-          <p className="text-xs font-bold uppercase text-muted-foreground">Membres actuels ({group.members.length})</p>
+          <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
           {group.members.map((uid) => {
             const isCreatorRow = uid === group.creatorId;
             const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';
             return (
               <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg">
                 <div className="flex items-center gap-2">
-                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || 'Membre'} size={28} />
-                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `Membre ${uid.slice(0, 6)}`}</span>
-                  {isCreatorRow && <Badge variant="outline" className="text-[10px]">Créateur</Badge>}
+                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || t('member')} size={28} />
+                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}</span>
+                  {isCreatorRow && <Badge variant="outline" className="text-[10px]">{t('mm_creator_badge')}</Badge>}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Select value={role} onValueChange={(val) => handleRoleChange(uid, val as GroupMemberRole)} disabled={busyUid === uid}>
@@ -181,13 +182,13 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="member">Membre</SelectItem>
-                      <SelectItem value="treasurer">Trésorier</SelectItem>
-                      <SelectItem value="secretary">Secrétaire</SelectItem>
+                      <SelectItem value="member">{t('member')}</SelectItem>
+                      <SelectItem value="treasurer">{t('mm_role_treasurer')}</SelectItem>
+                      <SelectItem value="secretary">{t('mm_role_secretary')}</SelectItem>
                     </SelectContent>
                   </Select>
                   {!isCreatorRow && (
-                    <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title="Exclure">
+                    <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title={t('mm_exclude_title')}>
                       <UserMinus className="h-4 w-4" />
                     </Button>
                   )}
@@ -202,10 +203,10 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
         isOpen={!!excludeTarget}
         onClose={() => setExcludeTarget(null)}
         onConfirm={handleExcludeConfirm}
-        title={`Exclure ${excludeTarget ? (profiles[excludeTarget]?.displayName || 'ce membre') : ''} ?`}
-        description="Cette personne perdra immédiatement l'accès au cercle et à son historique de cotisations. Cette action est irréversible."
+        title={`${t('mm_exclude_title')} ${excludeTarget ? (profiles[excludeTarget]?.displayName || t('mm_default_member_fallback')) : ''} ?`}
+        description={`${t('mm_exclude_confirm_desc_main')} ${t('gd_action_irreversible')}`}
         type="destructive"
-        confirmLabel="Oui, exclure"
+        confirmLabel={t('mm_confirm_exclude_label')}
         isLoading={!!excludeTarget && busyUid === excludeTarget}
       />
     </Card>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Users, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface JoinGroupProps {
   joinCode: string;
@@ -16,6 +17,7 @@ interface JoinGroupProps {
 }
 
 export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps) {
+  const { t } = useLanguage();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -28,7 +30,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
         if (error) throw error;
 
         if (!groupRows || groupRows.length === 0) {
-          toast.error("Code d'invitation invalide.");
+          toast.error(t('jg_invalid_invite_code'));
           onCancel();
           return;
         }
@@ -40,7 +42,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
         }
       } catch (error) {
         console.error("Error fetching group for join:", error);
-        toast.error("Erreur lors de la récupération du groupe.");
+        toast.error(t('jg_fetch_group_error'));
       } finally {
         setLoading(false);
       }
@@ -53,7 +55,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
     if (!group || !user) return;
 
     if (group.members.includes(user.uid)) {
-      toast.info("Vous êtes déjà membre de ce groupe.");
+      toast.info(t('jg_already_member'));
       onJoined(group.id);
       return;
     }
@@ -73,7 +75,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
       toast.success(result.message);
     } catch (error) {
       console.error("Error requesting to join group:", error);
-      toast.error("Erreur lors de la demande d'adhésion.");
+      toast.error(t('jg_join_request_error'));
     } finally {
       setJoining(false);
     }
@@ -83,7 +85,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Recherche du cercle...</p>
+        <p className="text-muted-foreground">{t('jg_searching_circle')}</p>
       </div>
     );
   }
@@ -99,13 +101,13 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
               <Clock className="w-8 h-8 text-brand" />
             </div>
             <div>
-              <h3 className="font-serif font-extrabold text-lg text-foreground">Demande envoyée !</h3>
+              <h3 className="font-serif font-extrabold text-lg text-foreground">{t('jg_request_sent_title')}</h3>
               <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                Votre demande d'adhésion au cercle "{group.name}" a été transmise à l'administrateur. Vous serez notifié dès qu'elle sera validée.
+                {t('jg_request_sent_desc_prefix')}{group.name}{t('jg_request_sent_desc_suffix')}
               </p>
             </div>
             <Button variant="outline" className="w-full mt-2" onClick={onCancel}>
-              Retour au tableau de bord
+              {t('jg_back_to_dashboard')}
             </Button>
           </CardContent>
         </Card>
@@ -120,9 +122,9 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
           <div className="mx-auto bg-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <Users className="w-8 h-8 text-secondary" />
           </div>
-          <CardTitle className="text-2xl font-serif font-bold text-foreground">Rejoindre un cercle</CardTitle>
+          <CardTitle className="text-2xl font-serif font-bold text-foreground">{t('join_group')}</CardTitle>
           <CardDescription className="text-xs text-muted-foreground mt-1">
-            Vous avez été invité à rejoindre une tontine digitale.
+            {t('jg_invited_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
@@ -133,32 +135,32 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[10px] uppercase text-muted-foreground font-bold">Cotisation</p>
+              <p className="text-[10px] uppercase text-muted-foreground font-bold">{t('contribution_label')}</p>
               <p className="font-serif font-bold text-base text-foreground">{group.contributionAmount.toLocaleString()} {group.currency}</p>
             </div>
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[10px] uppercase text-muted-foreground font-bold">Fréquence</p>
-              <p className="font-serif font-bold text-base text-brand capitalize">{group.frequency}</p>
+              <p className="text-[10px] uppercase text-muted-foreground font-bold">{t('frequency')}</p>
+              <p className="font-serif font-bold text-base text-brand capitalize">{t(`freq_${group.frequency}`)}</p>
             </div>
           </div>
 
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-2.5 text-xs font-semibold text-foreground">
               <CheckCircle2 className="w-4.5 h-4.5 text-secondary" />
-              <span>Paiements sécurisés automatisés via Paydunya</span>
+              <span>{t('jg_secure_payments_desc')}</span>
             </div>
             <div className="flex items-center gap-2.5 text-xs font-semibold text-foreground">
               <ShieldCheck className="w-4.5 h-4.5 text-brand" />
-              <span>Votre assiduité renforce votre Score de Réputation</span>
+              <span>{t('jg_reputation_boost_desc')}</span>
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-2 pt-0 pb-6 px-6">
           <Button className="w-full h-12 text-sm font-bold bg-secondary hover:bg-secondary/90 text-white rounded-2xl shadow-sm transition-all cursor-pointer" onClick={handleJoin} disabled={joining}>
-            {joining ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Demander à rejoindre"}
+            {joining ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : t('jg_request_to_join_cta')}
           </Button>
           <Button variant="ghost" className="w-full text-xs font-bold text-muted-foreground hover:text-muted-foreground cursor-pointer" onClick={onCancel} disabled={joining}>
-            Annuler
+            {t('cancel')}
           </Button>
         </CardFooter>
       </Card>

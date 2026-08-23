@@ -10,6 +10,7 @@ import {
   isSameMonth, isSameDay, isToday, format, addMonths, subMonths, parseISO, isAfter, isBefore
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CalendarEvent {
   date: Date;
@@ -25,9 +26,18 @@ interface CalendarViewProps {
 }
 
 const PROJECTED_CYCLES = 6;
-const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
+  const { t } = useLanguage();
+  const WEEKDAY_LABELS = [
+    t('cal_weekday_mon'),
+    t('cal_weekday_tue'),
+    t('cal_weekday_wed'),
+    t('cal_weekday_thu'),
+    t('cal_weekday_fri'),
+    t('cal_weekday_sat'),
+    t('cal_weekday_sun'),
+  ];
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const events = useMemo<CalendarEvent[]>(() => {
@@ -77,9 +87,9 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <CalendarDays className="w-6 h-6" />
-            Calendrier des échéances
+            {t('cal_page_title')}
           </h1>
-          <p className="text-muted-foreground text-sm">Vos prochains tours de distribution et cotisations.</p>
+          <p className="text-muted-foreground text-sm">{t('cal_page_subtitle')}</p>
         </div>
       </div>
 
@@ -91,7 +101,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(new Date())}>
-              <span className="text-[10px] font-bold">Auj.</span>
+              <span className="text-[10px] font-bold">{t('cal_today_short')}</span>
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
               <ChevronRight className="w-4 h-4" />
@@ -131,11 +141,11 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Prochaines échéances</CardTitle>
+          <CardTitle className="text-base">{t('cal_upcoming_title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Aucune échéance à venir.</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">{t('cal_no_upcoming')}</p>
           ) : (
             upcoming.map((event, i) => (
               <div

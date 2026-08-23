@@ -71,11 +71,11 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
   const handleLogin = async () => {
     if (!email.includes('@')) {
-      toast.error("Veuillez saisir un email valide.");
+      toast.error(t('onb_enter_valid_email'));
       return;
     }
     if (!password) {
-      toast.error("Veuillez saisir votre mot de passe.");
+      toast.error(t('onb_enter_password'));
       return;
     }
     setIsSubmittingAuth(true);
@@ -86,9 +86,9 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     } catch (err: any) {
       console.error("Email login error:", err);
       if (err?.message?.toLowerCase().includes('invalid login credentials')) {
-        toast.error("Email ou mot de passe incorrect.");
+        toast.error(t('onb_invalid_credentials'));
       } else {
-        toast.error(`Erreur de connexion : ${err?.message || err}`);
+        toast.error(`${t('onb_login_error_prefix')} ${err?.message || err}`);
       }
     } finally {
       setIsSubmittingAuth(false);
@@ -98,15 +98,15 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const handleNextStep = () => {
     if (step === 2) {
       if (!displayName.trim()) {
-        toast.error("Veuillez saisir un nom d'utilisateur.");
+        toast.error(t('onb_enter_username'));
         return;
       }
       if (!email.includes('@')) {
-        toast.error("Veuillez saisir un email valide.");
+        toast.error(t('onb_enter_valid_email'));
         return;
       }
       if (password.length < 6) {
-        toast.error("Le mot de passe doit contenir au moins 6 caractères.");
+        toast.error(t('onb_pw_min_6'));
         return;
       }
     }
@@ -126,26 +126,26 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       if (error) throw error;
     } catch (err: any) {
       console.error("Google Auth Error:", err);
-      toast.error(`Erreur d'authentification: ${err?.message || err}`);
+      toast.error(`${t('onb_auth_error_prefix')} ${err?.message || err}`);
     }
   };
 
   const slides = [
     {
-      title: "La Tontine des Mamans & Commerçantes",
-      description: "Digitalisez vos cercles d'épargne en toute sécurité. Cotisez ensemble et suivez chaque versement en toute transparence depuis votre téléphone.",
+      title: t('banner_mamas_title'),
+      description: t('onb_slide1_desc'),
       image: "/onboarding-mamas.png",
       color: "from-amber-500/15 to-orange-500/5"
     },
     {
-      title: "Une Jeunesse Prospère qui Épargne",
-      description: "Étudiants, jeunes entrepreneurs et travailleurs : créez des cercles d'épargne flexibles, suivez vos cotisations et réalisez vos projets.",
+      title: t('onb_slide2_title'),
+      description: t('onb_slide2_desc'),
       image: "/young-savers.png",
       color: "from-emerald-500/15 to-teal-500/5"
     },
     {
-      title: "Encaissez par Mobile Money (Wave, Orange, MTN)",
-      description: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
+      title: t('onb_slide3_title'),
+      description: t('onb_slide3_desc'),
       image: "/vendor-success.png",
       color: "from-orange-500/15 to-amber-500/5"
     }
@@ -156,7 +156,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     try {
       const { allowSignups } = await fetchPlatformSettings();
       if (!allowSignups) {
-        toast.error("Les inscriptions sont temporairement suspendues. Réessayez plus tard.");
+        toast.error(t('onb_signups_suspended'));
         return;
       }
 
@@ -175,7 +175,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         // 6-digit code. Move to the verification step instead of failing.
         setOtpDigits(Array(OTP_LENGTH).fill(''));
         setStep(4);
-        toast.success(`Un code à ${OTP_LENGTH} chiffres a été envoyé à ${email}.`);
+        toast.success(`${t('onb_otp_sent_prefix')} ${OTP_LENGTH} ${t('onb_otp_sent_mid')} ${email}.`);
         return;
       }
 
@@ -184,13 +184,13 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       console.error("Signup error:", err);
       const msg = (err?.message || '').toLowerCase();
       if (msg.includes('already registered') || msg.includes('already been registered')) {
-        toast.error("Cet email est déjà associé à un compte. Connectez-vous plutôt.", {
-          action: { label: "Se connecter", onClick: () => { setAuthMode('login'); setStep(2); } }
+        toast.error(t('onb_email_already_registered'), {
+          action: { label: t('nav_login'), onClick: () => { setAuthMode('login'); setStep(2); } }
         });
       } else if (msg.includes('password')) {
-        toast.error("Le mot de passe est trop faible (minimum 6 caractères).");
+        toast.error(t('onb_password_too_weak'));
       } else {
-        toast.error(`Erreur lors de la création du compte : ${err?.message || err}`);
+        toast.error(`${t('onb_account_creation_error_prefix')} ${err?.message || err}`);
       }
     } finally {
       setIsCreatingAccount(false);
@@ -214,14 +214,14 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       localStorage.setItem('eganye_biometrics_username', displayName);
     }
 
-    toast.success("Votre compte eganyé a été créé avec succès !");
+    toast.success(t('onb_account_created_success'));
     onComplete();
   };
 
   const handleVerifyOtp = async () => {
     const code = otpDigits.join('');
     if (code.length !== OTP_LENGTH) {
-      toast.error(`Veuillez saisir les ${OTP_LENGTH} chiffres du code.`);
+      toast.error(`${t('onb_enter_otp_digits_prefix')} ${OTP_LENGTH} ${t('onb_enter_otp_digits_suffix')}`);
       return;
     }
     setIsVerifyingOtp(true);
@@ -233,9 +233,9 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       console.error("OTP verification error:", err);
       const msg = (err?.message || '').toLowerCase();
       if (msg.includes('expired') || msg.includes('invalid')) {
-        toast.error("Code incorrect ou expiré. Vérifiez le code ou renvoyez-en un nouveau.");
+        toast.error(t('onb_otp_invalid'));
       } else {
-        toast.error(`Erreur de vérification : ${err?.message || err}`);
+        toast.error(`${t('onb_verification_error_prefix')} ${err?.message || err}`);
       }
       setOtpDigits(Array(OTP_LENGTH).fill(''));
       otpInputRefs.current[0]?.focus();
@@ -249,10 +249,10 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     try {
       const { error } = await supabase.auth.resend({ type: 'signup', email });
       if (error) throw error;
-      toast.success("Nouveau code envoyé !");
+      toast.success(t('onb_new_code_sent'));
     } catch (err: any) {
       console.error("OTP resend error:", err);
-      toast.error(`Impossible de renvoyer le code : ${err?.message || err}`);
+      toast.error(`${t('onb_resend_code_error_prefix')} ${err?.message || err}`);
     } finally {
       setIsResendingOtp(false);
     }
@@ -343,7 +343,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               </div>
 
               <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
-                Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Wave, Orange Money, et augmentez votre score financier.
+                {t('onb_welcome_desc')}
               </p>
 
               <div className="space-y-3 pt-4">
@@ -351,13 +351,13 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   onClick={() => setStep(1)}
                   className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 glow-orange transition-all flex items-center justify-center gap-2"
                 >
-                  Découvrir eganyé
+                  {t('onb_discover_eganye')}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
 
                 <div className="relative flex py-2 items-center">
                   <div className="flex-grow border-t border-border"></div>
-                  <span className="flex-shrink mx-4 text-muted-foreground text-xs">Ou continuer avec</span>
+                  <span className="flex-shrink mx-4 text-muted-foreground text-xs">{t('onb_or_continue_with')}</span>
                   <div className="flex-grow border-t border-border"></div>
                 </div>
 
@@ -372,7 +372,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     <path fill="#FBBC05" d="M5.24 10.55c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.39 2.96C.5 4.77 0 6.83 0 9s.5 4.23 1.39 6.04l3.85-3.49z"/>
                     <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.01.68-2.31 1.09-3.95 1.09-3.25 0-5.84-1.76-6.76-4.51L1.74 16.8C3.72 20.33 7.7 23 12 23z"/>
                   </svg>
-                  Connexion via Google
+                  {t('onb_google_signin')}
                 </Button>
 
                 <Button
@@ -381,7 +381,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   className="w-full border-secondary/40 text-secondary hover:bg-secondary/10 font-bold rounded-2xl h-12 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
                 >
                   <Key className="w-4 h-4" />
-                  J'ai déjà un compte, me connecter
+                  {t('onb_already_have_account')}
                 </Button>
 
               </div>
@@ -433,7 +433,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   onClick={() => setStep(2)}
                   className="w-1/3 text-muted-foreground font-bold"
                 >
-                  Passer
+                  {t('onb_skip')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -445,7 +445,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   }}
                   className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
                 >
-                  {slideIndex === slides.length - 1 ? "Compris !" : "Suivant"}
+                  {slideIndex === slides.length - 1 ? t('onb_got_it') : t('onb_next')}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -463,19 +463,19 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
             >
               <div className="space-y-1">
                 <h2 className="text-2xl font-black text-foreground tracking-tight">
-                  {authMode === 'login' ? 'Connectez-vous' : 'Créez votre Compte'}
+                  {authMode === 'login' ? t('onb_login_title') : t('onb_signup_title')}
                 </h2>
                 <p className="text-muted-foreground text-xs">
                   {authMode === 'login'
-                    ? 'Entrez vos identifiants pour retrouver votre espace eganyé.'
-                    : 'Définissez vos identifiants pour vous connecter en toute sécurité.'}
+                    ? t('onb_login_desc')
+                    : t('onb_signup_desc')}
                 </p>
                 <button
                   type="button"
                   onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
                   className="text-[11px] font-bold text-secondary hover:underline cursor-pointer"
                 >
-                  {authMode === 'login' ? "Pas encore de compte ? Créez-en un" : "Vous avez déjà un compte ? Connectez-vous"}
+                  {authMode === 'login' ? t('onb_no_account_yet') : t('onb_already_account_login')}
                 </button>
               </div>
 
@@ -484,11 +484,11 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   <div className="space-y-1.5">
                     <Label htmlFor="ob_name" className="font-bold text-foreground text-xs flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-brand" />
-                      Nom d'utilisateur / Surnom
+                      {t('prof_username_nickname')}
                     </Label>
                     <Input
                       id="ob_name"
-                      placeholder="Ex: Fatou Sy"
+                      placeholder={t('onb_name_placeholder')}
                       className="rounded-xl h-12 border-border focus-visible:ring-primary text-sm"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -499,12 +499,12 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <div className="space-y-1.5">
                   <Label htmlFor="ob_email" className="font-bold text-foreground text-xs flex items-center gap-1.5">
                     <Globe2 className="w-3.5 h-3.5 text-brand" />
-                    Adresse Email
+                    {t('prof_email_address_label')}
                   </Label>
                   <Input
                     id="ob_email"
                     type="email"
-                    placeholder="Ex: fatou@gmail.com"
+                    placeholder={t('onb_email_placeholder')}
                     className="rounded-xl h-11 border-border focus-visible:ring-primary"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -514,13 +514,13 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <div className="space-y-1.5">
                   <Label htmlFor="ob_pass" className="font-bold text-foreground text-xs flex items-center gap-1.5">
                     <Key className="w-3.5 h-3.5 text-brand" />
-                    Mot de passe
+                    {t('onb_password_label')}
                   </Label>
                   <div className="relative">
                     <Input
                       id="ob_pass"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Min. 6 caractères"
+                      placeholder={t('onb_min_6_chars_placeholder')}
                       className="rounded-xl h-12 pr-10 border-border focus-visible:ring-primary text-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -539,27 +539,27 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <>
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <div className="space-y-1">
-                    <Label className="font-bold text-foreground text-[10px] uppercase">Thème</Label>
+                    <Label className="font-bold text-foreground text-[10px] uppercase">{t('onb_theme_label')}</Label>
                     <div className="flex gap-1 bg-muted p-1 rounded-lg">
                       <button
                         type="button"
                         onClick={() => handleThemeChange('light')}
                         className={`flex-1 text-xs font-bold py-2 rounded-md ${theme === 'light' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
                       >
-                        {t('light_mode') || 'Clair'}
+                        {t('light_mode')}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleThemeChange('dark')}
                         className={`flex-1 text-xs font-bold py-2 rounded-md ${theme === 'dark' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
                       >
-                        {t('dark_mode') || 'Sombre'}
+                        {t('dark_mode')}
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="font-bold text-foreground text-[10px] uppercase">Langue</Label>
+                    <Label className="font-bold text-foreground text-[10px] uppercase">{t('prof_language_label')}</Label>
                     <LanguageSwitcher value={language} onChange={setLanguage} variant="grid" />
                   </div>
                 </div>
@@ -572,8 +572,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                         <Fingerprint className="w-4.5 h-4.5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black text-foreground">Accès Biométrique</h4>
-                        <p className="text-[10px] text-muted-foreground font-medium">Face ID ou Empreinte Digitale</p>
+                        <h4 className="text-xs font-black text-foreground">{t('onb_biometric_access')}</h4>
+                        <p className="text-[10px] text-muted-foreground font-medium">{t('onb_faceid_or_fingerprint')}</p>
                       </div>
                     </div>
                     <button
@@ -583,7 +583,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                           setIsBiometricPromptOpen(true);
                         } else {
                           setBiometricsEnabled(false);
-                          toast.info("Connexion biométrique désactivée.");
+                          toast.info(t('onb_biometric_disabled_toast'));
                         }
                       }}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
@@ -601,7 +601,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   {biometricsEnabled && (
                     <div className="text-[10px] font-bold text-secondary flex items-center gap-1 bg-secondary/10 p-2 rounded-xl border border-secondary/20">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Biométrie associée avec succès !</span>
+                      <span>{t('onb_biometric_linked_success')}</span>
                     </div>
                   )}
                 </div>
@@ -616,7 +616,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     disabled={isSubmittingAuth}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
                   >
-                    {isSubmittingAuth ? "Connexion..." : "Se connecter"}
+                    {isSubmittingAuth ? t('onb_connecting_ellipsis') : t('nav_login')}
                     {!isSubmittingAuth && <ArrowRight className="w-4 h-4" />}
                   </Button>
                 ) : (
@@ -624,7 +624,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     onClick={handleNextStep}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 flex items-center justify-center gap-2"
                   >
-                    Étape Suivante
+                    {t('onb_next_step_button')}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 )}
@@ -655,7 +655,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                     disabled={isCreatingAccount || isLoading}
                     className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 flex items-center justify-center gap-2 glow-orange"
                   >
-                    {isCreatingAccount || isLoading ? "Création en cours..." : "Créer mon Compte eganyé !"}
+                    {isCreatingAccount || isLoading ? t('onb_creating_account') : t('onb_create_account_cta')}
                     {!(isCreatingAccount || isLoading) && <ArrowRight className="w-4 h-4" />}
                   </Button>
                 </div>
@@ -676,9 +676,9 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <div className="mx-auto w-14 h-14 rounded-2xl bg-success-soft text-secondary flex items-center justify-center">
                   <MailCheck className="w-7 h-7" />
                 </div>
-                <h2 className="text-2xl font-black text-foreground tracking-tight">Vérifiez votre email</h2>
+                <h2 className="text-2xl font-black text-foreground tracking-tight">{t('onb_verify_email_title')}</h2>
                 <p className="text-muted-foreground text-xs px-4">
-                  Entrez le code à {OTP_LENGTH} chiffres envoyé à <span className="font-bold text-foreground">{email}</span>
+                  {t('onb_enter_code_prefix')} {OTP_LENGTH} {t('onb_enter_code_suffix')} <span className="font-bold text-foreground">{email}</span>
                 </p>
               </div>
 
@@ -706,7 +706,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   disabled={isVerifyingOtp || isCreatingAccount}
                   className="w-full gradient-sunset text-white font-bold rounded-2xl h-12 flex items-center justify-center gap-2 glow-orange"
                 >
-                  {isVerifyingOtp ? "Vérification..." : "Vérifier le code"}
+                  {isVerifyingOtp ? t('onb_verifying_ellipsis') : t('onb_verify_code_button')}
                   {!isVerifyingOtp && <ArrowRight className="w-4 h-4" />}
                 </Button>
                 <button
@@ -715,7 +715,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   disabled={isResendingOtp}
                   className="w-full text-center text-xs font-bold text-secondary hover:underline disabled:opacity-50 cursor-pointer"
                 >
-                  {isResendingOtp ? "Envoi en cours..." : "Je n'ai pas reçu de code — Renvoyer"}
+                  {isResendingOtp ? t('onb_sending_in_progress') : t('onb_resend_code')}
                 </button>
               </div>
             </motion.div>
@@ -728,10 +728,10 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       <BiometricPrompt
         isOpen={isBiometricPromptOpen}
         onClose={() => setIsBiometricPromptOpen(false)}
-        username={displayName || "Utilisateur"}
+        username={displayName || t('onb_default_username')}
         onSuccess={() => {
           setBiometricsEnabled(true);
-          toast.success("Authentification biométrique activée avec succès !");
+          toast.success(t('onb_biometric_auth_success'));
         }}
         mode="register"
       />

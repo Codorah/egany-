@@ -8,38 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, HelpCircle, LifeBuoy, ChevronDown, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupportProps {
   user: UserProfile;
   onBack: () => void;
 }
-
-const FAQ_ITEMS = [
-  {
-    question: "Comment fonctionne une tontine sur eganyé ?",
-    answer: "Chaque membre cotise le même montant à intervalle régulier (quotidien, hebdomadaire, bi-hebdomadaire ou mensuel). À chaque cycle, un membre reçoit le pot total selon la méthode de distribution choisie (rotation, tirage au sort ou enchères)."
-  },
-  {
-    question: "Comment rejoindre une tontine ?",
-    answer: "Via un lien d'invitation, un code QR, ou un code à saisir. Votre demande doit ensuite être validée par l'administrateur du cercle avant que vous n'en deveniez membre."
-  },
-  {
-    question: "Que se passe-t-il si je paie en retard ?",
-    answer: "Si le cercle a activé les pénalités de retard, un montant fixe ou un pourcentage par jour de retard sera automatiquement ajouté à votre prochaine cotisation, après un éventuel délai de grâce."
-  },
-  {
-    question: "Comment recharger mon portefeuille eganyé ?",
-    answer: "Depuis votre Profil > Portefeuille, choisissez « Recharger » et suivez les instructions de paiement (Mobile Money : Wave, Orange Money, MTN...)."
-  },
-  {
-    question: "Qu'est-ce que le Score de Réputation ?",
-    answer: "Un score de 0 à 100 calculé selon votre ponctualité de paiement. Un score élevé renforce la confiance des autres membres et administrateurs des cercles que vous rejoignez."
-  },
-  {
-    question: "Comment activer les notifications push ?",
-    answer: "Depuis votre Profil > Paramètres > Notifications, activez l'interrupteur « Notifications push » et autorisez les notifications lorsque votre navigateur vous le demande."
-  }
-];
 
 interface FaqAccordionItemProps {
   question: string;
@@ -66,15 +40,25 @@ const FaqAccordionItem: React.FC<FaqAccordionItemProps> = ({ question, answer })
 }
 
 export function Support({ user, onBack }: SupportProps) {
+  const { t } = useLanguage();
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  const FAQ_ITEMS = [
+    { question: t('sup_faq_1_q'), answer: t('sup_faq_1_a') },
+    { question: t('sup_faq_2_q'), answer: t('sup_faq_2_a') },
+    { question: t('sup_faq_3_q'), answer: t('sup_faq_3_a') },
+    { question: t('sup_faq_4_q'), answer: t('sup_faq_4_a') },
+    { question: t('sup_faq_5_q'), answer: t('sup_faq_5_a') },
+    { question: t('sup_faq_6_q'), answer: t('sup_faq_6_a') },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !message.trim()) {
-      toast.error('Veuillez remplir le sujet et le message.');
+      toast.error(t('sup_fill_required_toast'));
       return;
     }
 
@@ -92,10 +76,10 @@ export function Support({ user, onBack }: SupportProps) {
       setSubmitted(true);
       setSubject('');
       setMessage('');
-      toast.success('Votre signalement a été envoyé !');
+      toast.success(t('sup_ticket_sent_toast'));
     } catch (error) {
       console.error('Error submitting support ticket:', error);
-      toast.error("Erreur lors de l'envoi du signalement.");
+      toast.error(t('sup_ticket_send_error_toast'));
     } finally {
       setSubmitting(false);
     }
@@ -110,9 +94,9 @@ export function Support({ user, onBack }: SupportProps) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <LifeBuoy className="w-6 h-6" />
-            Support
+            {t('support')}
           </h1>
-          <p className="text-muted-foreground text-sm">Questions fréquentes et signalement de problème.</p>
+          <p className="text-muted-foreground text-sm">{t('sup_header_subtitle')}</p>
         </div>
       </div>
 
@@ -120,7 +104,7 @@ export function Support({ user, onBack }: SupportProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <HelpCircle className="w-4 h-4" />
-            Questions fréquentes
+            {t('sup_faq_title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -132,31 +116,31 @@ export function Support({ user, onBack }: SupportProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Signaler un problème</CardTitle>
-          <CardDescription>Notre équipe examinera votre message dans les meilleurs délais.</CardDescription>
+          <CardTitle className="text-base">{t('sup_report_problem_title')}</CardTitle>
+          <CardDescription>{t('sup_report_problem_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {submitted ? (
             <p className="text-sm text-secondary font-semibold py-4 text-center">
-              Merci ! Votre signalement a bien été transmis.
+              {t('sup_ticket_submitted_message')}
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="support_subject">Sujet</Label>
+                <Label htmlFor="support_subject">{t('sup_subject_label')}</Label>
                 <Input
                   id="support_subject"
-                  placeholder="Ex: Problème de paiement, bug d'affichage..."
+                  placeholder={t('sup_subject_placeholder')}
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={submitting}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="support_message">Description</Label>
+                <Label htmlFor="support_message">{t('prof_description')}</Label>
                 <Textarea
                   id="support_message"
-                  placeholder="Décrivez le problème rencontré en détail..."
+                  placeholder={t('sup_message_placeholder')}
                   className="h-28 resize-none"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -165,7 +149,7 @@ export function Support({ user, onBack }: SupportProps) {
               </div>
               <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
                 {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                Envoyer le signalement
+                {t('sup_send_report_cta')}
               </Button>
             </form>
           )}
