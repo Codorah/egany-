@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle, RefreshCw, PackageSearch } from 'lucide-react';
+import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle, RefreshCw, PackageSearch, Wallet, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
-import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest } from '@/lib/marketplace';
+import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest, repayMarketplaceCredit } from '@/lib/marketplace';
 
 interface MarketplaceProps {
   user: UserProfile;
@@ -25,6 +27,12 @@ const statusLabels: Record<MarketplaceRequest['status'], { label: string; classN
   rejected: { label: 'Refusé', className: 'bg-rose-500/10 text-rose-600' },
 };
 
+// Plafond de crédit indicatif : 2x l'épargne totale déjà versée dans les
+// cercles de tontine, avec un plancher pour ne pas bloquer les nouveaux
+// membres. L'admin reste libre d'ajuster le montant final à l'approbation.
+const CREDIT_FLOOR = 5000;
+const creditCap = (totalSaved: number) => Math.max(CREDIT_FLOOR, Math.round(totalSaved * 2));
+
 export function Marketplace({ user }: MarketplaceProps) {
   const [services, setServices] = useState<MarketplaceService[]>([]);
   const [myRequests, setMyRequests] = useState<MarketplaceRequest[]>([]);
@@ -32,6 +40,9 @@ export function Marketplace({ user }: MarketplaceProps) {
   const [loadError, setLoadError] = useState(false);
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [repayAmount, setRepayAmount] = useState('');
+  const [isRepaying, setIsRepaying] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -62,17 +73,63 @@ export function Marketplace({ user }: MarketplaceProps) {
 
   const handleAction = async () => {
     if (!selectedService) return;
+    let requestedAmount: number | undefined;
+    if (selectedService.category === 'credit') {
+      const amount = parseFloat(creditAmount);
+      const cap = creditCap(user.totalSaved);
+      if (!amount || amount <= 0) {
+        toast.error('Veuillez indiquer le montant souhaité.');
+        return;
+      }
+      if (amount > cap) {
+        toast.error(`Le montant demandé dépasse votre plafond indicatif de ${cap.toLocaleString()} FCFA.`);
+        return;
+      }
+      requestedAmount = amount;
+    }
     setIsSubmitting(true);
     try {
-      const result = await submitMarketplaceRequest({ userId: user.uid, serviceId: selectedService.id });
+      const result = await submitMarketplaceRequest({ userId: user.uid, serviceId: selectedService.id, requestedAmount });
       if (!result.success) throw new Error(result.message);
       toast.success(result.message);
       setSelectedService(null);
+      setCreditAmount('');
       await loadData();
     } catch (err: any) {
       toast.error(err.message || "Erreur lors de l'envoi de la demande.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRepay = async () => {
+    const existingRequest = selectedService ? requestForService(selectedService.id) : undefined;
+    if (!existingRequest) return;
+    const amount = parseFloat(repayAmount);
+    const remaining = (existingRequest.approvedAmount || 0) - existingRequest.repaidAmount;
+    if (!amount || amount <= 0) {
+      toast.error('Veuillez indiquer le montant à rembourser.');
+      return;
+    }
+    if (amount > remaining) {
+      toast.error(`Ce montant dépasse le solde restant dû (${remaining.toLocaleString()} FCFA).`);
+      return;
+    }
+    if (amount > user.walletBalance) {
+      toast.error('Solde du portefeuille insuffisant.');
+      return;
+    }
+    setIsRepaying(true);
+    try {
+      const result = await repayMarketplaceCredit({ requestId: existingRequest.id, amount });
+      if (!result.success) throw new Error(result.message);
+      toast.success('Remboursement effectué !');
+      setRepayAmount('');
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors du remboursement.');
+    } finally {
+      setIsRepaying(false);
     }
   };
 
@@ -142,7 +199,11 @@ export function Marketplace({ user }: MarketplaceProps) {
                 </p>
                 {existingRequest ? (
                   <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${statusLabels[existingRequest.status].className}`}>
-                    Demande : {statusLabels[existingRequest.status].label}
+                    {existingRequest.status === 'approved' && service.category === 'credit' && existingRequest.approvedAmount != null
+                      ? existingRequest.repaidAmount >= existingRequest.approvedAmount
+                        ? 'Crédit remboursé'
+                        : `Solde dû : ${(existingRequest.approvedAmount - existingRequest.repaidAmount).toLocaleString()} FCFA`
+                      : `Demande : ${statusLabels[existingRequest.status].label}`}
                   </div>
                 ) : (
                   <Button variant="outline" className="w-full font-bold border-brand/30 text-brand hover:bg-brand/10 h-11">
@@ -186,35 +247,127 @@ export function Marketplace({ user }: MarketplaceProps) {
                   </div>
                 )}
 
-                {requestForService(selectedService.id) ? (
-                  <div className="bg-muted p-4 rounded-xl flex items-center gap-3 mb-2 text-sm">
-                    <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
-                    Vous avez déjà une demande {statusLabels[requestForService(selectedService.id)!.status].label.toLowerCase()} pour ce service.
-                  </div>
-                ) : !isEligible(selectedService) ? (
-                  <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3 mb-2">
-                    <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
-                      Ce service nécessite un score de réputation d'au moins {selectedService.minReputationScore}. Le vôtre est actuellement {user.reputationScore}.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-start gap-3 mb-6">
-                      <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-                      <p className="text-xs text-brand-deep leading-relaxed">
-                        En soumettant cette demande, vous autorisez notre partenaire à consulter votre score de réputation eganyé pour la traiter.
-                      </p>
-                    </div>
-                    <Button
-                      className="w-full h-12 text-base font-bold rounded-xl"
-                      onClick={handleAction}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Envoi en cours...' : selectedService.actionLabel}
-                    </Button>
-                  </>
-                )}
+                {(() => {
+                  const existingRequest = requestForService(selectedService.id);
+                  const isActiveCredit = existingRequest?.status === 'approved'
+                    && selectedService.category === 'credit'
+                    && existingRequest.approvedAmount != null
+                    && existingRequest.repaidAmount < existingRequest.approvedAmount;
+
+                  if (isActiveCredit && existingRequest) {
+                    const remaining = (existingRequest.approvedAmount || 0) - existingRequest.repaidAmount;
+                    return (
+                      <div className="space-y-4">
+                        <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Montant emprunté</span>
+                            <span className="font-bold text-foreground">{existingRequest.approvedAmount!.toLocaleString()} FCFA</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Déjà remboursé</span>
+                            <span className="font-bold text-secondary">{existingRequest.repaidAmount.toLocaleString()} FCFA</span>
+                          </div>
+                          <div className="flex justify-between text-sm pt-2 border-t border-brand/10">
+                            <span className="font-bold text-foreground">Solde restant dû</span>
+                            <span className="font-black text-brand">{remaining.toLocaleString()} FCFA</span>
+                          </div>
+                          {existingRequest.repaymentDeadline && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
+                              <CalendarClock className="w-3.5 h-3.5" />
+                              Échéance : {new Date(existingRequest.repaymentDeadline).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold">Montant à rembourser</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={remaining}
+                            placeholder={`Max ${remaining.toLocaleString()} FCFA`}
+                            value={repayAmount}
+                            onChange={(e) => setRepayAmount(e.target.value)}
+                            className="rounded-xl h-11"
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Solde de votre portefeuille : {user.walletBalance.toLocaleString()} FCFA. Vous pouvez rembourser en plusieurs fois.
+                          </p>
+                        </div>
+                        <Button
+                          className="w-full h-12 text-base font-bold rounded-xl"
+                          onClick={handleRepay}
+                          disabled={isRepaying}
+                        >
+                          <Wallet className="w-4 h-4 mr-2" />
+                          {isRepaying ? 'Traitement...' : 'Rembourser'}
+                        </Button>
+                      </div>
+                    );
+                  }
+
+                  if (existingRequest) {
+                    const isFullyRepaidCredit = existingRequest.status === 'approved'
+                      && selectedService.category === 'credit'
+                      && existingRequest.approvedAmount != null
+                      && existingRequest.repaidAmount >= existingRequest.approvedAmount;
+                    return (
+                      <div className="bg-muted p-4 rounded-xl flex items-center gap-3 mb-2 text-sm">
+                        <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
+                        {isFullyRepaidCredit
+                          ? 'Ce crédit a été intégralement remboursé. Bravo !'
+                          : selectedService.category === 'credit' && existingRequest.requestedAmount
+                          ? `Votre demande de ${existingRequest.requestedAmount.toLocaleString()} FCFA est ${statusLabels[existingRequest.status].label.toLowerCase()}.`
+                          : `Vous avez déjà une demande ${statusLabels[existingRequest.status].label.toLowerCase()} pour ce service.`}
+                      </div>
+                    );
+                  }
+
+                  if (!isEligible(selectedService)) {
+                    return (
+                      <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3 mb-2">
+                        <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
+                          Ce service nécessite un score de réputation d'au moins {selectedService.minReputationScore}. Le vôtre est actuellement {user.reputationScore}.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {selectedService.category === 'credit' && (
+                        <div className="space-y-1.5 mb-4">
+                          <Label className="text-xs font-bold">Montant souhaité (FCFA)</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={creditCap(user.totalSaved)}
+                            placeholder={`Jusqu'à ${creditCap(user.totalSaved).toLocaleString()} FCFA`}
+                            value={creditAmount}
+                            onChange={(e) => setCreditAmount(e.target.value)}
+                            className="rounded-xl h-11"
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Plafond indicatif basé sur votre épargne dans vos cercles ({user.totalSaved.toLocaleString()} FCFA) : {creditCap(user.totalSaved).toLocaleString()} FCFA. Le montant final est confirmé par notre équipe.
+                          </p>
+                        </div>
+                      )}
+                      <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-start gap-3 mb-6">
+                        <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
+                        <p className="text-xs text-brand-deep leading-relaxed">
+                          En soumettant cette demande, vous autorisez notre partenaire à consulter votre score de réputation eganyé pour la traiter.
+                        </p>
+                      </div>
+                      <Button
+                        className="w-full h-12 text-base font-bold rounded-xl"
+                        onClick={handleAction}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Envoi en cours...' : selectedService.actionLabel}
+                      </Button>
+                    </>
+                  );
+                })()}
               </div>
             </>
           )}

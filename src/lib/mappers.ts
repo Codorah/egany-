@@ -79,6 +79,11 @@ export function mapMarketplaceRequestRow(row: Record<string, any>): MarketplaceR
     reviewedBy: row.reviewed_by ?? undefined,
     reviewedAt: row.reviewed_at ?? undefined,
     createdAt: row.created_at,
+    requestedAmount: row.requested_amount != null ? Number(row.requested_amount) : undefined,
+    approvedAmount: row.approved_amount != null ? Number(row.approved_amount) : undefined,
+    repaidAmount: Number(row.repaid_amount ?? 0),
+    repaymentDeadline: row.repayment_deadline ?? undefined,
+    disbursedAt: row.disbursed_at ?? undefined,
   };
 }
 

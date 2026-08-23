@@ -1157,7 +1157,14 @@ CREATE TABLE IF NOT EXISTS public.marketplace_requests (
   admin_notes text,
   reviewed_by uuid REFERENCES public.profiles(id),
   reviewed_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  -- Uniquement pour les services category='credit' (ex: Micro-crédit Agricole) —
+  -- restent NULL pour assurance/équipement.
+  requested_amount numeric,
+  approved_amount numeric,
+  repaid_amount numeric NOT NULL DEFAULT 0,
+  repayment_deadline date,
+  disbursed_at timestamptz
 );
 
 CREATE INDEX IF NOT EXISTS idx_marketplace_requests_user ON public.marketplace_requests(user_id, created_at DESC);
@@ -1213,4 +1220,143 @@ DROP POLICY IF EXISTS "platform_settings_update_admin_only" ON public.platform_s
 
 CREATE POLICY "platform_settings_select_all" ON public.platform_settings FOR SELECT USING (true);
 CREATE POLICY "platform_settings_update_admin_only" ON public.platform_settings FOR UPDATE USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- ============================================================================
+-- 12. MARKETPLACE — CRÉDIT RÉEL (décaissement + remboursements multiples)
+-- ============================================================================
+-- L'approbation d'une demande "Micro-crédit Agricole" (category='credit')
+-- ne faisait auparavant qu'envoyer une notification — aucun argent ne
+-- bougeait, alors que le texte du service annonce un vrai crédit. Le
+-- décaissement passe par execute_financial_transaction (même registre
+-- comptable double-entrée que le reste de l'app) et le remboursement peut
+-- se faire en plusieurs fois (repaid_amount s'incrémente à chaque appel).
+
+CREATE OR REPLACE FUNCTION public.approve_marketplace_credit(
+  p_request_id uuid,
+  p_approved_amount numeric,
+  p_repayment_deadline date,
+  p_admin_notes text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_req record;
+  v_service record;
+  v_ledger_result jsonb;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Non autorisé.');
+  END IF;
+
+  IF p_approved_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le montant approuvé doit être supérieur à zéro.');
+  END IF;
+
+  SELECT * INTO v_req FROM public.marketplace_requests WHERE id = p_request_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Demande introuvable.');
+  END IF;
+  IF v_req.status <> 'pending' THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Cette demande a déjà été traitée.');
+  END IF;
+
+  SELECT * INTO v_service FROM public.marketplace_services WHERE id = v_req.service_id;
+  IF NOT FOUND OR v_service.category <> 'credit' THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Ce service n''est pas un service de crédit.');
+  END IF;
+
+  UPDATE public.marketplace_requests SET
+    status = 'approved',
+    approved_amount = p_approved_amount,
+    repayment_deadline = p_repayment_deadline,
+    admin_notes = p_admin_notes,
+    reviewed_by = auth.uid(),
+    reviewed_at = now(),
+    disbursed_at = now()
+  WHERE id = p_request_id;
+
+  v_ledger_result := public.execute_financial_transaction(
+    p_idempotency_key := 'credit_disbursement_' || p_request_id::text,
+    p_user_id := v_req.user_id,
+    p_amount := p_approved_amount,
+    p_currency := 'FCFA',
+    p_description := 'Décaissement crédit — ' || v_service.title,
+    p_action_type := 'admin_adjustment',
+    p_debit_account := 'marketplace_credit:' || v_req.service_id::text,
+    p_credit_account := 'user_wallet:' || v_req.user_id::text
+  );
+
+  IF NOT (v_ledger_result->>'success')::boolean THEN
+    RAISE EXCEPTION '%', v_ledger_result->>'message';
+  END IF;
+
+  INSERT INTO public.notifications (user_id, title, message, type)
+  VALUES (
+    v_req.user_id,
+    'Crédit approuvé et décaissé !',
+    'Votre crédit "' || v_service.title || '" de ' || p_approved_amount || ' FCFA a été approuvé et versé sur votre portefeuille. À rembourser avant le ' || to_char(p_repayment_deadline, 'DD/MM/YYYY') || '.',
+    'system'
+  );
+
+  RETURN jsonb_build_object('success', true, 'message', 'Crédit approuvé et décaissé.');
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'message', sqlerrm);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.repay_marketplace_credit(
+  p_request_id uuid,
+  p_amount numeric
+)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_req record;
+  v_remaining numeric;
+  v_ledger_result jsonb;
+BEGIN
+  IF p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le montant doit être supérieur à zéro.');
+  END IF;
+
+  SELECT * INTO v_req FROM public.marketplace_requests WHERE id = p_request_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Crédit introuvable.');
+  END IF;
+  IF v_req.user_id <> auth.uid() THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Non autorisé.');
+  END IF;
+  IF v_req.status <> 'approved' OR v_req.approved_amount IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Ce crédit n''est pas actif.');
+  END IF;
+
+  v_remaining := v_req.approved_amount - v_req.repaid_amount;
+  IF p_amount > v_remaining THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Ce montant dépasse le solde restant dû (' || v_remaining || ' FCFA).');
+  END IF;
+
+  v_ledger_result := public.execute_financial_transaction(
+    p_idempotency_key := 'credit_repayment_' || p_request_id::text || '_' || extract(epoch from now())::text,
+    p_user_id := v_req.user_id,
+    p_amount := p_amount,
+    p_currency := 'FCFA',
+    p_description := 'Remboursement crédit Marketplace',
+    p_action_type := 'admin_adjustment',
+    p_debit_account := 'user_wallet:' || v_req.user_id::text,
+    p_credit_account := 'marketplace_credit:' || v_req.service_id::text
+  );
+
+  IF NOT (v_ledger_result->>'success')::boolean THEN
+    RETURN jsonb_build_object('success', false, 'message', v_ledger_result->>'message');
+  END IF;
+
+  UPDATE public.marketplace_requests SET repaid_amount = repaid_amount + p_amount WHERE id = p_request_id;
+
+  RETURN jsonb_build_object('success', true, 'message', 'Remboursement enregistré.', 'remainingBalance', v_remaining - p_amount);
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'message', sqlerrm);
+END;
+$$;
 

@@ -25,10 +25,12 @@ export async function fetchMyMarketplaceRequests(userId: string): Promise<Market
 export async function submitMarketplaceRequest(params: {
   userId: string;
   serviceId: string;
+  requestedAmount?: number;
 }): Promise<{ success: boolean; message: string }> {
   const { error } = await supabase.from('marketplace_requests').insert({
     user_id: params.userId,
     service_id: params.serviceId,
+    requested_amount: params.requestedAmount ?? null,
   });
   if (error) {
     return { success: false, message: error.message };
@@ -36,10 +38,10 @@ export async function submitMarketplaceRequest(params: {
   return { success: true, message: 'Votre demande a été envoyée ! Notre partenaire vous contactera sous 24h.' };
 }
 
-export async function fetchPendingMarketplaceRequests(): Promise<(MarketplaceRequest & { userName: string; userEmail: string; serviceTitle: string })[]> {
+export async function fetchPendingMarketplaceRequests(): Promise<(MarketplaceRequest & { userName: string; userEmail: string; userTotalSaved: number; serviceTitle: string; serviceCategory: string })[]> {
   const { data, error } = await supabase
     .from('marketplace_requests')
-    .select('*, profiles!marketplace_requests_user_id_fkey(display_name, email), marketplace_services!marketplace_requests_service_id_fkey(title)')
+    .select('*, profiles!marketplace_requests_user_id_fkey(display_name, email, total_saved), marketplace_services!marketplace_requests_service_id_fkey(title, category)')
     .eq('status', 'pending')
     .order('created_at', { ascending: true });
   if (error || !data) return [];
@@ -47,8 +49,38 @@ export async function fetchPendingMarketplaceRequests(): Promise<(MarketplaceReq
     ...mapMarketplaceRequestRow(row),
     userName: row.profiles?.display_name || 'Utilisateur',
     userEmail: row.profiles?.email || '',
+    userTotalSaved: Number(row.profiles?.total_saved ?? 0),
     serviceTitle: row.marketplace_services?.title || 'Service',
+    serviceCategory: row.marketplace_services?.category || '',
   }));
+}
+
+export async function approveMarketplaceCredit(params: {
+  requestId: string;
+  approvedAmount: number;
+  repaymentDeadline: string;
+  adminNotes?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('approve_marketplace_credit', {
+    p_request_id: params.requestId,
+    p_approved_amount: params.approvedAmount,
+    p_repayment_deadline: params.repaymentDeadline,
+    p_admin_notes: params.adminNotes || null,
+  });
+  if (error) return { success: false, message: error.message };
+  return data as { success: boolean; message: string };
+}
+
+export async function repayMarketplaceCredit(params: {
+  requestId: string;
+  amount: number;
+}): Promise<{ success: boolean; message: string; remainingBalance?: number }> {
+  const { data, error } = await supabase.rpc('repay_marketplace_credit', {
+    p_request_id: params.requestId,
+    p_amount: params.amount,
+  });
+  if (error) return { success: false, message: error.message };
+  return data as { success: boolean; message: string; remainingBalance?: number };
 }
 
 export async function updateMarketplaceRequestStatus(params: {

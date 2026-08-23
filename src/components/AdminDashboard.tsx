@@ -5,7 +5,7 @@ import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
 import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
-import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
+import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus, approveMarketplaceCredit } from '@/lib/marketplace';
 import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Loader2, 
@@ -96,7 +97,9 @@ export function AdminDashboard() {
   const [reviewingKycId, setReviewingKycId] = useState<string | null>(null);
 
   // Marketplace request queue
-  const [marketplaceRequests, setMarketplaceRequests] = useState<(MarketplaceRequest & { userName: string; userEmail: string; serviceTitle: string })[]>([]);
+  const [marketplaceRequests, setMarketplaceRequests] = useState<(MarketplaceRequest & { userName: string; userEmail: string; userTotalSaved: number; serviceTitle: string; serviceCategory: string })[]>([]);
+  const [creditApprovalForm, setCreditApprovalForm] = useState<Record<string, { amount: string; deadline: string }>>({});
+  const [approvingCreditId, setApprovingCreditId] = useState<string | null>(null);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
 
   const fetchData = async () => {
@@ -216,6 +219,44 @@ export function AdminDashboard() {
       toast.error(error.message || 'Erreur lors du traitement de la demande.');
     } finally {
       setReviewingRequestId(null);
+    }
+  };
+
+  const getCreditForm = (req: { id: string; requestedAmount?: number }) => {
+    if (creditApprovalForm[req.id]) return creditApprovalForm[req.id];
+    const defaultDeadline = new Date();
+    defaultDeadline.setDate(defaultDeadline.getDate() + 30);
+    return {
+      amount: req.requestedAmount != null ? String(req.requestedAmount) : '',
+      deadline: defaultDeadline.toISOString().slice(0, 10),
+    };
+  };
+
+  const setCreditFormField = (requestId: string, field: 'amount' | 'deadline', value: string, req: { id: string; requestedAmount?: number }) => {
+    setCreditApprovalForm(prev => ({ ...prev, [requestId]: { ...getCreditForm(req), ...prev[requestId], [field]: value } }));
+  };
+
+  const handleApproveCredit = async (req: { id: string; userId: string; serviceTitle: string; requestedAmount?: number }) => {
+    const form = getCreditForm(req);
+    const amount = parseFloat(form.amount);
+    if (!amount || amount <= 0) {
+      toast.error('Veuillez indiquer un montant à décaisser.');
+      return;
+    }
+    if (!form.deadline) {
+      toast.error("Veuillez indiquer une date d'échéance de remboursement.");
+      return;
+    }
+    setApprovingCreditId(req.id);
+    try {
+      const result = await approveMarketplaceCredit({ requestId: req.id, approvedAmount: amount, repaymentDeadline: form.deadline });
+      if (!result.success) throw new Error(result.message);
+      toast.success(`Crédit de ${amount.toLocaleString()} FCFA décaissé pour "${req.serviceTitle}".`);
+      setMarketplaceRequests(prev => prev.filter(r => r.id !== req.id));
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'approbation du crédit.");
+    } finally {
+      setApprovingCreditId(null);
     }
   };
 
@@ -1028,44 +1069,98 @@ export function AdminDashboard() {
               ) : (
                 <div className="divide-y divide-border">
                   {marketplaceRequests.map((req) => (
-                    <div key={req.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-bold text-foreground">{req.serviceTitle}</p>
-                        <p className="text-[11px] text-muted-foreground">{req.userName} • {req.userEmail}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Soumis le {new Date(req.createdAt).toLocaleDateString()}
-                        </p>
+                    <div key={req.id} className="p-5 flex flex-col gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-bold text-foreground">{req.serviceTitle}</p>
+                          <p className="text-[11px] text-muted-foreground">{req.userName} • {req.userEmail}</p>
+                          {req.serviceCategory === 'credit' && (
+                            <p className="text-[11px] text-brand font-bold">
+                              Demande : {(req.requestedAmount || 0).toLocaleString()} FCFA • Épargne du membre : {req.userTotalSaved.toLocaleString()} FCFA
+                            </p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground">
+                            Soumis le {new Date(req.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {req.serviceCategory !== 'credit' && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReviewMarketplaceRequest(req.id, 'contacted', req.userId, req.serviceTitle)}
+                              disabled={reviewingRequestId === req.id}
+                              className="h-9 rounded-xl text-xs font-bold border-border"
+                            >
+                              Marquer contacté
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReviewMarketplaceRequest(req.id, 'approved', req.userId, req.serviceTitle)}
+                              disabled={reviewingRequestId === req.id}
+                              className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                            >
+                              <Check className="w-3.5 h-3.5 mr-1.5" />
+                              Approuver
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReviewMarketplaceRequest(req.id, 'rejected', req.userId, req.serviceTitle)}
+                              disabled={reviewingRequestId === req.id}
+                              className="h-9 w-9 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
+                              title="Refuser"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleReviewMarketplaceRequest(req.id, 'contacted', req.userId, req.serviceTitle)}
-                          disabled={reviewingRequestId === req.id}
-                          className="h-9 rounded-xl text-xs font-bold border-border"
-                        >
-                          Marquer contacté
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleReviewMarketplaceRequest(req.id, 'approved', req.userId, req.serviceTitle)}
-                          disabled={reviewingRequestId === req.id}
-                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
-                        >
-                          <Check className="w-3.5 h-3.5 mr-1.5" />
-                          Approuver
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleReviewMarketplaceRequest(req.id, 'rejected', req.userId, req.serviceTitle)}
-                          disabled={reviewingRequestId === req.id}
-                          className="h-9 w-9 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
-                          title="Refuser"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
+
+                      {req.serviceCategory === 'credit' && (
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3 bg-muted/30 border border-border rounded-2xl p-4">
+                          <div className="space-y-1 flex-1">
+                            <Label className="text-[10px] font-bold uppercase text-muted-foreground">Montant à décaisser (FCFA)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={getCreditForm(req).amount}
+                              onChange={(e) => setCreditFormField(req.id, 'amount', e.target.value, req)}
+                              className="h-10 rounded-xl bg-card"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase text-muted-foreground">Échéance de remboursement</Label>
+                            <Input
+                              type="date"
+                              value={getCreditForm(req).deadline}
+                              onChange={(e) => setCreditFormField(req.id, 'deadline', e.target.value, req)}
+                              className="h-10 rounded-xl bg-card"
+                            />
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveCredit(req)}
+                              disabled={approvingCreditId === req.id}
+                              className="h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                            >
+                              <Check className="w-3.5 h-3.5 mr-1.5" />
+                              Approuver et décaisser
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReviewMarketplaceRequest(req.id, 'rejected', req.userId, req.serviceTitle)}
+                              disabled={reviewingRequestId === req.id || approvingCreditId === req.id}
+                              className="h-10 w-10 p-0 rounded-xl border-danger/30 text-danger hover:bg-danger-soft"
+                              title="Refuser"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

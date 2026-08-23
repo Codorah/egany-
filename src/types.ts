@@ -72,6 +72,12 @@ export interface MarketplaceRequest {
   reviewedBy?: string;
   reviewedAt?: string;
   createdAt: string;
+  // Uniquement pour les services category='credit'
+  requestedAmount?: number;
+  approvedAmount?: number;
+  repaidAmount: number;
+  repaymentDeadline?: string;
+  disbursedAt?: string;
 }
 
 export type GroupMemberRole = 'member' | 'treasurer' | 'secretary';
