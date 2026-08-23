@@ -63,6 +63,7 @@ import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
+import { apiUrl } from '@/lib/apiBase';
 import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
@@ -345,7 +346,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       // Le portefeuille n'est crédité qu'après un vrai paiement Paydunya
       // confirmé (App.tsx gère le retour ?paydunya_success=true) — on ne
       // crédite jamais directement ici.
-      const response = await fetch('/api/create-paydunya-checkout', {
+      const response = await fetch(apiUrl('/api/create-paydunya-checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, userId: user.uid, userName: user.displayName, userEmail: user.email }),

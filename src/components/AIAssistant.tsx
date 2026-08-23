@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { mapContributionRow } from '@/lib/mappers';
+import { apiUrl } from '@/lib/apiBase';
 import { Group, UserProfile } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -87,7 +88,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
     setIsTyping(true);
 
     try {
-      const response = await fetch('/api/ai-assistant', {
+      const response = await fetch(apiUrl('/api/ai-assistant'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: query, context: financialContext }),

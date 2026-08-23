@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">eganyé</string>
+    <string name="title_activity_main">eganyé</string>
+    <string name="package_name">com.codorah.eganye</string>
+    <string name="custom_url_scheme">com.codorah.eganye</string>
+</resources>

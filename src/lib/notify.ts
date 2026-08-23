@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { apiUrl } from './apiBase';
 
 export interface NotifyParams {
   userId: string;
@@ -40,7 +41,7 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
     const deliveries: Promise<any>[] = [];
     if (profile.email_notifications_enabled && profile.email) {
       deliveries.push(
-        fetch('/api/send-email', {
+        fetch(apiUrl('/api/send-email'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.email, subject: title, message })
@@ -49,7 +50,7 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
     }
     if (profile.sms_notifications_enabled && profile.phone) {
       deliveries.push(
-        fetch('/api/send-sms', {
+        fetch(apiUrl('/api/send-sms'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
@@ -58,7 +59,7 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
     }
     if (profile.whatsapp_notifications_enabled && profile.phone) {
       deliveries.push(
-        fetch('/api/send-whatsapp', {
+        fetch(apiUrl('/api/send-whatsapp'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
