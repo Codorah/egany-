@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow } from '@/lib/mappers';
 import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
-import { LedgerEntry, AuditLog, performFullSystemReconciliation } from '@/lib/ledger';
+import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
 import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
@@ -87,6 +87,10 @@ export function AdminDashboard() {
   const [reconReports, setReconReports] = useState<any[]>([]);
   const [isReconciling, setIsReconciling] = useState(false);
 
+  // Pending Mobile Money withdrawal queue (manual disbursement — Paydunya has no payout API)
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
+  const [processingWithdrawalId, setProcessingWithdrawalId] = useState<string | null>(null);
+
   // KYC review queue
   const [kycSubmissions, setKycSubmissions] = useState<(KycSubmission & { userName: string; userEmail: string })[]>([]);
   const [reviewingKycId, setReviewingKycId] = useState<string | null>(null);
@@ -121,6 +125,7 @@ export function AdminDashboard() {
 
       setKycSubmissions(await fetchPendingKycSubmissions());
       setMarketplaceRequests(await fetchPendingMarketplaceRequests());
+      setPendingWithdrawals(await fetchPendingWithdrawals());
 
       const settings = await fetchPlatformSettings();
       setMaintenanceMode(settings.maintenanceMode);
@@ -211,6 +216,47 @@ export function AdminDashboard() {
       toast.error(error.message || 'Erreur lors du traitement de la demande.');
     } finally {
       setReviewingRequestId(null);
+    }
+  };
+
+  const handleCompleteWithdrawal = async (w: PendingWithdrawal) => {
+    setProcessingWithdrawalId(w.id);
+    try {
+      const result = await completeWithdrawal(w.id);
+      if (!result.success) throw new Error(result.message);
+      toast.success(`Retrait de ${w.amount.toLocaleString()} FCFA marqué comme envoyé.`);
+      setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
+      await notifyUser({
+        userId: w.userId,
+        title: 'Retrait effectué',
+        message: `Votre retrait de ${w.amount.toLocaleString()} FCFA vers ${w.paymentMethod.toUpperCase()} a été envoyé.`,
+        type: 'system',
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du traitement du retrait.");
+    } finally {
+      setProcessingWithdrawalId(null);
+    }
+  };
+
+  const handleFailWithdrawal = async (w: PendingWithdrawal) => {
+    const reason = window.prompt("Motif de l'échec (le portefeuille sera remboursé) :") || undefined;
+    setProcessingWithdrawalId(w.id);
+    try {
+      const result = await failWithdrawal({ transactionId: w.id, userId: w.userId, amount: w.amount, reason });
+      if (!result.success) throw new Error(result.message);
+      toast.success('Retrait annulé, portefeuille remboursé.');
+      setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
+      await notifyUser({
+        userId: w.userId,
+        title: 'Retrait échoué — remboursé',
+        message: `Votre retrait de ${w.amount.toLocaleString()} FCFA n'a pas pu être effectué${reason ? ` (${reason})` : ''}. Le montant a été recrédité sur votre portefeuille.`,
+        type: 'system',
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'annulation du retrait.");
+    } finally {
+      setProcessingWithdrawalId(null);
     }
   };
 
@@ -587,6 +633,9 @@ export function AdminDashboard() {
           <TabsTrigger value="ledger" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <BookOpen className="w-4 h-4" />
             {t('admin_tab_ledger')}
+            {pendingWithdrawals.length > 0 && (
+              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{pendingWithdrawals.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
             <Settings className="w-4 h-4" />
@@ -1116,6 +1165,60 @@ export function AdminDashboard() {
 
         {/* TAB 5: DOUBLE-ENTRY LEDGER & AUDIT LOGS */}
         <TabsContent value="ledger" className="mt-6 space-y-6">
+          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+            <CardHeader className="pb-4 bg-muted/30 border-b border-border">
+              <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
+                <ArrowUpRight className="w-5 h-5 text-brand" />
+                Retraits Mobile Money en attente
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Paydunya ne décaisse pas automatiquement vers Mobile Money : envoyez l'argent manuellement puis marquez la demande traitée. Le portefeuille de l'utilisateur est déjà débité (réservé).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {pendingWithdrawals.length === 0 ? (
+                <p className="text-center py-12 text-muted-foreground text-xs font-medium">
+                  Aucun retrait en attente.
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {pendingWithdrawals.map((w) => (
+                    <div key={w.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold text-foreground">{w.userName} • {w.userEmail}</p>
+                        <p className="text-xs font-black text-brand">{w.amount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Demandé le {new Date(w.date).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => handleCompleteWithdrawal(w)}
+                          disabled={processingWithdrawalId === w.id}
+                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1.5" />
+                          Envoyé
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFailWithdrawal(w)}
+                          disabled={processingWithdrawalId === w.id}
+                          className="h-9 rounded-xl text-xs font-bold border-danger/30 text-danger hover:bg-danger-soft"
+                        >
+                          <X className="w-3.5 h-3.5 mr-1.5" />
+                          Échec (rembourser)
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left side: Reconciliation control */}

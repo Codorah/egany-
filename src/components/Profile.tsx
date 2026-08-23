@@ -113,11 +113,6 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [rechargeAmount, setRechargeAmount] = useState('');
-  // Stable per-attempt idempotency keys: a retry after a failed request must
-  // reuse the same key (so the backend dedupes it if it actually went
-  // through), while editing the amount signals a genuinely new operation.
-  const rechargeIdempotencyKeyRef = React.useRef<string | null>(null);
-  useEffect(() => { rechargeIdempotencyKeyRef.current = null; }, [rechargeAmount]);
   const [isRecharging, setIsRecharging] = useState(false);
 
   // Withdrawal states
@@ -347,26 +342,19 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
     }
     setIsRecharging(true);
     try {
-      if (!rechargeIdempotencyKeyRef.current) {
-        rechargeIdempotencyKeyRef.current = crypto.randomUUID();
-      }
-      const result = await executeFinancialTransaction({
-        idempotencyKey: rechargeIdempotencyKeyRef.current,
-        userId: user.uid,
-        amount,
-        currency: 'FCFA',
-        description: `Recharge de portefeuille via Mobile Money (${amount.toLocaleString()} FCFA)`,
-        actionType: 'wallet_recharge',
-        debitAccount: 'mobile_money_gateway',
-        creditAccount: `user_wallet:${user.uid}`
+      // Le portefeuille n'est crédité qu'après un vrai paiement Paydunya
+      // confirmé (App.tsx gère le retour ?paydunya_success=true) — on ne
+      // crédite jamais directement ici.
+      const response = await fetch('/api/create-paydunya-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, userId: user.uid, userName: user.displayName, userEmail: user.email }),
       });
-      if (!result.success) throw new Error(result.message);
-      rechargeIdempotencyKeyRef.current = null;
-      toast.success(`Portefeuille rechargé avec succès (+${amount.toLocaleString()} FCFA) !`);
-      setRechargeAmount('');
+      const data = await response.json();
+      if (!response.ok || !data.url) throw new Error(data.error || "Impossible de démarrer le paiement Paydunya.");
+      window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || "Échec de la recharge.");
-    } finally {
       setIsRecharging(false);
     }
   };
@@ -400,6 +388,10 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       if (!withdrawIdempotencyKeyRef.current) {
         withdrawIdempotencyKeyRef.current = crypto.randomUUID();
       }
+      // Paydunya n'expose que l'encaissement, pas le décaissement automatique
+      // vers Mobile Money : l'argent est réservé (débité) immédiatement, puis
+      // un admin l'envoie manuellement et marque la demande traitée. Le solde
+      // est remboursé automatiquement si l'admin marque le retrait en échec.
       const result = await executeFinancialTransaction({
         idempotencyKey: withdrawIdempotencyKeyRef.current,
         userId: user.uid,
@@ -408,11 +400,22 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         description: `Retrait vers ${withdrawMethod.toUpperCase()} (${withdrawPhone})`,
         actionType: 'wallet_withdrawal',
         debitAccount: `user_wallet:${user.uid}`,
-        creditAccount: `mobile_money_${withdrawMethod}`
+        creditAccount: 'mobile_money_payout_pending'
       });
       if (!result.success) throw new Error(result.message);
+
+      await supabase.from('wallet_transactions').insert({
+        user_id: user.uid,
+        amount,
+        type: 'withdraw',
+        description: `Retrait vers ${withdrawMethod.toUpperCase()} (${withdrawPhone})`,
+        status: 'pending',
+        reference: withdrawPhone,
+        payment_method: withdrawMethod,
+      });
+
       withdrawIdempotencyKeyRef.current = null;
-      toast.success(`Retrait de ${amount.toLocaleString()} FCFA effectué !`);
+      toast.success(`Retrait de ${amount.toLocaleString()} FCFA demandé — vous recevrez l'argent sur ${withdrawMethod.toUpperCase()} sous peu.`);
       setWithdrawAmount('');
       setWithdrawPin('');
     } catch (err: any) {

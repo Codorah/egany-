@@ -94,6 +94,86 @@ export async function executeFinancialTransaction(params: {
   return data as { success: boolean; message: string; transactionId?: string };
 }
 
+export interface PendingWithdrawal {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  amount: number;
+  paymentMethod: string;
+  reference: string | null;
+  date: string;
+}
+
+/**
+ * Retraits Mobile Money : Paydunya n'expose que l'encaissement (checkout),
+ * pas le décaissement automatique — un vrai retrait nécessite qu'un admin
+ * envoie physiquement l'argent via Mobile Money, puis marque la demande
+ * traitée ici. Le portefeuille de l'utilisateur est débité immédiatement à
+ * la demande (l'argent est réservé), remboursé uniquement si l'admin
+ * marque le retrait en échec.
+ */
+export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
+  const { data, error } = await supabase
+    .from('wallet_transactions')
+    .select('*, profiles!wallet_transactions_user_id_fkey(display_name, email)')
+    .eq('type', 'withdraw')
+    .eq('status', 'pending')
+    .order('date', { ascending: true });
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    id: row.id,
+    userId: row.user_id,
+    userName: row.profiles?.display_name || 'Utilisateur',
+    userEmail: row.profiles?.email || '',
+    amount: Number(row.amount),
+    paymentMethod: row.payment_method || '',
+    reference: row.reference,
+    date: row.date,
+  }));
+}
+
+export async function completeWithdrawal(transactionId: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase
+    .from('wallet_transactions')
+    .update({ status: 'completed' })
+    .eq('id', transactionId)
+    .eq('status', 'pending')
+    .select('id');
+  if (error) return { success: false, message: error.message };
+  if (!data || data.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
+  return { success: true };
+}
+
+export async function failWithdrawal(params: {
+  transactionId: string;
+  userId: string;
+  amount: number;
+  reason?: string;
+}): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase
+    .from('wallet_transactions')
+    .update({ status: 'failed', description: params.reason || 'Retrait échoué — remboursé.' })
+    .eq('id', params.transactionId)
+    .eq('status', 'pending')
+    .select('id');
+  if (error) return { success: false, message: error.message };
+  if (!data || data.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
+
+  const refund = await executeFinancialTransaction({
+    idempotencyKey: `withdraw_refund_${params.transactionId}`,
+    userId: params.userId,
+    amount: params.amount,
+    currency: 'FCFA',
+    description: `Remboursement — retrait échoué (${params.reason || 'raison non précisée'})`,
+    actionType: 'admin_adjustment',
+    debitAccount: 'mobile_money_payout_pending',
+    creditAccount: `user_wallet:${params.userId}`,
+  });
+  if (!refund.success) return { success: false, message: refund.message };
+  return { success: true };
+}
+
 export interface PinVerificationResult {
   ok: boolean;
   locked: boolean;
