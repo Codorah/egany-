@@ -19,7 +19,8 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
-  MailCheck
+  MailCheck,
+  Check
 } from 'lucide-react';
 import { signInWithGoogle, signInWithEmail, supabase } from '@/lib/supabase';
 import { fetchPlatformSettings } from '@/lib/platformSettings';
@@ -48,6 +49,15 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const passwordChecks = {
+    length: password.length >= 6,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    digit: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+  const isPasswordStrongEnough = Object.values(passwordChecks).every(Boolean);
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
@@ -105,8 +115,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         toast.error(t('onb_enter_valid_email'));
         return;
       }
-      if (password.length < 6) {
-        toast.error(t('onb_pw_min_6'));
+      if (authMode === 'signup' ? !isPasswordStrongEnough : password.length < 6) {
+        toast.error(authMode === 'signup' ? t('onb_pw_not_strong_enough') : t('onb_pw_min_6'));
         return;
       }
     }
@@ -413,17 +423,22 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className={`p-5 rounded-2xl bg-card border border-border flex flex-col items-center text-center space-y-4 overflow-hidden shadow-soft`}
+                  className="rounded-2xl bg-card border border-border flex flex-col items-center text-center overflow-hidden shadow-soft"
                 >
-                  <div className="w-full h-44 sm:h-52 rounded-xl overflow-hidden shadow-soft relative">
+                  {/* Bled edge-to-edge within the card (no side padding) so the photo
+                      reads as a real scene, not a thumbnail floating in whitespace. */}
+                  <div className="w-full aspect-[4/3] relative">
                     <img
                       src={slides[slideIndex].image}
                       alt={slides[slideIndex].title}
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-serif font-black text-foreground">{slides[slideIndex].title}</h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed max-w-sm font-medium">{slides[slideIndex].description}</p>
+                  <div className="px-5 pb-5 pt-1 space-y-3">
+                    <h3 className="text-lg sm:text-xl font-serif font-black text-foreground">{slides[slideIndex].title}</h3>
+                    <p className="text-muted-foreground text-xs leading-relaxed max-w-sm font-medium">{slides[slideIndex].description}</p>
+                  </div>
                 </motion.div>
               </AnimatePresence>
 
@@ -533,6 +548,25 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {authMode === 'signup' && password.length > 0 && (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1">
+                      {([
+                        ['length', 'onb_pw_req_length'],
+                        ['uppercase', 'onb_pw_req_uppercase'],
+                        ['lowercase', 'onb_pw_req_lowercase'],
+                        ['digit', 'onb_pw_req_digit'],
+                        ['special', 'onb_pw_req_special'],
+                      ] as const).map(([key, labelKey]) => {
+                        const met = passwordChecks[key];
+                        return (
+                          <div key={key} className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${met ? 'text-secondary' : 'text-muted-foreground'}`}>
+                            {met ? <Check className="w-3 h-3 shrink-0" /> : <div className="w-3 h-3 shrink-0 rounded-full border border-current" />}
+                            {t(labelKey)}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {authMode === 'signup' && (

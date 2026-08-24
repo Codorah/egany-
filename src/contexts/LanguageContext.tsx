@@ -3751,6 +3751,42 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Nyagbe la le be wòanɔ nyaŋɔŋlɔ 6 teƒe.',
     kbp: 'Tɛmɛnsira ɖɔ ka kɛ nɖʋʋ 6 sɔɔndʋ dɔɔsʋ.'
   },
+  onb_pw_not_strong_enough: {
+    fr: 'Votre mot de passe doit remplir toutes les conditions ci-dessous.',
+    en: 'Your password must meet all the requirements below.',
+    ee: 'Ele be wò nyagbe nawɔ ɖe nudidiwo katã le ete la dzi.',
+    kbp: 'Pɩ-wɛɛ se ño-tɛmɛnsira wɛɛ nɖʋʋ tɩŋa ŋgʋ kɩ-wɛ tɛtʋ yɔɔ yɔ.'
+  },
+  onb_pw_req_length: {
+    fr: '6 caractères min.',
+    en: '6+ characters',
+    ee: 'Sɔɔndʋ 6 ya wu',
+    kbp: 'Sɔɔndʋ 6 ɖeke-ɖeke'
+  },
+  onb_pw_req_uppercase: {
+    fr: 'Une majuscule',
+    en: 'One uppercase letter',
+    ee: 'Nyaŋɔŋlɔ gã ɖeka',
+    kbp: 'Mbʋlʋ sɔsɔ kʋɖʋm'
+  },
+  onb_pw_req_lowercase: {
+    fr: 'Une minuscule',
+    en: 'One lowercase letter',
+    ee: 'Nyaŋɔŋlɔ sue ɖeka',
+    kbp: 'Mbʋlʋ cikpelaɣ kʋɖʋm'
+  },
+  onb_pw_req_digit: {
+    fr: 'Un chiffre',
+    en: 'One number',
+    ee: 'Xexlẽdzesi ɖeka',
+    kbp: 'Kalʋʋ kʋɖʋm'
+  },
+  onb_pw_req_special: {
+    fr: 'Un caractère spécial',
+    en: 'One special character',
+    ee: 'Dzesi tɔxɛ ɖeka',
+    kbp: 'Sɔɔndʋ kɩjɛyʋʋ kʋɖʋm'
+  },
   onb_auth_error_prefix: {
     fr: "Erreur d'authentification:",
     en: 'Authentication error:',

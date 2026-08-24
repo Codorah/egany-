@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapContributionRow, mapWalletTransactionRow } from '@/lib/mappers';
 import { Group, UserProfile, WalletTransaction, Contribution } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   LineChart,
   Line,
@@ -17,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { TrendingUp, Wallet, Landmark, Calendar, ChevronDown } from 'lucide-react';
+import { TrendingUp, Landmark, ChevronDown } from 'lucide-react';
 import { useLanguage, LanguageCode } from '@/contexts/LanguageContext';
 
 interface DashboardChartsProps {
@@ -46,7 +44,6 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('balance');
 
   // Load Wallet Transactions
   useEffect(() => {
@@ -222,197 +219,147 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
   const labelStyle = { color: 'var(--foreground)', fontWeight: 700 };
 
   return (
-    <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
-      <CardHeader className="pb-4 bg-muted/40 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <CardTitle className="font-serif text-lg font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-secondary" />
-            {t('chart_title')}
+    <div className="space-y-4">
+      {/* BALANCE — its own card, no tabs: always visible, simplest reading order for mobile */}
+      <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+        <CardHeader className="pb-3 bg-muted/40 border-b border-border">
+          <CardTitle className="font-serif text-base font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-4.5 h-4.5 text-secondary" />
+            {t('chart_tab_balance')}
           </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground font-medium">
-            {t('chart_subtitle')}
-          </CardDescription>
-        </div>
+        </CardHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-          <TabsList className="bg-muted p-0.5 rounded-xl h-9">
-            <TabsTrigger
-              value="balance"
-              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
-            >
-              {t('chart_tab_balance')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="contributions"
-              className="rounded-lg text-xs font-bold px-3 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
-            >
-              {t('chart_tab_contributions')}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </CardHeader>
-
-      <CardContent className="pt-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-
-          {/* TAB 1: BALANCE EVOLUTION */}
-          <TabsContent value="balance" className="mt-0 outline-none">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
-                  <Wallet className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_wallet_balance')}</p>
-                  <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.walletBalance)}</p>
-                </div>
-              </div>
-              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand">
-                  <Landmark className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_total_saved')}</p>
-                  <p className="font-serif font-extrabold text-base text-foreground">{formatCurrency(user.totalSaved)}</p>
-                </div>
-              </div>
-              <div className="p-4 bg-muted border border-border rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-eganye-gold/10 flex items-center justify-center text-eganye-gold">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">{t('chart_last_transaction')}</p>
-                  <p className="font-serif font-bold text-sm text-foreground">
-                    {transactions.length > 0
-                      ? new Date(transactions[transactions.length - 1].date).toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })
-                      : t('chart_none')}
-                  </p>
-                </div>
-              </div>
+        <CardContent className="pt-5">
+          <div className="grid grid-cols-3 gap-2 mb-5 text-center">
+            <div>
+              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_wallet_balance')}</p>
+              <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.walletBalance)}</p>
             </div>
-
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={balanceData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--secondary)" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="var(--secondary)" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="name"
-                    stroke="var(--ink-soft)"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="var(--ink-soft)"
-                    fontSize={11}
-                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelStyle={labelStyle}
-                    formatter={(value: any) => [formatCurrency(Number(value)), t('chart_tooltip_balance')]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Balance"
-                    stroke="var(--secondary)"
-                    strokeWidth={3}
-                    dot={{ r: 4, strokeWidth: 2, fill: 'var(--card)' }}
-                    activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--secondary)' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="border-x border-border">
+              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_total_saved')}</p>
+              <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.totalSaved)}</p>
             </div>
-            </motion.div>
-          </TabsContent>
+            <div>
+              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_last_transaction')}</p>
+              <p className="font-serif font-bold text-sm text-foreground mt-0.5">
+                {transactions.length > 0
+                  ? new Date(transactions[transactions.length - 1].date).toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })
+                  : t('chart_none')}
+              </p>
+            </div>
+          </div>
 
-          {/* TAB 2: MONTHLY CONTRIBUTIONS */}
-          <TabsContent value="contributions" className="mt-0 outline-none">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+          <div className="h-[220px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={balanceData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--secondary)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="var(--secondary)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  stroke="var(--ink-soft)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--ink-soft)"
+                  fontSize={11}
+                  tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  labelStyle={labelStyle}
+                  formatter={(value: any) => [formatCurrency(Number(value)), t('chart_tooltip_balance')]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Balance"
+                  stroke="var(--secondary)"
+                  strokeWidth={3}
+                  dot={{ r: 4, strokeWidth: 2, fill: 'var(--card)' }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--secondary)' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* COTISATIONS — a separate card of its own, not a tab inside the balance card */}
+      <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+        <CardHeader className="pb-3 bg-muted/40 border-b border-border flex flex-row items-center justify-between gap-3">
+          <CardTitle className="font-serif text-base font-bold text-foreground flex items-center gap-2">
+            <Landmark className="w-4.5 h-4.5 text-brand" />
+            {t('chart_tab_contributions')}
+          </CardTitle>
+          <div className="relative inline-block shrink-0">
+            <select
+              value={selectedGroupId}
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+              aria-label={t('chart_circle_label')}
+              title={t('chart_circle_label')}
+              className="appearance-none bg-muted hover:bg-muted/70 transition-colors text-xs font-bold text-foreground pl-3 pr-7 py-1.5 rounded-xl border-none cursor-pointer focus:outline-none max-w-[140px] truncate"
             >
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase">{t('chart_circle_label')}</span>
-                <div className="relative inline-block">
-                  <select
-                    value={selectedGroupId}
-                    onChange={(e) => setSelectedGroupId(e.target.value)}
-                    aria-label={t('chart_circle_label')}
-                    title={t('chart_circle_label')}
-                    className="appearance-none bg-muted hover:bg-muted/70 transition-colors text-xs font-bold text-foreground pl-3 pr-8 py-1.5 rounded-xl border-none cursor-pointer focus:outline-none"
-                  >
-                    <option value="all">{t('chart_all_circles')}</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 pointer-events-none text-foreground" />
-                </div>
-              </div>
+              <option value="all">{t('chart_all_circles')}</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-2.5 pointer-events-none text-foreground" />
+          </div>
+        </CardHeader>
 
-              {currentGroup && (
-                <div className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1 rounded-xl">
-                  {t('chart_recurring_contribution')} {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
-                </div>
-              )}
+        <CardContent className="pt-5">
+          {currentGroup && (
+            <div className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1.5 rounded-xl mb-4 inline-block">
+              {t('chart_recurring_contribution')} {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
             </div>
+          )}
 
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={contributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="name"
-                    stroke="var(--ink-soft)"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="var(--ink-soft)"
-                    fontSize={11}
-                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    labelStyle={labelStyle}
-                    formatter={(value: any) => [formatCurrency(Number(value))]}
-                  />
-                  <Legend
-                    verticalAlign="top"
-                    height={36}
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--foreground)' }}
-                  />
-                  <Bar dataKey={paidLabel} fill="var(--secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey={pendingLabel} fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            </motion.div>
-          </TabsContent>
-
-        </Tabs>
-      </CardContent>
-    </Card>
+          <div className="h-[220px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={contributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  stroke="var(--ink-soft)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--ink-soft)"
+                  fontSize={11}
+                  tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  labelStyle={labelStyle}
+                  formatter={(value: any) => [formatCurrency(Number(value))]}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--foreground)' }}
+                />
+                <Bar dataKey={paidLabel} fill="var(--secondary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey={pendingLabel} fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

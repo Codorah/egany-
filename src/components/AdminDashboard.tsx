@@ -48,11 +48,13 @@ import {
   BadgeCheck,
   Eye,
   X,
-  Store
+  Store,
+  ChevronLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomAvatar } from './CustomAvatar';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 function handleAdminError(error: unknown, path: string) {
   console.error('Admin Error: ', JSON.stringify({ error: error instanceof Error ? error.message : String(error), path, context: 'AdminDashboard' }));
@@ -98,6 +100,17 @@ export function AdminDashboard() {
 
   // Marketplace request queue
   const [marketplaceRequests, setMarketplaceRequests] = useState<(MarketplaceRequest & { userName: string; userEmail: string; userTotalSaved: number; serviceTitle: string; serviceCategory: string })[]>([]);
+
+  // Mobile drill-down: null = showing the section menu, otherwise the id of the
+  // entered section. Desktop ignores this and always shows the tab strip + content
+  // side by side — this only changes how the same Tabs are presented on phones.
+  const [adminSection, setAdminSection] = useState<string | null>(null);
+  const handleAdminBack = React.useCallback(() => {
+    if (adminSection === null) return false;
+    setAdminSection(null);
+    return true;
+  }, [adminSection]);
+  useBackHandler(handleAdminBack, true);
   const [creditApprovalForm, setCreditApprovalForm] = useState<Record<string, { amount: string; deadline: string }>>({});
   const [approvingCreditId, setApprovingCreditId] = useState<string | null>(null);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
@@ -647,42 +660,72 @@ export function AdminDashboard() {
       </AnimatePresence>
 
       {/* --- DETAILED MANAGEMENT SECTIONS --- */}
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 max-w-3xl bg-muted p-1 rounded-2xl">
-          <TabsTrigger value="users" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <User className="w-4 h-4" />
-            {t('members')}
-          </TabsTrigger>
-          <TabsTrigger value="groups" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <GroupsIcon className="w-4 h-4" />
-            {t('admin_tab_groups')}
-          </TabsTrigger>
-          <TabsTrigger value="kyc" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <BadgeCheck className="w-4 h-4" />
-            KYC
-            {kycSubmissions.length > 0 && (
-              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{kycSubmissions.length}</Badge>
+      {(() => {
+        const adminSections = [
+          { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: 0 },
+          { id: 'groups', label: t('admin_tab_groups'), icon: GroupsIcon, color: 'bg-secondary/10 text-secondary', count: 0 },
+          { id: 'kyc', label: 'KYC', icon: BadgeCheck, color: 'bg-eganye-gold/10 text-eganye-gold', count: kycSubmissions.length },
+          { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length },
+          { id: 'ledger', label: t('admin_tab_ledger'), icon: BookOpen, color: 'bg-secondary/10 text-secondary', count: pendingWithdrawals.length },
+          { id: 'settings', label: t('settings'), icon: Settings, color: 'bg-muted-foreground/10 text-muted-foreground', count: 0 },
+        ];
+        const currentSection = adminSections.find((s) => s.id === adminSection);
+        return (
+          <Tabs value={adminSection ?? 'users'} onValueChange={setAdminSection} className="w-full">
+            {/* Desktop: classic tab strip — plenty of horizontal room */}
+            <TabsList className="hidden md:grid w-full grid-cols-6 max-w-3xl bg-muted p-1 rounded-2xl">
+              {adminSections.map((s) => (
+                <TabsTrigger key={s.id} value={s.id} className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
+                  <s.icon className="w-4 h-4" />
+                  {s.label}
+                  {s.count > 0 && (
+                    <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{s.count}</Badge>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {/* Mobile: drill-down menu — tap a section to enter it, like a native settings screen */}
+            {adminSection === null && (
+              <div className="md:hidden bg-card border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                {adminSections.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setAdminSection(s.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-muted/60 transition-colors"
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>
+                      <s.icon className="w-4.5 h-4.5" />
+                    </div>
+                    <span className="flex-1 font-bold text-sm text-foreground">{s.label}</span>
+                    {s.count > 0 && (
+                      <Badge className="bg-brand text-white text-[10px] h-5 px-1.5 border-none">{s.count}</Badge>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+              </div>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="marketplace" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <Store className="w-4 h-4" />
-            Marketplace
-            {marketplaceRequests.length > 0 && (
-              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{marketplaceRequests.length}</Badge>
+
+            {/* Mobile: back header — only shown once a section is entered */}
+            {adminSection !== null && currentSection && (
+              <div className="md:hidden flex items-center gap-2 mb-1">
+                <button
+                  onClick={() => setAdminSection(null)}
+                  className="p-2 -ml-2 rounded-xl text-foreground active:bg-muted/60 transition-colors"
+                  aria-label={t('gd_back')}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${currentSection.color}`}>
+                  <currentSection.icon className="w-3.5 h-3.5" />
+                </div>
+                <h2 className="font-serif font-bold text-base text-foreground">{currentSection.label}</h2>
+              </div>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="ledger" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <BookOpen className="w-4 h-4" />
-            {t('admin_tab_ledger')}
-            {pendingWithdrawals.length > 0 && (
-              <Badge className="bg-brand text-white text-[9px] h-4 px-1.5 border-none">{pendingWithdrawals.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
-            <Settings className="w-4 h-4" />
-            {t('settings')}
-          </TabsTrigger>
-        </TabsList>
+
+            {/* Content: on mobile, hidden while the menu is showing; on desktop, always visible */}
+            <div className={adminSection === null ? 'hidden md:block' : ''}>
 
         {/* TAB 1: USER MANAGEMENT */}
         <TabsContent value="users" className="mt-6 space-y-4">
@@ -1555,7 +1598,11 @@ export function AdminDashboard() {
 
           </div>
         </TabsContent>
-      </Tabs>
+
+            </div>
+          </Tabs>
+        );
+      })()}
     </motion.div>
   );
 }

@@ -30,6 +30,9 @@ import { fetchPlatformSettings } from '@/lib/platformSettings';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+import { runBackHandlers } from '@/hooks/useBackHandler';
 
 type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank';
 
@@ -82,6 +85,24 @@ export default function App() {
   }, []);
   
   const [view, setView] = useState<View>('dashboard');
+
+  // Android hardware back button (Play Store review expects it to navigate
+  // within the app, not just exit): a nested screen (e.g. the admin
+  // drill-down menu) gets first refusal via useBackHandler; otherwise this
+  // falls back to "go to dashboard", then "exit the app" once already home.
+  // No-op on web — the browser's own back button/history already works there.
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = CapacitorApp.addListener('backButton', () => {
+      if (runBackHandlers()) return;
+      setView((current) => {
+        if (current !== 'dashboard') return 'dashboard';
+        CapacitorApp.exitApp();
+        return current;
+      });
+    });
+    return () => { listenerPromise.then((l) => l.remove()); };
+  }, []);
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
