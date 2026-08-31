@@ -53,6 +53,7 @@ import {
   PhoneCall,
   Upload,
   XCircle,
+  CheckCircle2,
   AlertTriangle,
   IdCard
 } from 'lucide-react';
@@ -171,6 +172,42 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rechargeCountry]);
   const [rechargePhone, setRechargePhone] = useState(user.phone || '');
+
+  // Recharge « directe » (SoftPay) : l'opérateur a envoyé une notification
+  // USSD/PIN sur le téléphone, on reste sur eganyé et on interroge Paydunya
+  // jusqu'à confirmation — le crédit réel reste exclusivement du ressort du
+  // webhook (voir api/paydunya-invoice-status.ts, lecture seule).
+  const [rechargePending, setRechargePending] = useState<{ invoiceToken: string; amount: number } | null>(null);
+  const [rechargeStatus, setRechargeStatus] = useState<'pending' | 'completed' | 'failed'>('pending');
+  useEffect(() => {
+    if (!rechargePending) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 40; // ~2 min à 3s d'intervalle
+    const poll = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      try {
+        const res = await fetch(apiUrl(`/api/paydunya-invoice-status?token=${encodeURIComponent(rechargePending.invoiceToken)}`));
+        const data = await res.json().catch(() => null);
+        if (data?.status === 'completed') {
+          if (!cancelled) setRechargeStatus('completed');
+          return;
+        }
+      } catch {
+        // Requête réseau ratée : on retente au prochain tour plutôt que
+        // d'abandonner sur un simple accroc de connexion.
+      }
+      if (cancelled) return;
+      if (attempts >= maxAttempts) {
+        setRechargeStatus('failed');
+        return;
+      }
+      setTimeout(poll, 3000);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [rechargePending]);
 
   // Withdrawal states
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -402,7 +439,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       return;
     }
     const amount = parseFloat(rechargeAmount);
-    if (!amount || amount < 100) {
+    if (!amount || amount < 200) {
       toast.error(t('prof_min_100'));
       return;
     }
@@ -438,6 +475,15 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         throw new Error(`Paydunya checkout HTTP ${response.status}`);
       }
       const data = await response.json().catch(() => null);
+
+      if (data?.mode === 'direct' && data?.invoiceToken) {
+        // Paydunya a envoyé une notification USSD/PIN directement sur le
+        // téléphone : on reste sur eganyé et on attend la confirmation.
+        setRechargeStatus('pending');
+        setRechargePending({ invoiceToken: data.invoiceToken, amount });
+        return;
+      }
+
       if (!data?.url) {
         throw new Error(data?.error || 'Paydunya checkout: réponse sans URL');
       }
@@ -446,6 +492,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     } catch (err: any) {
       console.error('Paydunya checkout error:', err);
       toast.error(t('prof_paydunya_start_error'));
+    } finally {
       setIsRecharging(false);
     }
   };
@@ -1041,6 +1088,49 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           </div>
 
           {walletAction === 'recharge' ? (
+            rechargePending ? (
+              <Card className="glass-card rounded-3xl p-8 border border-border/80 space-y-4 text-center">
+                {rechargeStatus === 'pending' && (
+                  <>
+                    <Loader2 className="w-10 h-10 mx-auto animate-spin text-primary" />
+                    <div className="space-y-1">
+                      <h4 className="font-serif font-bold text-sm text-foreground">{t('recharge_pending_title')}</h4>
+                      <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                        {t('recharge_pending_desc_prefix')} {rechargePending.amount.toLocaleString()} FCFA {t('recharge_pending_desc_suffix')}
+                      </p>
+                    </div>
+                    <Button variant="ghost" className="text-xs" onClick={() => setRechargePending(null)}>
+                      {t('recharge_pending_cancel')}
+                    </Button>
+                  </>
+                )}
+                {rechargeStatus === 'completed' && (
+                  <>
+                    <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500" />
+                    <h4 className="font-serif font-bold text-sm text-foreground">{t('recharge_success_title')}</h4>
+                    <Button
+                      className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs"
+                      onClick={() => { setRechargePending(null); setRechargeAmount(''); }}
+                    >
+                      {t('recharge_pending_close')}
+                    </Button>
+                  </>
+                )}
+                {rechargeStatus === 'failed' && (
+                  <>
+                    <XCircle className="w-10 h-10 mx-auto text-danger" />
+                    <h4 className="font-serif font-bold text-sm text-foreground">{t('recharge_failed_title')}</h4>
+                    <Button
+                      variant="outline"
+                      className="border-primary text-primary font-bold rounded-xl h-10 w-full text-xs"
+                      onClick={() => setRechargePending(null)}
+                    >
+                      {t('recharge_pending_close')}
+                    </Button>
+                  </>
+                )}
+              </Card>
+            ) : (
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" /> {t('recharge_wallet_title')}
@@ -1081,6 +1171,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_recharge_via_mobile_money')}
               </Button>
             </Card>
+            )
           ) : (
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">

@@ -1540,10 +1540,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Kɩdɛkɛdɩm email sɔɔlɩm yekiɣu taa.'
   },
   prof_min_100: {
-    fr: 'Veuillez saisir un montant minimum de 100 FCFA.',
-    en: 'Please enter a minimum amount of 100 FCFA.',
-    ee: 'Taflatse ŋlɔ home si mede 100 FCFA.',
-    kbp: 'Taa kalɩ liidiye ñɩma ŋgʋ kɩ-fɛyɩ 100 FCFA.'
+    fr: 'Veuillez saisir un montant minimum de 200 FCFA.',
+    en: 'Please enter a minimum amount of 200 FCFA.',
+    ee: 'Taflatse ŋlɔ home si mede 200 FCFA.',
+    kbp: 'Taa kalɩ liidiye ñɩma ŋgʋ kɩ-fɛyɩ 200 FCFA.'
   },
   prof_valid_amount: {
     fr: 'Veuillez entrer un montant valide.',
@@ -2058,6 +2058,48 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Payable via:',
     ee: 'Réglable via :',
     kbp: 'Réglable via :'
+  },
+  recharge_pending_title: {
+    fr: 'Confirmez sur votre téléphone',
+    en: 'Confirm on your phone',
+    ee: 'Confirmez sur votre téléphone',
+    kbp: 'Confirmez sur votre téléphone'
+  },
+  recharge_pending_desc_prefix: {
+    fr: 'Une demande de débit de',
+    en: 'A debit request for',
+    ee: 'Une demande de débit de',
+    kbp: 'Une demande de débit de'
+  },
+  recharge_pending_desc_suffix: {
+    fr: 'a été envoyée sur votre téléphone. Validez-la pour terminer la recharge.',
+    en: 'has been sent to your phone. Approve it to complete the top-up.',
+    ee: 'a été envoyée sur votre téléphone. Validez-la pour terminer la recharge.',
+    kbp: 'a été envoyée sur votre téléphone. Validez-la pour terminer la recharge.'
+  },
+  recharge_pending_cancel: {
+    fr: 'Annuler',
+    en: 'Cancel',
+    ee: 'Annuler',
+    kbp: 'Annuler'
+  },
+  recharge_pending_close: {
+    fr: 'Fermer',
+    en: 'Close',
+    ee: 'Fermer',
+    kbp: 'Fermer'
+  },
+  recharge_success_title: {
+    fr: 'Paiement confirmé ! Votre solde sera mis à jour sous peu.',
+    en: 'Payment confirmed! Your balance will update shortly.',
+    ee: 'Paiement confirmé ! Votre solde sera mis à jour sous peu.',
+    kbp: 'Paiement confirmé ! Votre solde sera mis à jour sous peu.'
+  },
+  recharge_failed_title: {
+    fr: "Aucune confirmation reçue. Réessayez, ou vérifiez que vous avez bien validé la demande sur votre téléphone.",
+    en: 'No confirmation received. Try again, or check that you approved the request on your phone.',
+    ee: "Aucune confirmation reçue. Réessayez, ou vérifiez que vous avez bien validé la demande sur votre téléphone.",
+    kbp: "Aucune confirmation reçue. Réessayez, ou vérifiez que vous avez bien validé la demande sur votre téléphone."
   },
   prof_enter_recharge_phone: {
     fr: 'Entrez le numéro Mobile Money qui effectuera le paiement',

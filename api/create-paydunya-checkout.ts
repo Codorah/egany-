@@ -2,10 +2,98 @@
  * Ouverture d'une session de paiement Paydunya.
  *
  * Cet endpoint ne crédite RIEN : il se contente de demander une facture au
- * prestataire et de renvoyer l'URL de paiement. Le crédit du portefeuille est
- * décidé plus tard, et uniquement, par api/paydunya-webhook une fois le
+ * prestataire, puis (pour les opérateurs qui le permettent) de déclencher
+ * directement le débit SoftPay sans quitter eganyé. Le crédit du portefeuille
+ * est décidé plus tard, et uniquement, par api/paydunya-webhook une fois le
  * paiement confirmé par Paydunya lui-même.
  */
+
+interface SoftpayRoute {
+  endpoint: string;
+  fields: (ctx: { name: string; email: string; phone: string; token: string }) => Record<string, string>;
+}
+
+// Correspondance opérateur eganyé -> route SoftPay Paydunya (documentation
+// EN/softpay, vérifiée le 2026-08-31). Seuls les opérateurs sans code OTP
+// à saisir côté marchand, et dont la confirmation ne redirige pas de toute
+// façon vers une page tierce (Wave, Djamo), sont ici : ce sont les seuls
+// pour lesquels rester sur eganyé apporte un vrai gain. Les noms de champs
+// varient d'un opérateur à l'autre côté Paydunya (pas standardisés) — c'est
+// volontairement recopié tel quel, ne pas "harmoniser".
+const SOFTPAY_ROUTES: Record<string, SoftpayRoute> = {
+  tmoney_tg: {
+    endpoint: 't-money-togo',
+    fields: ({ name, email, phone, token }) => ({
+      name_t_money: name, email_t_money: email, phone_t_money: phone, payment_token: token,
+    }),
+  },
+  moov_tg: {
+    endpoint: 'moov-togo',
+    fields: ({ name, email, phone, token }) => ({
+      // customer_address doit être non vide (vérifié en direct : Paydunya le
+      // rejette sinon) — on ne collecte pas d'adresse dans le formulaire de
+      // recharge, donc on renseigne le pays à défaut de mieux.
+      moov_togo_customer_fullname: name, moov_togo_email: email,
+      moov_togo_customer_address: 'Togo', moov_togo_phone_number: phone, payment_token: token,
+    }),
+  },
+  orange_money_sn: {
+    endpoint: 'new-orange-money-senegal',
+    fields: ({ name, email, phone, token }) => ({
+      customer_name: name, customer_email: email, phone_number: phone, invoice_token: token,
+    }),
+  },
+  expresso_sn: {
+    endpoint: 'expresso-senegal',
+    fields: ({ name, email, phone, token }) => ({
+      expresso_sn_fullName: name, expresso_sn_email: email, expresso_sn_phone: phone, payment_token: token,
+    }),
+  },
+  free_money_sn: {
+    endpoint: 'free-money-senegal',
+    fields: ({ name, email, phone, token }) => ({
+      customer_name: name, customer_email: email, phone_number: phone, payment_token: token,
+    }),
+  },
+  moov_bj: {
+    endpoint: 'moov-benin',
+    fields: ({ name, email, phone, token }) => ({
+      moov_benin_customer_fullname: name, moov_benin_email: email,
+      moov_benin_phone_number: phone, payment_token: token,
+    }),
+  },
+  celtiis_bj: {
+    endpoint: 'celtiis-cash',
+    fields: ({ name, email, phone, token }) => ({
+      celtiis_cash_customer_fullname: name, celtiis_cash_customer_email: email,
+      celtiis_cash_phone_number: phone, payment_token: token,
+    }),
+  },
+  moov_bf: {
+    endpoint: 'moov-burkina',
+    fields: ({ name, email, phone, token }) => ({
+      moov_burkina_faso_fullName: name, moov_burkina_faso_email: email,
+      moov_burkina_faso_phone_number: phone, moov_burkina_faso_payment_token: token,
+    }),
+  },
+  moov_ci: {
+    endpoint: 'moov-ci',
+    fields: ({ name, email, phone, token }) => ({
+      moov_ci_customer_fullname: name, moov_ci_email: email,
+      moov_ci_phone_number: phone, payment_token: token,
+    }),
+  },
+  orange_money_ml: {
+    endpoint: 'orange-money-mali',
+    fields: ({ name, email, phone, token }) => ({
+      // Même remarque que moov_tg ci-dessus pour customer_address (par
+      // analogie — pas vérifié en direct pour cette route spécifique).
+      orange_money_mali_customer_fullname: name, orange_money_mali_email: email,
+      orange_money_mali_phone_number: phone, orange_money_mali_customer_address: 'Mali', payment_token: token,
+    }),
+  },
+};
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -15,7 +103,9 @@ export default async function handler(req: any, res: any) {
     const { amount, userId, userName, userEmail, phone, paymentMethod } = req.body;
 
     const parsedAmount = Number(amount);
-    if (!userId || !Number.isFinite(parsedAmount) || parsedAmount < 100) {
+    // Paydunya refuse toute facture sous 200 FCFA (vérifié en direct contre
+    // l'API : "Invalid Total Amount. Minimum checkout amount is 200 FCFA.").
+    if (!userId || !Number.isFinite(parsedAmount) || parsedAmount < 200) {
       return res.status(400).json({ error: 'Requête invalide (utilisateur ou montant).' });
     }
 
@@ -40,21 +130,27 @@ export default async function handler(req: any, res: any) {
       const simUrl = `${origin}/?paydunya_sim=true&amount=${parsedAmount}&userId=${userId}`
         + `&userName=${encodeURIComponent(userName || '')}&userEmail=${encodeURIComponent(userEmail || '')}`
         + `&phone=${encodeURIComponent(phone || '')}&operator=${encodeURIComponent(paymentMethod || '')}`;
-      return res.status(200).json({ id: 'sim_session_id', url: simUrl, simulated: true });
+      return res.status(200).json({ id: 'sim_session_id', url: simUrl, mode: 'redirect', simulated: true });
     }
 
-    const baseUrl = mode === 'live'
+    const isLive = mode === 'live';
+    const invoiceUrl = isLive
       ? 'https://app.paydunya.com/api/v1/checkout-invoice/create'
       : 'https://sandbox.paydunya.com/api/v1/checkout-invoice/create';
+    const softpayBase = isLive
+      ? 'https://app.paydunya.com/api/v1/softpay/'
+      : 'https://sandbox.paydunya.com/api/v1/softpay/';
 
-    const response = await fetch(baseUrl, {
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      'PAYDUNYA-MASTER-KEY': masterKey,
+      'PAYDUNYA-PRIVATE-KEY': privateKey,
+      'PAYDUNYA-TOKEN': token,
+    };
+
+    const response = await fetch(invoiceUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'PAYDUNYA-MASTER-KEY': masterKey,
-        'PAYDUNYA-PRIVATE-KEY': privateKey,
-        'PAYDUNYA-TOKEN': token,
-      },
+      headers: authHeaders,
       body: JSON.stringify({
         invoice: {
           total_amount: parsedAmount,
@@ -95,10 +191,41 @@ export default async function handler(req: any, res: any) {
 
     const data = await response.json();
 
-    if (data.response_code === '00') {
-      return res.status(200).json({ id: data.token, url: data.response_text });
+    if (data.response_code !== '00') {
+      throw new Error(data.response_text || "Erreur de réponse de l'API Paydunya");
     }
-    throw new Error(data.response_text || "Erreur de réponse de l'API Paydunya");
+
+    const invoiceToken = data.token as string;
+    const redirectUrl = data.response_text as string;
+
+    // ---- SoftPay : rester sur eganyé au lieu de rediriger, si l'opérateur
+    // choisi le permet. En cas d'échec ou d'imprévu, on retombe sur l'URL de
+    // la facture déjà créée plutôt que de faire échouer toute la recharge —
+    // la facture reste valable, seul le canal de confirmation change.
+    const softpayRoute = SOFTPAY_ROUTES[paymentMethod as string];
+    if (softpayRoute) {
+      try {
+        const softpayResponse = await fetch(softpayBase + softpayRoute.endpoint, {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify(softpayRoute.fields({
+            name: userName || '',
+            email: userEmail || '',
+            phone: phone || '',
+            token: invoiceToken,
+          })),
+        });
+        const softpayData: any = await softpayResponse.json().catch(() => null);
+        if (softpayResponse.ok && softpayData?.success === true) {
+          return res.status(200).json({ mode: 'direct', invoiceToken, message: softpayData.message });
+        }
+        console.warn('[paydunya] SoftPay refusé, repli sur la redirection :', softpayData);
+      } catch (softpayError) {
+        console.warn('[paydunya] SoftPay indisponible, repli sur la redirection :', softpayError);
+      }
+    }
+
+    return res.status(200).json({ id: invoiceToken, url: redirectUrl, mode: 'redirect' });
   } catch (error: any) {
     console.error('[paydunya] Erreur création de facture :', error);
     return res.status(500).json({ error: 'Impossible de démarrer le paiement.' });
