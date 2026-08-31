@@ -60,6 +60,15 @@ export default async function handler(req: any, res: any) {
           total_amount: parsedAmount,
           description: 'Recharge de portefeuille eganyé',
           name: 'Recharge eganyé',
+          // Préremplit nom/email/téléphone sur la page Paydunya hébergée.
+          // Doit être imbriqué DANS "invoice" (pas à la racine du corps de
+          // la requête) — un essai précédent l'avait placé au mauvais
+          // niveau, ce qui faisait échouer la création de facture.
+          customer: {
+            name: userName || undefined,
+            email: userEmail || undefined,
+            phone: phone || undefined,
+          },
         },
         store: {
           name: 'eganyé',
@@ -74,10 +83,6 @@ export default async function handler(req: any, res: any) {
         },
         // Repris tel quel dans la confirmation : c'est ainsi que le webhook
         // sait quel portefeuille créditer, sans faire confiance au client.
-        // (Pas de champ "customer" ici : l'API checkout-invoice/create de
-        // Paydunya ne l'accepte pas en entrée — il n'est renseigné par
-        // Paydunya qu'après un paiement réussi. Un précédent essai de
-        // préremplissage via ce champ faisait échouer la création de facture.)
         custom_data: {
           userId,
           userName,
