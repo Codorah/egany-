@@ -91,7 +91,7 @@ export function BiometricPrompt({
             {/* Logo/Icon Header */}
             <div className="flex justify-center gap-1.5 items-center text-brand">
               <Lock className="w-4 h-4 text-secondary" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <span className="text-[13px] font-black uppercase tracking-widest text-muted-foreground">
                 Sécurité Biométrique eganyé
               </span>
             </div>
@@ -242,7 +242,7 @@ export function BiometricPrompt({
 
               {/* Scanning details / feedback text */}
               <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className={`text-[11px] font-black tracking-wide uppercase transition-colors duration-300 ${
+                <span className={`text-[13px] font-black tracking-wide uppercase transition-colors duration-300 ${
                   scanState === 'scanning'
                     ? 'text-secondary animate-pulse'
                     : scanState === 'success'
@@ -280,7 +280,7 @@ export function BiometricPrompt({
             </div>
 
             {/* Footnote */}
-            <p className="text-[9px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
+            <p className="text-[12px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
               Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics).
             </p>
 

@@ -74,10 +74,12 @@ export async function approveMarketplaceCredit(params: {
 export async function repayMarketplaceCredit(params: {
   requestId: string;
   amount: number;
+  idempotencyKey: string;
 }): Promise<{ success: boolean; message: string; remainingBalance?: number }> {
   const { data, error } = await supabase.rpc('repay_marketplace_credit', {
     p_request_id: params.requestId,
     p_amount: params.amount,
+    p_idempotency_key: params.idempotencyKey,
   });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string; remainingBalance?: number };

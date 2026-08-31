@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+/* Polices de la charte eganyé : Playfair Display pour les titres et les
+   montants, Inter pour le texte courant et les boutons. */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -6,18 +8,23 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
-    --font-serif: 'Playfair Display', serif;
-    --font-heading: 'Playfair Display', serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-heading: 'Playfair Display', Georgia, serif;
 
-    --color-eganye-gold: #D4A574;
-    --color-eganye-orange: #E67E22;
-    --color-eganye-beige: #F5E6D3;
-    --color-eganye-green: #2BB673;
-    --color-eganye-brown: #4B2E05;
+    --color-eganye-gold: #C9962E;
+    --color-eganye-orange: #B65A24;
+    --color-eganye-beige: #E9D9C3;
+    --color-eganye-cream: #FFFCF6;
+    --color-eganye-green: #1F4D3A;
+    --color-eganye-brown: #2A1F16;
 
     --color-brand: var(--brand);
     --color-brand-deep: var(--brand-deep);
+    --color-sage: var(--sage);
+    --color-brown: var(--brown);
+    --color-warning: var(--warning);
+    --color-warning-soft: var(--warning-soft);
     --color-success: var(--success);
     --color-success-soft: var(--success-soft);
     --color-success-deep: var(--success-deep);
@@ -67,102 +74,134 @@
 }
 
 :root {
-    /* Palette Neo-Fintech Africaine — Mode Clair (Défaut) */
-    --background: #FDFBF7;
-    --foreground: #2D1A04;
-    --card: #FFFFFF;
-    --card-foreground: #2D1A04;
-    --popover: #FFFFFF;
-    --popover-foreground: #2D1A04;
+    /* ================= CHARTE EGANYÉ — MODE CLAIR ==================
+       Chaque couleur a un rôle, elle n'est pas décorative :
 
-    --primary: #E67E22;
+         Orange café  #B65A24 → action importante (cotiser, créer, rejoindre)
+         Vert profond #1F4D3A → argent sécurisé, validation, confiance
+         Vert sauge   #78917A → éléments secondaires, états calmes
+         Brun chaud   #7A5137 → texte d'appui, accents terreux
+         Crème        #F7F1E7 → fond principal
+         Sable        #E9D9C3 → bordures et séparations
+         Rouge doux            → retard, pénalité
+         Ocre doux             → en attente
+
+       Le vert ne doit PAS être utilisé partout : il perd son sens de
+       « validé / sécurisé » s'il sert aussi de couleur d'accent générique.
+       ================================================================= */
+    --background: #F7F1E7;
+    --foreground: #2A1F16;
+    --card: #FFFCF6;
+    --card-foreground: #2A1F16;
+    --popover: #FFFCF6;
+    --popover-foreground: #2A1F16;
+
+    /* Action principale — orange café */
+    --primary: #B65A24;
     --primary-foreground: #FFFFFF;
 
-    --secondary: #10B981;
+    /* Argent, sécurité, validation — vert profond */
+    --secondary: #1F4D3A;
     --secondary-foreground: #FFFFFF;
 
-    --muted: #F5F0E8;
-    --muted-foreground: #8C6D46;
+    --muted: #F0E6D6;
+    --muted-foreground: #7A5137;
 
-    --accent: #F5F0E8;
-    --accent-foreground: #2D1A04;
+    --accent: #F0E6D6;
+    --accent-foreground: #2A1F16;
 
-    --destructive: #E74C3C;
-    --border: #F0E6D6;
-    --input: #F0E6D6;
-    --ring: #E67E22;
+    --destructive: #B4483F;
+    --border: #E9D9C3;
+    --input: #DCC7A9;
+    --ring: #B65A24;
 
-    --brand: #E67E22;
-    --brand-deep: #D35400;
-    --success: #10B981;
-    --success-soft: #ECFDF5;
-    --success-deep: #059669;
-    --danger: #E74C3C;
-    --danger-soft: #FEF2F2;
-    --chip: #F5F0E8;
-    --ink-soft: #8C6D46;
+    --brand: #B65A24;
+    --brand-deep: #94441A;
+    --sage: #78917A;
+    --brown: #7A5137;
+    --success: #1F4D3A;
+    --success-soft: #E3EDE7;
+    --success-deep: #163A2B;
+    --danger: #B4483F;
+    --danger-soft: #F9E5E3;
+    --warning: #B5842A;
+    --warning-soft: #FAEFD9;
+    --chip: #F0E6D6;
+    --ink-soft: #7A5137;
+    --gold: #C9962E;
 
-    --chart-1: #E67E22;
-    --chart-2: #10B981;
-    --chart-3: #D4A574;
-    --chart-4: #4B2E05;
-    --chart-5: #8C6D46;
+    --chart-1: #B65A24;
+    --chart-2: #1F4D3A;
+    --chart-3: #78917A;
+    --chart-4: #7A5137;
+    --chart-5: #C9962E;
     --radius: 1rem;
 
-    --sidebar: #FDFBF7;
-    --sidebar-foreground: #2D1A04;
-    --sidebar-primary: #E67E22;
+    --sidebar: #F7F1E7;
+    --sidebar-foreground: #2A1F16;
+    --sidebar-primary: #B65A24;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #F5F0E8;
-    --sidebar-accent-foreground: #2D1A04;
-    --sidebar-border: #F0E6D6;
-    --sidebar-ring: #E67E22;
+    --sidebar-accent: #F0E6D6;
+    --sidebar-accent-foreground: #2A1F16;
+    --sidebar-border: #E9D9C3;
+    --sidebar-ring: #B65A24;
 }
 
 .dark {
-    /* Palette Neo-Fintech Africaine — Mode Sombre */
-    --background: #120D08;
-    --foreground: #F7EBE0;
-    --card: #1D150E;
-    --card-foreground: #F7EBE0;
-    --popover: #1D150E;
-    --popover-foreground: #F7EBE0;
+    /* Charte eganyé — Mode Sombre (mêmes rôles, éclaircis) */
+    --background: #1C1712;
+    --foreground: #F3ECDD;
+    --card: #28221A;
+    --card-foreground: #F3ECDD;
+    --popover: #28221A;
+    --popover-foreground: #F3ECDD;
 
-    --primary: #F39C12;
-    --primary-foreground: #120D08;
+    --primary: #D0763C;
+    --primary-foreground: #1C1712;
 
-    --secondary: #34D399;
-    --secondary-foreground: #120D08;
+    --secondary: #4E9A78;
+    --secondary-foreground: #1C1712;
 
-    --muted: #2A1F15;
-    --muted-foreground: #BA9D7C;
+    --muted: #332B21;
+    --muted-foreground: #C7B99E;
 
-    --accent: #2A1F15;
-    --accent-foreground: #F7EBE0;
+    --accent: #332B21;
+    --accent-foreground: #F3ECDD;
 
-    --destructive: #EF4444;
-    --border: #2E2318;
-    --input: #2E2318;
-    --ring: #F39C12;
+    --destructive: #E58A93;
+    --border: #3C3323;
+    --input: #453A29;
+    --ring: #D0763C;
 
-    --brand: #F39C12;
-    --brand-deep: #E67E22;
-    --success: #34D399;
-    --success-soft: rgba(52, 211, 153, 0.15);
-    --success-deep: #059669;
-    --danger: #EF4444;
-    --danger-soft: rgba(239, 68, 68, 0.15);
-    --chip: #2A1F15;
-    --ink-soft: #BA9D7C;
+    --brand: #D0763C;
+    --brand-deep: #B65A24;
+    --success: #4E9A78;
+    --success-soft: rgba(78, 154, 120, 0.18);
+    --success-deep: #1F4D3A;
+    --danger: #E58A93;
+    --danger-soft: rgba(178, 58, 72, 0.22);
+    --sage: #8FA891;
+    --brown: #B99374;
+    --warning: #D6A345;
+    --warning-soft: rgba(214, 163, 69, 0.18);
+    --chip: #332B21;
+    --ink-soft: #C7B99E;
+    --gold: #E3B15C;
 
-    --sidebar: #1D150E;
-    --sidebar-foreground: #F7EBE0;
-    --sidebar-primary: #F39C12;
-    --sidebar-primary-foreground: #120D08;
-    --sidebar-accent: #2A1F15;
-    --sidebar-accent-foreground: #F7EBE0;
-    --sidebar-border: #2E2318;
-    --sidebar-ring: #F39C12;
+    --chart-1: #D0763C;
+    --chart-2: #4E9A78;
+    --chart-3: #E3B15C;
+    --chart-4: #B08A6A;
+    --chart-5: #C7B99E;
+
+    --sidebar: #28221A;
+    --sidebar-foreground: #F3ECDD;
+    --sidebar-primary: #D0763C;
+    --sidebar-primary-foreground: #1C1712;
+    --sidebar-accent: #332B21;
+    --sidebar-accent-foreground: #F3ECDD;
+    --sidebar-border: #3C3323;
+    --sidebar-ring: #D0763C;
 }
 
 @layer base {
@@ -214,19 +253,19 @@
 /* ======================================================== */
 
 .gradient-sunset {
-  background: linear-gradient(135deg, #E67E22 0%, #F0932B 60%, #D4A574 100%);
+  background: linear-gradient(135deg, #B65A24 0%, #A85020 55%, #94441A 100%);
 }
 
 .gradient-emerald {
-  background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  background: linear-gradient(135deg, #163A2B 0%, #1F4D3A 55%, #2C6349 100%);
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, #B8860B 0%, #D4A574 50%, #F3E5AB 100%);
+  background: linear-gradient(135deg, #A97A1E 0%, #C9962E 50%, #E3B15C 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(135deg, #2D1A04 0%, #4B2E05 50%, #1A0F02 100%);
+  background: linear-gradient(135deg, #241C14 0%, #3A2C1E 50%, #1C1712 100%);
 }
 
 /* ======================================================== */
@@ -234,19 +273,63 @@
 /* ======================================================== */
 
 .shadow-soft {
-  box-shadow: 0 1px 3px 0 rgba(45, 26, 4, 0.04), 0 1px 2px -1px rgba(45, 26, 4, 0.03);
+  box-shadow: 0 1px 3px 0 rgba(36, 28, 20, 0.05), 0 4px 14px -10px rgba(36, 28, 20, 0.28);
 }
 
 .shadow-elevated {
-  box-shadow: 0 4px 12px -2px rgba(45, 26, 4, 0.08), 0 2px 6px -1px rgba(45, 26, 4, 0.03);
+  box-shadow: 0 2px 6px -2px rgba(36, 28, 20, 0.08), 0 14px 30px -16px rgba(36, 28, 20, 0.4);
 }
 
 .glow-orange {
-  box-shadow: 0 4px 14px -4px rgba(230, 126, 34, 0.25);
+  box-shadow: 0 8px 20px -8px rgba(148, 68, 26, 0.55);
 }
 
 .glow-emerald {
-  box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 20px -8px rgba(31, 77, 58, 0.5);
+}
+
+/* ======================================================== */
+/* TOUCH FEEDBACK — every control must answer the finger    */
+/* Audit UX : « il n'y a même pas d'animation de bouton »   */
+/* ======================================================== */
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label[for],
+summary {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease, background-color 120ms ease,
+              border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+a[href]:active,
+summary:active {
+  transform: scale(0.965);
+}
+
+/* Cards and list rows that navigate somewhere press in more gently */
+.press-row:active {
+  transform: scale(0.985);
+  background-color: var(--muted);
+}
+
+/* Keyboard users get the same affordance as a visible focus ring */
+:where(button, [role="button"], a[href], input, select, textarea):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  a[href]:active,
+  summary:active,
+  .press-row:active {
+    transform: none;
+  }
 }
 
 /* ======================================================== */

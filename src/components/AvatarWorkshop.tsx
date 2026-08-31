@@ -141,7 +141,7 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
                 key={s.id}
                 type="button"
                 onClick={() => handlePickStyle(s.id)}
-                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-xl text-[13px] font-bold border transition-colors cursor-pointer ${
                   styleId === s.id
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-card text-foreground border-border hover:bg-muted'
@@ -180,7 +180,7 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
             <Upload className="w-3.5 h-3.5" />
             <span>{isUploading ? 'Envoi en cours...' : 'Téléverser une photo'}</span>
           </Button>
-          <p className="text-[11px] text-muted-foreground max-w-xs">
+          <p className="text-[13px] text-muted-foreground max-w-xs">
             Votre photo est stockée de façon sécurisée et reste associée à votre profil.
           </p>
         </div>

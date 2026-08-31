@@ -44,6 +44,8 @@ export function Marketplace({ user }: MarketplaceProps) {
   const [creditAmount, setCreditAmount] = useState('');
   const [repayAmount, setRepayAmount] = useState('');
   const [isRepaying, setIsRepaying] = useState(false);
+  const repayIdempotencyKeyRef = React.useRef<string | null>(null);
+  useEffect(() => { repayIdempotencyKeyRef.current = null; }, [repayAmount]);
 
   const loadData = async () => {
     setLoading(true);
@@ -122,8 +124,16 @@ export function Marketplace({ user }: MarketplaceProps) {
     }
     setIsRepaying(true);
     try {
-      const result = await repayMarketplaceCredit({ requestId: existingRequest.id, amount });
+      if (!repayIdempotencyKeyRef.current) {
+        repayIdempotencyKeyRef.current = crypto.randomUUID();
+      }
+      const result = await repayMarketplaceCredit({
+        requestId: existingRequest.id,
+        amount,
+        idempotencyKey: repayIdempotencyKeyRef.current,
+      });
       if (!result.success) throw new Error(result.message);
+      repayIdempotencyKeyRef.current = null;
       toast.success(t('mkt_repayment_done_toast'));
       setRepayAmount('');
       await loadData();
@@ -273,7 +283,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                             <span className="font-black text-brand">{remaining.toLocaleString()} FCFA</span>
                           </div>
                           {existingRequest.repaymentDeadline && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
+                            <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground pt-1">
                               <CalendarClock className="w-3.5 h-3.5" />
                               {t('deadline_prefix')} {new Date(existingRequest.repaymentDeadline).toLocaleDateString()}
                             </div>
@@ -290,7 +300,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                             onChange={(e) => setRepayAmount(e.target.value)}
                             className="rounded-xl h-11"
                           />
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[13px] text-muted-foreground">
                             {t('mkt_wallet_balance_prefix')} {user.walletBalance.toLocaleString()} FCFA. {t('mkt_repay_multiple_times_suffix')}
                           </p>
                         </div>
@@ -348,7 +358,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                             onChange={(e) => setCreditAmount(e.target.value)}
                             className="rounded-xl h-11"
                           />
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[13px] text-muted-foreground">
                             {t('mkt_cap_info_prefix')} ({user.totalSaved.toLocaleString()} FCFA) : {creditCap(user.totalSaved).toLocaleString()} FCFA. {t('mkt_cap_info_suffix')}
                           </p>
                         </div>

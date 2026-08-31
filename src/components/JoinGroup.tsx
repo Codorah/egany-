@@ -135,11 +135,11 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[10px] uppercase text-muted-foreground font-bold">{t('contribution_label')}</p>
+              <p className="text-[13px] uppercase text-muted-foreground font-bold">{t('contribution_label')}</p>
               <p className="font-serif font-bold text-base text-foreground">{group.contributionAmount.toLocaleString()} {group.currency}</p>
             </div>
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[10px] uppercase text-muted-foreground font-bold">{t('frequency')}</p>
+              <p className="text-[13px] uppercase text-muted-foreground font-bold">{t('frequency')}</p>
               <p className="font-serif font-bold text-base text-brand capitalize">{t(`freq_${group.frequency}`)}</p>
             </div>
           </div>

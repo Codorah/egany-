@@ -228,7 +228,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
               <Landmark className="w-5 h-5 text-primary" />
               {t('gd_ledger_card_title')}
             </CardTitle>
-            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[13px]">
               {t('gd_full_transparency_badge')}
             </Badge>
           </div>
@@ -239,25 +239,25 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         <CardContent className="p-5 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('gd_current_treasury_label')}</span>
+              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_current_treasury_label')}</span>
               <p className="text-lg font-black text-primary mt-0.5">
                 {treasuryBalance !== null ? treasuryBalance.toLocaleString() : '...'} {group.currency}
               </p>
             </div>
             <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('contribution_label')} / {t('member')}</span>
+              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('contribution_label')} / {t('member')}</span>
               <p className="text-lg font-black text-foreground mt-0.5">
                 {group.contributionAmount.toLocaleString()} {group.currency}
               </p>
             </div>
             <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('gd_active_members_label')}</span>
+              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_active_members_label')}</span>
               <p className="text-lg font-black text-foreground mt-0.5">
                 {group.members.length} {t('participants')}
               </p>
             </div>
             <div className="bg-card p-3.5 rounded-2xl border border-border/60">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('gd_pot_per_cycle_label')}</span>
+              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_pot_per_cycle_label')}</span>
               <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                 {totalPot.toLocaleString()} {group.currency}
               </p>
@@ -287,7 +287,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           {beneficiaryToDistribute ? (
             <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200 flex items-center gap-1">
+                <span className="text-[13px] font-bold uppercase tracking-wider text-amber-200 flex items-center gap-1">
                   <Trophy className="w-3 h-3" /> {t('gd_next_beneficiary_label')} ({t('gd_tour_word')} {group.currentPayoutIndex + 1})
                 </span>
                 <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
@@ -296,14 +296,14 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">{t('gd_net_amount_label')}</span>
+                <span className="text-[13px] font-bold uppercase tracking-wider text-amber-200">{t('gd_net_amount_label')}</span>
                 <p className="text-2xl font-black text-white">{totalPot.toLocaleString()} {group.currency}</p>
               </div>
             </div>
           ) : (
             <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                   {t('gd_tour_word')} {group.currentPayoutIndex + 1}
                 </span>
                 <h4 className="text-sm font-bold text-foreground">{t('gd_draw_required_title')}</h4>
@@ -334,7 +334,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     onChange={(e) => setAuctionDiscount(e.target.value)}
                     className="rounded-xl h-11"
                   />
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     {t('gd_auction_discount_desc')}
                   </p>
                 </div>
@@ -378,9 +378,9 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     <div>
                       <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         {memberName(memberId)}
-                        {isCurrent && <Badge className="bg-primary text-white text-[9px] px-1.5 py-0">{t('status_active')}</Badge>}
+                        {isCurrent && <Badge className="bg-primary text-white text-[12px] px-1.5 py-0">{t('status_active')}</Badge>}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[13px] text-muted-foreground">
                         {isPast ? t('gd_payout_done_label') : isCurrent ? t('gd_current_turn_label') : t('gd_upcoming_label')}
                       </p>
                     </div>
@@ -389,7 +389,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     <span className="text-xs font-black text-foreground">
                       {totalPot.toLocaleString()} {group.currency}
                     </span>
-                    <span className={`flex items-center justify-end gap-1 text-[10px] font-bold ${
+                    <span className={`flex items-center justify-end gap-1 text-[13px] font-bold ${
                       isPast ? 'text-emerald-600' : isCurrent ? 'text-primary' : 'text-muted-foreground'
                     }`}>
                       {isPast ? <CheckCircle className="w-3 h-3" /> : isCurrent ? <Clock className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
@@ -422,7 +422,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
             {/* Left Sub-panel: Share details */}
             <div className="md:col-span-8 space-y-4">
               <div className="space-y-1">
-                <Badge className="bg-brand text-white font-black tracking-widest text-[10px] uppercase">{t('gd_quick_share_badge')}</Badge>
+                <Badge className="bg-brand text-white font-black tracking-widest text-[13px] uppercase">{t('gd_quick_share_badge')}</Badge>
                 <h3 className="text-xl font-extrabold text-foreground tracking-tight">{t('gd_invite_link_title')}</h3>
                 <p className="text-muted-foreground text-xs">
                   {t('gd_invite_link_desc')}
@@ -431,7 +431,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
 
               {/* Copyable Invitation Link */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground">{t('gd_custom_link_label')}</span>
+                <span className="text-[13px] font-bold uppercase text-muted-foreground">{t('gd_custom_link_label')}</span>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -461,7 +461,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
               {/* Invitation Code */}
               <div className="flex flex-wrap items-center gap-6 pt-1">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('gd_unique_code_label')}</span>
+                  <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_unique_code_label')}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-sm font-black tracking-wider text-foreground bg-chip px-2.5 py-1 rounded-lg border border-border">
                       {group.joinCode}
@@ -485,12 +485,12 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">{t('gd_share_channels_label')}</span>
+                  <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_share_channels_label')}</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-[10px] font-bold text-brand bg-brand/10 hover:bg-brand/20 rounded-lg px-2.5"
+                      className="h-7 text-[13px] font-bold text-brand bg-brand/10 hover:bg-brand/20 rounded-lg px-2.5"
                       onClick={() => {
                         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t('gd_whatsapp_share_text')} ${window.location.origin}/?join=${group.joinCode}`)}`, '_blank');
                       }}
@@ -500,7 +500,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-[10px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500/20 rounded-lg px-2.5"
+                      className="h-7 text-[13px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500/20 rounded-lg px-2.5"
                       onClick={() => {
                         window.open(`https://telegram.me/share/url?url=${encodeURIComponent(`${window.location.origin}/?join=${group.joinCode}`)}&text=${encodeURIComponent(t('gd_telegram_share_text'))}`, '_blank');
                       }}
@@ -530,7 +530,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                   <QrCode className="w-5 h-5 text-foreground" />
                 </div>
               </div>
-              <span className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-1">
+              <span className="text-[12px] font-black uppercase text-muted-foreground flex items-center gap-1">
                 <ExternalLink className="w-3 h-3" />
                 {t('gd_scan_to_join')}
               </span>
@@ -558,7 +558,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                     <span className={`w-6 text-center text-xs font-black ${index === 0 ? 'text-brand' : 'text-muted-foreground'}`}>#{index + 1}</span>
                     <CustomAvatar photoURL={members[uid]?.photoURL} name={memberName(uid)} size={28} />
                     <span className="text-sm font-medium">{memberName(uid)}</span>
-                    {uid === profile?.uid && <Badge variant="outline" className="text-[9px]">{t('gd_you_badge')}</Badge>}
+                    {uid === profile?.uid && <Badge variant="outline" className="text-[12px]">{t('gd_you_badge')}</Badge>}
                   </div>
                   <Badge className={index === 0 ? 'bg-brand text-white' : ''} variant={index === 0 ? undefined : 'outline'}>
                     {members[uid]?.reputationScore ?? '-'} / 100

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { ConfirmationBottomSheet } from '@/components/ui/ConfirmationBottomSheet';
 import { 
   User, 
   Users,
@@ -65,26 +66,61 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
 import { apiUrl } from '@/lib/apiBase';
 import { fetchLatestKycSubmission, submitKycDocument, KYC_VERIFIED_LEVEL } from '@/lib/kyc';
+import { PAYDUNYA_COUNTRIES, getOperatorsForCountry, findOperatorLabel } from '@/lib/paydunyaMethods';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { LanguageSwitcher } from './ui/LanguageSwitcher';
 import { BiometricPrompt } from './BiometricPrompt';
 import { useBiometrics } from '@/hooks/useBiometrics';
 
+// Boutons-puces (nom complet toujours visible, pas de liste déroulante) pour
+// choisir un pays ou un opérateur avant une recharge/un retrait.
+function ChipPicker({
+  options, value, onChange, ariaLabel,
+}: { options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; ariaLabel: string }) {
+  return (
+    <div role="group" aria-label={ariaLabel} className="flex flex-wrap gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`px-3.5 h-9 rounded-full text-xs font-bold border transition-colors ${
+            value === opt.value
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-foreground border-border hover:bg-muted'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface ProfileProps {
   user: UserProfile;
   groups: Group[];
   defaultTab?: string;
+  focusCard?: 'recharge' | 'withdraw';
   onLogout?: () => void;
   onNavigate?: (view: string) => void;
 }
 
-export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: ProfileProps) {
+export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavigate }: ProfileProps) {
   const { t, language, setLanguage } = useLanguage();
   
-  // Navigation state: null = Root settings, string = active sub-category screen
-  const [activeSection, setActiveSection] = useState<string | null>(defaultTab === 'wallet' ? 'payments' : null);
-  const [activeSubTab, setActiveSubTab] = useState<string>('personal_info');
+  // Navigation state: null = Root settings, string = active sub-category screen.
+  // `defaultTab` est la cible envoyée par les autres écrans. 'kyc' est un
+  // sous-onglet de la section « compte » : le blocage à la création de cercle
+  // l'utilise pour déposer l'utilisatrice directement sur la vérification.
+  const PROFILE_SECTION_IDS = ['account', 'security', 'payments', 'circles', 'subscription', 'notifications', 'legal'];
+  const [activeSection, setActiveSection] = useState<string | null>(() => {
+    if (defaultTab === 'wallet') return 'payments';
+    if (defaultTab === 'kyc') return 'account';
+    return defaultTab && PROFILE_SECTION_IDS.includes(defaultTab) ? defaultTab : null;
+  });
+  const [activeSubTab, setActiveSubTab] = useState<string>(defaultTab === 'kyc' ? 'kyc' : 'personal_info');
 
   // Form states
   const [editDisplayName, setEditDisplayName] = useState(user.displayName);
@@ -113,17 +149,46 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
   // Wallet & Transactions
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
+
+  // Le bouton "Recharger" du Dashboard doit ouvrir la carte Recharger, et
+  // "Retirer" sa propre carte — les deux ne s'affichent jamais ensemble.
+  // `focusCard` (venant de App.tsx) fixe laquelle est active à l'arrivée ;
+  // le sélecteur ci-dessous permet ensuite de basculer sans revenir en arrière.
+  const [walletAction, setWalletAction] = useState<'recharge' | 'withdraw'>(focusCard || 'recharge');
+  useEffect(() => {
+    if (focusCard) setWalletAction(focusCard);
+  }, [focusCard]);
+
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [isRecharging, setIsRecharging] = useState(false);
+  const [rechargeCountry, setRechargeCountry] = useState('tg');
+  const [rechargeMethod, setRechargeMethod] = useState('tmoney_tg');
+  useEffect(() => {
+    const options = getOperatorsForCountry(rechargeCountry);
+    if (!options.some((op) => op.value === rechargeMethod)) {
+      setRechargeMethod(options[0].value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rechargeCountry]);
+  const [rechargePhone, setRechargePhone] = useState(user.phone || '');
 
   // Withdrawal states
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const withdrawIdempotencyKeyRef = React.useRef<string | null>(null);
   useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount]);
-  const [withdrawMethod, setWithdrawMethod] = useState('flooz');
-  const [withdrawPhone, setWithdrawPhone] = useState('+228 90 00 00 00');
+  const [withdrawCountry, setWithdrawCountry] = useState('tg');
+  const [withdrawMethod, setWithdrawMethod] = useState('tmoney_tg');
+  useEffect(() => {
+    const operators = getOperatorsForCountry(withdrawCountry);
+    if (operators.length > 0 && !operators.some((op) => op.value === withdrawMethod)) {
+      setWithdrawMethod(operators[0].value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [withdrawCountry]);
+  const [withdrawPhone, setWithdrawPhone] = useState(user.phone || '');
   const [withdrawPin, setWithdrawPin] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 
   // Delete account confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -341,26 +406,51 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       toast.error(t('prof_min_100'));
       return;
     }
+    if (rechargePhone.replace(/\D/g, '').length < 8) {
+      toast.error(t('prof_enter_recharge_phone'));
+      return;
+    }
     setIsRecharging(true);
     try {
       // Le portefeuille n'est crédité qu'après un vrai paiement Paydunya
       // confirmé (App.tsx gère le retour ?paydunya_success=true) — on ne
-      // crédite jamais directement ici.
+      // crédite jamais directement ici. Le pays/opérateur/téléphone ne sont
+      // que des indications transmises pour le suivi (custom_data) et le
+      // mode simulation locale : Paydunya reste seul maître du choix réel
+      // du canal de paiement sur sa page hébergée.
       const response = await fetch(apiUrl('/api/create-paydunya-checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, userId: user.uid, userName: user.displayName, userEmail: user.email }),
+        body: JSON.stringify({
+          amount,
+          userId: user.uid,
+          userName: user.displayName,
+          userEmail: user.email,
+          phone: rechargePhone,
+          paymentMethod: rechargeMethod,
+        }),
       });
-      const data = await response.json();
-      if (!response.ok || !data.url) throw new Error(data.error || t('prof_paydunya_start_error'));
+
+      // Une réponse en échec (404 en dev où Vite ne sert pas /api/*, ou page
+      // d'erreur d'une passerelle) renvoie du HTML : le parser en JSON lèverait
+      // « Unexpected token '<' », qui finissait affiché tel quel à l'écran.
+      if (!response.ok) {
+        throw new Error(`Paydunya checkout HTTP ${response.status}`);
+      }
+      const data = await response.json().catch(() => null);
+      if (!data?.url) {
+        throw new Error(data?.error || 'Paydunya checkout: réponse sans URL');
+      }
+
       window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || t('prof_recharge_error'));
+      console.error('Paydunya checkout error:', err);
+      toast.error(t('prof_paydunya_start_error'));
       setIsRecharging(false);
     }
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdrawReview = () => {
     if (!navigator.onLine) {
       toast.error(t('prof_offline_withdraw'));
       return;
@@ -374,10 +464,24 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
       toast.error(t('prof_insufficient_balance'));
       return;
     }
+    if (!withdrawMethod) {
+      toast.error(t('prof_enter_withdraw_operator'));
+      return;
+    }
+    if (withdrawPhone.replace(/\D/g, '').length < 8) {
+      toast.error(t('prof_enter_valid_phone'));
+      return;
+    }
     if (!withdrawPin) {
       toast.error(t('prof_enter_withdraw_pin'));
       return;
     }
+    setShowWithdrawConfirm(true);
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    const withdrawMethodLabel = findOperatorLabel(withdrawMethod);
     setIsWithdrawing(true);
     try {
       const pinResult = await verifyUserPin(user.uid, withdrawPin);
@@ -398,7 +502,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         userId: user.uid,
         amount,
         currency: 'FCFA',
-        description: `Retrait vers ${withdrawMethod.toUpperCase()} (${withdrawPhone})`,
+        description: `Retrait vers ${withdrawMethodLabel} (${withdrawPhone})`,
         actionType: 'wallet_withdrawal',
         debitAccount: `user_wallet:${user.uid}`,
         creditAccount: 'mobile_money_payout_pending'
@@ -409,18 +513,20 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
         user_id: user.uid,
         amount,
         type: 'withdraw',
-        description: `Retrait vers ${withdrawMethod.toUpperCase()} (${withdrawPhone})`,
+        description: `Retrait vers ${withdrawMethodLabel} (${withdrawPhone})`,
         status: 'pending',
         reference: withdrawPhone,
         payment_method: withdrawMethod,
       });
 
       withdrawIdempotencyKeyRef.current = null;
-      toast.success(`${t('prof_withdraw_requested_prefix')} ${amount.toLocaleString()} FCFA ${t('prof_withdraw_requested_mid')} ${withdrawMethod.toUpperCase()} ${t('prof_withdraw_requested_suffix')}`);
+      toast.success(`${t('prof_withdraw_requested_prefix')} ${amount.toLocaleString()} FCFA ${t('prof_withdraw_requested_mid')} ${withdrawMethodLabel} ${t('prof_withdraw_requested_suffix')}`);
       setWithdrawAmount('');
       setWithdrawPin('');
+      setShowWithdrawConfirm(false);
     } catch (err: any) {
-      toast.error(err.message || t('prof_withdraw_error'));
+      console.error('Withdrawal error:', err);
+      toast.error(t('prof_withdraw_error'));
     } finally {
       setIsWithdrawing(false);
     }
@@ -541,11 +647,11 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   <div className="flex items-center justify-center gap-2">
                     <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
                     {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
-                      <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
+                      <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[13px] font-bold">
                         {t('prof_account_verified')}
                       </Badge>
                     ) : (
-                      <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] font-bold">
+                      <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[13px] font-bold">
                         {t('prof_identity_not_verified')}
                       </Badge>
                     )}
@@ -558,13 +664,13 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               {/* User Balance & Reputation */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="bg-muted/40 p-3 rounded-2xl border border-border/60 text-center space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('available_balance')}</span>
+                  <span className="text-[13px] font-bold text-muted-foreground uppercase">{t('available_balance')}</span>
                   <p className="text-sm font-black text-primary">
                     {(user.walletBalance || 0).toLocaleString()} FCFA
                   </p>
                 </div>
                 <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center space-y-0.5">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{t('reliability_score')}</span>
+                  <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{t('reliability_score')}</span>
                   <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                     {user.reputationScore} / 100
                   </p>
@@ -584,7 +690,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   <PhoneCall className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold text-foreground">{t('prof_need_help')}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">{t('prof_support_desc_sidebar')}</p>
+                <p className="text-[13px] text-muted-foreground">{t('prof_support_desc_sidebar')}</p>
                 <Button
                   onClick={() => onNavigate?.('support')}
                   variant="outline"
@@ -596,13 +702,13 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 <div className="flex gap-1.5 pt-0.5">
                   <button
                     onClick={() => onNavigate?.('support')}
-                    className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                   >
                     <Lightbulb className="w-3 h-3" /> {t('prof_suggest')}
                   </button>
                   <button
                     onClick={() => onNavigate?.('support')}
-                    className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                   >
                     <Bug className="w-3 h-3" /> {t('prof_report_bug')}
                   </button>
@@ -616,7 +722,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             <div className="lg:col-span-2 space-y-5">
               {categoryGroups.map((group) => (
                 <div key={group.name} className="space-y-2">
-                  <h3 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground px-1">
+                  <h3 className="text-[13px] font-black uppercase tracking-wider text-muted-foreground px-1">
                     {group.name}
                   </h3>
                   <Card className="rounded-2xl border border-border shadow-soft overflow-hidden py-0 gap-0">
@@ -774,12 +880,12 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                     <IdCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="space-y-0.5">
                       <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{t('prof_id_document_label')}</p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[13px] text-muted-foreground">
                         {user.kycVerifiedAt ? `${t('prof_verified_on')} ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : t('prof_verified_word')}
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-emerald-500 text-white text-[10px] flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_word')}</Badge>
+                  <Badge className="bg-emerald-500 text-white text-[13px] flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_word')}</Badge>
                 </div>
               ) : kycSubmission?.status === 'pending' ? (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
@@ -787,15 +893,15 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                     <IdCard className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div className="space-y-0.5">
                       <p className="text-xs font-bold text-amber-700 dark:text-amber-300">{t('prof_id_document_label')}</p>
-                      <p className="text-[11px] text-muted-foreground">{t('prof_sent_on')} {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
+                      <p className="text-[13px] text-muted-foreground">{t('prof_sent_on')} {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
                     </div>
                   </div>
-                  <Badge className="bg-amber-500 text-white text-[10px]">{t('prof_pending_validation')}</Badge>
+                  <Badge className="bg-amber-500 text-white text-[13px]">{t('prof_pending_validation')}</Badge>
                 </div>
               ) : (
                 <div className="space-y-3 pt-2">
                   {kycSubmission?.status === 'rejected' && (
-                    <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[11px] text-danger font-medium flex items-start gap-2">
+                    <div className="p-3 bg-danger-soft border border-danger/20 rounded-2xl text-[13px] text-danger font-medium flex items-start gap-2">
                       <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>{t('prof_kyc_rejected_prefix')}{kycSubmission.rejectionReason ? ` : ${kycSubmission.rejectionReason}` : ''}. {t('prof_kyc_resubmit')}</span>
                     </div>
@@ -821,7 +927,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                         <p className="text-xs font-bold text-foreground truncate">
                           {kycFile ? kycFile.name : t('prof_choose_photo_pdf')}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-[13px] text-muted-foreground">
                           {kycFile ? t('prof_tap_change_file') : t('prof_file_format_hint')}
                         </p>
                       </div>
@@ -875,7 +981,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[13px] text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{t('prof_mandate_warning_prefix')} <strong>{t('prof_mandate_warning_bold')}</strong>{t('prof_mandate_warning_suffix')}</span>
                 </div>
@@ -910,9 +1016,31 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             </div>
           </Card>
 
-          {/* Action Cards: Recharger, Retirer, Moyens de paiement */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Recharge Card */}
+          {/* Recharger et Retirer sont deux cartes distinctes : une seule est
+              affichée à la fois, choisie par le bouton du Dashboard qui a
+              amené ici (ou par ce sélecteur si on change d'avis sur place). */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setWalletAction('recharge')}
+              className={`h-10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                walletAction === 'recharge' ? 'bg-card shadow-xs text-emerald-600' : 'text-muted-foreground'
+              }`}
+            >
+              <Plus className="w-4 h-4" /> {t('recharge')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setWalletAction('withdraw')}
+              className={`h-10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                walletAction === 'withdraw' ? 'bg-card shadow-xs text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              <ArrowDownCircle className="w-4 h-4" /> {t('withdraw')}
+            </button>
+          </div>
+
+          {walletAction === 'recharge' ? (
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
                 <Plus className="w-4 h-4 text-emerald-500" /> {t('recharge_wallet_title')}
@@ -924,12 +1052,36 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">{t('pay_country_label')}</Label>
+                <ChipPicker
+                  ariaLabel={t('pay_country_label')}
+                  value={rechargeCountry}
+                  onChange={setRechargeCountry}
+                  options={PAYDUNYA_COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag} ${c.label}` }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">{t('pay_operator_label')}</Label>
+                <ChipPicker
+                  ariaLabel={t('pay_operator_label')}
+                  value={rechargeMethod}
+                  onChange={setRechargeMethod}
+                  options={getOperatorsForCountry(rechargeCountry)}
+                />
+              </div>
+              <Input
+                type="tel"
+                placeholder={t('prof_withdraw_phone_placeholder')}
+                value={rechargePhone}
+                onChange={(e) => setRechargePhone(e.target.value)}
+                className="rounded-xl h-11 text-xs"
+              />
               <Button onClick={handleRecharge} disabled={isRecharging} className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs">
                 {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_recharge_via_mobile_money')}
               </Button>
             </Card>
-
-            {/* Withdraw Card */}
+          ) : (
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
                 <ArrowDownCircle className="w-4 h-4 text-primary" /> {t('prof_withdraw_funds')}
@@ -941,6 +1093,31 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">{t('pay_country_label')}</Label>
+                <ChipPicker
+                  ariaLabel={t('pay_country_label')}
+                  value={withdrawCountry}
+                  onChange={setWithdrawCountry}
+                  options={PAYDUNYA_COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag} ${c.label}` }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">{t('prof_withdraw_operator_label')}</Label>
+                <ChipPicker
+                  ariaLabel={t('prof_withdraw_operator_label')}
+                  value={withdrawMethod}
+                  onChange={setWithdrawMethod}
+                  options={getOperatorsForCountry(withdrawCountry)}
+                />
+              </div>
+              <Input
+                type="tel"
+                placeholder={t('prof_withdraw_phone_placeholder')}
+                value={withdrawPhone}
+                onChange={(e) => setWithdrawPhone(e.target.value)}
+                className="rounded-xl h-11 text-xs"
+              />
               <Input
                 type="password"
                 placeholder={t('prof_pin_4digits_placeholder')}
@@ -949,11 +1126,11 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 onChange={(e) => setWithdrawPin(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
-              <Button onClick={handleWithdraw} disabled={isWithdrawing} variant="outline" className="border-primary text-primary font-bold rounded-xl h-10 w-full text-xs">
+              <Button onClick={handleWithdrawReview} disabled={isWithdrawing} variant="outline" className="border-primary text-primary font-bold rounded-xl h-10 w-full text-xs">
                 {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_confirm_withdraw')}
               </Button>
             </Card>
-          </div>
+          )}
 
           {/* Transaction History — was fetched into walletTransactions but
               never actually rendered anywhere in this component. */}
@@ -967,7 +1144,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   <div key={tx.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
                     <div>
                       <p className="text-xs font-bold text-foreground">{tx.description}</p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[13px] text-muted-foreground">
                         {format(new Date(tx.date), 'dd MMM yyyy, HH:mm', { locale: fr })}
                       </p>
                     </div>
@@ -1002,11 +1179,11 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="flex-1 flex flex-col justify-end gap-2 items-center group">
                     <div className="w-full bg-muted/60 rounded-t-sm h-[15%] group-hover:bg-primary/50 transition-all duration-300"></div>
-                    <span className="text-[9px] text-muted-foreground font-medium uppercase">{t('prof_month_label')} {i+1}</span>
+                    <span className="text-[12px] text-muted-foreground font-medium uppercase">{t('prof_month_label')} {i+1}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center mt-2">{t('prof_insufficient_data_charts')}</p>
+              <p className="text-[13px] text-muted-foreground text-center mt-2">{t('prof_insufficient_data_charts')}</p>
             </div>
 
             <div className="space-y-2 pt-2">
@@ -1021,9 +1198,9 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
                   <div key={g.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center text-xs">
                     <div>
                       <p className="font-bold text-foreground">{g.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{g.contributionAmount.toLocaleString()} FCFA / {g.frequency}</p>
+                      <p className="text-[13px] text-muted-foreground">{g.contributionAmount.toLocaleString()} FCFA / {g.frequency}</p>
                     </div>
-                    <Badge variant={g.status === 'active' ? 'default' : 'secondary'} className="text-[9px]">
+                    <Badge variant={g.status === 'active' ? 'default' : 'secondary'} className="text-[12px]">
                       {g.status}
                     </Badge>
                   </div>
@@ -1045,13 +1222,13 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             <div className="p-5 bg-gradient-to-br from-purple-500/10 to-primary/5 border border-purple-500/20 rounded-2xl space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <Badge className="bg-purple-500 text-white font-bold text-[10px] mb-2">
+                  <Badge className="bg-purple-500 text-white font-bold text-[13px] mb-2">
                     {t('prof_current_plan_label')} {user.subscriptionPlan === 'premium' ? t('prof_plan_premium') : t('prof_plan_free')}
                   </Badge>
                   <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">
                     {user.subscriptionPlan === 'premium' ? t('prof_eganye_premium') : t('prof_eganye_essential')}
                   </h4>
-                  <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
+                  <p className="text-[13px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
                     {user.subscriptionPlan === 'premium'
                       ? `${t('prof_subscription_active_prefix')}${user.subscriptionExpiresAt ? ` ${t('prof_subscription_active_until')} ${format(new Date(user.subscriptionExpiresAt), 'dd MMMM yyyy', { locale: fr })}` : ''}.`
                       : t('prof_basic_access_desc')}
@@ -1117,7 +1294,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
             <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl">
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-foreground">{t('prof_biometrics_label')}</p>
-                <p className="text-[11px] text-muted-foreground">{t('prof_biometrics_desc')}</p>
+                <p className="text-[13px] text-muted-foreground">{t('prof_biometrics_desc')}</p>
               </div>
               <Switch checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />
             </div>
@@ -1150,7 +1327,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
                   <p className="text-xs font-bold text-foreground">{t('prof_push_notif')}</p>
-                  <p className="text-[10px] text-muted-foreground">{t('prof_push_channel_desc')}</p>
+                  <p className="text-[13px] text-muted-foreground">{t('prof_push_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={pushNotif}
@@ -1161,7 +1338,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
                   <p className="text-xs font-bold text-foreground">{t('sms_label')}</p>
-                  <p className="text-[10px] text-muted-foreground">{t('prof_sms_channel_desc')}</p>
+                  <p className="text-[13px] text-muted-foreground">{t('prof_sms_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={smsNotif}
@@ -1172,7 +1349,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
                   <p className="text-xs font-bold text-foreground">{t('email_label')}</p>
-                  <p className="text-[10px] text-muted-foreground">{t('prof_email_channel_desc')}</p>
+                  <p className="text-[13px] text-muted-foreground">{t('prof_email_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={emailNotif}
@@ -1183,7 +1360,7 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
               <div className="flex items-center justify-between p-3.5 bg-card border border-border/60 rounded-2xl">
                 <div>
                   <p className="text-xs font-bold text-foreground">{t('whatsapp_label')}</p>
-                  <p className="text-[10px] text-muted-foreground">{t('prof_whatsapp_channel_desc')}</p>
+                  <p className="text-[13px] text-muted-foreground">{t('prof_whatsapp_channel_desc')}</p>
                 </div>
                 <Switch
                   checked={whatsAppNotif}
@@ -1283,6 +1460,22 @@ export function Profile({ user, groups, defaultTab, onLogout, onNavigate }: Prof
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* WITHDRAWAL CONFIRMATION — recap of amount + operator + phone before
+          the money actually moves (see UX audit: this used to submit instantly
+          on click, with the destination number never shown). */}
+      <ConfirmationBottomSheet
+        isOpen={showWithdrawConfirm}
+        onClose={() => setShowWithdrawConfirm(false)}
+        onConfirm={handleWithdraw}
+        isLoading={isWithdrawing}
+        type="debit"
+        title={t('prof_withdraw_confirm_title')}
+        description={`${t('prof_withdraw_confirm_desc')} ${findOperatorLabel(withdrawMethod)} — ${withdrawPhone}`}
+        amount={parseFloat(withdrawAmount) || 0}
+        currency="FCFA"
+        confirmLabel={t('prof_confirm_withdraw')}
+      />
     </div>
   );
 }

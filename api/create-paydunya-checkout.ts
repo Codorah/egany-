@@ -1,29 +1,50 @@
+/**
+ * Ouverture d'une session de paiement Paydunya.
+ *
+ * Cet endpoint ne crédite RIEN : il se contente de demander une facture au
+ * prestataire et de renvoyer l'URL de paiement. Le crédit du portefeuille est
+ * décidé plus tard, et uniquement, par api/paydunya-webhook une fois le
+ * paiement confirmé par Paydunya lui-même.
+ */
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { amount, userId, userName, userEmail } = req.body;
+    const { amount, userId, userName, userEmail, phone, paymentMethod } = req.body;
+
+    const parsedAmount = Number(amount);
+    if (!userId || !Number.isFinite(parsedAmount) || parsedAmount < 100) {
+      return res.status(400).json({ error: 'Requête invalide (utilisateur ou montant).' });
+    }
 
     const masterKey = process.env.PAYDUNYA_MASTER_KEY;
     const privateKey = process.env.PAYDUNYA_PRIVATE_KEY;
     const token = process.env.PAYDUNYA_TOKEN;
     const mode = process.env.PAYDUNYA_MODE || 'sandbox';
 
-    const origin = req.headers.origin || 'https://egany.vercel.app';
+    const origin = req.headers.origin || `https://${req.headers.host}`;
+    const isProduction = process.env.VERCEL_ENV === 'production';
 
-    // Check if credentials are set
     if (!masterKey || !privateKey || !token) {
-      console.log("Paydunya credentials not fully set, falling back to simulated checkout interface.");
-      // Simulated sandbox redirect link
-      const simUrl = `${origin}/?paydunya_sim=true&amount=${amount}&userId=${userId}&userName=${encodeURIComponent(userName)}&userEmail=${encodeURIComponent(userEmail || '')}`;
-      return res.status(200).json({ id: 'sim_session_id', url: simUrl });
+      // En production, mieux vaut un échec franc qu'un faux parcours de
+      // paiement : l'utilisatrice croirait avoir payé.
+      if (isProduction) {
+        console.error('[paydunya] Identifiants absents en production — recharge indisponible.');
+        return res.status(503).json({ error: 'Le paiement est momentanément indisponible.' });
+      }
+      // Hors production seulement : parcours simulé, pour travailler l'interface.
+      // Il ne crédite aucun portefeuille (seul le webhook en a le droit).
+      console.log('[paydunya] Identifiants absents — parcours simulé (aucun crédit).');
+      const simUrl = `${origin}/?paydunya_sim=true&amount=${parsedAmount}&userId=${userId}`
+        + `&userName=${encodeURIComponent(userName || '')}&userEmail=${encodeURIComponent(userEmail || '')}`
+        + `&phone=${encodeURIComponent(phone || '')}&operator=${encodeURIComponent(paymentMethod || '')}`;
+      return res.status(200).json({ id: 'sim_session_id', url: simUrl, simulated: true });
     }
 
-    // Real Paydunya integration if keys exist
-    const baseUrl = mode === 'live' 
-      ? 'https://app.paydunya.com/api/v1/checkout-invoice/create' 
+    const baseUrl = mode === 'live'
+      ? 'https://app.paydunya.com/api/v1/checkout-invoice/create'
       : 'https://sandbox.paydunya.com/api/v1/checkout-invoice/create';
 
     const response = await fetch(baseUrl, {
@@ -36,36 +57,45 @@ export default async function handler(req: any, res: any) {
       },
       body: JSON.stringify({
         invoice: {
-          total_amount: amount,
-          description: "Recharge de Portefeuille Virtuel Tontine Connect",
-          name: "Tontine Connect Top-up"
+          total_amount: parsedAmount,
+          description: 'Recharge de portefeuille eganyé',
+          name: 'Recharge eganyé',
         },
         store: {
-          name: "Tontine Connect"
+          name: 'eganyé',
         },
         actions: {
-          cancel_url: `${origin}/?payment=cancel`,
-          return_url: `${origin}/?payment=success&paydunya_ref=recharge&amount=${amount}&userId=${userId}`
+          cancel_url: `${origin}/?paydunya_cancel=true`,
+          // Retour de l'utilisatrice : purement informatif, ne prouve pas le
+          // paiement (elle peut aussi taper cette adresse à la main).
+          return_url: `${origin}/?paydunya_success=true`,
+          // Notification serveur à serveur : c'est elle qui fait autorité.
+          callback_url: `${origin}/api/paydunya-webhook`,
         },
+        // Repris tel quel dans la confirmation : c'est ainsi que le webhook
+        // sait quel portefeuille créditer, sans faire confiance au client.
+        // (Pas de champ "customer" ici : l'API checkout-invoice/create de
+        // Paydunya ne l'accepte pas en entrée — il n'est renseigné par
+        // Paydunya qu'après un paiement réussi. Un précédent essai de
+        // préremplissage via ce champ faisait échouer la création de facture.)
         custom_data: {
           userId,
           userName,
           userEmail,
-          amount
-        }
-      })
+          phone,
+          paymentMethod,
+        },
+      }),
     });
 
     const data = await response.json();
-    
-    // CORRECTION: response_text contains the URL of the invoice, not 'success'
+
     if (data.response_code === '00') {
-      res.status(200).json({ id: data.token, url: data.response_text });
-    } else {
-      throw new Error(data.response_text || "Erreur de réponse de l'API Paydunya");
+      return res.status(200).json({ id: data.token, url: data.response_text });
     }
+    throw new Error(data.response_text || "Erreur de réponse de l'API Paydunya");
   } catch (error: any) {
-    console.error('Paydunya error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('[paydunya] Erreur création de facture :', error);
+    return res.status(500).json({ error: 'Impossible de démarrer le paiement.' });
   }
 }

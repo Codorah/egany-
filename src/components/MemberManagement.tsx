@@ -174,7 +174,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                 <div className="flex items-center gap-2">
                   <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || t('member')} size={28} />
                   <span className="text-sm font-medium">{profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}</span>
-                  {isCreatorRow && <Badge variant="outline" className="text-[10px]">{t('mm_creator_badge')}</Badge>}
+                  {isCreatorRow && <Badge variant="outline" className="text-[13px]">{t('mm_creator_badge')}</Badge>}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Select value={role} onValueChange={(val) => handleRoleChange(uid, val as GroupMemberRole)} disabled={busyUid === uid}>

@@ -58,7 +58,7 @@ export function InviteMemberDialog({ joinCode }: InviteMemberDialogProps) {
               {copied ? <Check className="w-4 h-4 text-secondary" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Partagez ce lien via WhatsApp, Snapchat ou Instagram.
           </p>
         </div>

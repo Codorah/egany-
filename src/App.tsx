@@ -4,6 +4,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
 import { Toaster } from '@/components/ui/sonner';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 // Lazy-loaded: kept out of the main bundle since Dashboard/Onboarding are
 // the only screens needed for first paint (logged-in home, logged-out auth).
@@ -18,6 +19,8 @@ const Support = lazy(() => import('@/components/Support').then((m) => ({ default
 const Marketplace = lazy(() => import('@/components/Marketplace').then((m) => ({ default: m.Marketplace })));
 const AIAssistant = lazy(() => import('@/components/AIAssistant').then((m) => ({ default: m.AIAssistant })));
 const MyBank = lazy(() => import('@/components/MyBank').then((m) => ({ default: m.MyBank })));
+const ActivityScreen = lazy(() => import('@/components/ActivityScreen').then((m) => ({ default: m.ActivityScreen })));
+const ChooseCircleToPay = lazy(() => import('@/components/ChooseCircleToPay').then((m) => ({ default: m.ChooseCircleToPay })));
 import { useAuth } from '@/hooks/useAuth';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
@@ -27,14 +30,13 @@ import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
 import { fetchPlatformSettings } from '@/lib/platformSettings';
-import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { runBackHandlers } from '@/hooks/useBackHandler';
 
-type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank';
+type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'wallet-recharge' | 'wallet-withdraw' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank' | 'cotiser' | 'activity';
 
 export default function App() {
   const { profile, loading: authLoading } = useAuth();
@@ -106,7 +108,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
-  const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; userId: string; userName: string; userEmail: string } | null>(null);
+  const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; userId: string; userName: string; userEmail: string; phone: string; operator: string } | null>(null);
 
   // Handle URL parameters for joining and Paydunya recharges
   React.useEffect(() => {
@@ -134,72 +136,33 @@ export default function App() {
       const userId = params.get('userId') || '';
       const userName = params.get('userName') || '';
       const userEmail = params.get('userEmail') || '';
+      const phone = params.get('phone') || '';
+      const operator = params.get('operator') || '';
       if (amount && userId) {
-        setPaydunyaSim({ amount, userId, userName, userEmail });
+        setPaydunyaSim({ amount, userId, userName, userEmail, phone, operator });
       }
     }
 
-    // Paydunya Success callback logic
-    const paydunyaSuccess = params.get('paydunya_success');
-    const rechargeAmount = params.get('amount');
-    
-    if (paydunyaSuccess === 'true' && rechargeAmount && activeProfile) {
-      const amountNum = parseFloat(rechargeAmount);
-      const handlePaydunyaRecharge = async () => {
-        try {
-          const rawRef = params.get('paydunya_ref') || `sim_ref_${Date.now()}`;
-          const idempotencyKey = `recharge_${activeProfile.uid}_${rawRef}`;
-
-          // Execute safe double-entry ledger financial transaction
-          const ledgerResult = await executeFinancialTransaction({
-            idempotencyKey,
-            userId: activeProfile.uid,
-            amount: amountNum,
-            currency: 'FCFA',
-            description: 'Recharge de portefeuille via Paydunya',
-            actionType: 'wallet_recharge',
-            debitAccount: 'psp_paydunya',
-            creditAccount: `user_wallet:${activeProfile.uid}`
-          });
-
-          if (!ledgerResult.success) {
-            throw new Error(ledgerResult.message);
-          }
-
-          // Create matching wallet transaction record for user display
-          await supabase.from('wallet_transactions').insert({
-            user_id: activeProfile.uid,
-            amount: amountNum,
-            type: 'recharge',
-            description: `Recharge de portefeuille via Paydunya`,
-            status: 'completed',
-            payment_method: 'paydunya',
-            reference: ledgerResult.transactionId || rawRef
-          });
-
-          // Create Notification
-          await notifyUser({
-            userId: activeProfile.uid,
-            title: 'Portefeuille rechargé !',
-            message: `Votre portefeuille virtuel a été rechargé de ${amountNum.toLocaleString()} FCFA avec succès via Paydunya.`,
-            type: 'system'
-          });
-
-          toast.success(`Votre portefeuille a été crédité de ${amountNum.toLocaleString()} FCFA !`);
-          setProfileTab('wallet');
-          setView('profile');
-        } catch (error: any) {
-          console.error("Error recording wallet recharge:", error);
-          toast.error(error.message || "Erreur lors de l'enregistrement de la recharge.");
-        }
-      };
-      handlePaydunyaRecharge();
+    // Retour depuis Paydunya.
+    //
+    // Le retour de l'utilisatrice sur cette URL ne prouve RIEN : elle peut
+    // avoir abandonné le paiement, ou taper l'adresse à la main. Le crédit
+    // du portefeuille est donc décidé exclusivement côté serveur, par le
+    // webhook du prestataire (api/paydunya-webhook). Ici on se contente
+    // d'informer et de renvoyer vers le portefeuille, où le nouveau solde
+    // apparaîtra dès que la confirmation sera arrivée.
+    if (params.get('paydunya_success') === 'true' && activeProfile) {
+      toast.success(
+        "Paiement envoyé. Votre portefeuille sera crédité dès la confirmation de l'opérateur."
+      );
+      setProfileTab('wallet');
+      setView('profile');
     } else if (params.get('paydunya_cancel') === 'true') {
-      toast.error("Recharge de portefeuille annulée.");
+      toast.error('Recharge de portefeuille annulée.');
     }
 
     // Clear URL params without refreshing
-    if (code || paySim || paydunyaSuccess || params.get('paydunya_cancel')) {
+    if (code || paySim || params.get('paydunya_success') || params.get('paydunya_cancel')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [profile, groups]);
@@ -248,8 +211,46 @@ export default function App() {
       case 'my-circles':
       case 'search-groups':
         return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+      case 'cotiser': {
+        // L'onglet central mène droit au paiement. S'il n'y a qu'un cercle
+        // actif, on ouvre directement ses cotisations ; sinon on laisse
+        // choisir, plutôt que de deviner à sa place.
+        const payable = groups.filter((g) => g.status === 'active');
+        if (payable.length === 1) {
+          return (
+            <ContributionsManager
+              group={payable[0]}
+              user={activeProfile}
+              onBack={() => setView('dashboard')}
+            />
+          );
+        }
+        return (
+          <ChooseCircleToPay
+            groups={payable}
+            onSelect={handleManageContributions}
+            onBack={() => setView('dashboard')}
+          />
+        );
+      }
+      case 'activity':
+        return (
+          <ActivityScreen
+            userId={activeProfile.uid}
+            onManageContributions={handleManageContributions}
+            onSelectGroup={handleSelectGroup}
+            onNavigateToProfileTab={(tab) => {
+              setProfileTab(tab);
+              setView('profile');
+            }}
+          />
+        );
       case 'wallet-savings':
         return <Profile user={activeProfile} groups={groups} defaultTab="wallet" onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
+      case 'wallet-recharge':
+        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" focusCard="recharge" onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
+      case 'wallet-withdraw':
+        return <Profile user={activeProfile} groups={groups} defaultTab="wallet" focusCard="withdraw" onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'support':
@@ -292,26 +293,14 @@ export default function App() {
   };
 
   if (authLoading) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="flex flex-col items-center gap-6">
-          <img 
-            src="/logo-emblem.png" 
-            alt="eganyé" 
-            className="w-20 h-20 rounded-2xl shadow-xl animate-spin" 
-            style={{ animationDuration: '2s' }} 
-          />
-          <span className="text-xs font-sans font-bold tracking-[0.2em] uppercase text-muted-foreground/60">chargement...</span>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Chargement de votre espace…" />;
   }
 
   const isAdminUser = activeProfile?.role === 'admin' || activeProfile?.email === 'codorah@hotmail.com';
   if (maintenanceMode && !isAdminUser) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground px-6 text-center gap-4">
-        <img src="/logo-emblem.png" alt="eganyé" className="w-16 h-16 rounded-2xl shadow-xl" />
+        <img src="/icons/icon-128.png" alt="eganyé" className="w-16 h-16 rounded-2xl shadow-xl" />
         <h1 className="text-xl font-serif font-black">Maintenance en cours</h1>
         <p className="text-sm text-muted-foreground max-w-sm">
           eganyé est temporairement indisponible pour une opération de maintenance. Revenez dans quelques instants.
@@ -327,6 +316,8 @@ export default function App() {
         userId={paydunyaSim.userId}
         userName={paydunyaSim.userName}
         userEmail={paydunyaSim.userEmail}
+        initialPhone={paydunyaSim.phone}
+        initialOperator={paydunyaSim.operator}
         onSuccess={(amount) => {
           window.location.href = `${window.location.origin}/?paydunya_success=true&amount=${amount}`;
         }}
@@ -364,11 +355,7 @@ export default function App() {
           Vous êtes hors-ligne — les données affichées peuvent ne pas être à jour, et les actions financières (recharge, retrait, cotisation, création/adhésion de cercle) sont désactivées.
         </div>
       )}
-      <Suspense fallback={
-        <div className="flex justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      }>
+      <Suspense fallback={<LoadingScreen fullScreen={false} />}>
         {renderView()}
       </Suspense>
       <Toaster />

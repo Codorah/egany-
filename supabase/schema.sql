@@ -464,6 +464,10 @@ CREATE POLICY "group_documents_storage_delete" ON storage.objects FOR DELETE USI
 -- 4. FONCTIONS RPC (FINANCES & TRANSACTIONNEL)
 -- ============================================================================
 
+-- Sécurité : ce SECURITY DEFINER a longtemps été exécutable sans aucune
+-- vérification de l'appelant (n'importe quel utilisateur — même anonyme,
+-- la fonction était accordée à `anon` — pouvait créditer n'importe quel
+-- portefeuille). Voir supabase/migrations/0005_harden_financial_transaction.sql.
 CREATE OR REPLACE FUNCTION public.execute_financial_transaction(
   p_idempotency_key text,
   p_user_id uuid,
@@ -487,7 +491,40 @@ DECLARE
   v_new_balance numeric;
   v_transaction_id text;
   v_wallet_account text;
+  v_caller uuid := auth.uid();
+  v_jwt_role text := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
+  v_is_service boolean;
+  v_is_admin boolean := false;
+  v_credits_wallet boolean;
 BEGIN
+  v_is_service := (v_jwt_role = 'service_role');
+  v_wallet_account := 'user_wallet:' || p_user_id::text;
+  v_credits_wallet := (p_credit_account = v_wallet_account);
+
+  -- Un client ne peut agir que sur son propre compte, ne peut jamais créditer
+  -- un portefeuille (sauf admin, pour les remboursements), et une recharge ne
+  -- peut venir que du serveur (webhook du prestataire de paiement).
+  IF NOT v_is_service THEN
+    IF v_caller IS NULL THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Vous devez être connectée pour effectuer cette opération.');
+    END IF;
+
+    SELECT (role = 'admin') INTO v_is_admin FROM public.profiles WHERE id = v_caller;
+    v_is_admin := coalesce(v_is_admin, false);
+
+    IF p_user_id <> v_caller AND NOT v_is_admin THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Opération non autorisée sur le compte d''une autre personne.');
+    END IF;
+
+    IF p_action_type = 'wallet_recharge' THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Une recharge doit être confirmée par le prestataire de paiement.');
+    END IF;
+
+    IF v_credits_wallet AND NOT v_is_admin THEN
+      RETURN jsonb_build_object('success', false, 'message', 'Le crédit d''un portefeuille ne peut pas être demandé depuis l''application.');
+    END IF;
+  END IF;
+
   IF p_amount <= 0 THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le montant doit être strictement supérieur à zéro.');
   END IF;
@@ -504,7 +541,6 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'L''utilisateur spécifié n''existe pas.');
   END IF;
 
-  v_wallet_account := 'user_wallet:' || p_user_id::text;
   v_new_balance := v_balance;
 
   IF p_debit_account = v_wallet_account THEN
@@ -512,7 +548,7 @@ BEGIN
       RETURN jsonb_build_object('success', false, 'message', 'Solde insuffisant dans votre portefeuille.');
     END IF;
     v_new_balance := v_balance - p_amount;
-  ELSIF p_credit_account = v_wallet_account THEN
+  ELSIF v_credits_wallet THEN
     v_new_balance := v_balance + p_amount;
   END IF;
 
@@ -533,7 +569,14 @@ BEGIN
   VALUES (p_idempotency_key, v_transaction_id, p_user_id, p_amount, p_action_type);
 
   INSERT INTO public.audit_logs (user_id, action, details, ip, device, status, idempotency_key)
-  VALUES (p_user_id, p_action_type, p_description || ' | Débit [' || p_debit_account || '] / Crédit [' || p_credit_account || '] de ' || p_amount || ' ' || p_currency, COALESCE(p_ip, 'Non disponible'), 'Serveur Supabase', 'success', p_idempotency_key);
+  VALUES (
+    p_user_id, p_action_type,
+    p_description || ' | Débit [' || p_debit_account || '] / Crédit [' || p_credit_account || '] de ' || p_amount || ' ' || p_currency
+      || ' | Appelant : ' || CASE WHEN v_is_service THEN 'service' WHEN v_is_admin THEN 'admin ' || v_caller::text ELSE v_caller::text END,
+    COALESCE(p_ip, 'Non disponible'),
+    CASE WHEN v_is_service THEN 'Serveur (service role)' ELSE 'Application' END,
+    'success', p_idempotency_key
+  );
 
   IF p_contribution_id IS NOT NULL AND p_group_id IS NOT NULL THEN
     UPDATE public.contributions SET
@@ -552,6 +595,9 @@ EXCEPTION WHEN others THEN
   RETURN jsonb_build_object('success', false, 'message', sqlerrm);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.execute_financial_transaction(text, uuid, numeric, text, text, text, text, text, uuid, uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.execute_financial_transaction(text, uuid, numeric, text, text, text, text, text, uuid, uuid, text) TO authenticated, service_role;
 
 -- Verification du PIN utilisateur
 CREATE OR REPLACE FUNCTION public.verify_user_pin(p_user_id uuid, p_entered_pin text)
@@ -665,6 +711,17 @@ DECLARE
   v_member record;
   v_description text;
 BEGIN
+  -- Réservé à la créatrice du cercle ou à un admin : sans ce garde-fou,
+  -- n'importe qui pouvait décaisser le pot complet d'un cercle vers le
+  -- portefeuille de son choix (argent créé de toutes pièces, hors ledger).
+  IF NOT (public.is_group_creator(p_group_id) OR public.is_admin()) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Non autorisé.');
+  END IF;
+
+  -- L'attribution dans le journal d'audit ne peut pas venir du client :
+  -- on l'ancre sur l'appelant réellement authentifié.
+  p_admin_user_id := auth.uid();
+
   SELECT * INTO v_group FROM public.groups WHERE id = p_group_id FOR UPDATE;
   IF NOT found THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le cercle d''épargne n''existe pas.');
@@ -769,6 +826,9 @@ EXCEPTION WHEN others THEN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.execute_payout_disbursement(uuid, uuid, uuid, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.execute_payout_disbursement(uuid, uuid, uuid, numeric) TO authenticated, service_role;
+
 -- Attribution de la position dans la rotation
 CREATE OR REPLACE FUNCTION public.assign_next_payout_position(p_group_id uuid, p_user_id uuid)
 RETURNS void
@@ -777,6 +837,12 @@ AS $$
 DECLARE
   v_next_position integer;
 BEGIN
+  -- Réservé à la créatrice du cercle ou à un admin : cette fonction rigeait
+  -- autrement l'ordre de rotation des payouts de n'importe quel cercle.
+  IF NOT (public.is_group_creator(p_group_id) OR public.is_admin()) THEN
+    RAISE EXCEPTION 'Non autorisé.';
+  END IF;
+
   SELECT count(*) INTO v_next_position FROM public.group_members
   WHERE group_id = p_group_id AND status = 'active' AND payout_position IS NOT NULL;
 
@@ -784,6 +850,9 @@ BEGIN
   WHERE group_id = p_group_id AND user_id = p_user_id;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.assign_next_payout_position(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.assign_next_payout_position(uuid, uuid) TO authenticated, service_role;
 
 -- ============================================================================
 -- MIGRATION COMPLÉMENTAIRE DE STRUCTURE (Abonnements, KYC, Mandataire)
@@ -1305,9 +1374,17 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
+-- L'ancienne clé d'idempotence incluait extract(epoch from now()), donc
+-- chaque appel — y compris un rejeu réseau de la même tentative — obtenait
+-- une clé différente et repassait la garde d'idempotence : un remboursement
+-- pouvait être débité deux fois. Le client fournit maintenant une clé stable
+-- par tentative (même schéma que le retrait dans Profile.tsx).
+DROP FUNCTION IF EXISTS public.repay_marketplace_credit(uuid, numeric);
+
 CREATE OR REPLACE FUNCTION public.repay_marketplace_credit(
   p_request_id uuid,
-  p_amount numeric
+  p_amount numeric,
+  p_idempotency_key text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
@@ -1316,6 +1393,7 @@ DECLARE
   v_req record;
   v_remaining numeric;
   v_ledger_result jsonb;
+  v_key text;
 BEGIN
   IF p_amount <= 0 THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le montant doit être supérieur à zéro.');
@@ -1325,7 +1403,10 @@ BEGIN
   IF NOT FOUND THEN
     RETURN jsonb_build_object('success', false, 'message', 'Crédit introuvable.');
   END IF;
-  IF v_req.user_id <> auth.uid() THEN
+  -- auth.uid() IS NULL pour un appel anonyme : sans ce cas explicite,
+  -- `v_req.user_id <> NULL` vaut NULL (donc "faux" pour un IF), et le
+  -- contrôle d'autorisation ci-dessous était silencieusement contourné.
+  IF auth.uid() IS NULL OR v_req.user_id <> auth.uid() THEN
     RETURN jsonb_build_object('success', false, 'message', 'Non autorisé.');
   END IF;
   IF v_req.status <> 'approved' OR v_req.approved_amount IS NULL THEN
@@ -1337,8 +1418,10 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Ce montant dépasse le solde restant dû (' || v_remaining || ' FCFA).');
   END IF;
 
+  v_key := COALESCE(p_idempotency_key, 'credit_repayment_' || p_request_id::text || '_' || gen_random_uuid()::text);
+
   v_ledger_result := public.execute_financial_transaction(
-    p_idempotency_key := 'credit_repayment_' || p_request_id::text || '_' || extract(epoch from now())::text,
+    p_idempotency_key := v_key,
     p_user_id := v_req.user_id,
     p_amount := p_amount,
     p_currency := 'FCFA',
@@ -1359,6 +1442,9 @@ EXCEPTION WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'message', sqlerrm);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.repay_marketplace_credit(uuid, numeric, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.repay_marketplace_credit(uuid, numeric, text) TO authenticated, service_role;
 
 -- ============================================================================
 -- 13. MA BANQUE — tirelires personnelles bloquées, avec délai réel

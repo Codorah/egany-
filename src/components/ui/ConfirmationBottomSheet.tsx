@@ -99,7 +99,7 @@ export function ConfirmationBottomSheet({
                     <h3 className="text-base font-black text-foreground tracking-tight">
                       {title}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
+                    <p className="text-[13px] text-muted-foreground font-bold uppercase tracking-wider">
                       {type === 'debit' ? 'Débit imminent' : type === 'destructive' ? 'Action irréversible' : type === 'recharge' ? 'Rechargement' : type === 'transfer' ? 'Virement/Cotisation' : 'Opération de paiement'}
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export function ConfirmationBottomSheet({
                 {/* Amount Highlight */}
                 {amount !== undefined && (
                   <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
+                    <span className="text-[13px] uppercase font-black text-muted-foreground tracking-widest">
                       Montant de l'opération
                     </span>
                     <span className={`text-2xl font-black mt-1 ${
@@ -139,7 +139,7 @@ export function ConfirmationBottomSheet({
                       <div className="p-2 bg-card rounded-full shadow-xs border border-border">
                         {type === 'recharge' ? <CreditCard className="w-4 h-4 text-foreground" /> : <Wallet className="w-4 h-4 text-foreground" />}
                       </div>
-                      <span className="text-[10px]">{type === 'recharge' ? 'Mon Mobile Money' : 'Mon Portefeuille'}</span>
+                      <span className="text-[13px]">{type === 'recharge' ? 'Mon Mobile Money' : 'Mon Portefeuille'}</span>
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center relative px-2">
@@ -153,14 +153,14 @@ export function ConfirmationBottomSheet({
                       <div className="p-2 bg-card rounded-full shadow-xs border border-border">
                         {type === 'recharge' ? <Wallet className="w-4 h-4 text-secondary" /> : <Send className="w-4 h-4 text-secondary" />}
                       </div>
-                      <span className="text-[10px]">{type === 'recharge' ? 'Portefeuille eganyé' : 'Cercle de Tontine'}</span>
+                      <span className="text-[13px]">{type === 'recharge' ? 'Portefeuille eganyé' : 'Cercle de Tontine'}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Secure / Protection Badge — uniquement pertinent pour une opération financière */}
                 {amount !== undefined && (
-                  <div className="flex items-center gap-2 text-[11px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
+                  <div className="flex items-center gap-2 text-[13px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
                     <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
                     <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
                   </div>

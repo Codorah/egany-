@@ -162,13 +162,13 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{document.name}</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       {categoryLabels[document.category]} • {formatSize(document.size)} • par {document.uploaderName} • {format(new Date(document.uploadedAt), 'dd/MM/yyyy')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Badge variant="outline" className="hidden sm:inline-flex text-[10px]">{categoryLabels[document.category]}</Badge>
+                  <Badge variant="outline" className="hidden sm:inline-flex text-[13px]">{categoryLabels[document.category]}</Badge>
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDownload(document)} title="Télécharger">
                     <Download className="w-4 h-4" />
                   </Button>

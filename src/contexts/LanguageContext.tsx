@@ -322,10 +322,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Pɩ-wɛ ɖeu! N-kɛ ñɩm mʋyʋ (Tier A). Se ŋ-tasɩ Tier S taa, sɔnzɩ liidiye n-kpou taa ɖooo kɩyakʋ ŋga ka-kaŋ yɔ, kɩ-yɔɔ.'
   },
   reputation_tip_b: {
-    fr: "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Wave ou Orange Money.",
-    en: 'Your reputation is correct (B-Tier) but could be improved. Tip: To avoid forgetting, recharge regularly via Wave or Orange Money.',
-    ee: 'Wò ŋkɔ nyuie le eme (Tier B) gake wòate ŋu anyo wu. Aɖaŋuɖoɖo: Be maŋlɔ nu be o la, trɔ ga de wò akɔnta me edziedzi to Wave alo Orange Money dzi.',
-    kbp: 'Ño-hɩɖɛ wɛ ɖeu (Tier B) piye pɩpɔzʋʋ se pɩ-cɛzɩɣ. Ñɩnɩ: Se n-ta pɩ-yɔɔ, sɔnzɩ liidiye tam-tam Wave yaa Orange Money yɔɔ.'
+    fr: "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Flooz ou T-Money.",
+    en: 'Your reputation is correct (B-Tier) but could be improved. Tip: To avoid forgetting, recharge regularly via Flooz or T-Money.',
+    ee: 'Wò ŋkɔ nyuie le eme (Tier B) gake wòate ŋu anyo wu. Aɖaŋuɖoɖo: Be maŋlɔ nu be o la, trɔ ga de wò akɔnta me edziedzi to Flooz alo T-Money dzi.',
+    kbp: 'Ño-hɩɖɛ wɛ ɖeu (Tier B) piye pɩpɔzʋʋ se pɩ-cɛzɩɣ. Ñɩnɩ: Se n-ta pɩ-yɔɔ, sɔnzɩ liidiye tam-tam Flooz yaa T-Money yɔɔ.'
   },
   reputation_tip_c: {
     fr: "Attention ! Votre score est critique (Tier C) à cause de retards répétés. Pour restaurer votre réputation, alimentez immédiatement votre solde de portefeuille et réglez vos cotisations en attente.",
@@ -360,10 +360,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Sɔnzɩ liidiye man-kpou taa'
   },
   recharge_wallet_desc: {
-    fr: 'Ajouter des fonds par Paydunya (Wave, Orange Money...)',
-    en: 'Add funds via Paydunya (Wave, Orange Money...)',
-    ee: 'Tsɔ ga kpe ɖe eŋu to Paydunya dzi (Wave, Orange Money...)',
-    kbp: 'Kpɛndɩ liidiye Paydunya yɔɔ (Wave, Orange Money...)'
+    fr: 'Ajouter des fonds par Paydunya (Flooz, T-Money...)',
+    en: 'Add funds via Paydunya (Flooz, T-Money...)',
+    ee: 'Tsɔ ga kpe ɖe eŋu to Paydunya dzi (Flooz, T-Money...)',
+    kbp: 'Kpɛndɩ liidiye Paydunya yɔɔ (Flooz, T-Money...)'
   },
   create_new_circle: {
     fr: 'Créer un nouveau cercle',
@@ -808,10 +808,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Liidiye ɖʋʋ tʋmɩyɛ'
   },
   enter_reference_error: {
-    fr: 'Veuillez saisir une référence (ex: ID Orange Money, Wave...)',
-    en: 'Please enter a reference (e.g. Orange Money ID, Wave...)',
-    ee: 'Taflatse ŋlɔ dzesi aɖe (kpɔɖeŋu: Orange Money ID, Wave...)',
-    kbp: 'Taa kalɩ tʋmɩyɛ nakʋyʋ (ɛzɩ: Orange Money ID, Wave...)'
+    fr: 'Veuillez saisir une référence (ex: ID Flooz, T-Money...)',
+    en: 'Please enter a reference (e.g. Flooz ID, T-Money...)',
+    ee: 'Taflatse ŋlɔ dzesi aɖe (kpɔɖeŋu: Flooz ID, T-Money...)',
+    kbp: 'Taa kalɩ tʋmɩyɛ nakʋyʋ (ɛzɩ: Flooz ID, T-Money...)'
   },
   send_proof: {
     fr: 'Envoyer le justificatif',
@@ -1904,10 +1904,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Sɔnzɩ liidiye Paydunya yɔɔ'
   },
   prof_recharge_dialog_desc: {
-    fr: 'Alimentez votre portefeuille virtuel via Paydunya (Wave, Orange Money, MTN, Carte Bancaire) pour automatiser vos cotisations quotidiennes de tontine.',
-    en: 'Fund your virtual wallet via Paydunya (Wave, Orange Money, MTN, Bank Card) to automate your daily tontine contributions.',
-    ee: 'Trɔ ga de wò komputa gaxɔ me to Paydunya dzi (Wave, Orange Money, MTN, Gakaɖi) be wò tontine gaxexlẽ gbesiagbe nàwɔ eɖokui.',
-    kbp: 'Sɔnzɩ ño-kpou taa Paydunya yɔɔ (Wave, Orange Money, MTN, Banki kaatɩ) se ño-tontine liidiye haʋ kɩyakʋ kʋɖʋmaɣ ɩ-la ɩ-maɣmaɣ.'
+    fr: 'Alimentez votre portefeuille virtuel via Paydunya (Flooz, T-Money, Carte Bancaire) pour automatiser vos cotisations quotidiennes de tontine.',
+    en: 'Fund your virtual wallet via Paydunya (Flooz, T-Money, Bank Card) to automate your daily tontine contributions.',
+    ee: 'Trɔ ga de wò komputa gaxɔ me to Paydunya dzi (Flooz, T-Money, Gakaɖi) be wò tontine gaxexlẽ gbesiagbe nàwɔ eɖokui.',
+    kbp: 'Sɔnzɩ ño-kpou taa Paydunya yɔɔ (Flooz, T-Money, Banki kaatɩ) se ño-tontine liidiye haʋ kɩyakʋ kʋɖʋmaɣ ɩ-la ɩ-maɣmaɣ.'
   },
   prof_recharge_amount: {
     fr: 'Montant de la recharge (FCFA)',
@@ -2016,6 +2016,84 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Confirm withdrawal',
     ee: 'Da Asi Ɖe Ɖeɖe le eme Dzi',
     kbp: 'Ña kpeɣu'
+  },
+  // NOTE: ee/kbp not yet translated for this group — duplicated from fr so
+  // the app shows correct French rather than fabricated Ewe/Kabiyè text.
+  // Same visible result as the t() fallback, spelled out explicitly here
+  // because `translations` requires all four LanguageCode keys.
+  prof_withdraw_operator_label: {
+    fr: 'Opérateur Mobile Money',
+    en: 'Mobile Money operator',
+    ee: 'Opérateur Mobile Money',
+    kbp: 'Opérateur Mobile Money'
+  },
+  prof_operator_flooz: {
+    fr: 'Flooz (Moov)',
+    en: 'Flooz (Moov)',
+    ee: 'Flooz (Moov)',
+    kbp: 'Flooz (Moov)'
+  },
+  prof_operator_tmoney: {
+    fr: 'T-Money (Togocom)',
+    en: 'T-Money (Togocom)',
+    ee: 'T-Money (Togocom)',
+    kbp: 'T-Money (Togocom)'
+  },
+  // NOTE: ee/kbp not yet translated for this group — duplicated from fr, comme
+  // pour prof_withdraw_operator_label ci-dessus.
+  pay_country_label: {
+    fr: 'Pays',
+    en: 'Country',
+    ee: 'Pays',
+    kbp: 'Pays'
+  },
+  pay_operator_label: {
+    fr: 'Opérateur',
+    en: 'Operator',
+    ee: 'Opérateur',
+    kbp: 'Opérateur'
+  },
+  pay_available_methods_prefix: {
+    fr: 'Réglable via :',
+    en: 'Payable via:',
+    ee: 'Réglable via :',
+    kbp: 'Réglable via :'
+  },
+  prof_enter_recharge_phone: {
+    fr: 'Entrez le numéro Mobile Money qui effectuera le paiement',
+    en: 'Enter the Mobile Money number that will make the payment',
+    ee: 'Entrez le numéro Mobile Money qui effectuera le paiement',
+    kbp: 'Entrez le numéro Mobile Money qui effectuera le paiement'
+  },
+  prof_withdraw_phone_placeholder: {
+    fr: '+228 90 00 00 00',
+    en: '+228 90 00 00 00',
+    ee: '+228 90 00 00 00',
+    kbp: '+228 90 00 00 00'
+  },
+  prof_enter_withdraw_operator: {
+    fr: 'Choisissez un opérateur Mobile Money',
+    en: 'Choose a Mobile Money operator',
+    ee: 'Choisissez un opérateur Mobile Money',
+    kbp: 'Choisissez un opérateur Mobile Money'
+  },
+  prof_enter_valid_phone: {
+    fr: 'Entrez le numéro Mobile Money qui doit recevoir le retrait',
+    en: 'Enter the Mobile Money number that should receive the withdrawal',
+    ee: 'Entrez le numéro Mobile Money qui doit recevoir le retrait',
+    kbp: 'Entrez le numéro Mobile Money qui doit recevoir le retrait'
+  },
+  prof_withdraw_confirm_title: {
+    fr: 'Vérifiez ce retrait',
+    en: 'Review this withdrawal',
+    ee: 'Vérifiez ce retrait',
+    kbp: 'Vérifiez ce retrait'
+  },
+  prof_withdraw_confirm_desc: {
+    fr: "L'argent sera envoyé sur ce numéro Mobile Money. Vérifiez qu'il est correct avant de continuer — ce n'est pas modifiable une fois envoyé.",
+    en: 'The money will be sent to this Mobile Money number. Double-check it before continuing — it cannot be changed once sent.',
+    ee: "L'argent sera envoyé sur ce numéro Mobile Money. Vérifiez qu'il est correct avant de continuer — ce n'est pas modifiable une fois envoyé.",
+    kbp: "L'argent sera envoyé sur ce numéro Mobile Money. Vérifiez qu'il est correct avant de continuer — ce n'est pas modifiable une fois envoyé."
   },
   prof_total_capital_saved: {
     fr: 'Capital Total Épargné',
@@ -3812,10 +3890,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Kalɩyaa, pɩyaɣ maralɩyaa nɛ tʋmɩyaa: mɩ-ma marali tontinaa nɛ pɩ-bɔbɔ, mɩ-cɔnɩ mɩ-liidiye haʋ nɛ mɩ-la mɩ-lɩmaɣza.'
   },
   onb_slide3_title: {
-    fr: 'Encaissez par Mobile Money (Wave, Orange, MTN)',
-    en: 'Get Paid via Mobile Money (Wave, Orange, MTN)',
-    ee: 'Xɔ Ga To Mobile Money Dzi (Wave, Orange, MTN)',
-    kbp: 'Mʋ liidiye Mobile Money taa (Wave, Orange, MTN)'
+    fr: 'Encaissez par Mobile Money (Flooz, T-Money)',
+    en: 'Get Paid via Mobile Money (Flooz, T-Money)',
+    ee: 'Xɔ Ga To Mobile Money Dzi (Flooz, T-Money)',
+    kbp: 'Mʋ liidiye Mobile Money taa (Flooz, T-Money)'
   },
   onb_slide3_desc: {
     fr: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
@@ -3902,10 +3980,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Pɩ-fɛyɩ ɖeu se pa-tasɩ tiyu kɩlɩzɩ :'
   },
   onb_welcome_desc: {
-    fr: "Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Wave, Orange Money, et augmentez votre score financier.",
-    en: 'Manage your African savings circles with ease, automate your contributions via Wave, Orange Money, and boost your financial score.',
-    ee: 'Kpɔ wò Afrika gadzraɖo habɔbɔwo dzi bɔbɔe, wɔ wò gaxexlẽwo automatique to Wave, Orange Money dzi, eye nàdo wò ga xexlẽme ɖe edzi.',
-    kbp: 'Ñɩɩ ño-Afrika marali tontinaa pɩ-bɔbɔ, la ño-liidiye haʋ ɖɔɖɔyɔ Wave, Orange Money yɔɔ, nɛ tasɩ ño-liidiye kɩlaʋ yɔɔ.'
+    fr: "Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Flooz, T-Money, et augmentez votre score financier.",
+    en: 'Manage your African savings circles with ease, automate your contributions via Flooz, T-Money, and boost your financial score.',
+    ee: 'Kpɔ wò Afrika gadzraɖo habɔbɔwo dzi bɔbɔe, wɔ wò gaxexlẽwo automatique to Flooz, T-Money dzi, eye nàdo wò ga xexlẽme ɖe edzi.',
+    kbp: 'Ñɩɩ ño-Afrika marali tontinaa pɩ-bɔbɔ, la ño-liidiye haʋ ɖɔɖɔyɔ Flooz, T-Money yɔɔ, nɛ tasɩ ño-liidiye kɩlaʋ yɔɔ.'
   },
   onb_discover_eganye: {
     fr: 'Découvrir eganyé',
@@ -4104,6 +4182,153 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: "I didn't receive a code — Resend",
     ee: 'Nyemexɔ kod aɖeke o — Gaɖoe Ɖa',
     kbp: 'Man-mʋʋ kɩlɩzɩ — Tasɩ tiyu'
+  },
+  loading: {
+    fr: 'Chargement…',
+    en: 'Loading…',
+    ee: 'Chargement…',
+    kbp: 'Chargement…'
+  },
+  nav_contribute: {
+    fr: 'Cotiser',
+    en: 'Pay in',
+    ee: 'Cotiser',
+    kbp: 'Cotiser'
+  },
+  nav_activity: {
+    fr: 'Activité',
+    en: 'Activity',
+    ee: 'Activité',
+    kbp: 'Activité'
+  },
+  activity_title: {
+    fr: 'Activité',
+    en: 'Activity',
+    ee: 'Activité',
+    kbp: 'Activité'
+  },
+  activity_subtitle: {
+    fr: 'Vos paiements, vos échéances et les nouvelles de vos cercles.',
+    en: 'Your payments, deadlines and circle news.',
+    ee: 'Vos paiements, vos échéances et les nouvelles de vos cercles.',
+    kbp: 'Vos paiements, vos échéances et les nouvelles de vos cercles.'
+  },
+  cotiser_pick_circle_title: {
+    fr: 'Quel cercle voulez-vous payer ?',
+    en: 'Which circle do you want to pay?',
+    ee: 'Quel cercle voulez-vous payer ?',
+    kbp: 'Quel cercle voulez-vous payer ?'
+  },
+  cotiser_no_circle: {
+    fr: "Vous n'avez pas encore de cercle actif à payer.",
+    en: "You don't have an active circle to pay yet.",
+    ee: "Vous n'avez pas encore de cercle actif à payer.",
+    kbp: "Vous n'avez pas encore de cercle actif à payer."
+  },
+  // Libellés d'accessibilité (lecteurs d'écran) pour les boutons sans texte.
+  a11y_back: {
+    fr: 'Retour',
+    en: 'Back',
+    ee: 'Trɔ Yi Megbe',
+    kbp: 'Pɩsɩ'
+  },
+  a11y_show_password: {
+    fr: 'Afficher le mot de passe',
+    en: 'Show password',
+    ee: 'Afficher le mot de passe',
+    kbp: 'Afficher le mot de passe'
+  },
+  a11y_hide_password: {
+    fr: 'Masquer le mot de passe',
+    en: 'Hide password',
+    ee: 'Masquer le mot de passe',
+    kbp: 'Masquer le mot de passe'
+  },
+  a11y_otp_digit: {
+    fr: 'Chiffre',
+    en: 'Digit',
+    ee: 'Chiffre',
+    kbp: 'Chiffre'
+  },
+  // Parcours « mot de passe oublié » — ee/kbp reprennent le français faute de
+  // traduction validée : mieux vaut du français correct qu'un texte inventé.
+  onb_forgot_title: {
+    fr: 'Mot de passe oublié ?',
+    en: 'Forgot your password?',
+    ee: 'Mot de passe oublié ?',
+    kbp: 'Mot de passe oublié ?'
+  },
+  onb_forgot_desc: {
+    fr: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code.",
+    en: "No worries. Enter your email and we'll send you a code.",
+    ee: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code.",
+    kbp: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code."
+  },
+  onb_send_code: {
+    fr: 'Envoyer le code',
+    en: 'Send the code',
+    ee: 'Envoyer le code',
+    kbp: 'Envoyer le code'
+  },
+  onb_code_sent_toast: {
+    fr: 'Code envoyé. Regardez votre boîte mail.',
+    en: 'Code sent. Check your inbox.',
+    ee: 'Code envoyé. Regardez votre boîte mail.',
+    kbp: 'Code envoyé. Regardez votre boîte mail.'
+  },
+  onb_reset_title: {
+    fr: 'Nouveau mot de passe',
+    en: 'New password',
+    ee: 'Nouveau mot de passe',
+    kbp: 'Nouveau mot de passe'
+  },
+  onb_reset_desc: {
+    fr: 'Choisissez un mot de passe que vous retiendrez.',
+    en: "Choose a password you'll remember.",
+    ee: 'Choisissez un mot de passe que vous retiendrez.',
+    kbp: 'Choisissez un mot de passe que vous retiendrez.'
+  },
+  onb_confirm_password_label: {
+    fr: 'Confirmez le mot de passe',
+    en: 'Confirm password',
+    ee: 'Confirmez le mot de passe',
+    kbp: 'Confirmez le mot de passe'
+  },
+  onb_passwords_dont_match: {
+    fr: 'Les deux mots de passe ne sont pas identiques.',
+    en: "The two passwords don't match.",
+    ee: 'Les deux mots de passe ne sont pas identiques.',
+    kbp: 'Les deux mots de passe ne sont pas identiques.'
+  },
+  onb_reset_password_button: {
+    fr: 'Enregistrer le mot de passe',
+    en: 'Save the password',
+    ee: 'Enregistrer le mot de passe',
+    kbp: 'Enregistrer le mot de passe'
+  },
+  onb_reset_success: {
+    fr: 'Mot de passe modifié. Vous pouvez vous connecter.',
+    en: 'Password changed. You can sign in now.',
+    ee: 'Mot de passe modifié. Vous pouvez vous connecter.',
+    kbp: 'Mot de passe modifié. Vous pouvez vous connecter.'
+  },
+  onb_reset_error: {
+    fr: "Impossible de modifier le mot de passe. Réessayez dans un instant.",
+    en: "Couldn't change the password. Try again in a moment.",
+    ee: "Impossible de modifier le mot de passe. Réessayez dans un instant.",
+    kbp: "Impossible de modifier le mot de passe. Réessayez dans un instant."
+  },
+  onb_send_code_error: {
+    fr: "Impossible d'envoyer le code. Vérifiez l'email et réessayez.",
+    en: "Couldn't send the code. Check the email and try again.",
+    ee: "Impossible d'envoyer le code. Vérifiez l'email et réessayez.",
+    kbp: "Impossible d'envoyer le code. Vérifiez l'email et réessayez."
+  },
+  onb_back_to_login: {
+    fr: 'Retour à la connexion',
+    en: 'Back to sign in',
+    ee: 'Retour à la connexion',
+    kbp: 'Retour à la connexion'
   },
   onb_default_username: {
     fr: 'Utilisateur',
@@ -4865,6 +5090,26 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Kpɔ wò ŋkɔɖeɖe dzi (Ŋkɔmeɖeɖe > Ŋkɔɖeɖe Kpɔkpɔ) hafi nàwɔ habɔbɔ.',
     kbp: 'Ña ño-hɩɖɛ (Ma-ɖɔkɔtɔ > Hɩɖɛ ñaʋ) pʋcɔ ŋ-ma tontine.'
   },
+  // Écran de blocage affiché à l'ouverture : on emmène l'utilisatrice au bon
+  // endroit avec un bouton, au lieu de lui dicter un chemin de menus.
+  cgd_kyc_gate_title: {
+    fr: 'Une dernière étape avant de créer',
+    en: 'One last step before creating',
+    ee: 'Une dernière étape avant de créer',
+    kbp: 'Une dernière étape avant de créer'
+  },
+  cgd_kyc_gate_desc: {
+    fr: "Pour créer un cercle, votre identité doit être vérifiée. Cela protège l'argent de toutes les membres. Deux photos suffisent.",
+    en: 'To create a circle, your identity must be verified. This protects everyone’s money. Two photos are enough.',
+    ee: "Pour créer un cercle, votre identité doit être vérifiée. Cela protège l'argent de toutes les membres. Deux photos suffisent.",
+    kbp: "Pour créer un cercle, votre identité doit être vérifiée. Cela protège l'argent de toutes les membres. Deux photos suffisent."
+  },
+  cgd_kyc_gate_cta: {
+    fr: 'Vérifier mon identité',
+    en: 'Verify my identity',
+    ee: 'Vérifier mon identité',
+    kbp: 'Vérifier mon identité'
+  },
   cgd_created_success: {
     fr: 'Cercle créé avec succès !',
     en: 'Circle created successfully!',
@@ -5314,10 +5559,10 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     kbp: 'Ɛzɩma mansɔnzɩ liidiye man-eganyé kpou taa?'
   },
   sup_faq_4_a: {
-    fr: 'Depuis votre Profil > Portefeuille, choisissez « Recharger » et suivez les instructions de paiement (Mobile Money : Wave, Orange Money, MTN...).',
-    en: 'From your Profile > Wallet, choose "Recharge" and follow the payment instructions (Mobile Money: Wave, Orange Money, MTN...).',
-    ee: 'Tso wò Profil > Gaxɔ me la, tia « Trɔ De Ga » eye nàdze fexexlẽ ƒe mɔfiafiawo yome (Mobile Money : Wave, Orange Money, MTN...).',
-    kbp: 'Ño-Profil > Kpou taa, lɩzɩ « Sɔnzɩ liidiye » nɛ ŋtɩŋɩɣnɩ liidiye fɛlɩyɛ wɩlɩtʋ yɔɔ (Mobile Money : Wave, Orange Money, MTN...).'
+    fr: 'Depuis votre Profil > Portefeuille, choisissez « Recharger » et suivez les instructions de paiement (Mobile Money : Flooz, T-Money...).',
+    en: 'From your Profile > Wallet, choose "Recharge" and follow the payment instructions (Mobile Money: Flooz, T-Money...).',
+    ee: 'Tso wò Profil > Gaxɔ me la, tia « Trɔ De Ga » eye nàdze fexexlẽ ƒe mɔfiafiawo yome (Mobile Money : Flooz, T-Money...).',
+    kbp: 'Ño-Profil > Kpou taa, lɩzɩ « Sɔnzɩ liidiye » nɛ ŋtɩŋɩɣnɩ liidiye fɛlɩyɛ wɩlɩtʋ yɔɔ (Mobile Money : Flooz, T-Money...).'
   },
   sup_faq_5_q: {
     fr: "Qu'est-ce que le Score de Réputation ?",

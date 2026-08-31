@@ -172,7 +172,7 @@ export function DashboardNotifications({
               Centre d'Alertes & Activités
             </CardTitle>
             {unreadLateAlerts > 0 && (
-              <Badge className="bg-danger text-white border-none font-bold text-[10px] rounded-full px-2 py-0.5 animate-pulse">
+              <Badge className="bg-danger text-white border-none font-bold text-[13px] rounded-full px-2 py-0.5 animate-pulse">
                 {unreadLateAlerts} retard{unreadLateAlerts > 1 ? 's' : ''}
               </Badge>
             )}
@@ -188,7 +188,7 @@ export function DashboardNotifications({
             variant="ghost"
             size="sm"
             onClick={() => setFilter('all')}
-            className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all ${
+            className={`h-7 px-3 text-[13px] font-bold rounded-xl cursor-pointer transition-all ${
               filter === 'all'
                 ? 'bg-card text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
@@ -200,7 +200,7 @@ export function DashboardNotifications({
             variant="ghost"
             size="sm"
             onClick={() => setFilter('late')}
-            className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
+            className={`h-7 px-3 text-[13px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
               filter === 'late'
                 ? 'bg-danger text-white shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
@@ -213,7 +213,7 @@ export function DashboardNotifications({
             variant="ghost"
             size="sm"
             onClick={() => setFilter('payout')}
-            className={`h-7 px-3 text-[11px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
+            className={`h-7 px-3 text-[13px] font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 ${
               filter === 'payout'
                 ? 'bg-secondary text-white shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
@@ -238,7 +238,7 @@ export function DashboardNotifications({
               </div>
               <div>
                 <p className="font-bold text-xs text-foreground">Aucune alerte trouvée</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-[13px] text-muted-foreground mt-0.5">
                   {filter === 'late'
                     ? "Aucun retard de paiement n'est signalé sur vos cercles d'épargne actifs."
                     : filter === 'payout'
@@ -275,10 +275,10 @@ export function DashboardNotifications({
                       {/* Content details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
-                          <span className={`text-[11px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full ${style.badgeClass}`}>
+                          <span className={`text-[13px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full ${style.badgeClass}`}>
                             {style.badgeText}
                           </span>
-                          <span className="text-[10px] font-medium text-muted-foreground">
+                          <span className="text-[13px] font-medium text-muted-foreground">
                             {notif.createdAt
                               ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })
                               : "À l'instant"}
@@ -289,7 +289,7 @@ export function DashboardNotifications({
                           {notif.title}
                         </h4>
 
-                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+                        <p className="text-[13px] text-muted-foreground leading-relaxed mb-3">
                           {notif.message}
                         </p>
 
@@ -301,7 +301,7 @@ export function DashboardNotifications({
                               variant="outline"
                               size="sm"
                               onClick={() => handleActionClick(notif)}
-                              className="h-7 px-3 text-[10px] font-black uppercase tracking-wide border-danger/30 text-danger bg-danger/5 hover:bg-danger hover:text-white rounded-lg cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
+                              className="h-7 px-3 text-[13px] font-black uppercase tracking-wide border-danger/30 text-danger bg-danger/5 hover:bg-danger hover:text-white rounded-lg cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
                             >
                               <span>Régler ma cotisation</span>
                               <ArrowRight className="w-3 h-3" />
@@ -314,7 +314,7 @@ export function DashboardNotifications({
                               variant="ghost"
                               size="sm"
                               onClick={() => handleActionClick(notif)}
-                              className="h-7 px-2 text-[10px] font-bold text-secondary hover:bg-secondary/10 rounded-lg cursor-pointer flex items-center gap-1"
+                              className="h-7 px-2 text-[13px] font-bold text-secondary hover:bg-secondary/10 rounded-lg cursor-pointer flex items-center gap-1"
                             >
                               <span>Voir le détail</span>
                             </Button>
@@ -326,7 +326,7 @@ export function DashboardNotifications({
                               variant="ghost"
                               size="sm"
                               onClick={() => markAsRead(notif.id)}
-                              className="h-7 px-2.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer flex items-center gap-1 ml-auto"
+                              className="h-7 px-2.5 text-[13px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer flex items-center gap-1 ml-auto"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>Lu</span>

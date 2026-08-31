@@ -303,15 +303,15 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-3 rounded-xl bg-success-soft border border-secondary/20">
-              <p className="text-[10px] font-bold uppercase text-secondary">{t('total_collected_in')}</p>
+              <p className="text-[13px] font-bold uppercase text-secondary">{t('total_collected_in')}</p>
               <p className="text-lg font-bold text-secondary">{totalCollected.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-xl bg-brand/10 border border-brand/20">
-              <p className="text-[10px] font-bold uppercase text-brand">{t('total_distributed_out')}</p>
+              <p className="text-[13px] font-bold uppercase text-brand">{t('total_distributed_out')}</p>
               <p className="text-lg font-bold text-brand">{totalDistributed.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-xl bg-muted border border-border">
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">{t('available_funds')}</p>
+              <p className="text-[13px] font-bold uppercase text-muted-foreground">{t('available_funds')}</p>
               <p className="text-lg font-bold">{availableFunds.toLocaleString()} {group.currency}</p>
             </div>
           </CardContent>
@@ -368,7 +368,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                       <TableCell>{c.amount.toLocaleString()} {group.currency}</TableCell>
                       <TableCell>
                         {c.penaltyApplied ? (
-                          <Badge variant={c.penaltyStatus === 'paid' ? 'secondary' : 'destructive'} className="text-[10px]">
+                          <Badge variant={c.penaltyStatus === 'paid' ? 'secondary' : 'destructive'} className="text-[13px]">
                             {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}
                           </Badge>
                         ) : (
@@ -463,7 +463,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="h-7 text-[10px] px-2"
+                      className="h-7 text-[13px] px-2"
                       onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
                     >
                       <Plus className="w-3 h-3 mr-1" />
@@ -472,7 +472,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                     <Button 
                       size="sm" 
                       variant="default" 
-                      className="h-7 text-[10px] px-2 bg-secondary hover:bg-secondary/90"
+                      className="h-7 text-[13px] px-2 bg-secondary hover:bg-secondary/90"
                       onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
                     >
                       <CheckCircle2 className="w-3 h-3 mr-1" />

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
+import { Plus, ShieldAlert, ArrowRight } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 
 import { supabase } from '@/lib/supabase';
@@ -59,9 +59,55 @@ function buildFormSchema(t: (key: string) => string) {
 
 type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
-export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement }) {
+export function CreateGroupDialog({
+  trigger,
+  triggerIsNativeButton = false,
+  onNavigateToVerification,
+}: {
+  trigger?: React.ReactElement;
+  /**
+   * `true` si `trigger` rend un vrai <button>. Base UI a besoin de le savoir :
+   * annoncer nativeButton={false} sur un <button> réel lui fait ajouter des
+   * attributs superflus (role, aria-disabled) et déclenche un avertissement.
+   */
+  triggerIsNativeButton?: boolean;
+  /** Emmène l'utilisatrice sur la vérification d'identité, dans son profil. */
+  onNavigateToVerification?: () => void;
+}) {
   const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
+
+  // Le niveau KYC est contrôlé dès l'ouverture, pas à la soumission : sinon on
+  // laisse remplir quinze champs et signer, pour refuser à la toute fin.
+  const [kycState, setKycState] = React.useState<'checking' | 'ok' | 'required'>('checking');
+
+  React.useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+
+    (async () => {
+      setKycState('checking');
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profileRow, error } = await supabase
+          .from('profiles')
+          .select('kyc_level')
+          .eq('id', user.id)
+          .single();
+        if (error) throw error;
+        if (cancelled) return;
+        setKycState((profileRow?.kyc_level ?? 1) < KYC_VERIFIED_LEVEL ? 'required' : 'ok');
+      } catch (err) {
+        console.error('KYC level check failed:', err);
+        // En cas d'échec réseau on laisse passer : la soumission revérifiera,
+        // et le serveur reste l'autorité sur le niveau KYC.
+        if (!cancelled) setKycState('ok');
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [open]);
   const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
   const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,7 +153,8 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
         .single();
       if (profileError) throw profileError;
       if ((profileRow?.kyc_level ?? 1) < KYC_VERIFIED_LEVEL) {
-        toast.error(t('cgd_kyc_required_error'));
+        // Garde-fou : normalement l'écran d'ouverture a déjà bloqué le cas.
+        setKycState('required');
         return;
       }
 
@@ -161,7 +208,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        nativeButton={!trigger}
+        nativeButton={trigger ? triggerIsNativeButton : true}
         render={trigger || <Button className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer" />}
       >
         {trigger ? undefined : (
@@ -172,6 +219,53 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px] max-h-[85vh] overflow-y-auto rounded-3xl bg-card border border-border">
+
+        {kycState === 'checking' ? (
+          /* Évite de montrer un formulaire de quinze champs pendant la
+             fraction de seconde qui précède le verdict KYC. */
+          <div className="flex flex-col items-center justify-center gap-4 py-16">
+            <div className="w-10 h-10 rounded-full border-[3px] border-border border-t-primary animate-spin" />
+            <span className="sr-only">{t('loading')}</span>
+          </div>
+        ) : kycState === 'required' ? (
+          <div className="flex flex-col items-center text-center gap-5 py-4">
+            <div className="w-20 h-20 rounded-[28px] bg-brand/10 text-brand flex items-center justify-center">
+              <ShieldAlert className="w-9 h-9" />
+            </div>
+
+            <div className="space-y-2">
+              <DialogTitle className="font-serif text-2xl font-bold text-foreground">
+                {t('cgd_kyc_gate_title')}
+              </DialogTitle>
+              <DialogDescription className="text-[15px] leading-relaxed text-muted-foreground max-w-sm">
+                {t('cgd_kyc_gate_desc')}
+              </DialogDescription>
+            </div>
+
+            <div className="w-full space-y-3 pt-1">
+              <Button
+                size="lg"
+                onClick={() => {
+                  setOpen(false);
+                  onNavigateToVerification?.();
+                }}
+                className="w-full rounded-2xl gradient-sunset text-white glow-orange gap-2"
+              >
+                {t('cgd_kyc_gate_cta')}
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+              <Button
+                size="lg"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="w-full rounded-2xl text-muted-foreground"
+              >
+                {t('cancel')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl font-bold text-foreground">{t('cgd_dialog_title')}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
@@ -182,7 +276,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-bold text-foreground">{t('cgd_name_label')}</Label>
             <Input id="name" placeholder={t('cgd_name_placeholder')} {...register("name")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-            {errors.name && <p className="text-[11px] text-danger font-semibold">{errors.name.message}</p>}
+            {errors.name && <p className="text-[13px] text-danger font-semibold">{errors.name.message}</p>}
           </div>
           
           <div className="space-y-1.5">
@@ -194,14 +288,14 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
               {...register("description")}
               disabled={isSubmitting}
             />
-            {errors.description && <p className="text-[11px] text-danger font-semibold">{errors.description.message}</p>}
+            {errors.description && <p className="text-[13px] text-danger font-semibold">{errors.description.message}</p>}
           </div>
  
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">{t('cgd_amount_label')}</Label>
               <Input id="contributionAmount" type="number" {...register("contributionAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.contributionAmount && <p className="text-[11px] text-danger font-semibold">{errors.contributionAmount.message}</p>}
+              {errors.contributionAmount && <p className="text-[13px] text-danger font-semibold">{errors.contributionAmount.message}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -217,7 +311,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                   <SelectItem value="monthly">{t('freq_monthly')}</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.frequency && <p className="text-[11px] text-danger font-semibold">{errors.frequency.message}</p>}
+              {errors.frequency && <p className="text-[13px] text-danger font-semibold">{errors.frequency.message}</p>}
             </div>
           </div>
 
@@ -225,7 +319,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
             <div className="space-y-1.5">
               <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">{t('cgd_max_members_label')}</Label>
               <Input id="maxMembers" type="number" {...register("maxMembers", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.maxMembers && <p className="text-[11px] text-danger font-semibold">{errors.maxMembers.message}</p>}
+              {errors.maxMembers && <p className="text-[13px] text-danger font-semibold">{errors.maxMembers.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="distributionMethod" className="text-xs font-bold text-foreground">{t('cgd_distribution_method_label')}</Label>
@@ -246,12 +340,12 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
             <div className="space-y-1.5">
               <Label htmlFor="startDate" className="text-xs font-bold text-foreground">{t('cgd_start_date_label')}</Label>
               <Input id="startDate" type="date" {...register("startDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.startDate && <p className="text-[11px] text-danger font-semibold">{errors.startDate.message}</p>}
+              {errors.startDate && <p className="text-[13px] text-danger font-semibold">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="endDate" className="text-xs font-bold text-foreground">{t('cgd_end_date_label')}</Label>
               <Input id="endDate" type="date" {...register("endDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.endDate && <p className="text-[11px] text-danger font-semibold">{errors.endDate.message}</p>}
+              {errors.endDate && <p className="text-[13px] text-danger font-semibold">{errors.endDate.message}</p>}
             </div>
           </div>
 
@@ -269,7 +363,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
           <div className="flex items-center justify-between bg-muted p-3.5 rounded-2xl border border-border">
             <div>
               <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">{t('cgd_private_circle_label')}</Label>
-              <p className="text-[10px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
+              <p className="text-[13px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
             </div>
             <button
               id="isPrivate"
@@ -314,21 +408,21 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                   <button
                     type="button"
                     onClick={() => setValue("penaltyType", "fixed")}
-                    className={`text-[11px] font-bold py-1.5 rounded-md ${penaltyType === 'fixed' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+                    className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'fixed' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
                   >
                     {t('cgd_penalty_fixed_toggle')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setValue("penaltyType", "percentage")}
-                    className={`text-[11px] font-bold py-1.5 rounded-md ${penaltyType === 'percentage' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+                    className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'percentage' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
                   >
                     {t('cgd_penalty_percentage_toggle')}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="penaltyValue" className="text-[10px] font-bold text-muted-foreground uppercase">
+                    <Label htmlFor="penaltyValue" className="text-[13px] font-bold text-muted-foreground uppercase">
                       {penaltyType === 'fixed' ? t('cgd_amount_label') : t('cgd_penalty_rate_label')}
                     </Label>
                     {penaltyType === 'fixed' ? (
@@ -338,7 +432,7 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="gracePeriod" className="text-[10px] font-bold text-muted-foreground uppercase">{t('cgd_grace_period_label')}</Label>
+                    <Label htmlFor="gracePeriod" className="text-[13px] font-bold text-muted-foreground uppercase">{t('cgd_grace_period_label')}</Label>
                     <Input id="gracePeriod" type="number" {...register("gracePeriod", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
                   </div>
                 </div>
@@ -363,14 +457,14 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
                 <p className="text-xs text-muted-foreground">
                   {t('cgd_terms_desc')}
                 </p>
-                {errors.termsAccepted && <span className="text-[10px] text-danger">{errors.termsAccepted.message}</span>}
+                {errors.termsAccepted && <span className="text-[13px] text-danger">{errors.termsAccepted.message}</span>}
               </div>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-border/50">
               <Label className="text-sm font-bold text-foreground">{t('cgd_signature_label')}</Label>
               <SignaturePad onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })} />
-              {errors.signature && <span className="text-[10px] text-danger">{errors.signature.message}</span>}
+              {errors.signature && <span className="text-[13px] text-danger">{errors.signature.message}</span>}
             </div>
           </div>
 
@@ -380,6 +474,8 @@ export function CreateGroupDialog({ trigger }: { trigger?: React.ReactElement })
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

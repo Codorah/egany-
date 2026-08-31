@@ -40,7 +40,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <Button variant="ghost" size="icon" className="relative group cursor-pointer hover:bg-chip/30">
           <Bell className="w-5 h-5 text-foreground group-hover:scale-110 transition-transform" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-danger text-white font-bold text-[10px] rounded-full animate-pulse border-2 border-card">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-danger text-white font-bold text-[13px] rounded-full animate-pulse border-2 border-card">
               {unreadCount}
             </Badge>
           )}
@@ -50,7 +50,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <div className="flex items-center justify-between p-4 bg-chip/15">
           <h3 className="font-serif font-bold text-sm text-foreground">Notifications</h3>
           {unreadCount > 0 && (
-            <span className="text-[10px] bg-brand/10 text-brand px-2.5 py-0.5 rounded-full font-bold">
+            <span className="text-[13px] bg-brand/10 text-brand px-2.5 py-0.5 rounded-full font-bold">
               {unreadCount} nouvelles
             </span>
           )}
@@ -76,11 +76,11 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                     <p className={`text-xs leading-snug mb-1 text-foreground ${!notification.read ? 'font-bold' : 'font-semibold'}`}>
                       {notification.title}
                     </p>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
+                    <p className="text-[13px] text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
                       {notification.message}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-medium text-muted-foreground flex items-center gap-1">
+                      <span className="text-[12px] font-medium text-muted-foreground flex items-center gap-1">
                         {notification.createdAt
                           ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: fr })
                           : "À l'instant"}

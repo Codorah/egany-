@@ -216,14 +216,23 @@ export function MyBank({ user }: MyBankProps) {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="glass-card p-6 rounded-3xl shadow-soft">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-brand/10 rounded-xl">
-            <Landmark className="w-6 h-6 text-brand" />
+      {/* Hero Card with uncropped 3D avatar */}
+      <div className="glass-card rounded-3xl p-4 sm:p-5 shadow-soft border border-border/70 relative overflow-hidden flex items-center justify-between gap-3 bg-gradient-to-br from-card via-card to-amber-500/5">
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[13px] font-bold border border-amber-500/20">
+            <Lock className="w-3 h-3" />
+            <span>Tirelire Personnelle Sécurisée</span>
           </div>
-          <h1 className="text-2xl font-black text-foreground">{t('my_bank')}</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">{t('my_bank')}</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{t('my_bank_subtitle')}</p>
         </div>
-        <p className="text-muted-foreground text-sm">{t('my_bank_subtitle')}</p>
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shadow-soft border-2 border-amber-500/30 shrink-0 bg-muted">
+          <img
+            src="/feature-my-bank.png"
+            alt="Ma Banque"
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
 
       {!hasActiveSubscription ? (
@@ -263,7 +272,7 @@ export function MyBank({ user }: MyBankProps) {
             <div>
               <p className="text-xs text-muted-foreground">{t('bank_current_tier')}</p>
               <p className="font-bold text-foreground">{t(`bank_tier_${user.bankTier}`)}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[13px] text-muted-foreground mt-0.5">
                 {t('bank_vaults_used')}: {vaults.length}/{maxVaults}
               </p>
             </div>
@@ -314,7 +323,7 @@ export function MyBank({ user }: MyBankProps) {
 
                     <p className="text-2xl font-black text-foreground">{vault.balance.toLocaleString()} FCFA</p>
 
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                       <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                       {unlocked
                         ? t('bank_unlocked_label')
@@ -406,7 +415,7 @@ export function MyBank({ user }: MyBankProps) {
                 onChange={(e) => setNewLockDays(e.target.value)}
                 className="rounded-xl h-11"
               />
-              <p className="text-[10px] text-muted-foreground">{t('bank_lock_days_hint')}</p>
+              <p className="text-[13px] text-muted-foreground">{t('bank_lock_days_hint')}</p>
             </div>
             <Button className="w-full h-12 font-bold rounded-xl" onClick={handleCreateVault} disabled={creating}>
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : t('bank_create_confirm')}

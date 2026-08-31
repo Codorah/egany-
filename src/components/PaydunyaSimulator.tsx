@@ -4,40 +4,47 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowRight, ShieldCheck, CreditCard, Smartphone, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowRight, ShieldCheck, Smartphone, CheckCircle2 } from 'lucide-react';
+import { PAYDUNYA_COUNTRIES, getOperatorsForCountry, findCountryForOperator } from '@/lib/paydunyaMethods';
 
 interface PaydunyaSimulatorProps {
   amount: number;
   userId: string;
   userName: string;
   userEmail: string;
+  /** Pré-sélectionnés depuis la carte Recharger de Profile.tsx, le cas échéant. */
+  initialOperator?: string;
+  initialPhone?: string;
   onSuccess: (amount: number) => void;
   onCancel: () => void;
 }
 
-export function PaydunyaSimulator({ amount, userId, userName, userEmail, onSuccess, onCancel }: PaydunyaSimulatorProps) {
-  const [paymentMethod, setPaymentMethod] = useState<'wave' | 'orange' | 'mtn' | 'card'>('wave');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
+export function PaydunyaSimulator({ amount, userId, userName, userEmail, initialOperator, initialPhone, onSuccess, onCancel }: PaydunyaSimulatorProps) {
+  const initialCountry = (initialOperator && findCountryForOperator(initialOperator)) || PAYDUNYA_COUNTRIES[0].code;
+  const [country, setCountry] = useState(initialCountry);
+  const [paymentMethod, setPaymentMethod] = useState(
+    initialOperator || getOperatorsForCountry(initialCountry)[0].value
+  );
+  const selectedCountry = PAYDUNYA_COUNTRIES.find((c) => c.code === country) ?? PAYDUNYA_COUNTRIES[0];
+  const availableMethods = getOperatorsForCountry(country);
+  const handleCountryChange = (nextCountry: string) => {
+    setCountry(nextCountry);
+    setPaymentMethod(getOperatorsForCountry(nextCountry)[0].value);
+  };
+  const [phoneNumber, setPhoneNumber] = useState(initialPhone || '');
   const [step, setStep] = useState<'details' | 'processing' | 'pin_sent' | 'success'>('details');
 
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (paymentMethod !== 'card' && !phoneNumber.trim()) {
+    if (!phoneNumber.trim()) {
       return;
     }
-    
+
     setStep('processing');
-    
+
     // Simulate payment processing steps
     setTimeout(() => {
-      if (paymentMethod === 'card') {
-        setStep('success');
-      } else {
-        setStep('pin_sent');
-      }
+      setStep('pin_sent');
     }, 2000);
   };
 
@@ -58,7 +65,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, onSucce
         <div className="flex items-center justify-center gap-2 mb-6 text-white">
           <div className="bg-brand text-primary-foreground p-1.5 rounded-lg font-bold text-lg">P</div>
           <span className="text-xl font-black tracking-widest text-brand">PAYDUNYA</span>
-          <Badge className="bg-brand/20 text-brand border-brand/30 text-[10px] ml-1">SANDBOX SIMULATOR</Badge>
+          <Badge className="bg-brand/20 text-brand border-brand/30 text-[13px] ml-1">SANDBOX SIMULATOR</Badge>
         </div>
 
         <Card className="border-slate-800 bg-slate-950 text-white shadow-2xl">
@@ -78,127 +85,86 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, onSucce
           <CardContent className="pt-6">
             {step === 'details' && (
               <form onSubmit={handlePayment} className="space-y-5">
-                <div className="space-y-3">
-                  <Label className="text-slate-300 font-medium">Moyen de Paiement</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('wave')}
-                      className={`flex flex-col items-center justify-between rounded-xl border-2 p-3 hover:bg-slate-900/80 hover:text-slate-100 cursor-pointer ${
-                        paymentMethod === 'wave'
-                          ? 'border-brand bg-brand/10 text-brand'
-                          : 'border-slate-800 bg-slate-900/40 text-slate-400'
-                      }`}
-                    >
-                      <Smartphone className={`w-5 h-5 mb-1 ${paymentMethod === 'wave' ? 'text-brand' : 'text-slate-400'}`} />
-                      <span className="text-sm font-bold text-slate-200">Wave</span>
-                      <span className="text-[10px] text-slate-500">Sans frais</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('orange')}
-                      className={`flex flex-col items-center justify-between rounded-xl border-2 p-3 hover:bg-slate-900/80 hover:text-slate-100 cursor-pointer ${
-                        paymentMethod === 'orange'
-                          ? 'border-brand bg-brand/10 text-brand'
-                          : 'border-slate-800 bg-slate-900/40 text-slate-400'
-                      }`}
-                    >
-                      <Smartphone className={`w-5 h-5 mb-1 ${paymentMethod === 'orange' ? 'text-brand' : 'text-slate-400'}`} />
-                      <span className="text-sm font-bold text-slate-200">Orange Money</span>
-                      <span className="text-[10px] text-slate-500">Validation via PIN</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('mtn')}
-                      className={`flex flex-col items-center justify-between rounded-xl border-2 p-3 hover:bg-slate-900/80 hover:text-slate-100 cursor-pointer ${
-                        paymentMethod === 'mtn'
-                          ? 'border-brand bg-brand/10 text-brand'
-                          : 'border-slate-800 bg-slate-900/40 text-slate-400'
-                      }`}
-                    >
-                      <Smartphone className={`w-5 h-5 mb-1 ${paymentMethod === 'mtn' ? 'text-brand' : 'text-slate-400'}`} />
-                      <span className="text-sm font-bold text-slate-200">MTN MoMo</span>
-                      <span className="text-[10px] text-slate-500">Notification Push</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`flex flex-col items-center justify-between rounded-xl border-2 p-3 hover:bg-slate-900/80 hover:text-slate-100 cursor-pointer ${
-                        paymentMethod === 'card'
-                          ? 'border-brand bg-brand/10 text-brand'
-                          : 'border-slate-800 bg-slate-900/40 text-slate-400'
-                      }`}
-                    >
-                      <CreditCard className={`w-5 h-5 mb-1 ${paymentMethod === 'card' ? 'text-brand' : 'text-slate-400'}`} />
-                      <span className="text-sm font-bold text-slate-200">Carte Bancaire</span>
-                      <span className="text-[10px] text-slate-500">Visa / Mastercard</span>
-                    </button>
+                <div className="space-y-2">
+                  <Label className="text-slate-300 font-medium">Pays</Label>
+                  <div role="group" aria-label="Pays" className="flex flex-wrap gap-2">
+                    {PAYDUNYA_COUNTRIES.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => handleCountryChange(c.code)}
+                        className={`px-3.5 h-9 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                          country === c.code
+                            ? 'bg-brand text-primary-foreground border-brand'
+                            : 'bg-slate-900/40 text-slate-300 border-slate-800 hover:bg-slate-900/80 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="mr-1.5">{c.flag}</span>{c.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {paymentMethod !== 'card' ? (
-                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                    <Label htmlFor="phone" className="text-slate-300 font-medium">
-                      Numéro de Téléphone {paymentMethod.toUpperCase()}
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-medium">+221</span>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="77 123 45 67"
-                        className="pl-14 bg-slate-900 border-slate-800 text-white focus-visible:ring-primary placeholder:text-slate-600"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-500">Un code de validation ou une confirmation USSD sera requis.</p>
+                <div className="space-y-3">
+                  <Label className="text-slate-300 font-medium">Moyen de Paiement</Label>
+                  <div className="space-y-2.5">
+                    {availableMethods.map((method) => {
+                      const isActive = paymentMethod === method.value;
+                      return (
+                        <button
+                          key={method.value}
+                          type="button"
+                          onClick={() => setPaymentMethod(method.value)}
+                          className={`w-full flex items-center gap-3.5 rounded-2xl border-2 py-3.5 px-4 text-left transition-colors cursor-pointer ${
+                            isActive
+                              ? 'border-brand bg-brand/10'
+                              : 'border-slate-800 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-700'
+                          }`}
+                        >
+                          <span
+                            className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                              isActive ? 'bg-brand/20 text-brand' : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            <Smartphone className="w-5 h-5" />
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className={`block text-sm font-bold truncate ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                              {method.label}
+                            </span>
+                            <span className="block text-[13px] text-slate-500">Validation via PIN</span>
+                          </span>
+                          <span
+                            className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isActive ? 'border-brand' : 'border-slate-700'
+                            }`}
+                          >
+                            {isActive && <span className="w-2.5 h-2.5 rounded-full bg-brand" />}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNo" className="text-slate-300 font-medium">Numéro de carte</Label>
-                      <Input
-                        id="cardNo"
-                        placeholder="4000 1234 5678 9010"
-                        className="bg-slate-900 border-slate-800 text-white focus-visible:ring-primary placeholder:text-slate-600"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry" className="text-slate-300 font-medium">Expiration</Label>
-                        <Input
-                          id="expiry"
-                          placeholder="MM/AA"
-                          className="bg-slate-900 border-slate-800 text-white focus-visible:ring-primary placeholder:text-slate-600"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv" className="text-slate-300 font-medium">CVC / CVV</Label>
-                        <Input
-                          id="cvv"
-                          placeholder="123"
-                          type="password"
-                          maxLength={3}
-                          className="bg-slate-900 border-slate-800 text-white focus-visible:ring-primary placeholder:text-slate-600"
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
+                </div>
+
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  <Label htmlFor="phone" className="text-slate-300 font-medium">
+                    Numéro de Téléphone
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-medium">{selectedCountry.dialCode}</span>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="77 123 45 67"
+                      className="pl-14 bg-slate-900 border-slate-800 text-white focus-visible:ring-primary placeholder:text-slate-600"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      required
+                    />
                   </div>
-                )}
+                  <p className="text-[13px] text-slate-500">Un code de validation ou une confirmation USSD sera requis.</p>
+                </div>
 
                 <div className="flex gap-3 pt-4">
                   <Button 
@@ -282,7 +248,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, onSucce
             )}
           </CardContent>
 
-          <CardFooter className="border-t border-slate-800/60 py-4 flex justify-between items-center text-[10px] text-slate-500">
+          <CardFooter className="border-t border-slate-800/60 py-4 flex justify-between items-center text-[13px] text-slate-500">
             <div className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
               <span>PCI-DSS Compliant</span>

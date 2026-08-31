@@ -106,7 +106,7 @@ export function Chat({ groupId, user }: ChatProps) {
                 <div className={`flex flex-col max-w-[80%] ${msg.userId === user.uid ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium">{msg.userName}</span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[13px] text-muted-foreground">
                       {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     </span>
                   </div>

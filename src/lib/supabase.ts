@@ -44,3 +44,17 @@ export const isPasswordProviderUser = (
 
 export const changePassword = (newPassword: string) =>
   supabase.auth.updateUser({ password: newPassword });
+
+/**
+ * Password recovery, in three steps — mirrors the signup OTP flow so the user
+ * sees the same kind of screen twice instead of two different mechanisms:
+ *   1. sendPasswordResetCode(email)   → Supabase emails a numeric code
+ *      (the "Reset password" template must use {{ .Token }}, not a magic link)
+ *   2. verifyPasswordResetCode(...)   → exchanges the code for a session
+ *   3. changePassword(newPassword)    → writes the new password on that session
+ */
+export const sendPasswordResetCode = (email: string) =>
+  supabase.auth.resetPasswordForEmail(email);
+
+export const verifyPasswordResetCode = (email: string, token: string) =>
+  supabase.auth.verifyOtp({ email, token, type: 'recovery' });

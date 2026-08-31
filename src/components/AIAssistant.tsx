@@ -95,11 +95,14 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: query, context: financialContext }),
       });
-      const data = await response.json();
+      // Même précaution que pour la recharge : une réponse en échec renvoie du
+      // HTML, qu'il ne faut jamais tenter de parser en JSON.
+      if (!response.ok) throw new Error(`AI assistant HTTP ${response.status}`);
+      const data = await response.json().catch(() => null);
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: data.reply || t('ais_no_reply_fallback'),
+        text: data?.reply || t('ais_no_reply_fallback'),
       }]);
     } catch (err) {
       toast.error(t('ais_connection_error_toast'));
@@ -123,7 +126,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
               <Bot className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-2xl font-serif font-black flex items-center gap-2">
-              {t('ais_header_title')} <span className="text-[10px] uppercase bg-white/20 px-2 py-0.5 rounded-full font-bold tracking-widest">{t('ais_status_operational')}</span>
+              {t('ais_header_title')} <span className="text-[13px] uppercase bg-white/20 px-2 py-0.5 rounded-full font-bold tracking-widest">{t('ais_status_operational')}</span>
             </h1>
           </div>
           <p className="text-white/80 text-xs font-medium">
@@ -148,14 +151,14 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
                   <h4 className="text-xs font-bold text-foreground">
                     {lateContributions.length} {t('ais_late_contributions_count_label')}
                   </h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     {lateContributions[0].groupName} : {lateContributions[0].amount.toLocaleString()} {lateContributions[0].currency}
                     {lateContributions.length > 1 ? ` ${t('ais_and_label')} ${lateContributions.length - 1} ${t('ais_others_label')}` : ''}.
                   </p>
                   <Button
                     onClick={() => handleSend('Aide-moi à rédiger un rappel pour mes cotisations en retard')}
                     size="sm"
-                    className="mt-2.5 h-8 text-[11px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
+                    className="mt-2.5 h-8 text-[13px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
                   >
                     <Bell className="w-3.5 h-3.5 mr-1" /> {t('ais_draft_reminder_cta')}
                   </Button>
@@ -168,7 +171,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
                 <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-bold text-foreground">{t('ais_no_late_contribution_title')}</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     {loadingContext ? t('ais_checking_ellipsis') : t('ais_all_payments_uptodate')}
                   </p>
                 </div>
@@ -183,14 +186,14 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
                 <h4 className="text-xs font-bold text-foreground">
                   {activeGroups.length} {t('ais_active_circles_count_label')}
                 </h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-[13px] text-muted-foreground mt-0.5">
                   {totalCommitted.toLocaleString()} {t('ais_engaged_this_cycle_suffix')}
                 </p>
                 <Button
                   onClick={() => handleSend('Fais-moi un bilan de ma caisse')}
                   variant="outline"
                   size="sm"
-                  className="mt-2.5 h-8 text-[11px] font-bold border-border text-foreground rounded-xl"
+                  className="mt-2.5 h-8 text-[13px] font-bold border-border text-foreground rounded-xl"
                 >
                   <FileText className="w-3.5 h-3.5 mr-1" /> {t('ais_generate_report_cta')}
                 </Button>

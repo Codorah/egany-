@@ -232,15 +232,15 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
         <CardContent className="pt-5">
           <div className="grid grid-cols-3 gap-2 mb-5 text-center">
             <div>
-              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_wallet_balance')}</p>
+              <p className="text-[12px] uppercase font-bold text-muted-foreground truncate">{t('chart_wallet_balance')}</p>
               <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.walletBalance)}</p>
             </div>
             <div className="border-x border-border">
-              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_total_saved')}</p>
+              <p className="text-[12px] uppercase font-bold text-muted-foreground truncate">{t('chart_total_saved')}</p>
               <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.totalSaved)}</p>
             </div>
             <div>
-              <p className="text-[9px] uppercase font-bold text-muted-foreground truncate">{t('chart_last_transaction')}</p>
+              <p className="text-[12px] uppercase font-bold text-muted-foreground truncate">{t('chart_last_transaction')}</p>
               <p className="font-serif font-bold text-sm text-foreground mt-0.5">
                 {transactions.length > 0
                   ? new Date(transactions[transactions.length - 1].date).toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })

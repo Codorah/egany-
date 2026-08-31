@@ -101,7 +101,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(new Date())}>
-              <span className="text-[10px] font-bold">{t('cal_today_short')}</span>
+              <span className="text-[13px] font-bold">{t('cal_today_short')}</span>
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
               <ChevronRight className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-muted-foreground uppercase mb-1">
+          <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground uppercase mb-1">
             {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
           </div>
           <div className="grid grid-cols-7 gap-1">

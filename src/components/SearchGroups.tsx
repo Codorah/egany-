@@ -111,7 +111,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-base">{group.name}</CardTitle>
-                    <Badge variant="outline" className="text-[10px]">{t(`freq_${group.frequency}`)}</Badge>
+                    <Badge variant="outline" className="text-[13px]">{t(`freq_${group.frequency}`)}</Badge>
                   </div>
                   <CardDescription className="line-clamp-2 text-xs">{group.description}</CardDescription>
                 </CardHeader>
