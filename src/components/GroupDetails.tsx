@@ -202,7 +202,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
 
   const sectionHeader = (title: string) => (
     <div className="flex items-center gap-3 mb-1">
-      <Button variant="ghost" size="icon" onClick={() => setSection(null)} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
+      <Button variant="ghost" size="icon" onClick={() => setSection(null)} className="rounded-xl shrink-0 cursor-pointer">
         <ArrowLeft className="w-4 h-4" />
       </Button>
       <h2 className="text-lg font-serif font-black text-foreground">{title}</h2>
@@ -328,7 +328,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
                 )}
                 <Button
                   onClick={() => setIsConfirmDistributeOpen(true)}
-                  className="w-full gradient-sunset text-white font-bold rounded-xl h-11 cursor-pointer"
+                  className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-11 cursor-pointer"
                 >
                   <Gift className="w-4 h-4 mr-2" />
                   {t('gd_distribute_funds_button')}
@@ -654,7 +654,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   return (
     <div className="space-y-5 pb-6">
       <div className="flex items-start justify-between gap-3">
-        <Button variant="ghost" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform -ml-2">
+        <Button variant="ghost" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer -ml-2">
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           {t('gd_back')}
         </Button>
@@ -683,7 +683,7 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
         </div>
         <Button
           onClick={() => setSection('cotisations')}
-          className="w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer active:scale-95 transition-transform"
+          className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer"
         >
           {t('contribute_now')}
         </Button>

@@ -326,7 +326,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform"
+            className="rounded-xl shrink-0 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -344,7 +344,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
             <Button
               variant="outline"
               onClick={handleExportExcel}
-              className="rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform"
+              className="rounded-xl gap-1.5 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span className="hidden sm:inline">{t('export_excel')}</span>
@@ -352,10 +352,10 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
             <Button
               variant="outline"
               onClick={handleExportPDF}
-              className="rounded-xl gap-1.5 border-danger/20 text-danger hover:bg-danger-soft cursor-pointer active:scale-95 transition-transform"
+              className="rounded-xl gap-1.5 border-danger/20 text-danger hover:bg-danger-soft cursor-pointer"
             >
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Export PDF</span>
+              <span className="hidden sm:inline">{t('export_pdf')}</span>
             </Button>
           </div>
         )}
@@ -456,7 +456,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                                     size="icon"
                                     variant="outline"
                                     disabled={statusBusy}
-                                    className="h-8 w-8 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                                    className="h-8 w-8 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer disabled:opacity-60"
                                     onClick={() => handleUpdateStatus(c.id, 'paid')}
                                     title={t('approve_payment')}
                                   >
@@ -466,7 +466,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                                     size="icon"
                                     variant="outline"
                                     disabled={statusBusy}
-                                    className="h-8 w-8 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                                    className="h-8 w-8 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer disabled:opacity-60"
                                     onClick={() => handleUpdateStatus(c.id, 'pending')}
                                     title={t('reject_proof')}
                                   >
@@ -538,7 +538,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                         size="sm"
                         variant="outline"
                         disabled={creating}
-                        className="h-7 text-[12px] px-2 rounded-lg gap-1 cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                        className="h-7 text-[12px] px-2 rounded-lg gap-1 cursor-pointer disabled:opacity-60"
                         onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
                       >
                         {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
@@ -547,7 +547,7 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                       <Button
                         size="sm"
                         disabled={paying}
-                        className="h-7 text-[12px] px-2 rounded-lg gap-1 bg-secondary hover:bg-secondary/90 cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                        className="btn-shine h-7 text-[12px] px-2 rounded-lg gap-1 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
                         onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
                       >
                         {paying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
@@ -600,7 +600,7 @@ function DeclarePaymentDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={
-        <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform">
+        <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer">
           <CheckCircle2 className="w-4 h-4" />
           {t('declare')}
         </Button>
@@ -626,7 +626,7 @@ function DeclarePaymentDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" className="rounded-xl cursor-pointer" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
-            <Button type="submit" disabled={isSubmitting} className="rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
+            <Button type="submit" disabled={isSubmitting} className="btn-shine rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {t('send_proof')}
             </Button>

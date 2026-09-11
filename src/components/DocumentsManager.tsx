@@ -150,7 +150,7 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
           </SelectContent>
         </Select>
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
-        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="sm:w-auto rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform">
+        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="btn-shine sm:w-auto rounded-xl gap-1.5 cursor-pointer">
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {t('doc_share_button')}
         </Button>

@@ -137,8 +137,8 @@ export function Chat({ groupId, user }: ChatProps) {
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1 rounded-full h-11 bg-muted border-transparent"
         />
-        <Button type="submit" size="icon" disabled={!newMessage.trim()} className="rounded-full h-11 w-11 shrink-0 cursor-pointer active:scale-95 transition-transform">
-          <Send className="w-4 h-4" />
+        <Button type="submit" size="icon" disabled={!newMessage.trim()} className="group/send rounded-full h-11 w-11 shrink-0 cursor-pointer">
+          <Send className="w-4 h-4 transition-transform duration-200 group-hover/send:translate-x-0.5 group-hover/send:-translate-y-0.5" />
         </Button>
       </form>
     </div>

@@ -571,6 +571,12 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Ɖe Le Excel Me',
     kbp: 'Lɩzɩ Excel taa'
   },
+  export_pdf: {
+    fr: 'Export PDF',
+    en: 'Export PDF',
+    ee: 'Ɖe Le PDF Me',
+    kbp: 'Lɩzɩ PDF taa'
+  },
   excel_generated: {
     fr: 'Export Excel généré !',
     en: 'Excel export generated!',

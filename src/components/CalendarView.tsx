@@ -94,13 +94,13 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-serif font-black text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
           <div className="flex gap-1.5">
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-xl text-[13px] font-bold cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth(new Date())}>
+            <Button variant="outline" size="sm" className="h-8 rounded-xl text-[13px] font-bold cursor-pointer" onClick={() => setCurrentMonth(new Date())}>
               {t('cal_today_short')}
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
