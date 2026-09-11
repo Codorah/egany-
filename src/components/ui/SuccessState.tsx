@@ -58,7 +58,7 @@ export function SuccessState({
           {actionText && onAction && (
             <Button
               onClick={onAction}
-              className="w-full rounded-2xl h-11 font-bold bg-secondary hover:bg-secondary/90 text-white cursor-pointer active:scale-95 transition-transform"
+              className="btn-shine w-full rounded-2xl h-11 font-bold bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
             >
               {actionText}
             </Button>

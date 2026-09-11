@@ -273,7 +273,7 @@ export function MyBank({ user, groups }: MyBankProps) {
     return (
       <div className="space-y-5 pb-20">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={closeCreateFlow} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
+          <Button variant="ghost" size="icon" onClick={closeCreateFlow} className="rounded-xl shrink-0 cursor-pointer">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-lg font-serif font-black text-foreground">{t('bank_create_page_title')}</h1>
@@ -393,7 +393,7 @@ export function MyBank({ user, groups }: MyBankProps) {
                     {t('onb_next_step_button')}
                   </Button>
                 ) : (
-                  <Button onClick={handleCreateVault} disabled={creating} className="flex-1 h-11 rounded-xl font-bold cursor-pointer">
+                  <Button onClick={handleCreateVault} disabled={creating} className="btn-shine flex-1 h-11 rounded-xl font-bold cursor-pointer">
                     {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : t('bank_create_confirm_cta')}
                   </Button>
                 )}
@@ -457,11 +457,11 @@ export function MyBank({ user, groups }: MyBankProps) {
 
       <div>
         <Button
-          className="w-full h-12 font-bold rounded-xl cursor-pointer active:scale-95 transition-transform"
+          className="btn-shine w-full h-12 font-bold rounded-xl cursor-pointer group/newvault"
           onClick={openCreateFlow}
           disabled={!canCreateVault}
         >
-          <PlusCircle className="w-4 h-4 mr-2" /> {t('bank_create_new')}
+          <PlusCircle className="w-4 h-4 mr-2 transition-transform duration-300 group-hover/newvault:rotate-90" /> {t('bank_create_new')}
         </Button>
         {!canCreateVault && (
           <p className="text-[12px] text-center text-muted-foreground mt-1.5">{t('bank_cap_reached_note')}</p>
@@ -583,7 +583,7 @@ export function MyBank({ user, groups }: MyBankProps) {
                   <p className="text-xs text-muted-foreground mb-4">{t('bank_per_month')}</p>
                 </div>
                 <Button
-                  className="w-full h-11 font-bold rounded-xl cursor-pointer active:scale-95 transition-transform"
+                  className="btn-shine w-full h-11 font-bold rounded-xl cursor-pointer"
                   onClick={() => handleSubscribe(tier)}
                   disabled={subscribing !== null}
                 >
@@ -627,7 +627,7 @@ export function MyBank({ user, groups }: MyBankProps) {
                   className="rounded-xl h-11"
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <Button className="h-12 font-bold rounded-xl" onClick={handleDeposit} disabled={actionBusy}>
+                  <Button className="btn-shine h-12 font-bold rounded-xl" onClick={handleDeposit} disabled={actionBusy}>
                     <Wallet className="w-4 h-4 mr-2" /> {t('bank_deposit_cta')}
                   </Button>
                   <Button
