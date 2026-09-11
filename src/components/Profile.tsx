@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmationBottomSheet } from '@/components/ui/ConfirmationBottomSheet';
 import { AmountDisplay } from '@/components/ui/AmountDisplay';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { TransactionItem } from '@/components/ui/TransactionItem';
 import {
   User,
   CreditCard,

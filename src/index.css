@@ -289,8 +289,8 @@
 }
 
 /* ======================================================== */
-/* TOUCH FEEDBACK — every control must answer the finger    */
-/* Audit UX : « il n'y a même pas d'animation de bouton »   */
+/* TOUCH FEEDBACK — every control must answer the finger     */
+/* Spring-like press + release, soft hover lift on desktop  */
 /* ======================================================== */
 
 button:not(:disabled),
@@ -299,21 +299,36 @@ a[href],
 label[for],
 summary {
   -webkit-tap-highlight-color: transparent;
-  transition: transform 120ms ease, background-color 120ms ease,
-              border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 150ms ease, border-color 150ms ease,
+              box-shadow 220ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease;
 }
 
 button:not(:disabled):active,
 [role="button"]:not([aria-disabled="true"]):active,
 a[href]:active,
 summary:active {
-  transform: scale(0.965);
+  transform: scale(0.955);
+  transition-duration: 90ms;
 }
 
 /* Cards and list rows that navigate somewhere press in more gently */
 .press-row:active {
   transform: scale(0.985);
   background-color: var(--muted);
+}
+
+/* Desktop-only hover lift — skipped on touch so it never gets "stuck" */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):not([data-slot="icon-button"]):hover,
+  [role="button"]:not([aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+  }
+
+  button:not(:disabled):active:hover,
+  [role="button"]:not([aria-disabled="true"]):active:hover {
+    transform: scale(0.955) translateY(0);
+  }
 }
 
 /* Keyboard users get the same affordance as a visible focus ring */
@@ -323,12 +338,54 @@ summary:active {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary {
+    transition: background-color 150ms ease, border-color 150ms ease,
+                box-shadow 150ms ease, opacity 150ms ease;
+  }
   button:not(:disabled):active,
   [role="button"]:not([aria-disabled="true"]):active,
   a[href]:active,
   summary:active,
   .press-row:active {
     transform: none;
+  }
+}
+
+/* ======================================================== */
+/* PRIMARY CTA SHINE — one soft light sweep on hover, never  */
+/* looping. Opt-in via .btn-shine on the handful of buttons  */
+/* that actually drive the page's main action.               */
+/* ======================================================== */
+
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-shine:hover::after {
+    transform: translateX(120%);
+    transition: transform 650ms ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-shine::after {
+    display: none;
   }
 }
 
@@ -376,14 +433,6 @@ summary:active {
 /* ======================================================== */
 /* GLOBAL INTERACTION REFINEMENTS                           */
 /* ======================================================== */
-
-button, [role="button"] {
-  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
-}
-
-button:active, [role="button"]:active {
-  transform: scale(0.98);
-}
 
 input, textarea, select {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;

@@ -135,9 +135,9 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
           trigger={
             <Button
               size="sm"
-              className="gradient-sunset text-white font-bold rounded-xl shadow-xs text-xs h-9 px-3 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+              className="btn-shine gradient-sunset text-white font-bold rounded-xl shadow-xs text-xs h-9 px-3 flex items-center gap-1.5 cursor-pointer group/cta"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4 transition-transform duration-300 group-hover/cta:rotate-90" />
               <span className="hidden sm:inline">{t('cgd_new_circle_button')}</span>
               <span className="sm:hidden">Créer</span>
             </Button>
@@ -192,18 +192,18 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               <Button
                 onClick={() => onNavigate?.('wallet-recharge')}
                 size="sm"
-                className="bg-white text-primary hover:bg-white/90 font-bold rounded-xl h-10 text-xs cursor-pointer shadow-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="btn-shine group/recharge bg-white text-primary hover:bg-white/90 font-bold rounded-xl h-10 text-xs cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
               >
-                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                <ArrowDownLeft className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-hover/recharge:-translate-y-0.5" />
                 <span>{t('recharge')}</span>
               </Button>
               <Button
                 onClick={() => onNavigate?.('wallet-withdraw')}
                 size="sm"
                 variant="outline"
-                className="bg-white/15 hover:bg-white/25 border-white/30 text-white font-bold rounded-xl h-10 text-xs cursor-pointer backdrop-blur-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="group/withdraw bg-white/15 hover:bg-white/25 border-white/30 text-white font-bold rounded-xl h-10 text-xs cursor-pointer backdrop-blur-xs flex items-center justify-center gap-1.5"
               >
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover/withdraw:translate-y-0.5" />
                 <span>Retirer</span>
               </Button>
             </div>
@@ -241,11 +241,16 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               <button
                 key={item.id}
                 onClick={item.action}
-                className="flex flex-col items-center gap-1.5 p-1 rounded-2xl group cursor-pointer active:scale-95 transition-all"
+                className="flex flex-col items-center gap-1.5 p-1 rounded-2xl cursor-pointer"
               >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-xs transition-transform duration-200 group-hover:scale-105 ${item.color}`}>
+                <motion.div
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-xs ${item.color}`}
+                >
                   <Icon className="w-5 h-5" />
-                </div>
+                </motion.div>
                 <span className="text-[13px] font-bold text-foreground tracking-tight text-center leading-tight">
                   {item.label}
                 </span>
@@ -274,7 +279,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
               </div>
               <Button
                 onClick={() => onManageContributions(nextGroupToPay.id)}
-                className="w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer active:scale-95 transition-transform"
+                className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer"
               >
                 {t('contribute_now')}
               </Button>

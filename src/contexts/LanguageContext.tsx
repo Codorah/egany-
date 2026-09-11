@@ -2756,7 +2756,7 @@ const translations: Record<string, Record<LanguageCode, string>> = {
   my_bank: {
     fr: 'Ma Banque',
     en: 'My Bank',
-    ee: 'Nye Gaxɔ',
+    ee: 'BankVi Nyé',
     kbp: 'Man liidiye kpou'
   },
   my_bank_subtitle: {
