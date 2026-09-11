@@ -887,7 +887,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <LanguageSwitcher value={language} onChange={setLanguage} variant="grid" />
                 </div>
               </div>
-              <Button onClick={handleSaveProfile} disabled={savingSettings} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full">
+              <Button onClick={handleSaveProfile} disabled={savingSettings} className="btn-shine gradient-sunset text-white font-bold rounded-2xl h-12 w-full">
                 {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : t('save')}
               </Button>
             </Card>
@@ -980,7 +980,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       />
                     </label>
                   </div>
-                  <Button onClick={handleSubmitKyc} disabled={isSubmittingKyc} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
+                  <Button onClick={handleSubmitKyc} disabled={isSubmittingKyc} className="btn-shine gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
                     {isSubmittingKyc ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_submit_for_verification')}
                   </Button>
                 </div>
@@ -1027,7 +1027,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 </div>
               </div>
 
-              <Button onClick={handleSaveMandate} disabled={isSavingMandate} className="gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
+              <Button onClick={handleSaveMandate} disabled={isSavingMandate} className="btn-shine gradient-sunset text-white font-bold rounded-2xl h-12 w-full mt-2">
                 {isSavingMandate ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_save_mandate')}
               </Button>
             </Card>
@@ -1158,7 +1158,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 onChange={(e) => setRechargePhone(e.target.value)}
                 className="rounded-xl h-11 text-xs"
               />
-              <Button onClick={handleRecharge} disabled={isRecharging} className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs">
+              <Button onClick={handleRecharge} disabled={isRecharging} className="btn-shine gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs">
                 {isRecharging ? <Loader2 className="w-4 h-4 animate-spin" /> : t('prof_recharge_via_mobile_money')}
               </Button>
             </Card>
@@ -1292,7 +1292,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   className="rounded-xl h-10 text-xs"
                 />
-                <Button onClick={handleChangePin} disabled={isSavingPin} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
+                <Button onClick={handleChangePin} disabled={isSavingPin} className="btn-shine gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
                   {isSavingPin ? t('sending_label') : t('edit_label')}
                 </Button>
               </div>
@@ -1309,7 +1309,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="rounded-xl h-10 text-xs"
                 />
-                <Button onClick={handleChangePassword} disabled={isSavingPassword} className="gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
+                <Button onClick={handleChangePassword} disabled={isSavingPassword} className="btn-shine gradient-sunset text-white font-bold rounded-xl h-10 text-xs px-4">
                   {isSavingPassword ? t('sending_label') : t('edit_label')}
                 </Button>
               </div>
