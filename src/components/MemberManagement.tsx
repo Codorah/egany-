@@ -3,14 +3,13 @@ import { supabase } from '@/lib/supabase';
 import { mapProfileRow } from '@/lib/mappers';
 import { Group, UserProfile, GroupMemberRole } from '@/types';
 import { notifyUser } from '@/lib/notify';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Check, X, UserMinus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CustomAvatar } from './CustomAvatar';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
+import { MemberCard } from './ui/MemberCard';
+import { StatusBadge } from './ui/StatusBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MemberManagementProps {
@@ -133,52 +132,54 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   if (group.members.length === 0 && pendingMembers.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Users className="w-4 h-4" />
+    <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-5">
+      <div>
+        <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary" />
           {t('mm_management_title')}
-        </CardTitle>
-        <CardDescription>{t('mm_management_desc')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {pendingMembers.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
-            {pendingMembers.map((uid) => (
-              <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg bg-brand/10 border-brand/20">
-                <div className="flex items-center gap-2">
-                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || t('member')} size={28} />
-                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="icon" variant="outline" className="h-11 w-11 text-secondary border-secondary/20 hover:bg-success-soft" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title={t('mm_accept_title')}>
+        </h2>
+        <p className="text-[13px] text-muted-foreground mt-0.5">{t('mm_management_desc')}</p>
+      </div>
+
+      {pendingMembers.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
+          {pendingMembers.map((uid) => (
+            <MemberCard
+              key={uid}
+              tone="pending"
+              avatarUrl={profiles[uid]?.photoURL}
+              name={profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}
+              trailing={
+                <>
+                  <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title={t('mm_accept_title')}>
                     {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleReject(uid)} title={t('mm_reject_title')}>
+                  <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleReject(uid)} title={t('mm_reject_title')}>
                     <X className="h-4 w-4" />
                   </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                </>
+              }
+            />
+          ))}
+        </div>
+      )}
 
-        <div className="space-y-2">
-          <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
-          {group.members.map((uid) => {
-            const isCreatorRow = uid === group.creatorId;
-            const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';
-            return (
-              <div key={uid} className="flex items-center justify-between p-2.5 border rounded-lg">
-                <div className="flex items-center gap-2">
-                  <CustomAvatar photoURL={profiles[uid]?.photoURL} name={profiles[uid]?.displayName || t('member')} size={28} />
-                  <span className="text-sm font-medium">{profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}</span>
-                  {isCreatorRow && <Badge variant="outline" className="text-[13px]">{t('mm_creator_badge')}</Badge>}
-                </div>
-                <div className="flex items-center gap-1.5">
+      <div className="space-y-2">
+        <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
+        {group.members.map((uid) => {
+          const isCreatorRow = uid === group.creatorId;
+          const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';
+          return (
+            <MemberCard
+              key={uid}
+              avatarUrl={profiles[uid]?.photoURL}
+              name={profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}
+              subtitle={isCreatorRow ? <StatusBadge tone="info" label={t('mm_creator_badge')} /> : undefined}
+              trailing={
+                <>
                   <Select value={role} onValueChange={(val) => handleRoleChange(uid, val as GroupMemberRole)} disabled={busyUid === uid}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                    <SelectTrigger className="h-8 w-[130px] text-xs rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -188,16 +189,16 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                     </SelectContent>
                   </Select>
                   {!isCreatorRow && (
-                    <Button size="icon" variant="outline" className="h-11 w-11 text-danger border-danger/20 hover:bg-danger-soft" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title={t('mm_exclude_title')}>
+                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title={t('mm_exclude_title')}>
                       <UserMinus className="h-4 w-4" />
                     </Button>
                   )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
+                </>
+              }
+            />
+          );
+        })}
+      </div>
 
       <ConfirmationBottomSheet
         isOpen={!!excludeTarget}
@@ -209,6 +210,6 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
         confirmLabel={t('mm_confirm_exclude_label')}
         isLoading={!!excludeTarget && busyUid === excludeTarget}
       />
-    </Card>
+    </div>
   );
 }

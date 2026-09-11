@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,17 +22,17 @@ interface FaqAccordionItemProps {
 const FaqAccordionItem: React.FC<FaqAccordionItemProps> = ({ question, answer }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div className="border border-border/70 rounded-2xl overflow-hidden bg-card">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-muted transition-colors"
+        className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-muted transition-colors active:scale-[0.99]"
       >
-        <span className="text-sm font-semibold">{question}</span>
-        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <span className="text-sm font-bold text-foreground">{question}</span>
+        <ChevronDown className={`w-4 h-4 shrink-0 text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">{answer}</div>
+        <div className="px-4 pb-4 text-[13px] text-muted-foreground leading-relaxed">{answer}</div>
       )}
     </div>
   );
@@ -86,75 +85,72 @@ export function Support({ user, onBack }: SupportProps) {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+    <div className="space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-20">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <LifeBuoy className="w-6 h-6" />
+          <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
+            <LifeBuoy className="w-5 h-5 text-primary" />
             {t('support')}
           </h1>
-          <p className="text-muted-foreground text-sm">{t('sup_header_subtitle')}</p>
+          <p className="text-[13px] text-muted-foreground font-medium">{t('sup_header_subtitle')}</p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <HelpCircle className="w-4 h-4" />
-            {t('sup_faq_title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+        <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-primary" />
+          {t('sup_faq_title')}
+        </h2>
+        <div className="space-y-2">
           {FAQ_ITEMS.map((item) => (
             <FaqAccordionItem key={item.question} question={item.question} answer={item.answer} />
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('sup_report_problem_title')}</CardTitle>
-          <CardDescription>{t('sup_report_problem_desc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-1">
+        <h2 className="text-base font-serif font-black text-foreground">{t('sup_report_problem_title')}</h2>
+        <p className="text-[13px] text-muted-foreground">{t('sup_report_problem_desc')}</p>
+        <div className="pt-2">
           {submitted ? (
-            <p className="text-sm text-secondary font-semibold py-4 text-center">
+            <p className="text-sm text-secondary font-bold py-4 text-center">
               {t('sup_ticket_submitted_message')}
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="support_subject">{t('sup_subject_label')}</Label>
+                <Label htmlFor="support_subject" className="text-xs font-bold text-foreground">{t('sup_subject_label')}</Label>
                 <Input
                   id="support_subject"
                   placeholder={t('sup_subject_placeholder')}
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={submitting}
+                  className="rounded-xl"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="support_message">{t('prof_description')}</Label>
+                <Label htmlFor="support_message" className="text-xs font-bold text-foreground">{t('prof_description')}</Label>
                 <Textarea
                   id="support_message"
                   placeholder={t('sup_message_placeholder')}
-                  className="h-28 resize-none"
+                  className="h-28 resize-none rounded-xl"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   disabled={submitting}
                 />
               </div>
-              <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
-                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              <Button type="submit" disabled={submitting} className="w-full sm:w-auto rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {t('sup_send_report_cta')}
               </Button>
             </form>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

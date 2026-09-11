@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Group } from '@/types';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, CalendarDays, Gift } from 'lucide-react';
@@ -82,92 +81,87 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <CalendarDays className="w-6 h-6" />
-            {t('cal_page_title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">{t('cal_page_subtitle')}</p>
-        </div>
+    <div className="space-y-4 sm:space-y-5 pb-20">
+      <div>
+        <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
+          <CalendarDays className="w-5 h-5 text-primary" />
+          {t('cal_page_title')}
+        </h1>
+        <p className="text-[13px] text-muted-foreground font-medium">{t('cal_page_subtitle')}</p>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</CardTitle>
-          <div className="flex gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
+      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-serif font-black text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(new Date())}>
-              <span className="text-[13px] font-bold">{t('cal_today_short')}</span>
+            <Button variant="outline" size="sm" className="h-8 rounded-xl text-[13px] font-bold cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth(new Date())}>
+              {t('cal_today_short')}
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer active:scale-95 transition-transform" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground uppercase mb-1">
-            {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day) => {
-              const key = format(day, 'yyyy-MM-dd');
-              const dayEvents = eventsByDay.get(key) || [];
-              const inMonth = isSameMonth(day, currentMonth);
-              return (
-                <div
-                  key={key}
-                  className={`aspect-square rounded-lg border p-1 flex flex-col items-center justify-start text-xs ${
-                    inMonth ? 'bg-card' : 'bg-muted text-muted-foreground'
-                  } ${isToday(day) ? 'border-secondary border-2' : 'border-border'}`}
-                >
-                  <span className={`font-semibold ${isToday(day) ? 'text-secondary' : ''}`}>{format(day, 'd')}</span>
-                  {dayEvents.length > 0 && (
-                    <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
-                      {dayEvents.slice(0, 3).map((_, i) => (
-                        <span key={i} className="w-1.5 h-1.5 rounded-full bg-brand" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{t('cal_upcoming_title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">{t('cal_no_upcoming')}</p>
-          ) : (
-            upcoming.map((event, i) => (
+        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1">
+          {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day) => {
+            const key = format(day, 'yyyy-MM-dd');
+            const dayEvents = eventsByDay.get(key) || [];
+            const inMonth = isSameMonth(day, currentMonth);
+            return (
+              <div
+                key={key}
+                className={`aspect-square rounded-xl border p-1 flex flex-col items-center justify-start text-xs transition-colors ${
+                  inMonth ? 'bg-card border-border/70' : 'bg-transparent border-transparent text-muted-foreground/60'
+                } ${isToday(day) ? 'border-primary border-2' : ''}`}
+              >
+                <span className={`font-bold ${isToday(day) ? 'text-primary' : ''}`}>{format(day, 'd')}</span>
+                {dayEvents.length > 0 && (
+                  <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
+                    {dayEvents.slice(0, 3).map((_, i) => (
+                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-brand" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-2">
+        <h2 className="text-base font-serif font-black text-foreground">{t('cal_upcoming_title')}</h2>
+        {upcoming.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">{t('cal_no_upcoming')}</p>
+        ) : (
+          <div className="space-y-2">
+            {upcoming.map((event, i) => (
               <div
                 key={`${event.groupId}-${i}`}
                 onClick={() => onSelectGroup(event.groupId)}
-                className="flex items-center justify-between p-3 rounded-xl border hover:bg-muted cursor-pointer transition-colors"
+                className="flex items-center justify-between p-3 rounded-2xl border border-border/70 hover:border-brand/40 hover:bg-muted/50 cursor-pointer transition-all active:scale-[0.99]"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
                     <Gift className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold">{event.groupName}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{event.groupName}</p>
+                    <p className="text-[12px] text-muted-foreground capitalize">{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
                   </div>
                 </div>
-                <Badge variant="outline">{event.amount.toLocaleString()} {event.currency}</Badge>
+                <Badge variant="outline" className="rounded-full shrink-0">{event.amount.toLocaleString()} {event.currency}</Badge>
               </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

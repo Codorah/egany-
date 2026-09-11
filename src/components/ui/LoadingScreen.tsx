@@ -33,8 +33,8 @@ export function LoadingScreen({ message = 'Chargement…', fullScreen = true }: 
           <path d="M32 5a27 27 0 0 1 27 27" stroke="url(#loadingScreenGradient)" strokeWidth="5" strokeLinecap="round" />
           <defs>
             <linearGradient id="loadingScreenGradient" x1="5" y1="5" x2="59" y2="59">
-              <stop offset="0%" stopColor="#C15B2A" />
-              <stop offset="100%" stopColor="#A44A1F" />
+              <stop offset="0%" stopColor="var(--brand)" />
+              <stop offset="100%" stopColor="var(--brand-deep)" />
             </linearGradient>
           </defs>
         </svg>

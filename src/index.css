@@ -1,6 +1,6 @@
-/* Polices de la charte eganyé : Playfair Display pour les titres et les
-   montants, Inter pour le texte courant et les boutons. */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* Polices de la charte eganyé : Poppins pour les titres et les montants,
+   Nunito pour le texte courant et les boutons — rond, chaleureux, humain. */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -8,16 +8,16 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Playfair Display', Georgia, serif;
-    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 
     --color-eganye-gold: #C9962E;
-    --color-eganye-orange: #B65A24;
-    --color-eganye-beige: #E9D9C3;
-    --color-eganye-cream: #FFFCF6;
-    --color-eganye-green: #1F4D3A;
-    --color-eganye-brown: #2A1F16;
+    --color-eganye-orange: #C96F4A;
+    --color-eganye-beige: #EFE2D0;
+    --color-eganye-cream: #FDF8F1;
+    --color-eganye-green: #5B7F5B;
+    --color-eganye-brown: #3E2F24;
 
     --color-brand: var(--brand);
     --color-brand-deep: var(--brand-deep);
@@ -77,131 +77,131 @@
     /* ================= CHARTE EGANYÉ — MODE CLAIR ==================
        Chaque couleur a un rôle, elle n'est pas décorative :
 
-         Orange café  #B65A24 → action importante (cotiser, créer, rejoindre)
-         Vert profond #1F4D3A → argent sécurisé, validation, confiance
-         Vert sauge   #78917A → éléments secondaires, états calmes
-         Brun chaud   #7A5137 → texte d'appui, accents terreux
-         Crème        #F7F1E7 → fond principal
-         Sable        #E9D9C3 → bordures et séparations
+         Terracotta   #C96F4A → action importante (cotiser, créer, rejoindre)
+         Vert olive   #5B7F5B → argent sécurisé, validation, confiance
+         Sauge clair  #8CA087 → éléments secondaires, états calmes
+         Brun profond #3E2F24 → texte d'appui, accents terreux
+         Crème        #F8F4ED → fond principal
+         Beige clair  #EFE2D0 → cartes, bordures et séparations
          Rouge doux            → retard, pénalité
          Ocre doux             → en attente
 
        Le vert ne doit PAS être utilisé partout : il perd son sens de
        « validé / sécurisé » s'il sert aussi de couleur d'accent générique.
        ================================================================= */
-    --background: #F7F1E7;
-    --foreground: #2A1F16;
-    --card: #FFFCF6;
-    --card-foreground: #2A1F16;
-    --popover: #FFFCF6;
-    --popover-foreground: #2A1F16;
+    --background: #F8F4ED;
+    --foreground: #3E2F24;
+    --card: #FDF8F1;
+    --card-foreground: #3E2F24;
+    --popover: #FDF8F1;
+    --popover-foreground: #3E2F24;
 
-    /* Action principale — orange café */
-    --primary: #B65A24;
+    /* Action principale — terracotta */
+    --primary: #C96F4A;
     --primary-foreground: #FFFFFF;
 
-    /* Argent, sécurité, validation — vert profond */
-    --secondary: #1F4D3A;
+    /* Argent, sécurité, validation — vert olive */
+    --secondary: #5B7F5B;
     --secondary-foreground: #FFFFFF;
 
-    --muted: #F0E6D6;
-    --muted-foreground: #7A5137;
+    --muted: #EFE2D0;
+    --muted-foreground: #6B5744;
 
-    --accent: #F0E6D6;
-    --accent-foreground: #2A1F16;
+    --accent: #EFE2D0;
+    --accent-foreground: #3E2F24;
 
     --destructive: #B4483F;
-    --border: #E9D9C3;
+    --border: #E4D3BC;
     --input: #DCC7A9;
-    --ring: #B65A24;
+    --ring: #C96F4A;
 
-    --brand: #B65A24;
-    --brand-deep: #94441A;
-    --sage: #78917A;
-    --brown: #7A5137;
-    --success: #1F4D3A;
-    --success-soft: #E3EDE7;
-    --success-deep: #163A2B;
+    --brand: #C96F4A;
+    --brand-deep: #A85A39;
+    --sage: #8CA087;
+    --brown: #6B5744;
+    --success: #5B7F5B;
+    --success-soft: #E7EDE3;
+    --success-deep: #3F5A3F;
     --danger: #B4483F;
     --danger-soft: #F9E5E3;
     --warning: #B5842A;
     --warning-soft: #FAEFD9;
-    --chip: #F0E6D6;
-    --ink-soft: #7A5137;
+    --chip: #EFE2D0;
+    --ink-soft: #6B5744;
     --gold: #C9962E;
 
-    --chart-1: #B65A24;
-    --chart-2: #1F4D3A;
-    --chart-3: #78917A;
-    --chart-4: #7A5137;
+    --chart-1: #C96F4A;
+    --chart-2: #5B7F5B;
+    --chart-3: #8CA087;
+    --chart-4: #6B5744;
     --chart-5: #C9962E;
     --radius: 1rem;
 
-    --sidebar: #F7F1E7;
-    --sidebar-foreground: #2A1F16;
-    --sidebar-primary: #B65A24;
+    --sidebar: #F8F4ED;
+    --sidebar-foreground: #3E2F24;
+    --sidebar-primary: #C96F4A;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #F0E6D6;
-    --sidebar-accent-foreground: #2A1F16;
-    --sidebar-border: #E9D9C3;
-    --sidebar-ring: #B65A24;
+    --sidebar-accent: #EFE2D0;
+    --sidebar-accent-foreground: #3E2F24;
+    --sidebar-border: #E4D3BC;
+    --sidebar-ring: #C96F4A;
 }
 
 .dark {
     /* Charte eganyé — Mode Sombre (mêmes rôles, éclaircis) */
-    --background: #1C1712;
-    --foreground: #F3ECDD;
-    --card: #28221A;
-    --card-foreground: #F3ECDD;
-    --popover: #28221A;
-    --popover-foreground: #F3ECDD;
+    --background: #211810;
+    --foreground: #F3EAD9;
+    --card: #2C2117;
+    --card-foreground: #F3EAD9;
+    --popover: #2C2117;
+    --popover-foreground: #F3EAD9;
 
-    --primary: #D0763C;
-    --primary-foreground: #1C1712;
+    --primary: #DD8760;
+    --primary-foreground: #211810;
 
-    --secondary: #4E9A78;
-    --secondary-foreground: #1C1712;
+    --secondary: #7DA073;
+    --secondary-foreground: #1C2318;
 
-    --muted: #332B21;
-    --muted-foreground: #C7B99E;
+    --muted: #372B1F;
+    --muted-foreground: #CDBBA0;
 
-    --accent: #332B21;
-    --accent-foreground: #F3ECDD;
+    --accent: #372B1F;
+    --accent-foreground: #F3EAD9;
 
     --destructive: #E58A93;
-    --border: #3C3323;
-    --input: #453A29;
-    --ring: #D0763C;
+    --border: #423523;
+    --input: #4A3C28;
+    --ring: #DD8760;
 
-    --brand: #D0763C;
-    --brand-deep: #B65A24;
-    --success: #4E9A78;
-    --success-soft: rgba(78, 154, 120, 0.18);
-    --success-deep: #1F4D3A;
+    --brand: #DD8760;
+    --brand-deep: #C96F4A;
+    --success: #7DA073;
+    --success-soft: rgba(125, 160, 115, 0.18);
+    --success-deep: #5B7F5B;
     --danger: #E58A93;
     --danger-soft: rgba(178, 58, 72, 0.22);
-    --sage: #8FA891;
-    --brown: #B99374;
+    --sage: #9FB399;
+    --brown: #C7AE8C;
     --warning: #D6A345;
     --warning-soft: rgba(214, 163, 69, 0.18);
-    --chip: #332B21;
-    --ink-soft: #C7B99E;
+    --chip: #372B1F;
+    --ink-soft: #CDBBA0;
     --gold: #E3B15C;
 
-    --chart-1: #D0763C;
-    --chart-2: #4E9A78;
+    --chart-1: #DD8760;
+    --chart-2: #7DA073;
     --chart-3: #E3B15C;
-    --chart-4: #B08A6A;
-    --chart-5: #C7B99E;
+    --chart-4: #C7AE8C;
+    --chart-5: #CDBBA0;
 
-    --sidebar: #28221A;
-    --sidebar-foreground: #F3ECDD;
-    --sidebar-primary: #D0763C;
-    --sidebar-primary-foreground: #1C1712;
-    --sidebar-accent: #332B21;
-    --sidebar-accent-foreground: #F3ECDD;
-    --sidebar-border: #3C3323;
-    --sidebar-ring: #D0763C;
+    --sidebar: #2C2117;
+    --sidebar-foreground: #F3EAD9;
+    --sidebar-primary: #DD8760;
+    --sidebar-primary-foreground: #211810;
+    --sidebar-accent: #372B1F;
+    --sidebar-accent-foreground: #F3EAD9;
+    --sidebar-border: #423523;
+    --sidebar-ring: #DD8760;
 }
 
 @layer base {
@@ -242,7 +242,7 @@
 }
 
 .dark .glass-nav {
-  background: rgba(18, 13, 8, 0.97);
+  background: rgba(33, 24, 16, 0.97);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
@@ -253,11 +253,11 @@
 /* ======================================================== */
 
 .gradient-sunset {
-  background: linear-gradient(135deg, #B65A24 0%, #A85020 55%, #94441A 100%);
+  background: linear-gradient(135deg, #C96F4A 0%, #B8623F 55%, #A85A39 100%);
 }
 
 .gradient-emerald {
-  background: linear-gradient(135deg, #163A2B 0%, #1F4D3A 55%, #2C6349 100%);
+  background: linear-gradient(135deg, #3F5A3F 0%, #5B7F5B 55%, #7DA073 100%);
 }
 
 .gradient-gold {
@@ -265,7 +265,7 @@
 }
 
 .gradient-card {
-  background: linear-gradient(135deg, #241C14 0%, #3A2C1E 50%, #1C1712 100%);
+  background: linear-gradient(135deg, #2C2117 0%, #3A2C1E 50%, #211810 100%);
 }
 
 /* ======================================================== */
@@ -273,19 +273,19 @@
 /* ======================================================== */
 
 .shadow-soft {
-  box-shadow: 0 1px 3px 0 rgba(36, 28, 20, 0.05), 0 4px 14px -10px rgba(36, 28, 20, 0.28);
+  box-shadow: 0 1px 3px 0 rgba(62, 47, 36, 0.05), 0 4px 14px -10px rgba(62, 47, 36, 0.28);
 }
 
 .shadow-elevated {
-  box-shadow: 0 2px 6px -2px rgba(36, 28, 20, 0.08), 0 14px 30px -16px rgba(36, 28, 20, 0.4);
+  box-shadow: 0 2px 6px -2px rgba(62, 47, 36, 0.08), 0 14px 30px -16px rgba(62, 47, 36, 0.4);
 }
 
 .glow-orange {
-  box-shadow: 0 8px 20px -8px rgba(148, 68, 26, 0.55);
+  box-shadow: 0 8px 20px -8px rgba(168, 90, 57, 0.55);
 }
 
 .glow-emerald {
-  box-shadow: 0 8px 20px -8px rgba(31, 77, 58, 0.5);
+  box-shadow: 0 8px 20px -8px rgba(63, 90, 63, 0.5);
 }
 
 /* ======================================================== */
@@ -370,7 +370,7 @@ summary:active {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(230, 126, 34, 0.35);
+  background: rgba(201, 111, 74, 0.35);
 }
 
 /* ======================================================== */
@@ -391,5 +391,5 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+  box-shadow: 0 0 0 3px rgba(201, 111, 74, 0.1);
 }

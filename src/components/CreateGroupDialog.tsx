@@ -77,12 +77,25 @@ export function CreateGroupDialog({
   const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
 
+  // Un écran = une décision : quinze champs d'un coup intimidaient, alors
+  // le formulaire est découpé en 4 étapes courtes plutôt qu'un long
+  // défilement (même logique que l'inscription dans Onboarding.tsx).
+  const TOTAL_STEPS = 4;
+  const [step, setStep] = React.useState(1);
+  const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
+    1: ['name', 'description', 'contributionAmount', 'frequency'],
+    2: ['maxMembers', 'distributionMethod', 'startDate', 'endDate'],
+    3: [],
+    4: ['termsAccepted', 'signature'],
+  };
+
   // Le niveau KYC est contrôlé dès l'ouverture, pas à la soumission : sinon on
   // laisse remplir quinze champs et signer, pour refuser à la toute fin.
   const [kycState, setKycState] = React.useState<'checking' | 'ok' | 'required'>('checking');
 
   React.useEffect(() => {
     if (!open) return;
+    setStep(1);
     let cancelled = false;
 
     (async () => {
@@ -109,7 +122,7 @@ export function CreateGroupDialog({
     return () => { cancelled = true; };
   }, [open]);
   const formSchema = React.useMemo(() => buildFormSchema(t), [t]);
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, reset, trigger: triggerValidation, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -136,6 +149,16 @@ export function CreateGroupDialog({
   const penaltiesEnabled = watch('penaltiesEnabled');
   const penaltyType = watch('penaltyType');
   const isPrivate = watch('isPrivate');
+
+  const handleNextStep = async () => {
+    const fields = STEP_FIELDS[step];
+    if (fields.length > 0) {
+      const valid = await triggerValidation(fields);
+      if (!valid) return;
+    }
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  };
+  const handlePrevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const onSubmit = async (values: FormValues) => {
     if (!navigator.onLine) {
@@ -272,206 +295,258 @@ export function CreateGroupDialog({
             {t('cgd_dialog_desc')}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-xs font-bold text-foreground">{t('cgd_name_label')}</Label>
-            <Input id="name" placeholder={t('cgd_name_placeholder')} {...register("name")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-            {errors.name && <p className="text-[13px] text-danger font-semibold">{errors.name.message}</p>}
-          </div>
-          
-          <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-xs font-bold text-foreground">{t('cgd_description_label')}</Label>
-            <Textarea
-              id="description"
-              placeholder={t('cgd_description_placeholder')}
-              className="resize-none rounded-xl border-border focus:ring-secondary h-20 text-xs" 
-              {...register("description")}
-              disabled={isSubmitting}
-            />
-            {errors.description && <p className="text-[13px] text-danger font-semibold">{errors.description.message}</p>}
-          </div>
- 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">{t('cgd_amount_label')}</Label>
-              <Input id="contributionAmount" type="number" {...register("contributionAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.contributionAmount && <p className="text-[13px] text-danger font-semibold">{errors.contributionAmount.message}</p>}
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="frequency" className="text-xs font-bold text-foreground">{t('frequency')}</Label>
-              <Select onValueChange={(val) => setValue("frequency", val as any)} disabled={isSubmitting}>
-                <SelectTrigger id="frequency" className="rounded-xl border-border">
-                  <SelectValue placeholder={t('cgd_choose_placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">{t('freq_daily')}</SelectItem>
-                  <SelectItem value="weekly">{t('freq_weekly')}</SelectItem>
-                  <SelectItem value="bi-weekly">{t('freq_bi-weekly')}</SelectItem>
-                  <SelectItem value="monthly">{t('freq_monthly')}</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.frequency && <p className="text-[13px] text-danger font-semibold">{errors.frequency.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">{t('cgd_max_members_label')}</Label>
-              <Input id="maxMembers" type="number" {...register("maxMembers", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.maxMembers && <p className="text-[13px] text-danger font-semibold">{errors.maxMembers.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="distributionMethod" className="text-xs font-bold text-foreground">{t('cgd_distribution_method_label')}</Label>
-              <Select defaultValue="sequential" onValueChange={(val) => setValue("distributionMethod", val as any)} disabled={isSubmitting}>
-                <SelectTrigger id="distributionMethod" className="rounded-xl border-border">
-                  <SelectValue placeholder={t('cgd_choose_placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sequential">{t('cgd_dist_sequential')}</SelectItem>
-                  <SelectItem value="draw">{t('cgd_dist_draw')}</SelectItem>
-                  <SelectItem value="auction">{t('cgd_dist_auction')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="startDate" className="text-xs font-bold text-foreground">{t('cgd_start_date_label')}</Label>
-              <Input id="startDate" type="date" {...register("startDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.startDate && <p className="text-[13px] text-danger font-semibold">{errors.startDate.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="endDate" className="text-xs font-bold text-foreground">{t('cgd_end_date_label')}</Label>
-              <Input id="endDate" type="date" {...register("endDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-              {errors.endDate && <p className="text-[13px] text-danger font-semibold">{errors.endDate.message}</p>}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="rules" className="text-xs font-bold text-foreground">{t('cgd_rules_label')}</Label>
-            <Textarea
-              id="rules"
-              placeholder={t('cgd_rules_placeholder')}
-              className="resize-none rounded-xl border-border focus:ring-secondary h-16 text-xs"
-              {...register("rules")}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="flex items-center justify-between bg-muted p-3.5 rounded-2xl border border-border">
-            <div>
-              <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">{t('cgd_private_circle_label')}</Label>
-              <p className="text-[13px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
-            </div>
-            <button
-              id="isPrivate"
-              type="button"
-              onClick={() => setValue("isPrivate", !isPrivate)}
-              disabled={isSubmitting}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isPrivate ? 'bg-secondary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  isPrivate ? 'translate-x-5' : 'translate-x-0'
-                }`}
+        {/* Repères d'étape — quatre segments, pas de texte technique, juste
+            « où j'en suis » d'un coup d'œil. */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex gap-1.5">
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-primary' : 'bg-muted'}`}
               />
-            </button>
+            ))}
           </div>
+          <p className="text-[13px] font-bold text-muted-foreground">
+            {t('cgd_step_word')} {step} {t('cgd_step_of_word')} {TOTAL_STEPS} · {t(`cgd_step${step}_title`)}
+          </p>
+        </div>
 
-          <div className="bg-muted p-3.5 rounded-2xl border border-border space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground">{t('prof_late_penalties')}</Label>
-              <button
-                id="penaltiesEnabled"
-                type="button"
-                onClick={() => setValue("penaltiesEnabled", !penaltiesEnabled)}
-                disabled={isSubmitting}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  penaltiesEnabled ? 'bg-secondary' : 'bg-muted'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    penaltiesEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-3">
+          {step === 1 && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-xs font-bold text-foreground">{t('cgd_name_label')}</Label>
+                <Input id="name" placeholder={t('cgd_name_placeholder')} {...register("name")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                {errors.name && <p className="text-[13px] text-danger font-semibold">{errors.name.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-bold text-foreground">{t('cgd_description_label')}</Label>
+                <Textarea
+                  id="description"
+                  placeholder={t('cgd_description_placeholder')}
+                  className="resize-none rounded-xl border-border focus:ring-secondary h-20 text-xs"
+                  {...register("description")}
+                  disabled={isSubmitting}
                 />
-              </button>
-            </div>
+                {errors.description && <p className="text-[13px] text-danger font-semibold">{errors.description.message}</p>}
+              </div>
 
-            {penaltiesEnabled && (
-              <div className="space-y-3 pt-1">
-                <div className="grid grid-cols-2 gap-2 bg-card p-0.5 rounded-lg border border-border">
-                  <button
-                    type="button"
-                    onClick={() => setValue("penaltyType", "fixed")}
-                    className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'fixed' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
-                  >
-                    {t('cgd_penalty_fixed_toggle')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setValue("penaltyType", "percentage")}
-                    className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'percentage' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
-                  >
-                    {t('cgd_penalty_percentage_toggle')}
-                  </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">{t('cgd_amount_label')}</Label>
+                  <Input id="contributionAmount" type="number" {...register("contributionAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                  {errors.contributionAmount && <p className="text-[13px] text-danger font-semibold">{errors.contributionAmount.message}</p>}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="penaltyValue" className="text-[13px] font-bold text-muted-foreground uppercase">
-                      {penaltyType === 'fixed' ? t('cgd_amount_label') : t('cgd_penalty_rate_label')}
-                    </Label>
-                    {penaltyType === 'fixed' ? (
-                      <Input id="penaltyValue" type="number" {...register("penaltyAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-                    ) : (
-                      <Input id="penaltyValue" type="number" step="0.1" {...register("penaltyRate", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="gracePeriod" className="text-[13px] font-bold text-muted-foreground uppercase">{t('cgd_grace_period_label')}</Label>
-                    <Input id="gracePeriod" type="number" {...register("gracePeriod", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
-                  </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="frequency" className="text-xs font-bold text-foreground">{t('frequency')}</Label>
+                  <Select onValueChange={(val) => setValue("frequency", val as any)} disabled={isSubmitting}>
+                    <SelectTrigger id="frequency" className="rounded-xl border-border">
+                      <SelectValue placeholder={t('cgd_choose_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">{t('freq_daily')}</SelectItem>
+                      <SelectItem value="weekly">{t('freq_weekly')}</SelectItem>
+                      <SelectItem value="bi-weekly">{t('freq_bi-weekly')}</SelectItem>
+                      <SelectItem value="monthly">{t('freq_monthly')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.frequency && <p className="text-[13px] text-danger font-semibold">{errors.frequency.message}</p>}
                 </div>
               </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">{t('cgd_max_members_label')}</Label>
+                  <Input id="maxMembers" type="number" {...register("maxMembers", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                  {errors.maxMembers && <p className="text-[13px] text-danger font-semibold">{errors.maxMembers.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="distributionMethod" className="text-xs font-bold text-foreground">{t('cgd_distribution_method_label')}</Label>
+                  <Select defaultValue="sequential" onValueChange={(val) => setValue("distributionMethod", val as any)} disabled={isSubmitting}>
+                    <SelectTrigger id="distributionMethod" className="rounded-xl border-border">
+                      <SelectValue placeholder={t('cgd_choose_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sequential">{t('cgd_dist_sequential')}</SelectItem>
+                      <SelectItem value="draw">{t('cgd_dist_draw')}</SelectItem>
+                      <SelectItem value="auction">{t('cgd_dist_auction')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="startDate" className="text-xs font-bold text-foreground">{t('cgd_start_date_label')}</Label>
+                  <Input id="startDate" type="date" {...register("startDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                  {errors.startDate && <p className="text-[13px] text-danger font-semibold">{errors.startDate.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="endDate" className="text-xs font-bold text-foreground">{t('cgd_end_date_label')}</Label>
+                  <Input id="endDate" type="date" {...register("endDate")} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                  {errors.endDate && <p className="text-[13px] text-danger font-semibold">{errors.endDate.message}</p>}
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="rules" className="text-xs font-bold text-foreground">{t('cgd_rules_label')}</Label>
+                <Textarea
+                  id="rules"
+                  placeholder={t('cgd_rules_placeholder')}
+                  className="resize-none rounded-xl border-border focus:ring-secondary h-16 text-xs"
+                  {...register("rules")}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="flex items-center justify-between bg-muted p-3.5 rounded-2xl border border-border">
+                <div>
+                  <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">{t('cgd_private_circle_label')}</Label>
+                  <p className="text-[13px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
+                </div>
+                <button
+                  id="isPrivate"
+                  type="button"
+                  onClick={() => setValue("isPrivate", !isPrivate)}
+                  disabled={isSubmitting}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    isPrivate ? 'bg-secondary' : 'bg-muted'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      isPrivate ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="bg-muted p-3.5 rounded-2xl border border-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground">{t('prof_late_penalties')}</Label>
+                  <button
+                    id="penaltiesEnabled"
+                    type="button"
+                    onClick={() => setValue("penaltiesEnabled", !penaltiesEnabled)}
+                    disabled={isSubmitting}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      penaltiesEnabled ? 'bg-secondary' : 'bg-muted'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        penaltiesEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {penaltiesEnabled && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-2 bg-card p-0.5 rounded-lg border border-border">
+                      <button
+                        type="button"
+                        onClick={() => setValue("penaltyType", "fixed")}
+                        className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'fixed' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+                      >
+                        {t('cgd_penalty_fixed_toggle')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue("penaltyType", "percentage")}
+                        className={`text-[13px] font-bold py-1.5 rounded-md ${penaltyType === 'percentage' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+                      >
+                        {t('cgd_penalty_percentage_toggle')}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="penaltyValue" className="text-[13px] font-bold text-muted-foreground uppercase">
+                          {penaltyType === 'fixed' ? t('cgd_amount_label') : t('cgd_penalty_rate_label')}
+                        </Label>
+                        {penaltyType === 'fixed' ? (
+                          <Input id="penaltyValue" type="number" {...register("penaltyAmount", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                        ) : (
+                          <Input id="penaltyValue" type="number" step="0.1" {...register("penaltyRate", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="gracePeriod" className="text-[13px] font-bold text-muted-foreground uppercase">{t('cgd_grace_period_label')}</Label>
+                        <Input id="gracePeriod" type="number" {...register("gracePeriod", { valueAsNumber: true })} disabled={isSubmitting} className="rounded-xl border-border focus:ring-secondary" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <div className="bg-muted/50 p-4 rounded-xl border border-border space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('cgd_legal_validation_title')}</h4>
+
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  {...register("termsAccepted")}
+                  className="mt-1 w-4 h-4 rounded border-border text-brand focus:ring-brand/50"
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="terms" className="text-sm font-bold text-foreground cursor-pointer">
+                    {t('cgd_terms_label')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('cgd_terms_desc')}
+                  </p>
+                  {errors.termsAccepted && <span className="text-[13px] text-danger">{errors.termsAccepted.message}</span>}
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-sm font-bold text-foreground">{t('cgd_signature_label')}</Label>
+                <SignaturePad onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })} />
+                {errors.signature && <span className="text-[13px] text-danger">{errors.signature.message}</span>}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="pt-2 flex-row gap-2">
+            {step > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevStep}
+                disabled={isSubmitting}
+                className="flex-1 rounded-2xl h-11 cursor-pointer"
+              >
+                {t('a11y_back')}
+              </Button>
             )}
-          </div>
-
-          <div className="bg-muted/50 p-4 rounded-xl border border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('cgd_legal_validation_title')}</h4>
-            
-            <div className="flex items-start gap-3">
-              <input 
-                type="checkbox" 
-                id="terms" 
-                {...register("termsAccepted")}
-                className="mt-1 w-4 h-4 rounded border-border text-brand focus:ring-brand/50"
-              />
-              <div className="space-y-1">
-                <Label htmlFor="terms" className="text-sm font-bold text-foreground cursor-pointer">
-                  {t('cgd_terms_label')}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t('cgd_terms_desc')}
-                </p>
-                {errors.termsAccepted && <span className="text-[13px] text-danger">{errors.termsAccepted.message}</span>}
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-border/50">
-              <Label className="text-sm font-bold text-foreground">{t('cgd_signature_label')}</Label>
-              <SignaturePad onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })} />
-              {errors.signature && <span className="text-[13px] text-danger">{errors.signature.message}</span>}
-            </div>
-          </div>
-
-          <DialogFooter className="pt-2">
-            <Button type="submit" className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer" disabled={isSubmitting}>
-              {isSubmitting ? t('cgd_creating_ellipsis') : t('cgd_submit_cta')}
-            </Button>
+            {step < TOTAL_STEPS ? (
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
+              >
+                {t('onb_next_step_button')}
+              </Button>
+            ) : (
+              <Button type="submit" className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer" disabled={isSubmitting}>
+                {isSubmitting ? t('cgd_creating_ellipsis') : t('cgd_submit_cta')}
+              </Button>
+            )}
           </DialogFooter>
         </form>
         </>

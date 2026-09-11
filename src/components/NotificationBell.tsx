@@ -13,12 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface NotificationBellProps {
   userId: string;
 }
 
 export function NotificationBell({ userId }: NotificationBellProps) {
+  const { t } = useLanguage();
   const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications(userId);
 
   const getIcon = (type: string) => {
@@ -26,7 +28,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       case 'reminder':
         return <Clock className="w-4 h-4 text-brand" />;
       case 'chat':
-        return <MessageCircle className="w-4 h-4 text-blue-500" />;
+        return <MessageCircle className="w-4 h-4 text-primary" />;
       case 'payout':
         return <DollarSign className="w-4 h-4 text-secondary" />;
       default:
@@ -48,10 +50,10 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       } />
       <DropdownMenuContent align="end" className="w-[320px] p-0 overflow-hidden rounded-3xl bg-card shadow-xl border border-border">
         <div className="flex items-center justify-between p-4 bg-chip/15">
-          <h3 className="font-serif font-bold text-sm text-foreground">Notifications</h3>
+          <h3 className="font-serif font-bold text-sm text-foreground">{t('nb_title')}</h3>
           {unreadCount > 0 && (
             <span className="text-[13px] bg-brand/10 text-brand px-2.5 py-0.5 rounded-full font-bold">
-              {unreadCount} nouvelles
+              {unreadCount} {t('nb_new_count_suffix')}
             </span>
           )}
         </div>
@@ -60,7 +62,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
           {notifications.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
               <Bell className="w-8 h-8 opacity-25 text-foreground" />
-              <p className="font-medium text-xs">Pas encore de notifications</p>
+              <p className="font-medium text-xs">{t('nb_empty_state')}</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -83,7 +85,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                       <span className="text-[12px] font-medium text-muted-foreground flex items-center gap-1">
                         {notification.createdAt
                           ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: fr })
-                          : "À l'instant"}
+                          : t('nb_just_now')}
                       </span>
                       <div className="flex items-center gap-1">
                         {!notification.read && (

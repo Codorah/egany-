@@ -119,7 +119,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto flex flex-col min-h-[calc(100dvh-140px)]">
       {/* Copilote Header */}
-      <div className="gradient-sunset p-6 rounded-3xl border border-amber-900/20 shadow-elevated text-white shrink-0 flex items-center justify-between">
+      <div className="gradient-sunset p-6 rounded-3xl border border-white/20 shadow-elevated text-white shrink-0 flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-xs">
@@ -144,9 +144,9 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {lateContributions.length > 0 ? (
-            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl space-y-2">
+            <div className="bg-warning-soft border border-warning/20 p-4 rounded-2xl space-y-2">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-bold text-foreground">
                     {lateContributions.length} {t('ais_late_contributions_count_label')}
@@ -166,9 +166,9 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
               </div>
             </div>
           ) : (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl space-y-2">
+            <div className="bg-success-soft border border-secondary/20 p-4 rounded-2xl space-y-2">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <ShieldCheck className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-bold text-foreground">{t('ais_no_late_contribution_title')}</h4>
                   <p className="text-[13px] text-muted-foreground mt-0.5">
@@ -215,13 +215,13 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
           onClick={() => handleSend('Fais-moi un bilan de ma caisse')}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
-          <FileText className="w-3.5 h-3.5 text-emerald-500" /> {t('ais_treasury_report_chip')}
+          <FileText className="w-3.5 h-3.5 text-secondary" /> {t('ais_treasury_report_chip')}
         </button>
         <button
           onClick={() => handleSend('Quand et combien vais-je recevoir à mon prochain tour ?')}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> {t('ais_next_turn_chip')}
+          <Sparkles className="w-3.5 h-3.5 text-warning" /> {t('ais_next_turn_chip')}
         </button>
       </div>
 

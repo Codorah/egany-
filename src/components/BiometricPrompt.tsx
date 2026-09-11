@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBiometrics } from '@/hooks/useBiometrics';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BiometricPromptProps {
   isOpen: boolean;
@@ -25,9 +26,11 @@ export function BiometricPrompt({
   isOpen,
   onClose,
   onSuccess,
-  username = "Utilisateur",
+  username,
   mode = 'register'
 }: BiometricPromptProps) {
+  const { t } = useLanguage();
+  const displayName = username || t('biom_default_username');
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [authType, setAuthType] = useState<'fingerprint' | 'faceid'>('fingerprint');
@@ -46,7 +49,7 @@ export function BiometricPrompt({
     setScanState('scanning');
 
     const result = mode === 'register'
-      ? await registerBiometrics(username)
+      ? await registerBiometrics(displayName)
       : { success: await authenticate(), message: '' };
 
     if (result.success) {
@@ -56,7 +59,7 @@ export function BiometricPrompt({
         onClose();
       }, 1200);
     } else {
-      setErrorMessage(result.message || "Échec de la vérification biométrique.");
+      setErrorMessage(result.message || t('biom_error_verification_failed'));
       setScanState('error');
     }
   };
@@ -65,7 +68,7 @@ export function BiometricPrompt({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3E2F24]/60 backdrop-blur-xs">
 
         {/* Animated Card Container */}
         <motion.div
@@ -92,19 +95,19 @@ export function BiometricPrompt({
             <div className="flex justify-center gap-1.5 items-center text-brand">
               <Lock className="w-4 h-4 text-secondary" />
               <span className="text-[13px] font-black uppercase tracking-widest text-muted-foreground">
-                Sécurité Biométrique eganyé
+                {t('biom_header_label')}
               </span>
             </div>
 
             {/* Main Descriptive text */}
             <div className="space-y-1">
               <h3 className="text-lg font-black text-foreground leading-tight">
-                {mode === 'register' ? 'Associer votre Biométrie' : 'Connexion Sécurisée'}
+                {mode === 'register' ? t('biom_register_title') : t('biom_auth_title')}
               </h3>
               <p className="text-xs text-muted-foreground px-4 leading-relaxed">
                 {mode === 'register'
-                  ? `Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte ${username}.`
-                  : `Posez votre doigt ou regardez l'appareil pour déverrouiller votre coffre eganyé.`
+                  ? `${t('biom_register_desc_prefix')} ${displayName}.`
+                  : t('biom_auth_desc')
                 }
               </p>
             </div>
@@ -124,7 +127,7 @@ export function BiometricPrompt({
                 }`}
               >
                 <Fingerprint className="w-3.5 h-3.5" />
-                Empreinte
+                {t('biom_fingerprint_label')}
               </button>
               <button
                 type="button"
@@ -139,7 +142,7 @@ export function BiometricPrompt({
                 }`}
               >
                 <ScanFace className="w-3.5 h-3.5" />
-                Face ID
+                {t('biom_faceid_label')}
               </button>
             </div>
 
@@ -251,10 +254,10 @@ export function BiometricPrompt({
                     ? 'text-danger'
                     : 'text-muted-foreground'
                 }`}>
-                  {scanState === 'scanning' && 'Lecture biométrique...'}
-                  {scanState === 'success' && 'Vérification réussie !'}
-                  {scanState === 'error' && (errorMessage || 'Échec, réessayez.')}
-                  {scanState === 'idle' && 'Cliquez pour commencer'}
+                  {scanState === 'scanning' && t('biom_scanning')}
+                  {scanState === 'success' && t('biom_success')}
+                  {scanState === 'error' && (errorMessage || t('biom_error_generic'))}
+                  {scanState === 'idle' && t('biom_idle_cta')}
                 </span>
               </div>
 
@@ -267,7 +270,7 @@ export function BiometricPrompt({
                 onClick={onClose}
                 className="flex-1 rounded-2xl h-10 border-border text-foreground font-bold text-xs cursor-pointer"
               >
-                Passer
+                {t('biom_skip')}
               </Button>
               <Button
                 onClick={handleStartScan}
@@ -275,13 +278,13 @@ export function BiometricPrompt({
                 className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-10 text-xs cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                Démarrer
+                {t('biom_start')}
               </Button>
             </div>
 
             {/* Footnote */}
             <p className="text-[12px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
-              Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics).
+              {t('biom_footnote')}
             </p>
 
           </div>

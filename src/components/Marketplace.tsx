@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest, repayMarketplaceCredit } from '@/lib/marketplace';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AmountDisplay } from './ui/AmountDisplay';
 
 interface MarketplaceProps {
   user: UserProfile;
@@ -30,10 +31,10 @@ const creditCap = (totalSaved: number) => Math.max(CREDIT_FLOOR, Math.round(tota
 export function Marketplace({ user }: MarketplaceProps) {
   const { t } = useLanguage();
   const statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }> = {
-    pending: { label: t('status_pending'), className: 'bg-amber-500/10 text-amber-600' },
-    contacted: { label: t('mkt_status_contacted'), className: 'bg-blue-500/10 text-blue-600' },
-    approved: { label: t('mkt_status_approved'), className: 'bg-emerald-500/10 text-emerald-600' },
-    rejected: { label: t('mkt_status_rejected'), className: 'bg-rose-500/10 text-rose-600' },
+    pending: { label: t('status_pending'), className: 'bg-warning-soft text-warning' },
+    contacted: { label: t('mkt_status_contacted'), className: 'bg-primary/10 text-primary' },
+    approved: { label: t('mkt_status_approved'), className: 'bg-success-soft text-secondary' },
+    rejected: { label: t('mkt_status_rejected'), className: 'bg-danger-soft text-danger' },
   };
   const [services, setServices] = useState<MarketplaceService[]>([]);
   const [myRequests, setMyRequests] = useState<MarketplaceRequest[]>([]);
@@ -172,7 +173,7 @@ export function Marketplace({ user }: MarketplaceProps) {
           <div className="p-2 bg-brand/10 rounded-xl">
             <Store className="w-6 h-6 text-brand" />
           </div>
-          <h1 className="text-2xl font-black text-foreground">{t('marketplace')}</h1>
+          <h1 className="text-2xl font-serif font-black text-foreground">{t('marketplace')}</h1>
         </div>
         <p className="text-muted-foreground text-sm">
           {t('mkt_header_subtitle')}
@@ -270,17 +271,17 @@ export function Marketplace({ user }: MarketplaceProps) {
                     return (
                       <div className="space-y-4">
                         <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5">
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between items-center text-xs">
                             <span className="text-muted-foreground">{t('mkt_borrowed_amount_label')}</span>
-                            <span className="font-bold text-foreground">{existingRequest.approvedAmount!.toLocaleString()} FCFA</span>
+                            <AmountDisplay amount={existingRequest.approvedAmount!} size="sm" />
                           </div>
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between items-center text-xs">
                             <span className="text-muted-foreground">{t('mkt_already_repaid_label')}</span>
-                            <span className="font-bold text-secondary">{existingRequest.repaidAmount.toLocaleString()} FCFA</span>
+                            <AmountDisplay amount={existingRequest.repaidAmount} size="sm" className="text-secondary" />
                           </div>
-                          <div className="flex justify-between text-sm pt-2 border-t border-brand/10">
+                          <div className="flex justify-between items-center text-sm pt-2 border-t border-brand/10">
                             <span className="font-bold text-foreground">{t('mkt_remaining_balance_label')}</span>
-                            <span className="font-black text-brand">{remaining.toLocaleString()} FCFA</span>
+                            <AmountDisplay amount={remaining} size="sm" className="text-brand" />
                           </div>
                           {existingRequest.repaymentDeadline && (
                             <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground pt-1">
@@ -335,9 +336,9 @@ export function Marketplace({ user }: MarketplaceProps) {
 
                   if (!isEligible(selectedService)) {
                     return (
-                      <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3 mb-2">
-                        <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                        <p className="text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
+                      <div className="bg-danger-soft border border-danger/20 p-4 rounded-xl flex items-start gap-3 mb-2">
+                        <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
+                        <p className="text-xs text-danger leading-relaxed">
                           {t('mkt_requires_score_prefix')} {selectedService.minReputationScore}. {t('mkt_your_score_is_suffix')} {user.reputationScore}.
                         </p>
                       </div>

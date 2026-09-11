@@ -1,12 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SignaturePadProps {
   onSignatureChange: (signatureDataUrl: string | null) => void;
 }
 
 export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
@@ -26,7 +28,7 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.lineWidth = 3;
-    ctx.strokeStyle = '#1F2937'; // dark gray
+    ctx.strokeStyle = '#3E2F24'; // brun profond — encre à la couleur de la charte
   }, []);
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
@@ -113,14 +115,14 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
             variant="secondary" 
             size="sm" 
             onClick={clearSignature}
-            className="h-8 text-xs gap-1 opacity-70 hover:opacity-100"
+            className="h-8 text-xs gap-1 opacity-70 hover:opacity-100 cursor-pointer"
           >
-            <Eraser className="w-3.5 h-3.5" /> Effacer
+            <Eraser className="w-3.5 h-3.5" /> {t('sig_clear_button')}
           </Button>
         </div>
       </div>
       <p className="text-[13px] text-muted-foreground text-center uppercase tracking-wider font-bold">
-        Signez dans le cadre ci-dessus
+        {t('sig_instruction')}
       </p>
     </div>
   );

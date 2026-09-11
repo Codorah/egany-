@@ -10,10 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmationBottomSheet } from '@/components/ui/ConfirmationBottomSheet';
-import { 
-  User, 
-  Users,
-  CreditCard, 
+import { AmountDisplay } from '@/components/ui/AmountDisplay';
+import {
+  User,
+  CreditCard,
   Landmark, 
   ArrowDownCircle, 
   Tag, 
@@ -57,11 +57,11 @@ import {
   AlertTriangle,
   IdCard
 } from 'lucide-react';
-import { UserProfile, Group, Contribution, WalletTransaction, KycSubmission } from '@/types';
+import { UserProfile, Group, WalletTransaction, KycSubmission } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase, changePassword } from '@/lib/supabase';
-import { mapWalletTransactionRow, mapContributionRow } from '@/lib/mappers';
+import { mapWalletTransactionRow } from '@/lib/mappers';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
@@ -115,7 +115,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   // `defaultTab` est la cible envoyée par les autres écrans. 'kyc' est un
   // sous-onglet de la section « compte » : le blocage à la création de cercle
   // l'utilise pour déposer l'utilisatrice directement sur la vérification.
-  const PROFILE_SECTION_IDS = ['account', 'security', 'payments', 'circles', 'subscription', 'notifications', 'legal'];
+  const PROFILE_SECTION_IDS = ['account', 'security', 'payments', 'subscription', 'notifications', 'legal'];
   const [activeSection, setActiveSection] = useState<string | null>(() => {
     if (defaultTab === 'wallet') return 'payments';
     if (defaultTab === 'kyc') return 'account';
@@ -149,7 +149,6 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
   // Wallet & Transactions
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
-  const [contributions, setContributions] = useState<Contribution[]>([]);
 
   // Le bouton "Recharger" du Dashboard doit ouvrir la carte Recharger, et
   // "Retirer" sa propre carte — les deux ne s'affichent jamais ensemble.
@@ -290,14 +289,6 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         .order('date', { ascending: false });
       if (data) setWalletTransactions(data.map(mapWalletTransactionRow));
     };
-    const fetchContribs = async () => {
-      const { data } = await supabase
-        .from('contributions')
-        .select('*')
-        .eq('user_id', user.uid)
-        .order('date', { ascending: false });
-      if (data) setContributions(data.map(mapContributionRow));
-    };
     const fetchKyc = async () => {
       setKycLoading(true);
       const submission = await fetchLatestKycSubmission(user.uid);
@@ -305,7 +296,6 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       setKycLoading(false);
     };
     fetchTx();
-    fetchContribs();
     fetchKyc();
   }, [user.uid]);
 
@@ -579,6 +569,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     }
   };
 
+  const isAdminUser = user.role === 'admin' || user.email === 'codorah@hotmail.com';
+
   // Main Categories array matching exact mockup design
   const mainCategories = [
     {
@@ -602,14 +594,6 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       title: t('prof_cat_payments_title'),
       description: t('prof_cat_payments_desc'),
       icon: <Wallet className="w-4.5 h-4.5 text-secondary" />,
-      color: 'bg-secondary/10',
-      group: t('prof_group_money_circles')
-    },
-    {
-      id: 'circles',
-      title: t('prof_cat_circles_title'),
-      description: t('prof_cat_circles_desc'),
-      icon: <Users className="w-4.5 h-4.5 text-secondary" />,
       color: 'bg-secondary/10',
       group: t('prof_group_money_circles')
     },
@@ -644,7 +628,18 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       icon: <BookOpen className="w-4.5 h-4.5 text-muted-foreground" />,
       color: 'bg-muted',
       group: t('prof_group_general')
-    }
+    },
+    // Sur mobile, la Sidebar (desktop uniquement) et le menu déroulant de la
+    // Navbar n'étaient pas un accès assez visible — l'admin n'avait nulle
+    // part où le trouver sur téléphone.
+    ...(isAdminUser ? [{
+      id: 'admin',
+      title: t('admin_panel') || 'Administration',
+      description: t('prof_cat_admin_desc'),
+      icon: <ShieldCheck className="w-4.5 h-4.5 text-secondary" />,
+      color: 'bg-secondary/10',
+      group: t('prof_group_general')
+    }] : [])
   ];
 
   const categoryGroups = [t('prof_group_account_security'), t('prof_group_money_circles'), t('prof_group_general')].map((groupName) => ({
@@ -694,13 +689,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <div className="flex items-center justify-center gap-2">
                     <h2 className="text-xl font-serif font-black text-foreground">{user.displayName}</h2>
                     {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
-                      <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[13px] font-bold">
-                        {t('prof_account_verified')}
-                      </Badge>
+                      <StatusBadge tone="success" label={t('prof_account_verified')} />
                     ) : (
-                      <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[13px] font-bold">
-                        {t('prof_identity_not_verified')}
-                      </Badge>
+                      <StatusBadge tone="warning" label={t('prof_identity_not_verified')} />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground font-medium">{user.phone || t('prof_phone_not_provided')}</p>
@@ -712,13 +703,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="bg-muted/40 p-3 rounded-2xl border border-border/60 text-center space-y-0.5">
                   <span className="text-[13px] font-bold text-muted-foreground uppercase">{t('available_balance')}</span>
-                  <p className="text-sm font-black text-primary">
-                    {(user.walletBalance || 0).toLocaleString()} FCFA
-                  </p>
+                  <AmountDisplay amount={user.walletBalance || 0} size="sm" className="text-primary" currencyClassName="text-primary/70" />
                 </div>
-                <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center space-y-0.5">
-                  <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{t('reliability_score')}</span>
-                  <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                <div className="bg-success-soft p-3 rounded-2xl border border-secondary/20 text-center space-y-0.5">
+                  <span className="text-[13px] font-bold text-secondary uppercase">{t('reliability_score')}</span>
+                  <p className="text-sm font-serif font-black text-secondary">
                     {user.reputationScore} / 100
                   </p>
                 </div>
@@ -749,13 +738,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <div className="flex gap-1.5 pt-0.5">
                   <button
                     onClick={() => onNavigate?.('support')}
-                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-primary py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer"
                   >
                     <Lightbulb className="w-3 h-3" /> {t('prof_suggest')}
                   </button>
                   <button
                     onClick={() => onNavigate?.('support')}
-                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1 text-[13px] font-bold text-muted-foreground hover:text-danger py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer"
                   >
                     <Bug className="w-3 h-3" /> {t('prof_report_bug')}
                   </button>
@@ -776,7 +765,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     {group.items.map((cat, idx) => (
                       <button
                         key={cat.id}
-                        onClick={() => cat.id === 'support' ? onNavigate?.('support') : setActiveSection(cat.id)}
+                        onClick={() => {
+                          if (cat.id === 'support') return onNavigate?.('support');
+                          if (cat.id === 'admin') return onNavigate?.('admin');
+                          setActiveSection(cat.id);
+                        }}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer ${
                           idx > 0 ? 'border-t border-border/60' : ''
                         }`}
@@ -795,13 +788,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               {/* Destructive action — kept visually separate from the groups above */}
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-rose-200 dark:border-rose-950 bg-rose-50/80 dark:bg-rose-950/20 hover:bg-rose-100/80 dark:hover:bg-rose-950/40 transition-colors cursor-pointer text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-danger/20 bg-danger-soft hover:bg-danger/15 transition-colors cursor-pointer text-left"
               >
-                <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 shrink-0">
+                <div className="p-2 rounded-xl bg-danger/10 text-danger shrink-0">
                   <Trash2 className="w-4.5 h-4.5" />
                 </div>
-                <span className="flex-1 font-bold text-sm text-rose-600 dark:text-rose-400">{t('prof_delete_account')}</span>
-                <ChevronRight className="w-4 h-4 text-rose-400 shrink-0" />
+                <span className="flex-1 font-bold text-sm text-danger">{t('prof_delete_account')}</span>
+                <ChevronRight className="w-4 h-4 text-danger/70 shrink-0" />
               </button>
 
               {/* Full-width Logout Button */}
@@ -903,15 +896,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_kyc_title')}</h3>
-                <Badge className={`font-bold text-xs border ${
-                  (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL
-                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                }`}>
-                  {(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
-                    <span className="flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_badge')}</span>
-                  ) : `${t('prof_kyc_level_prefix')} ${user.kycLevel ?? 1} ${t('prof_kyc_level_suffix')}`}
-                </Badge>
+                <StatusBadge
+                  tone={(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? 'success' : 'warning'}
+                  icon={(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? Check : undefined}
+                  label={(user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL
+                    ? t('prof_verified_badge')
+                    : `${t('prof_kyc_level_prefix')} ${user.kycLevel ?? 1} ${t('prof_kyc_level_suffix')}`}
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 {t('prof_kyc_desc')}
@@ -922,28 +913,28 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL ? (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+                <div className="p-4 bg-success-soft border border-secondary/30 rounded-2xl flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <IdCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <IdCard className="w-4 h-4 text-secondary shrink-0" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{t('prof_id_document_label')}</p>
+                      <p className="text-xs font-bold text-secondary">{t('prof_id_document_label')}</p>
                       <p className="text-[13px] text-muted-foreground">
                         {user.kycVerifiedAt ? `${t('prof_verified_on')} ${format(new Date(user.kycVerifiedAt), 'dd/MM/yyyy')}` : t('prof_verified_word')}
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-emerald-500 text-white text-[13px] flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_word')}</Badge>
+                  <Badge className="bg-secondary text-white text-[13px] flex items-center gap-1"><Check className="w-3 h-3" /> {t('prof_verified_word')}</Badge>
                 </div>
               ) : kycSubmission?.status === 'pending' ? (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex justify-between items-center">
+                <div className="p-4 bg-warning-soft border border-warning/30 rounded-2xl flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <IdCard className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <IdCard className="w-4 h-4 text-warning shrink-0" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">{t('prof_id_document_label')}</p>
+                      <p className="text-xs font-bold text-warning">{t('prof_id_document_label')}</p>
                       <p className="text-[13px] text-muted-foreground">{t('prof_sent_on')} {format(new Date(kycSubmission.createdAt), 'dd/MM/yyyy')}</p>
                     </div>
                   </div>
-                  <Badge className="bg-amber-500 text-white text-[13px]">{t('prof_pending_validation')}</Badge>
+                  <Badge className="bg-warning text-white text-[13px]">{t('prof_pending_validation')}</Badge>
                 </div>
               ) : (
                 <div className="space-y-3 pt-2">
@@ -1028,7 +1019,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[13px] text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
+                <div className="p-3 bg-warning-soft border border-warning/20 rounded-2xl text-[13px] text-warning font-medium flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{t('prof_mandate_warning_prefix')} <strong>{t('prof_mandate_warning_bold')}</strong>{t('prof_mandate_warning_suffix')}</span>
                 </div>
@@ -1050,15 +1041,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           {/* Wallet Balance Header */}
           <Card className="gradient-sunset text-white rounded-3xl p-6 shadow-soft space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-200">{t('prof_wallet_payments_header')}</span>
-              <button onClick={() => setShowBalance(!showBalance)} className="text-white/80 hover:text-white">
+              <span className="text-xs font-bold uppercase tracking-wider text-white/80">{t('prof_wallet_payments_header')}</span>
+              <button onClick={() => setShowBalance(!showBalance)} className="text-white/80 hover:text-white cursor-pointer">
                 {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
             <div>
-              <p className="text-3xl sm:text-4xl font-serif font-black">
-                {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '•••••••• FCFA'}
-              </p>
+              <AmountDisplay amount={user.walletBalance || 0} hidden={!showBalance} size="xl" className="text-white" currencyClassName="text-white/80" />
               <span className="text-xs text-white/80">{t('prof_balance_available_now')}</span>
             </div>
           </Card>
@@ -1071,7 +1060,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               type="button"
               onClick={() => setWalletAction('recharge')}
               className={`h-10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
-                walletAction === 'recharge' ? 'bg-card shadow-xs text-emerald-600' : 'text-muted-foreground'
+                walletAction === 'recharge' ? 'bg-card shadow-xs text-secondary' : 'text-muted-foreground'
               }`}
             >
               <Plus className="w-4 h-4" /> {t('recharge')}
@@ -1106,7 +1095,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 )}
                 {rechargeStatus === 'completed' && (
                   <>
-                    <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500" />
+                    <CheckCircle2 className="w-10 h-10 mx-auto text-secondary" />
                     <h4 className="font-serif font-bold text-sm text-foreground">{t('recharge_success_title')}</h4>
                     <Button
                       className="gradient-sunset text-white font-bold rounded-xl h-10 w-full text-xs"
@@ -1133,7 +1122,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             ) : (
             <Card className="glass-card rounded-3xl p-5 border border-border/80 space-y-3">
               <h4 className="font-serif font-bold text-sm text-foreground flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-emerald-500" /> {t('recharge_wallet_title')}
+                <Plus className="w-4 h-4 text-secondary" /> {t('recharge_wallet_title')}
               </h4>
               <Input
                 type="number"
@@ -1232,72 +1221,15 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {walletTransactions.map((tx) => (
-                  <div key={tx.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center">
-                    <div>
-                      <p className="text-xs font-bold text-foreground">{tx.description}</p>
-                      <p className="text-[13px] text-muted-foreground">
-                        {format(new Date(tx.date), 'dd MMM yyyy, HH:mm', { locale: fr })}
-                      </p>
-                    </div>
-                    <span className={`text-xs font-black shrink-0 pl-3 ${tx.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-danger'}`}>
-                      {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()} FCFA
-                    </span>
-                  </div>
+                  <TransactionItem
+                    key={tx.id}
+                    title={tx.description}
+                    subtitle={format(new Date(tx.date), 'dd MMM yyyy, HH:mm', { locale: fr })}
+                    amount={tx.amount}
+                  />
                 ))}
               </div>
             )}
-          </Card>
-        </motion.div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 3.B. SUB-SECTION SCREEN: MES CERCLES & GRAPHES */}
-      {/* ========================================================================= */}
-      {activeSection === 'circles' && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-3xl mx-auto">
-          <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_my_tontine_circles')}</h3>
-              <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 font-bold text-xs">
-                {groups?.length || 0} {t('prof_actif_suffix')}
-              </Badge>
-            </div>
-
-            <div className="p-4 bg-card border border-border/60 rounded-2xl space-y-3">
-              <h4 className="text-xs font-bold text-foreground">{t('prof_participation_stats')}</h4>
-              <div className="flex items-end gap-2 h-32 pt-4">
-                {/* Empty Graphs (as requested by user: "mes cercles essaie de faire des graphes vides") */}
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex-1 flex flex-col justify-end gap-2 items-center group">
-                    <div className="w-full bg-muted/60 rounded-t-sm h-[15%] group-hover:bg-primary/50 transition-all duration-300"></div>
-                    <span className="text-[12px] text-muted-foreground font-medium uppercase">{t('prof_month_label')} {i+1}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[13px] text-muted-foreground text-center mt-2">{t('prof_insufficient_data_charts')}</p>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('prof_current_circles')}</h4>
-              {!groups || groups.length === 0 ? (
-                <div className="p-4 text-center bg-muted/30 rounded-2xl border border-border/60">
-                  <p className="text-xs text-muted-foreground">{t('prof_no_circle_member')}</p>
-                  <Button variant="link" onClick={() => onNavigate?.('search-groups')} className="text-primary text-xs h-auto p-0 mt-1">{t('join_group')}</Button>
-                </div>
-              ) : (
-                groups.map((g: any) => (
-                  <div key={g.id} className="p-3 bg-card border border-border/60 rounded-2xl flex justify-between items-center text-xs">
-                    <div>
-                      <p className="font-bold text-foreground">{g.name}</p>
-                      <p className="text-[13px] text-muted-foreground">{g.contributionAmount.toLocaleString()} FCFA / {g.frequency}</p>
-                    </div>
-                    <Badge variant={g.status === 'active' ? 'default' : 'secondary'} className="text-[12px]">
-                      {g.status}
-                    </Badge>
-                  </div>
-                ))
-              )}
-            </div>
           </Card>
         </motion.div>
       )}
@@ -1310,25 +1242,25 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           <Card className="glass-card rounded-3xl p-6 border border-border/80 space-y-4">
             <h3 className="font-serif font-bold text-lg text-foreground">{t('prof_subscription_advantages')}</h3>
 
-            <div className="p-5 bg-gradient-to-br from-purple-500/10 to-primary/5 border border-purple-500/20 rounded-2xl space-y-3">
+            <div className="p-5 bg-gradient-to-br from-eganye-gold/10 to-primary/5 border border-eganye-gold/20 rounded-2xl space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <Badge className="bg-purple-500 text-white font-bold text-[13px] mb-2">
+                  <Badge className="bg-eganye-gold text-white font-bold text-[13px] mb-2">
                     {t('prof_current_plan_label')} {user.subscriptionPlan === 'premium' ? t('prof_plan_premium') : t('prof_plan_free')}
                   </Badge>
-                  <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300">
+                  <h4 className="text-sm font-bold text-foreground">
                     {user.subscriptionPlan === 'premium' ? t('prof_eganye_premium') : t('prof_eganye_essential')}
                   </h4>
-                  <p className="text-[13px] text-purple-700/80 dark:text-purple-300/80 max-w-xs mt-1">
+                  <p className="text-[13px] text-muted-foreground max-w-xs mt-1">
                     {user.subscriptionPlan === 'premium'
                       ? `${t('prof_subscription_active_prefix')}${user.subscriptionExpiresAt ? ` ${t('prof_subscription_active_until')} ${format(new Date(user.subscriptionExpiresAt), 'dd MMMM yyyy', { locale: fr })}` : ''}.`
                       : t('prof_basic_access_desc')}
                   </p>
                 </div>
-                <Award className="w-10 h-10 text-purple-500 opacity-50" />
+                <Award className="w-10 h-10 text-eganye-gold opacity-50" />
               </div>
               {user.subscriptionPlan !== 'premium' && (
-                <Button disabled className="bg-purple-600/50 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft cursor-not-allowed">
+                <Button disabled className="bg-eganye-gold/50 text-white font-bold rounded-xl h-10 text-xs w-full mt-2 shadow-soft cursor-not-allowed">
                   {t('prof_premium_coming_soon')}
                 </Button>
               )}
@@ -1514,7 +1446,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-rose-600 flex items-center gap-2">
+            <DialogTitle className="text-lg font-bold text-danger flex items-center gap-2">
               <Trash2 className="w-5 h-5" /> {t('prof_delete_account_confirm_title')}
             </DialogTitle>
             <DialogDescription className="text-xs">
@@ -1523,7 +1455,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           </DialogHeader>
 
           {groups.length > 0 ? (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium flex items-start gap-2">
+            <div className="p-3 bg-danger-soft border border-danger/20 text-danger rounded-2xl text-xs font-medium flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{t('prof_delete_blocked_prefix')} <strong>{groups.length} {t('prof_delete_blocked_suffix')}</strong>. {t('prof_delete_blocked_desc')}</span>
             </div>
@@ -1544,7 +1476,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 setShowDeleteConfirm(false);
                 onLogout?.();
               }}
-              className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold"
+              className="bg-danger hover:bg-danger/90 text-white rounded-xl text-xs font-bold"
             >
               {t('prof_delete_account')}
             </Button>

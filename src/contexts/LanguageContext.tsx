@@ -2327,6 +2327,68 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Trɔ wò gadede nyawo, app ƒe gbe, eye nàta wò avatar tɔxɛ.',
     kbp: 'Yekiɣ ño-sʋʋ tɔm, app kʋnʋŋ nɛ ma ño-lɔŋ maɣmaɣ.'
   },
+  // Atelier d'avatar (AvatarWorkshop.tsx) — utilisé pendant l'inscription
+  // et depuis le Profil, ces textes étaient restés en français en dur.
+  avw_invalid_image_error: {
+    fr: 'Veuillez sélectionner une image valide (JPG, PNG).',
+    en: 'Please select a valid image (JPG, PNG).',
+    ee: 'Veuillez sélectionner une image valide (JPG, PNG).',
+    kbp: 'Veuillez sélectionner une image valide (JPG, PNG).'
+  },
+  avw_no_account_error: {
+    fr: "Impossible d'identifier votre compte pour l'envoi.",
+    en: 'Unable to identify your account for the upload.',
+    ee: "Impossible d'identifier votre compte pour l'envoi.",
+    kbp: "Impossible d'identifier votre compte pour l'envoi."
+  },
+  avw_photo_updated_success: {
+    fr: 'Photo de profil mise à jour !',
+    en: 'Profile photo updated!',
+    ee: 'Photo de profil mise à jour !',
+    kbp: 'Photo de profil mise à jour !'
+  },
+  avw_upload_failed_error: {
+    fr: "Échec de l'envoi de la photo.",
+    en: 'Photo upload failed.',
+    ee: "Échec de l'envoi de la photo.",
+    kbp: "Échec de l'envoi de la photo."
+  },
+  avw_illustrated_tab: {
+    fr: 'Avatar illustré',
+    en: 'Illustrated avatar',
+    ee: 'Avatar illustré',
+    kbp: 'Avatar illustré'
+  },
+  avw_photo_tab: {
+    fr: 'Ma photo',
+    en: 'My photo',
+    ee: 'Ma photo',
+    kbp: 'Ma photo'
+  },
+  avw_shuffle_button: {
+    fr: 'Essayer une autre variante',
+    en: 'Try another variant',
+    ee: 'Essayer une autre variante',
+    kbp: 'Essayer une autre variante'
+  },
+  avw_uploading_ellipsis: {
+    fr: 'Envoi en cours...',
+    en: 'Uploading...',
+    ee: 'Envoi en cours...',
+    kbp: 'Envoi en cours...'
+  },
+  avw_upload_photo_button: {
+    fr: 'Téléverser une photo',
+    en: 'Upload a photo',
+    ee: 'Téléverser une photo',
+    kbp: 'Téléverser une photo'
+  },
+  avw_photo_storage_note: {
+    fr: 'Votre photo est stockée de façon sécurisée et reste associée à votre profil.',
+    en: 'Your photo is stored securely and stays linked to your profile.',
+    ee: 'Votre photo est stockée de façon sécurisée et reste associée à votre profil.',
+    kbp: 'Votre photo est stockée de façon sécurisée et reste associée à votre profil.'
+  },
   prof_security_identity: {
     fr: 'Sécurité & Identité',
     en: 'Security & Identity',
@@ -2521,6 +2583,18 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Gaxexlẽ Si Gbɔna',
     kbp: 'Liidiye haʋ ŋgʋ kɩ-kɔŋ yɔ'
   },
+  dash_today_action_title: {
+    fr: "À faire aujourd'hui",
+    en: 'To do today',
+    ee: "À faire aujourd'hui",
+    kbp: "À faire aujourd'hui"
+  },
+  dash_all_caught_up_title: {
+    fr: 'Tout est à jour 🎉',
+    en: 'All caught up 🎉',
+    ee: 'Tout est à jour 🎉',
+    kbp: 'Tout est à jour 🎉'
+  },
   contribute_now: {
     fr: 'Cotiser',
     en: 'Contribute',
@@ -2568,6 +2642,12 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Join a circle to plan your turn.',
     ee: 'Ge ɖe habɔbɔ me be nàɖo wò turn ɖoɖo.',
     kbp: 'Kpɛndɩ tontine se ŋ-ñɔɔzɩ ño-kɩyakʋ.'
+  },
+  unread_alerts_suffix: {
+    fr: 'alerte(s) non lue(s)',
+    en: 'unread alert(s)',
+    ee: 'alerte(s) non lue(s)',
+    kbp: 'alerte(s) non lue(s)'
   },
   reliability_score: {
     fr: 'Score de Fiabilité',
@@ -2685,6 +2765,252 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Do gaxɔ wò gadzraɖo teƒe si wòhiã, menye teƒe si nèdi o.',
     kbp: 'Ha ño-marali alɩwaatʋ ŋga kɩ-pɔzʋʋ yɔ, pɩ-tɩɩ kɛ ŋga n-sɔɔlɩ yɔ.'
   },
+  bank_subscribe_error: {
+    fr: "Erreur lors de l'abonnement.",
+    en: 'Error while subscribing.',
+    ee: "Erreur lors de l'abonnement.",
+    kbp: "Erreur lors de l'abonnement."
+  },
+  bank_create_error: {
+    fr: 'Erreur lors de la création.',
+    en: 'Error while creating.',
+    ee: 'Erreur lors de la création.',
+    kbp: 'Erreur lors de la création.'
+  },
+  bank_invalid_amount_error: {
+    fr: 'Veuillez indiquer un montant valide.',
+    en: 'Please enter a valid amount.',
+    ee: 'Veuillez indiquer un montant valide.',
+    kbp: 'Veuillez indiquer un montant valide.'
+  },
+  bank_insufficient_wallet_error: {
+    fr: 'Solde du portefeuille insuffisant.',
+    en: 'Insufficient wallet balance.',
+    ee: 'Solde du portefeuille insuffisant.',
+    kbp: 'Solde du portefeuille insuffisant.'
+  },
+  bank_deposit_error: {
+    fr: 'Erreur lors du dépôt.',
+    en: 'Error while depositing.',
+    ee: 'Erreur lors du dépôt.',
+    kbp: 'Erreur lors du dépôt.'
+  },
+  bank_withdraw_error: {
+    fr: 'Erreur lors du retrait.',
+    en: 'Error while withdrawing.',
+    ee: 'Erreur lors du retrait.',
+    kbp: 'Erreur lors du retrait.'
+  },
+  bank_relock_error: {
+    fr: 'Erreur lors du re-blocage.',
+    en: 'Error while relocking.',
+    ee: 'Erreur lors du re-blocage.',
+    kbp: 'Erreur lors du re-blocage.'
+  },
+  bank_delete_error: {
+    fr: 'Erreur lors de la suppression.',
+    en: 'Error while deleting.',
+    ee: 'Erreur lors de la suppression.',
+    kbp: 'Erreur lors de la suppression.'
+  },
+  bank_load_error_title: {
+    fr: 'Impossible de charger Ma Banque',
+    en: 'Unable to load My Bank',
+    ee: 'Impossible de charger Ma Banque',
+    kbp: 'Impossible de charger Ma Banque'
+  },
+  bank_retry: {
+    fr: 'Réessayer',
+    en: 'Retry',
+    ee: 'Réessayer',
+    kbp: 'Réessayer'
+  },
+  bank_secure_badge: {
+    fr: 'Tirelire personnelle sécurisée',
+    en: 'Secure personal savings',
+    ee: 'Tirelire personnelle sécurisée',
+    kbp: 'Tirelire personnelle sécurisée'
+  },
+  bank_amount_placeholder: {
+    fr: 'Montant (FCFA)',
+    en: 'Amount (FCFA)',
+    ee: 'Montant (FCFA)',
+    kbp: 'Montant (FCFA)'
+  },
+  bank_manage_vault_subtitle: {
+    fr: 'Dépôt ou retrait sur ce coffre',
+    en: 'Deposit or withdraw from this vault',
+    ee: 'Dépôt ou retrait sur ce coffre',
+    kbp: 'Dépôt ou retrait sur ce coffre'
+  },
+  bank_wallet_balance_label: {
+    fr: 'Solde portefeuille',
+    en: 'Wallet balance',
+    ee: 'Solde portefeuille',
+    kbp: 'Solde portefeuille'
+  },
+  bank_vault_balance_label: {
+    fr: 'Solde de ce coffre',
+    en: 'This vault\'s balance',
+    ee: 'Solde de ce coffre',
+    kbp: 'Solde de ce coffre'
+  },
+  bank_my_savings_title: {
+    fr: 'Mon épargne',
+    en: 'My savings',
+    ee: 'Mon épargne',
+    kbp: 'Mon épargne'
+  },
+  bank_add_money_cta: {
+    fr: 'Ajouter de l\'argent',
+    en: 'Add money',
+    ee: 'Ajouter de l\'argent',
+    kbp: 'Ajouter de l\'argent'
+  },
+  bank_create_step1_title: {
+    fr: 'Combien veux-tu mettre de côté ?',
+    en: 'How much do you want to set aside?',
+    ee: 'Combien veux-tu mettre de côté ?',
+    kbp: 'Combien veux-tu mettre de côté ?'
+  },
+  bank_create_step2_title: {
+    fr: "Jusqu'à quand ?",
+    en: 'Until when?',
+    ee: "Jusqu'à quand ?",
+    kbp: "Jusqu'à quand ?"
+  },
+  bank_create_step3_title: {
+    fr: 'Pour quel projet ?',
+    en: 'For which project?',
+    ee: 'Pour quel projet ?',
+    kbp: 'Pour quel projet ?'
+  },
+  bank_create_step4_title: {
+    fr: 'Ton épargne est prête 🔒',
+    en: 'Your savings are ready 🔒',
+    ee: 'Ton épargne est prête 🔒',
+    kbp: 'Ton épargne est prête 🔒'
+  },
+  bank_project_scolaire: {
+    fr: 'Projet scolaire',
+    en: 'School project',
+    ee: 'Projet scolaire',
+    kbp: 'Projet scolaire'
+  },
+  bank_project_voyage: {
+    fr: 'Voyage',
+    en: 'Trip',
+    ee: 'Voyage',
+    kbp: 'Voyage'
+  },
+  bank_project_maison: {
+    fr: 'Maison',
+    en: 'Home',
+    ee: 'Maison',
+    kbp: 'Maison'
+  },
+  bank_project_autre: {
+    fr: 'Autre',
+    en: 'Other',
+    ee: 'Autre',
+    kbp: 'Autre'
+  },
+  bank_project_custom_placeholder: {
+    fr: 'Nom du projet',
+    en: 'Project name',
+    ee: 'Nom du projet',
+    kbp: 'Nom du projet'
+  },
+  bank_create_confirm_prefix: {
+    fr: 'Tu vas réserver :',
+    en: "You're about to set aside:",
+    ee: 'Tu vas réserver :',
+    kbp: 'Tu vas réserver :'
+  },
+  bank_create_confirm_until: {
+    fr: "jusqu'au :",
+    en: 'until:',
+    ee: "jusqu'au :",
+    kbp: "jusqu'au :"
+  },
+  bank_create_confirm_cta: {
+    fr: 'Confirmer mon épargne',
+    en: 'Confirm my savings',
+    ee: 'Confirmer mon épargne',
+    kbp: 'Confirmer mon épargne'
+  },
+  bank_create_deadline_error: {
+    fr: 'Choisis une date future.',
+    en: 'Choose a future date.',
+    ee: 'Choisis une date future.',
+    kbp: 'Choisis une date future.'
+  },
+  bank_create_project_error: {
+    fr: 'Donne un nom à ton projet.',
+    en: 'Give your project a name.',
+    ee: 'Donne un nom à ton projet.',
+    kbp: 'Donne un nom à ton projet.'
+  },
+  bank_reservation_ready_desc: {
+    fr: 'Ton argent reste réservé jusqu\'à la date choisie, puis il redevient disponible.',
+    en: 'Your money stays set aside until the chosen date, then becomes available again.',
+    ee: 'Ton argent reste réservé jusqu\'à la date choisie, puis il redevient disponible.',
+    kbp: 'Ton argent reste réservé jusqu\'à la date choisie, puis il redevient disponible.'
+  },
+  bank_add_money_now_cta: {
+    fr: "Ajouter de l'argent maintenant",
+    en: 'Add money now',
+    ee: "Ajouter de l'argent maintenant",
+    kbp: "Ajouter de l'argent maintenant"
+  },
+  bank_later_cta: {
+    fr: 'Plus tard',
+    en: 'Later',
+    ee: 'Plus tard',
+    kbp: 'Plus tard'
+  },
+  bank_back_to_my_bank: {
+    fr: 'Retour à Ma Banque',
+    en: 'Back to My Bank',
+    ee: 'Retour à Ma Banque',
+    kbp: 'Retour à Ma Banque'
+  },
+  bank_free_trial_label: {
+    fr: 'Essai gratuit',
+    en: 'Free trial',
+    ee: 'Essai gratuit',
+    kbp: 'Essai gratuit'
+  },
+  bank_free_trial_desc: {
+    fr: 'Un compte épargne inclus pour essayer, sans engagement.',
+    en: 'One savings account included to try it out, no commitment.',
+    ee: 'Un compte épargne inclus pour essayer, sans engagement.',
+    kbp: 'Un compte épargne inclus pour essayer, sans engagement.'
+  },
+  bank_upsell_title: {
+    fr: 'Envie de plusieurs coffres ?',
+    en: 'Want more than one vault?',
+    ee: 'Envie de plusieurs coffres ?',
+    kbp: 'Envie de plusieurs coffres ?'
+  },
+  bank_upsell_desc: {
+    fr: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.',
+    en: 'Subscribe to create several savings accounts at once.',
+    ee: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.',
+    kbp: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.'
+  },
+  bank_create_page_title: {
+    fr: 'Créer un compte épargne',
+    en: 'Create a savings account',
+    ee: 'Créer un compte épargne',
+    kbp: 'Créer un compte épargne'
+  },
+  bank_cap_reached_note: {
+    fr: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.',
+    en: "You've reached your tier's limit — subscribe to create more.",
+    ee: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.',
+    kbp: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.'
+  },
   bank_no_subscription_title: {
     fr: "Débloquez l'accès à Ma Banque",
     en: 'Unlock access to My Bank',
@@ -2768,6 +3094,12 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Create the bank',
     ee: 'Wɔ Gaxɔ La',
     kbp: 'Ma kpou'
+  },
+  bank_locked_strict_note: {
+    fr: "Personne ne peut y toucher avant cette date, pas même toi.",
+    en: "No one can touch it before that date — not even you.",
+    ee: "Personne ne peut y toucher avant cette date, pas même toi.",
+    kbp: "Personne ne peut y toucher avant cette date, pas même toi."
   },
   bank_locked_until: {
     fr: 'Bloquée jusqu\'au',
@@ -3143,6 +3475,30 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Kpɔ wò bubɔ kple viɖe siwo su ŋuwò la dzi.',
     kbp: 'Ñɩɩ ño-kpaɣʋʋ nɛ ño-ñɩm.'
   },
+  nb_title: {
+    fr: 'Notifications',
+    en: 'Notifications',
+    ee: 'Notifications',
+    kbp: 'Notifications'
+  },
+  nb_new_count_suffix: {
+    fr: 'nouvelles',
+    en: 'new',
+    ee: 'nouvelles',
+    kbp: 'nouvelles'
+  },
+  nb_empty_state: {
+    fr: 'Pas encore de notifications',
+    en: 'No notifications yet',
+    ee: 'Pas encore de notifications',
+    kbp: 'Pas encore de notifications'
+  },
+  nb_just_now: {
+    fr: "À l'instant",
+    en: 'Just now',
+    ee: "À l'instant",
+    kbp: "À l'instant"
+  },
   prof_cat_notifications_title: {
     fr: 'Notifications & communication',
     en: 'Notifications & communication',
@@ -3178,6 +3534,12 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Review the terms, policies and legal documents.',
     ee: 'Kpɔ ɖoɖowo, gɔmeɖoɖowo kple sedede nuŋɔŋlɔwo.',
     kbp: 'Cɔnɩ tɔm, ñɔɔzʋʋ nɛ sɛtʋ sɛbɩyɛ.'
+  },
+  prof_cat_admin_desc: {
+    fr: "Gestion, vérifications, modération de l'application.",
+    en: 'App management, verifications, moderation.',
+    ee: "Gestion, vérifications, modération de l'application.",
+    kbp: "Gestion, vérifications, modération de l'application."
   },
   prof_group_account_security: {
     fr: 'Compte & sécurité',
@@ -4033,6 +4395,54 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Dze Si eganyé',
     kbp: 'Nyɩ eganyé'
   },
+  onb_intent_title: {
+    fr: 'Que veux-tu faire ?',
+    en: 'What do you want to do?',
+    ee: 'Que veux-tu faire ?',
+    kbp: 'Que veux-tu faire ?'
+  },
+  onb_intent_desc: {
+    fr: "Choisis une option pour commencer l'aventure.",
+    en: 'Choose an option to get started.',
+    ee: "Choisis une option pour commencer l'aventure.",
+    kbp: "Choisis une option pour commencer l'aventure."
+  },
+  onb_intent_create_title: {
+    fr: 'Créer une tontine',
+    en: 'Create a tontine',
+    ee: 'Créer une tontine',
+    kbp: 'Créer une tontine'
+  },
+  onb_intent_create_desc: {
+    fr: 'Invite tes proches et épargnez ensemble.',
+    en: 'Invite your circle and save together.',
+    ee: 'Invite tes proches et épargnez ensemble.',
+    kbp: 'Invite tes proches et épargnez ensemble.'
+  },
+  onb_intent_join_title: {
+    fr: 'Rejoindre une tontine',
+    en: 'Join a tontine',
+    ee: 'Rejoindre une tontine',
+    kbp: 'Rejoindre une tontine'
+  },
+  onb_intent_join_desc: {
+    fr: "Avec un code ou un lien d'invitation.",
+    en: 'With a code or an invite link.',
+    ee: "Avec un code ou un lien d'invitation.",
+    kbp: "Avec un code ou un lien d'invitation."
+  },
+  offline_banner_title: {
+    fr: 'Tu es hors connexion',
+    en: "You're offline",
+    ee: 'Tu es hors connexion',
+    kbp: 'Tu es hors connexion'
+  },
+  offline_banner_desc: {
+    fr: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.',
+    en: 'Data may be out of date. Top-ups, withdrawals, contributions and creating/joining a circle are disabled.',
+    ee: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.',
+    kbp: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.'
+  },
   onb_or_continue_with: {
     fr: 'Ou continuer avec',
     en: 'Or continue with',
@@ -4391,6 +4801,204 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Back',
     ee: 'Trɔ Megbe',
     kbp: 'Pɩsɩ'
+  },
+  gd_nav_cotisations: {
+    fr: 'Cotisations',
+    en: 'Contributions',
+    ee: 'Cotisations',
+    kbp: 'Cotisations'
+  },
+  gd_nav_membres: {
+    fr: 'Membres',
+    en: 'Members',
+    ee: 'Membres',
+    kbp: 'Membres'
+  },
+  gd_nav_discussion: {
+    fr: 'Discussion',
+    en: 'Discussion',
+    ee: 'Discussion',
+    kbp: 'Discussion'
+  },
+  gd_nav_documents: {
+    fr: 'Documents',
+    en: 'Documents',
+    ee: 'Documents',
+    kbp: 'Documents'
+  },
+  gd_nav_parametres: {
+    fr: 'Paramètres',
+    en: 'Settings',
+    ee: 'Paramètres',
+    kbp: 'Paramètres'
+  },
+  gd_my_situation_title: {
+    fr: 'Ma situation',
+    en: 'My situation',
+    ee: 'Ma situation',
+    kbp: 'Ma situation'
+  },
+  gd_my_contributed_label: {
+    fr: 'cotisés',
+    en: 'contributed',
+    ee: 'cotisés',
+    kbp: 'cotisés'
+  },
+  gd_my_position_label: {
+    fr: 'Position',
+    en: 'Position',
+    ee: 'Position',
+    kbp: 'Position'
+  },
+  gd_next_contribution_title: {
+    fr: 'Prochaine cotisation',
+    en: 'Next contribution',
+    ee: 'Prochaine cotisation',
+    kbp: 'Prochaine cotisation'
+  },
+  gd_settings_section_title: {
+    fr: 'Paramètres du cercle',
+    en: 'Circle settings',
+    ee: 'Paramètres du cercle',
+    kbp: 'Paramètres du cercle'
+  },
+  doc_file_too_large_error: {
+    fr: 'Le fichier dépasse la taille maximale de 10 Mo.',
+    en: 'The file exceeds the 10 MB size limit.',
+    ee: 'Le fichier dépasse la taille maximale de 10 Mo.',
+    kbp: 'Le fichier dépasse la taille maximale de 10 Mo.'
+  },
+  doc_shared_success: {
+    fr: 'Document partagé avec le cercle !',
+    en: 'Document shared with the circle!',
+    ee: 'Document partagé avec le cercle !',
+    kbp: 'Document partagé avec le cercle !'
+  },
+  doc_upload_error: {
+    fr: "Erreur lors de l'envoi du document.",
+    en: 'Error while uploading the document.',
+    ee: "Erreur lors de l'envoi du document.",
+    kbp: "Erreur lors de l'envoi du document."
+  },
+  doc_download_link_error: {
+    fr: 'Erreur lors de la génération du lien de téléchargement.',
+    en: 'Error while generating the download link.',
+    ee: 'Erreur lors de la génération du lien de téléchargement.',
+    kbp: 'Erreur lors de la génération du lien de téléchargement.'
+  },
+  doc_delete_confirm_title: {
+    fr: 'Supprimer ce document ?',
+    en: 'Delete this document?',
+    ee: 'Supprimer ce document ?',
+    kbp: 'Supprimer ce document ?'
+  },
+  doc_delete_confirm_desc: {
+    fr: 'Cette action est définitive et supprime le fichier pour tous les membres du cercle.',
+    en: 'This action is permanent and removes the file for every member of the circle.',
+    ee: 'Cette action est définitive et supprime le fichier pour tous les membres du cercle.',
+    kbp: 'Cette action est définitive et supprime le fichier pour tous les membres du cercle.'
+  },
+  doc_deleted_success: {
+    fr: 'Document supprimé.',
+    en: 'Document deleted.',
+    ee: 'Document supprimé.',
+    kbp: 'Document supprimé.'
+  },
+  doc_delete_error: {
+    fr: 'Erreur lors de la suppression.',
+    en: 'Error while deleting.',
+    ee: 'Erreur lors de la suppression.',
+    kbp: 'Erreur lors de la suppression.'
+  },
+  doc_section_title: {
+    fr: 'Documents du cercle',
+    en: 'Circle documents',
+    ee: 'Documents du cercle',
+    kbp: 'Documents du cercle'
+  },
+  doc_section_desc: {
+    fr: 'Statuts, contrats, PV de réunion et justificatifs partagés entre membres.',
+    en: 'Bylaws, contracts, meeting minutes and receipts shared between members.',
+    ee: 'Statuts, contrats, PV de réunion et justificatifs partagés entre membres.',
+    kbp: 'Statuts, contrats, PV de réunion et justificatifs partagés entre membres.'
+  },
+  doc_share_button: {
+    fr: 'Partager un document',
+    en: 'Share a document',
+    ee: 'Partager un document',
+    kbp: 'Partager un document'
+  },
+  doc_empty_state: {
+    fr: 'Aucun document partagé pour ce cercle.',
+    en: 'No document shared for this circle yet.',
+    ee: 'Aucun document partagé pour ce cercle.',
+    kbp: 'Aucun document partagé pour ce cercle.'
+  },
+  doc_download_title: {
+    fr: 'Télécharger',
+    en: 'Download',
+    ee: 'Télécharger',
+    kbp: 'Télécharger'
+  },
+  doc_uploaded_by_prefix: {
+    fr: 'par',
+    en: 'by',
+    ee: 'par',
+    kbp: 'par'
+  },
+  doc_cat_statuts: {
+    fr: 'Statuts',
+    en: 'Bylaws',
+    ee: 'Statuts',
+    kbp: 'Statuts'
+  },
+  doc_cat_contrat: {
+    fr: 'Contrat',
+    en: 'Contract',
+    ee: 'Contrat',
+    kbp: 'Contrat'
+  },
+  doc_cat_pv: {
+    fr: 'PV de réunion',
+    en: 'Meeting minutes',
+    ee: 'PV de réunion',
+    kbp: 'PV de réunion'
+  },
+  doc_cat_justificatif: {
+    fr: 'Justificatif',
+    en: 'Receipt',
+    ee: 'Justificatif',
+    kbp: 'Justificatif'
+  },
+  doc_cat_autre: {
+    fr: 'Autre',
+    en: 'Other',
+    ee: 'Autre',
+    kbp: 'Autre'
+  },
+  chat_title: {
+    fr: 'Discussion du cercle',
+    en: 'Circle discussion',
+    ee: 'Discussion du cercle',
+    kbp: 'Discussion du cercle'
+  },
+  chat_messages_suffix: {
+    fr: 'messages',
+    en: 'messages',
+    ee: 'messages',
+    kbp: 'messages'
+  },
+  chat_empty_state: {
+    fr: 'Commencez la discussion…',
+    en: 'Start the discussion…',
+    ee: 'Commencez la discussion…',
+    kbp: 'Commencez la discussion…'
+  },
+  chat_input_placeholder: {
+    fr: 'Votre message…',
+    en: 'Your message…',
+    ee: 'Votre message…',
+    kbp: 'Votre message…'
   },
   gd_hide_chat: {
     fr: 'Masquer le Chat',
@@ -4946,6 +5554,42 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Habɔbɔ Yeye',
     kbp: 'Tontine kɩfaŋa'
   },
+  cir_page_subtitle: {
+    fr: 'Crée, rejoins ou retrouve tes tontines.',
+    en: 'Create, join, or find your tontines.',
+    ee: 'Crée, rejoins ou retrouve tes tontines.',
+    kbp: 'Crée, rejoins ou retrouve tes tontines.'
+  },
+  cir_join_section_title: {
+    fr: 'Rejoindre un cercle',
+    en: 'Join a circle',
+    ee: 'Rejoindre un cercle',
+    kbp: 'Rejoindre un cercle'
+  },
+  cir_join_code_placeholder: {
+    fr: 'Ex : EG12345',
+    en: 'E.g. EG12345',
+    ee: 'Ex : EG12345',
+    kbp: 'Ex : EG12345'
+  },
+  cir_join_button: {
+    fr: 'Rejoindre',
+    en: 'Join',
+    ee: 'Rejoindre',
+    kbp: 'Rejoindre'
+  },
+  cir_search_link: {
+    fr: 'Ou rechercher un cercle public',
+    en: 'Or search a public circle',
+    ee: 'Ou rechercher un cercle public',
+    kbp: 'Ou rechercher un cercle public'
+  },
+  cir_join_empty_code_error: {
+    fr: "Entre un code d'invitation.",
+    en: 'Enter an invite code.',
+    ee: "Entre un code d'invitation.",
+    kbp: "Entre un code d'invitation."
+  },
   cgd_dialog_title: {
     fr: 'Créer un nouveau cercle',
     en: 'Create a new circle',
@@ -4957,6 +5601,42 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Set up your digital tontine. You will be able to invite relatives and automate contributions after creating it.',
     ee: 'Ðo wò tontine komputa dzi ɖoɖo. Àte ŋu akpe wò ƒometɔwo ɖo eye nàna gaxexlẽwo nawɔ nu ɖokuiwo dzi le esi nàwɔe vɔ megbe.',
     kbp: 'Ñɔɔzɩ ño-tontine kɩfaŋa kpou taa. Ŋ-pɩzɩɣ nɛ ŋ-yaa ño-ɛyaa nɛ liidiye haʋ la wɛɛ ɖeke-ɖeke ye n-manɩ-kɛ.'
+  },
+  cgd_step_word: {
+    fr: 'Étape',
+    en: 'Step',
+    ee: 'Étape',
+    kbp: 'Étape'
+  },
+  cgd_step_of_word: {
+    fr: 'sur',
+    en: 'of',
+    ee: 'sur',
+    kbp: 'sur'
+  },
+  cgd_step1_title: {
+    fr: "L'essentiel",
+    en: 'The essentials',
+    ee: "L'essentiel",
+    kbp: "L'essentiel"
+  },
+  cgd_step2_title: {
+    fr: 'Qui, et quand',
+    en: 'Who, and when',
+    ee: 'Qui, et quand',
+    kbp: 'Qui, et quand'
+  },
+  cgd_step3_title: {
+    fr: 'Règles du cercle',
+    en: 'Circle rules',
+    ee: 'Règles du cercle',
+    kbp: 'Règles du cercle'
+  },
+  cgd_step4_title: {
+    fr: 'Validation',
+    en: 'Confirmation',
+    ee: 'Validation',
+    kbp: 'Validation'
   },
   cgd_name_label: {
     fr: 'Nom du cercle',
@@ -5107,6 +5787,114 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     en: 'Electronic Signature',
     ee: 'Asidede Komputa Dzi',
     kbp: 'Kpou taa nɩɩyɛ'
+  },
+  biom_default_username: {
+    fr: 'Utilisateur',
+    en: 'User',
+    ee: 'Utilisateur',
+    kbp: 'Utilisateur'
+  },
+  biom_header_label: {
+    fr: 'Sécurité biométrique eganyé',
+    en: 'eganyé biometric security',
+    ee: 'Sécurité biométrique eganyé',
+    kbp: 'Sécurité biométrique eganyé'
+  },
+  biom_register_title: {
+    fr: 'Associer votre biométrie',
+    en: 'Link your biometrics',
+    ee: 'Associer votre biométrie',
+    kbp: 'Associer votre biométrie'
+  },
+  biom_auth_title: {
+    fr: 'Connexion sécurisée',
+    en: 'Secure sign-in',
+    ee: 'Connexion sécurisée',
+    kbp: 'Connexion sécurisée'
+  },
+  biom_register_desc_prefix: {
+    fr: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte",
+    en: 'Enable ultra-fast fingerprint or face access for your account',
+    ee: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte",
+    kbp: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte"
+  },
+  biom_auth_desc: {
+    fr: "Posez votre doigt ou regardez l'appareil pour déverrouiller votre coffre eganyé.",
+    en: 'Place your finger or look at the device to unlock your eganyé vault.',
+    ee: "Posez votre doigt ou regardez l'appareil pour déverrouiller votre coffre eganyé.",
+    kbp: "Posez votre doigt ou regardez l'appareil pour déverrouiller votre coffre eganyé."
+  },
+  biom_fingerprint_label: {
+    fr: 'Empreinte',
+    en: 'Fingerprint',
+    ee: 'Empreinte',
+    kbp: 'Empreinte'
+  },
+  biom_faceid_label: {
+    fr: 'Face ID',
+    en: 'Face ID',
+    ee: 'Face ID',
+    kbp: 'Face ID'
+  },
+  biom_scanning: {
+    fr: 'Lecture biométrique…',
+    en: 'Reading biometrics…',
+    ee: 'Lecture biométrique…',
+    kbp: 'Lecture biométrique…'
+  },
+  biom_success: {
+    fr: 'Vérification réussie !',
+    en: 'Verification successful!',
+    ee: 'Vérification réussie !',
+    kbp: 'Vérification réussie !'
+  },
+  biom_error_generic: {
+    fr: 'Échec, réessayez.',
+    en: 'Failed, try again.',
+    ee: 'Échec, réessayez.',
+    kbp: 'Échec, réessayez.'
+  },
+  biom_error_verification_failed: {
+    fr: 'Échec de la vérification biométrique.',
+    en: 'Biometric verification failed.',
+    ee: 'Échec de la vérification biométrique.',
+    kbp: 'Échec de la vérification biométrique.'
+  },
+  biom_idle_cta: {
+    fr: 'Cliquez pour commencer',
+    en: 'Tap to start',
+    ee: 'Cliquez pour commencer',
+    kbp: 'Cliquez pour commencer'
+  },
+  biom_skip: {
+    fr: 'Passer',
+    en: 'Skip',
+    ee: 'Passer',
+    kbp: 'Passer'
+  },
+  biom_start: {
+    fr: 'Démarrer',
+    en: 'Start',
+    ee: 'Démarrer',
+    kbp: 'Démarrer'
+  },
+  biom_footnote: {
+    fr: "Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics).",
+    en: "Secured by your device's standard biometric API (WebAuthn / Capacitor Biometrics).",
+    ee: "Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics).",
+    kbp: "Sécurisé par l'API biométrique standard de votre appareil (WebAuthn / Capacitor Biometrics)."
+  },
+  sig_clear_button: {
+    fr: 'Effacer',
+    en: 'Clear',
+    ee: 'Effacer',
+    kbp: 'Effacer'
+  },
+  sig_instruction: {
+    fr: 'Signez dans le cadre ci-dessus',
+    en: 'Sign inside the box above',
+    ee: 'Signez dans le cadre ci-dessus',
+    kbp: 'Signez dans le cadre ci-dessus'
   },
   cgd_creating_ellipsis: {
     fr: 'Création en cours...',

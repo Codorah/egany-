@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Group, UserProfile } from '@/types';
 import { requestToJoinGroup, hydrateGroups } from '@/lib/groups';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Search, Users, Loader2, Send } from 'lucide-react';
 import { EmptyState } from './ui/EmptyState';
+import { AmountDisplay } from './ui/AmountDisplay';
+import { Skeleton } from './ui/Skeleton';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -71,14 +72,14 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+    <div className="space-y-4 sm:space-y-5 pb-20">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('sg_page_title')}</h1>
-          <p className="text-muted-foreground text-sm">{t('sg_page_subtitle')}</p>
+          <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground">{t('sg_page_title')}</h1>
+          <p className="text-[13px] text-muted-foreground font-medium">{t('sg_page_subtitle')}</p>
         </div>
       </div>
 
@@ -88,13 +89,20 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
           placeholder={t('sg_search_placeholder')}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
-          className="pl-9"
+          className="pl-9 rounded-xl"
         />
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="glass-card rounded-2xl border border-border/70 p-4 space-y-3">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-9 w-full rounded-xl" />
+            </div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -103,41 +111,38 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
           description={t('sg_empty_desc')}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((group) => {
             const isPending = group.pendingMembers?.includes(user.uid) || requestedIds.includes(group.id);
             return (
-              <Card key={group.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-base">{group.name}</CardTitle>
-                    <Badge variant="outline" className="text-[13px]">{t(`freq_${group.frequency}`)}</Badge>
-                  </div>
-                  <CardDescription className="line-clamp-2 text-xs">{group.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground">{t('contribution_label')}</span>
-                    <span>{group.contributionAmount.toLocaleString()} {group.currency}</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground">{t('participants')}</span>
-                    <span>{group.members.length}{group.maxMembers ? ` / ${group.maxMembers}` : ''}</span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    disabled={isPending || requestingId === group.id}
-                    onClick={() => handleRequest(group)}
-                  >
-                    {requestingId === group.id ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    {isPending ? t('sg_request_sent_label') : t('jg_request_to_join_cta')}
-                  </Button>
-                </CardContent>
-              </Card>
+              <div key={group.id} className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 space-y-3">
+                <div className="flex justify-between items-start gap-2">
+                  <h3 className="font-serif font-bold text-sm text-foreground truncate">{group.name}</h3>
+                  <Badge variant="outline" className="text-[12px] rounded-full shrink-0">{t(`freq_${group.frequency}`)}</Badge>
+                </div>
+                <p className="text-[13px] text-muted-foreground line-clamp-2">{group.description}</p>
+
+                <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-border/60">
+                  <span className="text-muted-foreground font-medium">{t('contribution_label')}</span>
+                  <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="sm" />
+                </div>
+                <div className="flex justify-between text-xs font-bold">
+                  <span className="text-muted-foreground font-medium">{t('participants')}</span>
+                  <span className="text-foreground">{group.members.length}{group.maxMembers ? ` / ${group.maxMembers}` : ''}</span>
+                </div>
+                <Button
+                  className="w-full rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                  disabled={isPending || requestingId === group.id}
+                  onClick={() => handleRequest(group)}
+                >
+                  {requestingId === group.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {isPending ? t('sg_request_sent_label') : t('jg_request_to_join_cta')}
+                </Button>
+              </div>
             );
           })}
         </div>

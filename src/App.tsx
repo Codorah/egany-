@@ -5,6 +5,8 @@ import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
 import { Toaster } from '@/components/ui/sonner';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { WifiOff } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Lazy-loaded: kept out of the main bundle since Dashboard/Onboarding are
 // the only screens needed for first paint (logged-in home, logged-out auth).
@@ -14,6 +16,7 @@ const JoinGroup = lazy(() => import('@/components/JoinGroup').then((m) => ({ def
 const AdminDashboard = lazy(() => import('@/components/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
 const ContributionsManager = lazy(() => import('@/components/ContributionsManager').then((m) => ({ default: m.ContributionsManager })));
 const SearchGroups = lazy(() => import('@/components/SearchGroups').then((m) => ({ default: m.SearchGroups })));
+const CircleHub = lazy(() => import('@/components/CircleHub').then((m) => ({ default: m.CircleHub })));
 const CalendarView = lazy(() => import('@/components/CalendarView').then((m) => ({ default: m.CalendarView })));
 const Support = lazy(() => import('@/components/Support').then((m) => ({ default: m.Support })));
 const Marketplace = lazy(() => import('@/components/Marketplace').then((m) => ({ default: m.Marketplace })));
@@ -39,6 +42,7 @@ import { runBackHandlers } from '@/hooks/useBackHandler';
 type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'wallet-recharge' | 'wallet-withdraw' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank' | 'cotiser' | 'activity';
 
 export default function App() {
+  const { t } = useLanguage();
   const { profile, loading: authLoading } = useAuth();
   const activeProfile = profile;
 
@@ -174,10 +178,19 @@ export default function App() {
     setView('group-details');
   };
 
-  const handleOnboardingComplete = () => {
+  // Saisie manuelle d'un code (onglet Cercle) — même mécanisme que le lien
+  // d'invitation ?join=CODE, juste déclenché depuis l'UI plutôt que l'URL.
+  const handleJoinByCode = (code: string) => {
+    setJoinCode(code.trim().toUpperCase());
+    setView('join');
+  };
+
+  const handleOnboardingComplete = (intent?: 'create' | 'join') => {
     // Account creation (Firebase Auth + Firestore profile) already happened inside <Onboarding>.
     // useAuth() picks up the new session automatically; we just reset the view.
-    setView('dashboard');
+    // L'intention choisie sur "Que veux-tu faire ?" évite un accueil vide :
+    // on amène directement sur l'onglet Cercle, qui a le + et le champ code.
+    setView(intent ? 'my-circles' : 'dashboard');
   };
 
   const handleLogout = async () => {
@@ -209,8 +222,21 @@ export default function App() {
           />
         );
       case 'my-circles':
+        return (
+          <CircleHub
+            user={activeProfile}
+            groups={groups}
+            onSelectGroup={handleSelectGroup}
+            onNavigateToVerification={() => {
+              setProfileTab('kyc');
+              setView('profile');
+            }}
+            onSearch={() => setView('search-groups')}
+            onJoinByCode={handleJoinByCode}
+          />
+        );
       case 'search-groups':
-        return <SearchGroups user={activeProfile} onBack={() => setView('dashboard')} />;
+        return <SearchGroups user={activeProfile} onBack={() => setView('my-circles')} />;
       case 'cotiser': {
         // L'onglet central mène droit au paiement. S'il n'y a qu'un cercle
         // actif, on ouvre directement ses cotisations ; sinon on laisse
@@ -260,7 +286,7 @@ export default function App() {
       case 'ai-assistant':
         return <AIAssistant user={activeProfile} groups={groups} />;
       case 'my-bank':
-        return <MyBank user={activeProfile} />;
+        return <MyBank user={activeProfile} groups={groups} />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':
@@ -278,7 +304,7 @@ export default function App() {
               setSelectedGroupId(id);
               setView('group-details');
             }}
-            onCancel={() => setView('dashboard')}
+            onCancel={() => setView('my-circles')}
           />
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'group-details':
@@ -351,8 +377,9 @@ export default function App() {
       onLogout={handleLogout}
     >
       {!isOnline && (
-        <div className="bg-amber-500 text-white text-xs font-bold text-center py-2 px-4">
-          Vous êtes hors-ligne — les données affichées peuvent ne pas être à jour, et les actions financières (recharge, retrait, cotisation, création/adhésion de cercle) sont désactivées.
+        <div className="bg-warning-soft border-b border-warning/30 text-warning text-xs font-bold text-center py-2 px-4 flex items-center justify-center gap-1.5">
+          <WifiOff className="w-3.5 h-3.5 shrink-0" />
+          <span>{t('offline_banner_title')} — {t('offline_banner_desc')}</span>
         </div>
       )}
       <Suspense fallback={<LoadingScreen fullScreen={false} />}>

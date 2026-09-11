@@ -13,7 +13,9 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
-  Check
+  Check,
+  Users,
+  Link2
 } from 'lucide-react';
 import {
   signInWithGoogle,
@@ -28,7 +30,10 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OnboardingProps {
-  onComplete: () => void;
+  /** L'intention choisie sur l'écran "Que veux-tu faire ?" est renvoyée à
+   * la fin, pour que l'app puisse ouvrir directement l'onglet Cercle
+   * (création ou adhésion) plutôt qu'un accueil vide après l'inscription. */
+  onComplete: (intent?: 'create' | 'join') => void;
   isLoading?: boolean;
 }
 
@@ -40,6 +45,7 @@ interface OnboardingProps {
 type Screen =
   | 'welcome'
   | 'slides'
+  | 'intent'
   | 'login'
   | 'register'
   | 'avatar'
@@ -233,6 +239,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
   const [screen, setScreen] = useState<Screen>('welcome');
   const [slideIndex, setSlideIndex] = useState(0);
+  const [intent, setIntent] = useState<'create' | 'join' | null>(null);
 
   // Champs partagés par les différents écrans
   const [displayName, setDisplayName] = useState('');
@@ -355,7 +362,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     if (error) throw error;
 
     toast.success(t('onb_account_created_success'));
-    onComplete();
+    onComplete(intent ?? undefined);
   };
 
   const handleFinishOnboarding = async () => {
@@ -924,7 +931,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
             <Button
               variant="ghost"
               size="lg"
-              onClick={() => goTo('register')}
+              onClick={() => goTo('intent')}
               className="text-white/85 hover:text-white hover:bg-white/10 rounded-full"
             >
               {t('onb_skip')}
@@ -933,7 +940,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
               size="lg"
               onClick={() => {
                 if (slideIndex < slides.length - 1) setSlideIndex(prev => prev + 1);
-                else goTo('register');
+                else goTo('intent');
               }}
               className="flex-1 bg-white hover:bg-white/90 text-brand-deep rounded-full gap-2"
             >
@@ -960,6 +967,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
             <div />
             <LanguageSwitcher value={language} onChange={setLanguage} variant="pill" />
           </>
+        ) : screen === 'intent' ? (
+          backButton('welcome')
         ) : (
           backButton('register')
         )}
@@ -1011,6 +1020,47 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 >
                   {t('onb_already_have_account')}
                 </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {screen === 'intent' && (
+            <motion.div key="intent" {...fade} className="w-full space-y-6 py-4">
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-serif font-black text-foreground tracking-tight">{t('onb_intent_title')}</h1>
+                <p className="text-sm text-muted-foreground">{t('onb_intent_desc')}</p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => { setIntent('create'); goTo('register'); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl gradient-sunset flex items-center justify-center text-white shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_create_title')}</h3>
+                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_create_desc')}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIntent('join'); goTo('register'); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
+                    <Link2 className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_join_title')}</h3>
+                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_join_desc')}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
               </div>
             </motion.div>
           )}

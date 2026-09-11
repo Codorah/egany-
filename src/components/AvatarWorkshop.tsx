@@ -13,6 +13,7 @@ import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AvatarWorkshopProps {
   value?: AvatarConfig;
@@ -43,6 +44,7 @@ function generateIllustratedAvatar(styleId: string, seed: string): string {
 }
 
 export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPhotoUpload = true }: AvatarWorkshopProps) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'illustrated' | 'photo'>('illustrated');
   const [styleId, setStyleId] = useState<string>(ILLUSTRATED_STYLES[0].id);
   const [seed, setSeed] = useState<string>(name || 'eganye');
@@ -77,11 +79,11 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
     e.target.value = '';
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image valide (JPG, PNG).');
+      toast.error(t('avw_invalid_image_error'));
       return;
     }
     if (!userId) {
-      toast.error("Impossible d'identifier votre compte pour l'envoi.");
+      toast.error(t('avw_no_account_error'));
       return;
     }
 
@@ -93,9 +95,9 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       onChange?.(data.publicUrl);
-      toast.success('Photo de profil mise à jour !');
+      toast.success(t('avw_photo_updated_success'));
     } catch (err: any) {
-      toast.error(err.message || "Échec de l'envoi de la photo.");
+      toast.error(err.message || t('avw_upload_failed_error'));
     } finally {
       setIsUploading(false);
     }
@@ -121,14 +123,14 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
             onClick={() => setMode('illustrated')}
             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer ${mode === 'illustrated' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
           >
-            Avatar illustré
+            {t('avw_illustrated_tab')}
           </button>
           <button
             type="button"
             onClick={() => setMode('photo')}
             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer ${mode === 'photo' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
           >
-            Ma photo
+            {t('avw_photo_tab')}
           </button>
         </div>
       )}
@@ -158,7 +160,7 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
             className="rounded-xl text-xs font-bold border-border text-foreground hover:bg-muted cursor-pointer flex items-center gap-1.5 mx-auto"
           >
             <Shuffle className="w-3.5 h-3.5" />
-            <span>Essayer une autre variante</span>
+            <span>{t('avw_shuffle_button')}</span>
           </Button>
         </div>
       ) : (
@@ -178,10 +180,10 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
             className="rounded-xl text-xs font-bold border-border text-foreground hover:bg-muted cursor-pointer flex items-center gap-1.5"
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>{isUploading ? 'Envoi en cours...' : 'Téléverser une photo'}</span>
+            <span>{isUploading ? t('avw_uploading_ellipsis') : t('avw_upload_photo_button')}</span>
           </Button>
           <p className="text-[13px] text-muted-foreground max-w-xs">
-            Votre photo est stockée de façon sécurisée et reste associée à votre profil.
+            {t('avw_photo_storage_note')}
           </p>
         </div>
       )}

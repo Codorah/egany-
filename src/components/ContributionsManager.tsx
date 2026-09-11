@@ -6,13 +6,15 @@ import { Group, UserProfile, Contribution, Payout } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search, Wallet, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StatusBadge } from './ui/StatusBadge';
+import { MemberCard } from './ui/MemberCard';
+import { Skeleton } from './ui/Skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContributionsManagerProps {
@@ -28,8 +30,20 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  // Une opération financière (déclarer/valider/rejeter un paiement) par
+  // clé "action-cibleId" à la fois : un double-tap sur mobile réseau lent
+  // ne doit jamais créer deux fois la même écriture comptable.
+  const [busyKeys, setBusyKeys] = useState<Set<string>>(new Set());
 
   const isManager = user.uid === group.creatorId || user.role === 'admin';
+
+  const setBusy = (key: string, val: boolean) => {
+    setBusyKeys((prev) => {
+      const next = new Set(prev);
+      if (val) next.add(key); else next.delete(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -92,6 +106,9 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   }, [group.id, isManager]);
 
   const handleUpdateStatus = async (contributionId: string, newStatus: 'paid' | 'pending' | 'late' | 'pending_approval') => {
+    const key = `status-${contributionId}`;
+    if (busyKeys.has(key)) return;
+    setBusy(key, true);
     try {
       const { error } = await supabase.from('contributions').update({ status: newStatus }).eq('id', contributionId);
       if (error) throw error;
@@ -99,6 +116,8 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error(t('status_update_error'));
+    } finally {
+      setBusy(key, false);
     }
   };
 
@@ -114,10 +133,14 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     } catch (error) {
       console.error("Error submitting proof:", error);
       toast.error(t('error_submitting'));
+      throw error;
     }
   };
 
   const handleCreateContribution = async (userId: string, userName: string, userEmail?: string) => {
+    const key = `create-${userId}`;
+    if (busyKeys.has(key)) return;
+    setBusy(key, true);
     try {
       const { error } = await supabase.from('contributions').insert({
         group_id: group.id,
@@ -134,10 +157,15 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     } catch (error) {
       console.error("Error creating contribution:", error);
       toast.error(t('error_creating'));
+    } finally {
+      setBusy(key, false);
     }
   };
 
   const handleRegisterPayment = async (userId: string, userName: string, userEmail?: string) => {
+    const key = `pay-${userId}`;
+    if (busyKeys.has(key)) return;
+    setBusy(key, true);
     try {
       const { data: inserted, error } = await supabase.from('contributions').insert({
         group_id: group.id,
@@ -174,6 +202,8 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
     } catch (error) {
       console.error("Error registering payment:", error);
       toast.error(t('error_registering_payment'));
+    } finally {
+      setBusy(key, false);
     }
   };
 
@@ -185,15 +215,15 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-success-soft text-secondary hover:bg-success-soft border-secondary/20">{t('status_paid')}</Badge>;
+        return <StatusBadge tone="success" label={t('status_paid')} />;
       case 'pending':
-        return <Badge variant="outline" className="text-brand border-brand/20 bg-brand/10">{t('status_pending')}</Badge>;
+        return <StatusBadge tone="info" label={t('status_pending')} />;
       case 'late':
-        return <Badge variant="destructive">{t('status_late')}</Badge>;
+        return <StatusBadge tone="danger" label={t('status_late')} />;
       case 'pending_approval':
-        return <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/10 border-blue-500/20 animate-pulse">{t('status_verifying')}</Badge>;
+        return <StatusBadge tone="info" label={t('status_verifying')} pulse />;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <StatusBadge tone="neutral" label={status} />;
     }
   };
 
@@ -259,33 +289,71 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-4 sm:space-y-5 pb-20">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3 w-28" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <Skeleton className="h-16 rounded-2xl" />
+          <Skeleton className="h-16 rounded-2xl" />
+          <Skeleton className="h-16 rounded-2xl" />
+        </div>
+        <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+          <Skeleton className="h-4 w-32" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-3 py-1.5">
+              <div className="space-y-1.5 flex-1">
+                <Skeleton className="h-3.5 w-2/3" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+    <div className="space-y-4 sm:space-y-5 pb-20">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform"
+          >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground truncate">
               {isManager ? t('contributions_management') : t('my_contributions_title')}
             </h1>
-            <p className="text-muted-foreground">{group.name} • {group.contributionAmount.toLocaleString()} {group.currency}</p>
+            <p className="text-[13px] text-muted-foreground font-medium truncate">
+              {group.name} • {group.contributionAmount.toLocaleString()} {group.currency}
+            </p>
           </div>
         </div>
         {isManager && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              onClick={handleExportExcel}
+              className="rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform"
+            >
               <FileSpreadsheet className="w-4 h-4" />
               <span className="hidden sm:inline">{t('export_excel')}</span>
             </Button>
-            <Button variant="outline" onClick={handleExportPDF} className="gap-2 border-red-200 text-red-600 hover:bg-red-50">
+            <Button
+              variant="outline"
+              onClick={handleExportPDF}
+              className="rounded-xl gap-1.5 border-danger/20 text-danger hover:bg-danger-soft cursor-pointer active:scale-95 transition-transform"
+            >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Export PDF</span>
             </Button>
@@ -294,39 +362,35 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
       </div>
 
       {isManager && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Wallet className="w-4 h-4" />
-              {t('circle_accounting')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-3 rounded-xl bg-success-soft border border-secondary/20">
-              <p className="text-[13px] font-bold uppercase text-secondary">{t('total_collected_in')}</p>
-              <p className="text-lg font-bold text-secondary">{totalCollected.toLocaleString()} {group.currency}</p>
+        <div className="glass-card rounded-3xl p-4 shadow-soft border border-border/70">
+          <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
+            <Wallet className="w-4 h-4 text-primary" />
+            {t('circle_accounting')}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-2xl bg-success-soft border border-secondary/20">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-secondary">{t('total_collected_in')}</p>
+              <p className="text-lg font-serif font-black text-secondary mt-0.5">{totalCollected.toLocaleString()} {group.currency}</p>
             </div>
-            <div className="p-3 rounded-xl bg-brand/10 border border-brand/20">
-              <p className="text-[13px] font-bold uppercase text-brand">{t('total_distributed_out')}</p>
-              <p className="text-lg font-bold text-brand">{totalDistributed.toLocaleString()} {group.currency}</p>
+            <div className="p-3 rounded-2xl bg-brand/10 border border-brand/20">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-brand">{t('total_distributed_out')}</p>
+              <p className="text-lg font-serif font-black text-brand mt-0.5">{totalDistributed.toLocaleString()} {group.currency}</p>
             </div>
-            <div className="p-3 rounded-xl bg-muted border border-border">
-              <p className="text-[13px] font-bold uppercase text-muted-foreground">{t('available_funds')}</p>
-              <p className="text-lg font-bold">{availableFunds.toLocaleString()} {group.currency}</p>
+            <div className="p-3 rounded-2xl bg-muted border border-border">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{t('available_funds')}</p>
+              <p className="text-lg font-serif font-black text-foreground mt-0.5">{availableFunds.toLocaleString()} {group.currency}</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className={isManager ? "lg:col-span-2" : "lg:col-span-3"}>
-          <CardHeader>
-            <CardTitle>{isManager ? t('payment_history') : t('my_payments')}</CardTitle>
-            <CardDescription>
-              {isManager
-                ? t('contributions_list_desc')
-                : t('my_contributions_desc')}
-            </CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className={`glass-card rounded-3xl shadow-soft border border-border/70 overflow-hidden ${isManager ? "lg:col-span-2" : "lg:col-span-3"}`}>
+          <div className="p-4 sm:p-5 pb-3 space-y-1">
+            <h2 className="text-base font-serif font-black text-foreground">{isManager ? t('payment_history') : t('my_payments')}</h2>
+            <p className="text-[13px] text-muted-foreground">
+              {isManager ? t('contributions_list_desc') : t('my_contributions_desc')}
+            </p>
             {isManager && (
               <div className="relative pt-2 max-w-xs">
                 <Search className="absolute left-2.5 top-4.5 w-3.5 h-3.5 text-muted-foreground" />
@@ -334,194 +398,216 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                   placeholder={t('search_member')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-8 text-xs"
+                  className="pl-8 h-9 text-xs rounded-xl"
                 />
               </div>
             )}
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-2 sm:px-3 pb-3">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>{t('member')}</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>{t('period')}</TableHead>
-                  <TableHead>{t('amount')}</TableHead>
-                  <TableHead>{t('penalty')}</TableHead>
-                  <TableHead>{t('status')}</TableHead>
-                  {isManager && <TableHead className="text-right">{t('actions')}</TableHead>}
+                <TableRow className="hover:bg-transparent border-border/70">
+                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('member')}</TableHead>
+                  <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wide font-bold text-muted-foreground">Email</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('period')}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('amount')}</TableHead>
+                  <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('penalty')}</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('status')}</TableHead>
+                  {isManager && <TableHead className="text-right text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContributions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={isManager ? 6 : 5} className="text-center py-8 text-muted-foreground">
-                      {t('no_contribution_found')}
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={isManager ? 7 : 6} className="text-center py-10">
+                      <div className="flex flex-col items-center gap-1.5 text-muted-foreground">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="text-xs font-medium">{t('no_contribution_found')}</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredContributions.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.userName || t('member')}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
-                      <TableCell>{c.period}</TableCell>
-                      <TableCell>{c.amount.toLocaleString()} {group.currency}</TableCell>
-                      <TableCell>
-                        {c.penaltyApplied ? (
-                          <Badge variant={c.penaltyStatus === 'paid' ? 'secondary' : 'destructive'} className="text-[13px]">
-                            {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(c.status)}</TableCell>
-                      {isManager && (
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {c.status === 'pending_approval' && (
-                              <div className="flex gap-1 mr-2">
-                                <Button 
-                                  size="icon" 
-                                  variant="outline" 
-                                  className="h-8 w-8 text-secondary border-secondary/20 hover:bg-success-soft"
-                                  onClick={() => handleUpdateStatus(c.id, 'paid')}
-                                  title={t('approve_payment')}
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="outline" 
-                                  className="h-8 w-8 text-danger border-danger/20 hover:bg-danger-soft"
-                                  onClick={() => handleUpdateStatus(c.id, 'pending')}
-                                  title={t('reject_proof')}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                            <Select 
-                              value={c.status} 
-                              onValueChange={(val: any) => handleUpdateStatus(c.id, val)}
-                            >
-                              <SelectTrigger className="w-[130px] h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="paid">{t('status_paid')}</SelectItem>
-                                <SelectItem value="pending">{t('status_pending')}</SelectItem>
-                                <SelectItem value="late">{t('status_late')}</SelectItem>
-                                <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </TableCell>
-                      )}
-                      {!isManager && (
-                        <TableCell className="text-right">
-                          {(c.status === 'pending' || c.status === 'late') && (
-                            <DeclarePaymentDialog 
-                              contribution={c} 
-                              onSubmit={(ref) => handleSubmitProof(c.id, ref)} 
+                  filteredContributions.map((c) => {
+                    const statusKey = `status-${c.id}`;
+                    const statusBusy = busyKeys.has(statusKey);
+                    return (
+                      <TableRow key={c.id} className="border-border/70">
+                        <TableCell className="font-bold text-foreground">{c.userName || t('member')}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">{c.period}</TableCell>
+                        <TableCell className="font-semibold">{c.amount.toLocaleString()} {group.currency}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {c.penaltyApplied ? (
+                            <StatusBadge
+                              tone={c.penaltyStatus === 'paid' ? 'success' : 'danger'}
+                              label={`${c.penaltyApplied.toLocaleString()} ${group.currency} ${c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}`}
                             />
-                          )}
-                          {c.status === 'pending_approval' && (
-                            <span className="text-xs text-muted-foreground italic">
-                              {t('ref_label')} {c.proofOfPayment?.reference}
-                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
                           )}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))
+                        <TableCell>{getStatusBadge(c.status)}</TableCell>
+                        {isManager && (
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {c.status === 'pending_approval' && (
+                                <div className="flex gap-1 mr-2">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    disabled={statusBusy}
+                                    className="h-8 w-8 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                                    onClick={() => handleUpdateStatus(c.id, 'paid')}
+                                    title={t('approve_payment')}
+                                  >
+                                    {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    disabled={statusBusy}
+                                    className="h-8 w-8 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                                    onClick={() => handleUpdateStatus(c.id, 'pending')}
+                                    title={t('reject_proof')}
+                                  >
+                                    {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                                  </Button>
+                                </div>
+                              )}
+                              <Select
+                                value={c.status}
+                                disabled={statusBusy}
+                                onValueChange={(val: any) => handleUpdateStatus(c.id, val)}
+                              >
+                                <SelectTrigger className="w-[130px] h-8 rounded-xl">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="paid">{t('status_paid')}</SelectItem>
+                                  <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                                  <SelectItem value="late">{t('status_late')}</SelectItem>
+                                  <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
+                        )}
+                        {!isManager && (
+                          <TableCell className="text-right">
+                            {(c.status === 'pending' || c.status === 'late') && (
+                              <DeclarePaymentDialog
+                                contribution={c}
+                                onSubmit={(ref) => handleSubmitProof(c.id, ref)}
+                              />
+                            )}
+                            {c.status === 'pending_approval' && (
+                              <span className="text-xs text-muted-foreground italic">
+                                {t('ref_label')} {c.proofOfPayment?.reference}
+                              </span>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {isManager && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('circle_members')}</CardTitle>
-              <CardDescription>{t('init_contribution_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {members.map((member) => (
-                <div key={member.uid} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                      {member.displayName.charAt(0)}
+          <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+            <div>
+              <h2 className="text-base font-serif font-black text-foreground">{t('circle_members')}</h2>
+              <p className="text-[13px] text-muted-foreground">{t('init_contribution_desc')}</p>
+            </div>
+            <div className="space-y-2">
+              {members.map((member) => {
+                const creating = busyKeys.has(`create-${member.uid}`);
+                const paying = busyKeys.has(`pay-${member.uid}`);
+                return (
+                  <MemberCard
+                    key={member.uid}
+                    avatarUrl={member.photoURL}
+                    name={member.displayName}
+                    subtitle={`${t('score_label')} ${member.reputationScore}/100`}
+                    trailing={
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={creating}
+                        className="h-7 text-[12px] px-2 rounded-lg gap-1 cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                        onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
+                      >
+                        {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                        {t('call_contribution')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={paying}
+                        className="h-7 text-[12px] px-2 rounded-lg gap-1 bg-secondary hover:bg-secondary/90 cursor-pointer active:scale-95 transition-transform disabled:opacity-60"
+                        onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
+                      >
+                        {paying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                        {t('pay')}
+                      </Button>
                     </div>
-                    <div className="text-sm">
-                      <p className="font-medium">{member.displayName}</p>
-                      <p className="text-xs text-muted-foreground">{t('score_label')} {member.reputationScore}/100</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="h-7 text-[13px] px-2"
-                      onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      {t('call_contribution')}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="default" 
-                      className="h-7 text-[13px] px-2 bg-secondary hover:bg-secondary/90"
-                      onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
-                    >
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      {t('pay')}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                    }
+                  />
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function DeclarePaymentDialog({ 
-  contribution, 
-  onSubmit 
-}: { 
-  contribution: Contribution, 
-  onSubmit: (reference: string) => void 
+function DeclarePaymentDialog({
+  contribution,
+  onSubmit
+}: {
+  contribution: Contribution,
+  onSubmit: (reference: string) => void
 }) {
   const { t } = useLanguage();
   const [reference, setReference] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reference.trim()) {
-      toast.error(t('enter_reference_error'));
+    if (!reference.trim() || isSubmitting) {
+      if (!reference.trim()) toast.error(t('enter_reference_error'));
       return;
     }
-    onSubmit(reference.trim());
-    setIsOpen(false);
-    setReference('');
+    setIsSubmitting(true);
+    try {
+      await onSubmit(reference.trim());
+      setIsOpen(false);
+      setReference('');
+    } catch {
+      // L'erreur est déjà notifiée par le parent (toast) ; on laisse le
+      // dialogue ouvert pour que la personne puisse corriger et renvoyer.
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={
-        <Button size="sm" variant="outline" className="h-8 gap-2">
+        <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform">
           <CheckCircle2 className="w-4 h-4" />
           {t('declare')}
         </Button>
       } />
-      <DialogContent>
+      <DialogContent className="rounded-3xl">
         <DialogHeader>
-          <DialogTitle>{t('declare_payment')}</DialogTitle>
+          <DialogTitle className="font-serif">{t('declare_payment')}</DialogTitle>
           <DialogDescription>
             {t('declare_payment_desc')}
           </DialogDescription>
@@ -529,17 +615,21 @@ function DeclarePaymentDialog({
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="reference">{t('transaction_reference')}</Label>
-            <Input 
-              id="reference" 
+            <Input
+              id="reference"
               placeholder={t('reference_placeholder')}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
+              className="rounded-xl"
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
-            <Button type="submit">{t('send_proof')}</Button>
+            <Button type="button" variant="ghost" className="rounded-xl cursor-pointer" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
+            <Button type="submit" disabled={isSubmitting} className="rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {t('send_proof')}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

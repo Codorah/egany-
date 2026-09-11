@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Plus, Bell, User } from 'lucide-react';
+import { Home, Users, Bell, Landmark, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BottomNavProps {
@@ -15,11 +15,12 @@ interface BottomNavProps {
 }
 
 /**
- * Navigation principale — 5 onglets, conformément à la charte eganyé.
- *
- * « Cotiser » est traité à part : c'est l'action que l'application veut
- * provoquer, elle occupe donc un bouton orange surélevé au centre plutôt
- * qu'un onglet ordinaire. Les quatre autres sont des destinations.
+ * Navigation principale — 5 onglets plats, conformément à la refonte
+ * eganyé : Accueil | Cercle | Activités | Ma Banque | Profil. Pas de bouton
+ * central : « Cotiser » reste accessible depuis la carte « À faire
+ * aujourd'hui » de l'Accueil et depuis chaque fiche de cercle, plutôt que
+ * de squatter un onglet qui ne sait de toute façon pas pour quel cercle on
+ * veut payer.
  */
 export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimulated = false }: BottomNavProps) {
   const { t } = useLanguage();
@@ -31,22 +32,21 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
   const isActive = (id: string) => {
     if (id === 'dashboard') return currentView === 'dashboard';
     if (id === 'my-circles') {
-      return ['my-circles', 'search-groups', 'group-details'].includes(currentView);
+      return ['my-circles', 'search-groups', 'group-details', 'cotiser', 'contributions'].includes(currentView);
     }
     if (id === 'activity') return currentView === 'activity';
-    if (id === 'profile') {
-      return ['profile', 'wallet-savings', 'wallet-recharge', 'wallet-withdraw', 'my-bank'].includes(currentView);
+    if (id === 'my-bank') {
+      return ['my-bank', 'wallet-savings', 'wallet-recharge', 'wallet-withdraw'].includes(currentView);
     }
+    if (id === 'profile') return currentView === 'profile';
     return false;
   };
 
-  const sideItems = [
+  const items = [
     { id: 'dashboard', label: t('nav_home'), icon: Home },
     { id: 'my-circles', label: t('nav_circles'), icon: Users },
-  ];
-
-  const rightItems = [
     { id: 'activity', label: t('nav_activity'), icon: Bell },
+    { id: 'my-bank', label: t('my_bank'), icon: Landmark },
     { id: 'profile', label: t('profile'), icon: User },
   ];
 
@@ -83,29 +83,8 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
 
   return (
     <div className={containerClasses}>
-      <div className="h-[84px] pt-3 pb-[env(safe-area-inset-bottom)] bg-card/95 backdrop-blur-2xl border-t-[1.5px] border-border flex items-start px-2">
-        {sideItems.map(renderTab)}
-
-        {/* Action centrale — surélevée hors de la barre */}
-        <div className="flex-1 flex flex-col items-center">
-          <button
-            onClick={() => handleNav('cotiser')}
-            className="-mt-8 w-16 h-16 rounded-full gradient-sunset text-white flex items-center justify-center shadow-[0_10px_24px_-8px_var(--brand-deep)] ring-4 ring-card cursor-pointer active:scale-90 transition-transform"
-          >
-            <Plus className="w-7 h-7" strokeWidth={2.6} />
-          </button>
-          <span
-            className={`text-[13px] leading-none tracking-tight mt-1.5 transition-colors duration-200 ${
-              currentView === 'cotiser' || currentView === 'contributions'
-                ? 'text-primary font-extrabold'
-                : 'text-muted-foreground font-semibold'
-            }`}
-          >
-            {t('nav_contribute')}
-          </span>
-        </div>
-
-        {rightItems.map(renderTab)}
+      <div className="h-[76px] pt-3 pb-[env(safe-area-inset-bottom)] bg-card/95 backdrop-blur-2xl border-t-[1.5px] border-border flex items-start px-2">
+        {items.map(renderTab)}
       </div>
     </div>
   );

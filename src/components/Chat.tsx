@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatProps {
   groupId: string;
@@ -16,6 +17,7 @@ interface ChatProps {
 }
 
 export function Chat({ groupId, user }: ChatProps) {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -76,65 +78,66 @@ export function Chat({ groupId, user }: ChatProps) {
     }
   };
 
+  // Pas de carte ni d'en-tête ici : le titre « Discussion » et le bouton
+  // retour vivent déjà dans l'en-tête de section de GroupDetails. Ce
+  // composant occupe tout l'espace restant, comme un vrai fil WhatsApp —
+  // pas une carte de 500px flottant au milieu de la page.
   return (
-    <div className="flex flex-col h-[500px] border rounded-xl bg-background overflow-hidden shadow-sm">
-      <div className="p-4 border-bottom bg-muted/30 flex items-center justify-between">
-        <h3 className="font-semibold">Chat du Cercle</h3>
-        <span className="text-xs text-muted-foreground">{messages.length} messages</span>
-      </div>
-
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+    <div className="flex flex-col h-[calc(100dvh-13rem)] min-h-[420px] -mx-4 sm:mx-0">
+      <ScrollArea className="flex-1 px-4">
+        <div className="space-y-3 py-3">
           {loading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm italic">
-              Commencez la discussion...
+              {t('chat_empty_state')}
             </div>
           ) : (
-            messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${msg.userId === user.uid ? 'flex-row-reverse' : 'flex-row'}`}
-              >
-                <Avatar className="w-8 h-8 shrink-0">
-                  <AvatarImage src={msg.userPhoto} />
-                  <AvatarFallback>{msg.userName?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className={`flex flex-col max-w-[80%] ${msg.userId === user.uid ? 'items-end' : 'items-start'}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium">{msg.userName}</span>
-                    <span className="text-[13px] text-muted-foreground">
+            messages.map((msg, idx) => {
+              const isMine = msg.userId === user.uid;
+              const prev = messages[idx - 1];
+              const showSender = !isMine && (!prev || prev.userId !== msg.userId);
+              return (
+                <div key={msg.id} className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <Avatar className={`w-7 h-7 shrink-0 ${isMine ? 'invisible' : ''}`}>
+                    <AvatarImage src={msg.userPhoto} />
+                    <AvatarFallback>{msg.userName?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className={`flex flex-col max-w-[78%] ${isMine ? 'items-end' : 'items-start'}`}>
+                    {showSender && (
+                      <span className="text-[11px] font-bold text-muted-foreground mb-0.5 px-1">{msg.userName}</span>
+                    )}
+                    <div
+                      className={`px-3.5 py-2 rounded-3xl text-sm leading-snug ${
+                        isMine
+                          ? 'bg-primary text-primary-foreground rounded-tr-md'
+                          : 'bg-muted text-foreground rounded-tl-md'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground mt-0.5 px-1">
                       {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     </span>
                   </div>
-                  <div
-                    className={`p-3 rounded-2xl text-sm ${
-                      msg.userId === user.uid
-                        ? 'bg-primary text-primary-foreground rounded-tr-none'
-                        : 'bg-muted rounded-tl-none'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           <div ref={scrollRef} />
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSendMessage} className="p-4 border-t bg-background flex gap-2">
+      <form onSubmit={handleSendMessage} className="px-4 py-3 border-t border-border/70 bg-background flex gap-2 shrink-0">
         <Input
-          placeholder="Votre message..."
+          placeholder={t('chat_input_placeholder')}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1"
+          className="flex-1 rounded-full h-11 bg-muted border-transparent"
         />
-        <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+        <Button type="submit" size="icon" disabled={!newMessage.trim()} className="rounded-full h-11 w-11 shrink-0 cursor-pointer active:scale-95 transition-transform">
           <Send className="w-4 h-4" />
         </Button>
       </form>
