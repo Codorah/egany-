@@ -346,7 +346,6 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
                   description={t('no_circle_desc')}
                   actionText={t('create_first_circle')}
                   onAction={() => {}}
-                  variant="amber"
                 />
               </div>
             }

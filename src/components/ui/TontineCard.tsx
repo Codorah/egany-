@@ -19,8 +19,16 @@ export function TontineCard({ group, onClick }: TontineCardProps) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="glass-card rounded-2xl p-3.5 shadow-soft border border-border/70 hover:border-brand/40 transition-all cursor-pointer flex items-center gap-3 active:scale-[0.99]"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="press-row glass-card rounded-2xl p-3.5 shadow-soft border border-border/70 hover:border-brand/40 transition-all cursor-pointer flex items-center gap-3"
     >
       <div className="w-11 h-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0 font-serif font-black text-base border border-brand/20">
         {group.name.substring(0, 2).toUpperCase()}

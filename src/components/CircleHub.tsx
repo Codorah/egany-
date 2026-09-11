@@ -64,7 +64,7 @@ export function CircleHub({ user, groups, onSelectGroup, onNavigateToVerificatio
           trigger={
             <Button
               size="sm"
-              className="gradient-sunset text-white font-bold rounded-xl shadow-xs text-xs h-9 px-3 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+              className="btn-shine gradient-sunset text-white font-bold rounded-xl shadow-xs text-xs h-9 px-3 flex items-center gap-1.5 cursor-pointer"
             >
               <span className="hidden sm:inline">{t('cgd_new_circle_button')}</span>
               <span className="sm:hidden">+</span>
@@ -85,7 +85,6 @@ export function CircleHub({ user, groups, onSelectGroup, onNavigateToVerificatio
                   description={t('no_circle_desc')}
                   actionText={t('create_first_circle')}
                   onAction={() => {}}
-                  variant="amber"
                 />
               </div>
             }
@@ -109,9 +108,9 @@ export function CircleHub({ user, groups, onSelectGroup, onNavigateToVerificatio
             placeholder={t('cir_join_code_placeholder')}
             className="rounded-xl flex-1"
           />
-          <Button type="submit" className="rounded-xl gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-transform">
+          <Button type="submit" className="btn-shine rounded-xl gap-1.5 shrink-0 cursor-pointer group/join">
             {t('cir_join_button')}
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/join:translate-x-0.5" />
           </Button>
         </form>
         <button

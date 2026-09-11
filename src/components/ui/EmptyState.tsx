@@ -10,7 +10,6 @@ interface EmptyStateProps {
   description: string;
   actionText?: string;
   onAction?: () => void;
-  variant?: 'amber' | 'emerald' | 'blue' | 'purple';
 }
 
 export function EmptyState({
@@ -20,36 +19,13 @@ export function EmptyState({
   description,
   actionText,
   onAction,
-  variant = 'amber',
 }: EmptyStateProps) {
-  const colors = {
-    amber: {
-      bg: 'bg-amber-500/10',
-      text: 'text-amber-600',
-      border: 'border-amber-500/20',
-      button: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-    },
-    emerald: {
-      bg: 'bg-emerald-500/10',
-      text: 'text-emerald-600',
-      border: 'border-emerald-500/20',
-      button: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-    },
-    blue: {
-      bg: 'bg-blue-500/10',
-      text: 'text-blue-500',
-      border: 'border-blue-500/20',
-      button: 'bg-blue-600 hover:bg-blue-700 text-white',
-    },
-    purple: {
-      bg: 'bg-purple-500/10',
-      text: 'text-purple-500',
-      border: 'border-purple-500/20',
-      button: 'bg-purple-600 hover:bg-purple-700 text-white',
-    },
+  const currentTheme = {
+    bg: 'bg-primary/10',
+    text: 'text-primary',
+    border: 'border-primary/20',
+    button: 'bg-primary hover:bg-primary/90 text-primary-foreground',
   };
-
-  const currentTheme = colors[variant];
 
   return (
     <motion.div
@@ -76,7 +52,7 @@ export function EmptyState({
       {actionText && onAction && (
         <Button
           onClick={onAction}
-          className={`rounded-2xl px-6 py-2 h-10 text-xs font-bold ${currentTheme.button}`}
+          className={`btn-shine rounded-2xl px-6 py-2 h-10 text-xs font-bold ${currentTheme.button}`}
         >
           {actionText}
         </Button>
