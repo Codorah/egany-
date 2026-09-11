@@ -215,6 +215,30 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Tutu',
     kbp: 'Ɖɩzɩ'
   },
+  alerts_activities_subtitle: {
+    fr: 'Suivi en temps réel de votre statut de paiement et rappels du cercle de tontine.',
+    en: 'Real-time tracking of your payment status and tontine circle reminders.',
+    ee: 'Nudzɔdzɔ le ɣeyiɣi me tso wò gaxexlẽ ƒe nɔnɔme kple wò habɔbɔ ƒe ɖoɖowo ŋu.',
+    kbp: 'Cɔnʋʋ lɛɛlɛɛyɔ ñɛ-liidiye haʋ tɔm nɛ tontine susuu tɔm.'
+  },
+  alert_badge_late: {
+    fr: 'Alerte Retard',
+    en: 'Late Alert',
+    ee: 'Nyaɖeɖe Tsitsitɔ',
+    kbp: 'Kɩgbɛdɩŋ tɔm susuu'
+  },
+  alert_badge_payout: {
+    fr: 'Paiement Reçu',
+    en: 'Payment Received',
+    ee: 'Gaxexlẽ Woxɔ',
+    kbp: 'Liidiye mʋm'
+  },
+  alert_badge_info: {
+    fr: 'Info',
+    en: 'Info',
+    ee: 'Nyatakaka',
+    kbp: 'Tɔm'
+  },
 
   // Onboarding & Language Selector Settings
   onboarding_title: {

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DashboardNotificationsProps {
   userId: string;
@@ -68,6 +69,7 @@ export function DashboardNotifications({
   onSelectGroup,
   onNavigateToProfileTab
 }: DashboardNotificationsProps) {
+  const { t } = useLanguage();
   const { notifications, loading, markAsRead, deleteNotification } = useNotifications(userId);
   const [filter, setFilter] = useState<'all' | 'late' | 'payout'>('all');
 
@@ -104,7 +106,7 @@ export function DashboardNotifications({
         bg: !notif.read ? 'bg-danger/10 border-danger/30' : 'bg-danger/5 border-danger/10',
         iconBg: 'bg-danger/15 text-danger',
         icon: <AlertTriangle className="w-4 h-4 shrink-0" />,
-        badgeText: 'Alerte Retard',
+        badgeText: t('alert_badge_late'),
         badgeClass: 'bg-danger/10 text-danger border border-danger/20'
       };
     }
@@ -113,7 +115,7 @@ export function DashboardNotifications({
         bg: !notif.read ? 'bg-secondary/10 border-secondary/30' : 'bg-secondary/5 border-secondary/10',
         iconBg: 'bg-secondary/15 text-secondary',
         icon: <DollarSign className="w-4 h-4 shrink-0" />,
-        badgeText: 'Paiement Reçu',
+        badgeText: t('alert_badge_payout'),
         badgeClass: 'bg-secondary/10 text-secondary border border-secondary/20'
       };
     }
@@ -121,7 +123,7 @@ export function DashboardNotifications({
       bg: !notif.read ? 'bg-muted border-border' : 'bg-card border-border',
       iconBg: 'bg-muted text-muted-foreground',
       icon: <Bell className="w-4 h-4 shrink-0" />,
-      badgeText: 'Info',
+      badgeText: t('alert_badge_info'),
       badgeClass: 'bg-muted text-muted-foreground'
     };
   };
@@ -163,22 +165,22 @@ export function DashboardNotifications({
   }
 
   return (
-    <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden">
+    <Card className="bg-card border border-border shadow-soft rounded-3xl overflow-hidden">
       <CardHeader className="pb-4 bg-muted/40 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
               <Bell className="w-5 h-5 text-brand" />
-              Centre d'Alertes & Activités
+              {t('alerts_activities')}
             </CardTitle>
             {unreadLateAlerts > 0 && (
               <Badge className="bg-danger text-white border-none font-bold text-[13px] rounded-full px-2 py-0.5 animate-pulse">
-                {unreadLateAlerts} retard{unreadLateAlerts > 1 ? 's' : ''}
+                {unreadLateAlerts} {t('unread_alerts_suffix')}
               </Badge>
             )}
           </div>
           <CardDescription className="text-xs text-muted-foreground mt-0.5 font-medium">
-            Suivi en temps réel de votre statut de paiement et rappels du cercle de tontine.
+            {t('alerts_activities_subtitle')}
           </CardDescription>
         </div>
 
@@ -194,7 +196,7 @@ export function DashboardNotifications({
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
             }`}
           >
-            Tous
+            {t('all')}
           </Button>
           <Button
             variant="ghost"
@@ -207,7 +209,7 @@ export function DashboardNotifications({
             }`}
           >
             <AlertTriangle className="w-3 h-3 shrink-0" />
-            Alertes Retard
+            {t('late_alerts')}
           </Button>
           <Button
             variant="ghost"
@@ -220,7 +222,7 @@ export function DashboardNotifications({
             }`}
           >
             <DollarSign className="w-3 h-3 shrink-0" />
-            Versements
+            {t('contributions')}
           </Button>
         </div>
       </CardHeader>
@@ -237,13 +239,13 @@ export function DashboardNotifications({
                 <Inbox className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-bold text-xs text-foreground">Aucune alerte trouvée</p>
+                <p className="font-bold text-xs text-foreground">{t('no_alert_found')}</p>
                 <p className="text-[13px] text-muted-foreground mt-0.5">
                   {filter === 'late'
-                    ? "Aucun retard de paiement n'est signalé sur vos cercles d'épargne actifs."
+                    ? t('no_alert_desc_late')
                     : filter === 'payout'
-                    ? "Aucun encaissement ou payout n'a encore été enregistré."
-                    : "Votre historique d'alertes est vierge pour le moment."}
+                    ? t('no_alert_desc_payout')
+                    : t('no_alert_desc_all')}
                 </p>
               </div>
             </motion.div>
@@ -301,10 +303,10 @@ export function DashboardNotifications({
                               variant="outline"
                               size="sm"
                               onClick={() => handleActionClick(notif)}
-                              className="h-7 px-3 text-[13px] font-black uppercase tracking-wide border-danger/30 text-danger bg-danger/5 hover:bg-danger hover:text-white rounded-lg cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
+                              className="btn-shine group/settle h-7 px-3 text-[13px] font-black uppercase tracking-wide border-danger/30 text-danger bg-danger/5 hover:bg-danger hover:text-white rounded-lg cursor-pointer flex items-center gap-1"
                             >
-                              <span>Régler ma cotisation</span>
-                              <ArrowRight className="w-3 h-3" />
+                              <span>{t('settle_my_contribution')}</span>
+                              <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover/settle:translate-x-0.5" />
                             </Button>
                           )}
 
@@ -316,7 +318,7 @@ export function DashboardNotifications({
                               onClick={() => handleActionClick(notif)}
                               className="h-7 px-2 text-[13px] font-bold text-secondary hover:bg-secondary/10 rounded-lg cursor-pointer flex items-center gap-1"
                             >
-                              <span>Voir le détail</span>
+                              <span>{t('view_details')}</span>
                             </Button>
                           )}
 
@@ -329,7 +331,7 @@ export function DashboardNotifications({
                               className="h-7 px-2.5 text-[13px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer flex items-center gap-1 ml-auto"
                             >
                               <Check className="w-3.5 h-3.5" />
-                              <span>Lu</span>
+                              <span>{t('read')}</span>
                             </Button>
                           )}
 
@@ -339,7 +341,7 @@ export function DashboardNotifications({
                             size="icon"
                             onClick={() => deleteNotification(notif.id)}
                             className="h-7 w-7 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger cursor-pointer ml-auto sm:ml-0"
-                            title="Supprimer"
+                            title={t('dismiss')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
