@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Plus, ShieldAlert, ArrowRight } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 
@@ -232,7 +233,7 @@ export function CreateGroupDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         nativeButton={trigger ? triggerIsNativeButton : true}
-        render={trigger || <Button className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer" />}
+        render={trigger || <Button className="btn-shine flex items-center gap-2 bg-brand hover:bg-brand/90 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer" />}
       >
         {trigger ? undefined : (
           <>
@@ -272,7 +273,7 @@ export function CreateGroupDialog({
                   setOpen(false);
                   onNavigateToVerification?.();
                 }}
-                className="w-full rounded-2xl gradient-sunset text-white glow-orange gap-2"
+                className="btn-shine w-full rounded-2xl gradient-sunset text-white glow-orange gap-2"
               >
                 {t('cgd_kyc_gate_cta')}
                 <ArrowRight className="w-5 h-5" />
@@ -415,41 +416,23 @@ export function CreateGroupDialog({
                   <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground">{t('cgd_private_circle_label')}</Label>
                   <p className="text-[13px] text-muted-foreground">{t('cgd_private_circle_desc')}</p>
                 </div>
-                <button
+                <Switch
                   id="isPrivate"
-                  type="button"
-                  onClick={() => setValue("isPrivate", !isPrivate)}
+                  checked={isPrivate}
+                  onCheckedChange={(checked) => setValue("isPrivate", checked)}
                   disabled={isSubmitting}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    isPrivate ? 'bg-secondary' : 'bg-muted'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
-                      isPrivate ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+                />
               </div>
 
               <div className="bg-muted p-3.5 rounded-2xl border border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground">{t('prof_late_penalties')}</Label>
-                  <button
+                  <Switch
                     id="penaltiesEnabled"
-                    type="button"
-                    onClick={() => setValue("penaltiesEnabled", !penaltiesEnabled)}
+                    checked={penaltiesEnabled}
+                    onCheckedChange={(checked) => setValue("penaltiesEnabled", checked)}
                     disabled={isSubmitting}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      penaltiesEnabled ? 'bg-secondary' : 'bg-muted'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        penaltiesEnabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
+                  />
                 </div>
 
                 {penaltiesEnabled && (
@@ -543,7 +526,7 @@ export function CreateGroupDialog({
                 {t('onb_next_step_button')}
               </Button>
             ) : (
-              <Button type="submit" className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer" disabled={isSubmitting}>
+              <Button type="submit" className="btn-shine flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer" disabled={isSubmitting}>
                 {isSubmitting ? t('cgd_creating_ellipsis') : t('cgd_submit_cta')}
               </Button>
             )}

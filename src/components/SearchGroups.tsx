@@ -74,7 +74,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
   return (
     <div className="space-y-4 sm:space-y-5 pb-20">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
@@ -131,7 +131,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                   <span className="text-foreground">{group.members.length}{group.maxMembers ? ` / ${group.maxMembers}` : ''}</span>
                 </div>
                 <Button
-                  className="w-full rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                  className="btn-shine w-full rounded-xl gap-1.5 cursor-pointer"
                   disabled={isPending || requestingId === group.id}
                   onClick={() => handleRequest(group)}
                 >
