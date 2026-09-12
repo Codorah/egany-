@@ -194,8 +194,16 @@ export function Marketplace({ user }: MarketplaceProps) {
             return (
               <div
                 key={service.id}
-                className="glass-card rounded-2xl p-5 shadow-soft hover:shadow-elevated transition-shadow flex flex-col justify-between cursor-pointer"
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedService(service)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedService(service);
+                  }
+                }}
+                className="press-row glass-card rounded-2xl p-5 shadow-soft hover:shadow-elevated transition-shadow flex flex-col justify-between cursor-pointer"
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-2xl ${service.colorClass} shadow-xs shrink-0`}>
@@ -218,9 +226,9 @@ export function Marketplace({ user }: MarketplaceProps) {
                       : `${t('mkt_request_prefix')} ${statusLabels[existingRequest.status].label}`}
                   </div>
                 ) : (
-                  <Button variant="outline" className="w-full font-bold border-brand/30 text-brand hover:bg-brand/10 h-11">
-                    {t('view_details')} <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
+                  <span className="w-full flex items-center justify-center gap-1 font-bold border border-brand/30 text-brand rounded-xl h-11 text-sm">
+                    {t('view_details')} <ChevronRight className="w-4 h-4" />
+                  </span>
                 )}
               </div>
             );
@@ -306,7 +314,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                           </p>
                         </div>
                         <Button
-                          className="w-full h-12 text-base font-bold rounded-xl"
+                          className="btn-shine w-full h-12 text-base font-bold rounded-xl"
                           onClick={handleRepay}
                           disabled={isRepaying}
                         >
@@ -371,7 +379,7 @@ export function Marketplace({ user }: MarketplaceProps) {
                         </p>
                       </div>
                       <Button
-                        className="w-full h-12 text-base font-bold rounded-xl"
+                        className="btn-shine w-full h-12 text-base font-bold rounded-xl"
                         onClick={handleAction}
                         disabled={isSubmitting}
                       >
