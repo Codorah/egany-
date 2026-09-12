@@ -42,7 +42,7 @@ export function ErrorState({
         ' flex flex-col items-center justify-center text-center px-6 gap-4 bg-background'
       }
     >
-      <div className="p-4 rounded-3xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+      <div className="p-4 rounded-3xl bg-danger-soft text-danger">
         <Icon className="w-8 h-8" />
       </div>
       <div className="space-y-1.5 max-w-xs">
@@ -52,7 +52,7 @@ export function ErrorState({
       {onRetry && (
         <Button
           onClick={onRetry}
-          className="gradient-sunset text-white font-bold rounded-2xl h-12 px-6 flex items-center gap-2 cursor-pointer"
+          className="btn-shine gradient-sunset text-white font-bold rounded-2xl h-12 px-6 flex items-center gap-2 cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
           {retryLabel}

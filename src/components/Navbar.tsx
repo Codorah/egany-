@@ -112,7 +112,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
             className="hidden md:flex p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             title={isDark ? t('nav_theme_light') : t('nav_theme_dark')}
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {isDark ? <Sun className="w-4 h-4 text-eganye-gold" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
           </button>
 
           {/* Notifications */}
@@ -134,7 +134,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                     <p className="text-sm font-bold text-foreground">{user.displayName}</p>
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     {user.role === 'admin' && (
-                      <span className="inline-flex items-center gap-1 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                      <span className="inline-flex items-center gap-1 text-[13px] font-bold text-secondary mt-1">
                         <Sparkles className="w-3 h-3" /> {t('nav_admin_badge')}
                       </span>
                     )}
@@ -151,7 +151,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                     className="w-full flex items-center justify-between px-2.5 py-2.5 rounded-lg text-sm font-semibold text-foreground hover:bg-muted"
                   >
                     <span className="flex items-center gap-2">
-                      {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+                      {isDark ? <Sun className="w-4 h-4 text-eganye-gold" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
                       <span>{isDark ? t('nav_theme_light') : t('nav_theme_dark')}</span>
                     </span>
                   </button>
@@ -183,8 +183,8 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                 <DropdownMenuSeparator className="my-1" />
                 {(user.role === 'admin' || user.email === 'codorah@hotmail.com') && (
                   <DropdownMenuItem onClick={() => onNavigate?.('admin')} className="rounded-xl cursor-pointer">
-                    <ShieldCheck className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-bold">{t('admin_panel') || 'Administration'}</span>
+                    <ShieldCheck className="mr-2 h-4 w-4 text-secondary" />
+                    <span className="font-bold">{t('admin_panel')}</span>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => onNavigate?.('profile')} className="rounded-xl cursor-pointer">
@@ -207,7 +207,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button className="gradient-sunset text-white font-bold rounded-xl shadow-xs hover:opacity-95 text-xs h-9 px-3" onClick={() => onNavigate?.('dashboard')}>
+            <Button className="btn-shine gradient-sunset text-white font-bold rounded-xl shadow-xs hover:opacity-95 text-xs h-9 px-3" onClick={() => onNavigate?.('dashboard')}>
               {t('nav_login')}
             </Button>
           )}
