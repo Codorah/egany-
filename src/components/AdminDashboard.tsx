@@ -525,7 +525,7 @@ export function AdminDashboard() {
                 {t('admin_total_savings_goals')}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+            <div className="w-10 h-10 rounded-xl bg-eganye-gold/10 flex items-center justify-center text-eganye-gold">
               <TrendingUp className="w-5 h-5" />
             </div>
           </CardContent>
@@ -549,7 +549,7 @@ export function AdminDashboard() {
                 />
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-sage/15 flex items-center justify-center text-sage shrink-0">
               <Award className="w-5 h-5" />
             </div>
           </CardContent>
@@ -823,7 +823,7 @@ export function AdminDashboard() {
                                 u.reputationScore >= 85 
                                   ? 'text-secondary' 
                                   : u.reputationScore >= 70 
-                                  ? 'text-blue-600' 
+                                  ? 'text-sage'
                                   : u.reputationScore >= 50 
                                   ? 'text-brand' 
                                   : 'text-danger'
@@ -1069,7 +1069,7 @@ export function AdminDashboard() {
                           size="sm"
                           onClick={() => handleReviewKyc(sub.id, true)}
                           disabled={reviewingKycId === sub.id}
-                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                          className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                         >
                           <Check className="w-3.5 h-3.5 mr-1.5" />
                           Valider
@@ -1141,7 +1141,7 @@ export function AdminDashboard() {
                               size="sm"
                               onClick={() => handleReviewMarketplaceRequest(req.id, 'approved', req.userId, req.serviceTitle)}
                               disabled={reviewingRequestId === req.id}
-                              className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                              className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                             >
                               <Check className="w-3.5 h-3.5 mr-1.5" />
                               Approuver
@@ -1186,7 +1186,7 @@ export function AdminDashboard() {
                               size="sm"
                               onClick={() => handleApproveCredit(req)}
                               disabled={approvingCreditId === req.id}
-                              className="h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                              className="btn-shine h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                             >
                               <Check className="w-3.5 h-3.5 mr-1.5" />
                               Approuver et décaisser
@@ -1334,7 +1334,7 @@ export function AdminDashboard() {
                           size="sm"
                           onClick={() => handleCompleteWithdrawal(w)}
                           disabled={processingWithdrawalId === w.id}
-                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                          className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                         >
                           <Check className="w-3.5 h-3.5 mr-1.5" />
                           Envoyé
@@ -1435,8 +1435,8 @@ export function AdminDashboard() {
                     </div>
                   </div>
 
-                  <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-11 text-xs"
+                  <Button
+                    className="btn-shine w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-11 text-xs"
                     onClick={handleTriggerReconciliation}
                     disabled={isReconciling}
                   >
@@ -1530,7 +1530,7 @@ export function AdminDashboard() {
                                   {entry.account.startsWith('user_wallet:') ? (
                                     <span className="text-foreground font-semibold">{t('admin_wallet_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
                                   ) : entry.account.startsWith('tontine_group:') ? (
-                                    <span className="text-indigo-600 font-semibold">{t('admin_circle_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
+                                    <span className="text-eganye-gold font-semibold">{t('admin_circle_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
                                   ) : (
                                     <span className="text-muted-foreground font-semibold">{entry.account}</span>
                                   )}
