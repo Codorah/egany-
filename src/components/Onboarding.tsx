@@ -598,7 +598,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   );
 
   const primaryButtonClass =
-    'w-full rounded-full gradient-sunset text-white glow-orange gap-2';
+    'btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2';
 
   /* ---------------- Écrans d'authentification (coque graphique) ------- */
 
@@ -942,7 +942,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 if (slideIndex < slides.length - 1) setSlideIndex(prev => prev + 1);
                 else goTo('intent');
               }}
-              className="flex-1 bg-white hover:bg-white/90 text-brand-deep rounded-full gap-2"
+              className="btn-shine flex-1 bg-white hover:bg-white/90 text-brand-deep rounded-full gap-2"
             >
               {slideIndex === slides.length - 1 ? t('onb_got_it') : t('onb_next')}
               <ArrowRight className="w-5 h-5" />
@@ -1007,7 +1007,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 <Button
                   onClick={() => goTo('slides')}
                   size="lg"
-                  className="w-full rounded-full gradient-sunset text-white glow-orange gap-2"
+                  className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
                 >
                   {t('onb_discover_eganye')}
                   <ArrowRight className="w-5 h-5" />
@@ -1077,7 +1077,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 onClick={handleFinishOnboarding}
                 disabled={isCreatingAccount || isLoading}
                 size="lg"
-                className="w-full rounded-full gradient-sunset text-white glow-orange gap-2"
+                className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
               >
                 {isCreatingAccount || isLoading ? t('onb_creating_account') : t('onb_create_account_cta')}
                 {!(isCreatingAccount || isLoading) && <ArrowRight className="w-5 h-5" />}
