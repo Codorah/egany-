@@ -6350,6 +6350,30 @@ const translations: Record<string, Record<LanguageCode, string>> = {
     ee: 'Turn Si Gbɔna',
     kbp: 'Ðɩɣyɛ kɩfalɩyɛ'
   },
+  ais_prompt_draft_reminder: {
+    fr: 'Aide-moi à rédiger un rappel pour mes cotisations en retard',
+    en: 'Help me draft a reminder for my late contributions',
+    ee: 'Kpe ɖe ŋunye maŋlɔ ŋkuɖodzinya na nye gaxexlẽ siwo tsi',
+    kbp: 'Sɩnɩ-m se man-ma ɖɔɖɔyʋ man liidiye haʋ ŋgʋ kɩ-gbɛdɩɣ yɔ, kɩ-yɔɔ'
+  },
+  ais_prompt_treasury_report: {
+    fr: 'Fais-moi un bilan de ma caisse',
+    en: 'Give me a report on my treasury',
+    ee: 'Wɔ ga nudɔdzikpɔkpɔ akɔnta nam',
+    kbp: 'Lɩzɩ-m man liidiye kpou kɩbɩnzʋʋ'
+  },
+  ais_prompt_late_summary: {
+    fr: 'Résume mes cotisations en retard et suggère un message de rappel',
+    en: 'Summarize my late contributions and suggest a reminder message',
+    ee: 'Fia nye gaxexlẽ siwo tsi ƒe kpuiƒoƒo eye nàɖo aɖaŋu tso ŋkuɖodzinya gbedeasi ŋu',
+    kbp: 'Kpaɣ man liidiye haʋ ŋgʋ kɩ-gbɛdɩɣ yɔ, kɩ-tɩŋa nɛ ñɩnɩ ɖɔɖɔyʋ tɔm'
+  },
+  ais_prompt_next_turn: {
+    fr: 'Quand et combien vais-je recevoir à mon prochain tour ?',
+    en: 'When and how much will I receive on my next turn?',
+    ee: 'Ɣe ka ɣi kple ga nenie maxɔ le nye turn si gbɔna me?',
+    kbp: 'Alɩwaatʋ ɖɩlɛ nɛ liidiye ɛzɩma ɖɩlɛ mʋʋʋ man-ɖɩɣyɛ kɩfalɩyɛ taa?'
+  },
   ais_conversation_label: {
     fr: 'Conversation Copilote IA',
     en: 'AI Copilot Conversation',

@@ -156,9 +156,9 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
                     {lateContributions.length > 1 ? ` ${t('ais_and_label')} ${lateContributions.length - 1} ${t('ais_others_label')}` : ''}.
                   </p>
                   <Button
-                    onClick={() => handleSend('Aide-moi à rédiger un rappel pour mes cotisations en retard')}
+                    onClick={() => handleSend(t('ais_prompt_draft_reminder'))}
                     size="sm"
-                    className="mt-2.5 h-8 text-[13px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
+                    className="btn-shine mt-2.5 h-8 text-[13px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
                   >
                     <Bell className="w-3.5 h-3.5 mr-1" /> {t('ais_draft_reminder_cta')}
                   </Button>
@@ -190,7 +190,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
                   {totalCommitted.toLocaleString()} {t('ais_engaged_this_cycle_suffix')}
                 </p>
                 <Button
-                  onClick={() => handleSend('Fais-moi un bilan de ma caisse')}
+                  onClick={() => handleSend(t('ais_prompt_treasury_report'))}
                   variant="outline"
                   size="sm"
                   className="mt-2.5 h-8 text-[13px] font-bold border-border text-foreground rounded-xl"
@@ -206,19 +206,19 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       {/* Quick Action Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <button
-          onClick={() => handleSend('Résume mes cotisations en retard et suggère un message de rappel')}
+          onClick={() => handleSend(t('ais_prompt_late_summary'))}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
           <Bell className="w-3.5 h-3.5 text-primary" /> {t('ais_smart_reminders_chip')}
         </button>
         <button
-          onClick={() => handleSend('Fais-moi un bilan de ma caisse')}
+          onClick={() => handleSend(t('ais_prompt_treasury_report'))}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
           <FileText className="w-3.5 h-3.5 text-secondary" /> {t('ais_treasury_report_chip')}
         </button>
         <button
-          onClick={() => handleSend('Quand et combien vais-je recevoir à mon prochain tour ?')}
+          onClick={() => handleSend(t('ais_prompt_next_turn'))}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
           <Sparkles className="w-3.5 h-3.5 text-warning" /> {t('ais_next_turn_chip')}
@@ -266,8 +266,8 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             className="rounded-2xl h-11 text-xs border-border/80 focus-visible:ring-primary"
           />
-          <Button onClick={() => handleSend()} className="gradient-sunset text-white rounded-2xl h-11 px-4 cursor-pointer">
-            <Send className="w-4 h-4" />
+          <Button onClick={() => handleSend()} className="group/send gradient-sunset text-white rounded-2xl h-11 px-4 cursor-pointer">
+            <Send className="w-4 h-4 transition-transform duration-200 group-hover/send:translate-x-0.5 group-hover/send:-translate-y-0.5" />
           </Button>
         </div>
       </div>
