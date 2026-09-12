@@ -33,12 +33,12 @@ export function Sidebar({ user, currentView = 'dashboard', onNavigate }: Sidebar
 
   const secondaryItems = [
     { id: 'calendar', label: t('calendar'), icon: <CalendarDays className="w-5 h-5" /> },
-    { id: 'marketplace', label: t('marketplace') || 'Services', icon: <Store className="w-5 h-5" /> },
-    { id: 'ai-assistant', label: t('ai_assistant') || 'Copilote IA', icon: <Bot className="w-5 h-5" /> },
+    { id: 'marketplace', label: t('marketplace'), icon: <Store className="w-5 h-5" /> },
+    { id: 'ai-assistant', label: t('ai_assistant'), icon: <Bot className="w-5 h-5" /> },
   ];
 
   if (user?.role === 'admin') {
-    secondaryItems.push({ id: 'admin', label: t('admin_panel') || 'Admin', icon: <ShieldCheck className="w-5 h-5" /> });
+    secondaryItems.push({ id: 'admin', label: t('admin_panel'), icon: <ShieldCheck className="w-5 h-5" /> });
   }
 
   const isActive = (id: string) => {

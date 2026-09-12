@@ -95,7 +95,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                             className="h-6 w-6 rounded-full hover:bg-success-soft text-secondary cursor-pointer"
                             onClick={() => markAsRead(notification.id)}
                           >
-                            <Check className="h-3.5 h-3.5" />
+                            <Check className="w-3.5 h-3.5" />
                           </Button>
                         )}
                         <Button
@@ -104,7 +104,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                           className="h-6 w-6 rounded-full hover:bg-danger-soft text-danger cursor-pointer"
                           onClick={() => deleteNotification(notification.id)}
                         >
-                          <Trash2 className="h-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </div>

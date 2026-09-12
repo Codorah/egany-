@@ -62,7 +62,7 @@ export function BottomNav({ user, currentView = 'dashboard', onNavigate, isSimul
         key={item.id}
         onClick={() => handleNav(item.id)}
         aria-current={active ? 'page' : undefined}
-        className="flex flex-col items-center justify-center flex-1 gap-1.5 cursor-pointer select-none active:scale-90 transition-transform"
+        className="flex flex-col items-center justify-center flex-1 gap-1.5 cursor-pointer select-none"
       >
         <Icon
           className={`w-[22px] h-[22px] transition-colors duration-200 ${
