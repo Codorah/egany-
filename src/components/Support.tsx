@@ -26,7 +26,7 @@ const FaqAccordionItem: React.FC<FaqAccordionItemProps> = ({ question, answer })
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-muted transition-colors active:scale-[0.99]"
+        className="press-row w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-muted transition-colors"
       >
         <span className="text-sm font-bold text-foreground">{question}</span>
         <ChevronDown className={`w-4 h-4 shrink-0 text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -87,7 +87,7 @@ export function Support({ user, onBack }: SupportProps) {
   return (
     <div className="space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-20">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer active:scale-95 transition-transform">
+        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
@@ -143,7 +143,7 @@ export function Support({ user, onBack }: SupportProps) {
                   disabled={submitting}
                 />
               </div>
-              <Button type="submit" disabled={submitting} className="w-full sm:w-auto rounded-xl gap-1.5 cursor-pointer active:scale-95 transition-transform">
+              <Button type="submit" disabled={submitting} className="btn-shine w-full sm:w-auto rounded-xl gap-1.5 cursor-pointer">
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {t('sup_send_report_cta')}
               </Button>

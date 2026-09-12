@@ -313,10 +313,12 @@ summary:active {
 }
 
 /* Cards and list rows that navigate somewhere press in more gently than a
-   button — this must outrank the generic [role="button"] press rule below
-   for elements that are both (clickable rows need role="button" for
-   keyboard/AT users, but shouldn't punch in as hard as a real button). */
+   button — these must outrank the generic button/[role="button"] press
+   rule below for elements that are also real <button>s or role="button"
+   (clickable rows need one of those for keyboard/AT users, but shouldn't
+   punch in as hard as a real action button). */
 .press-row:active,
+button.press-row:active,
 [role="button"].press-row:active {
   transform: scale(0.985);
   background-color: var(--muted);
