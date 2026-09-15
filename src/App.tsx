@@ -4,6 +4,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding } from '@/components/Onboarding';
 import { Toaster } from '@/components/ui/sonner';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WifiOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -165,8 +166,17 @@ export default function App() {
       toast.error('Recharge de portefeuille annulée.');
     }
 
+    // Raccourcis de l'icône PWA (manifest.json > shortcuts) : un appui long
+    // sur l'icône d'accueil ouvre directement l'écran demandé.
+    const shortcut = params.get('shortcut');
+    if (shortcut) {
+      if (shortcut === 'circles') setView('my-circles');
+      else if (shortcut === 'bank') setView('my-bank');
+      else if (shortcut === 'recharge') setView('wallet-recharge');
+    }
+
     // Clear URL params without refreshing
-    if (code || paySim || params.get('paydunya_success') || params.get('paydunya_cancel')) {
+    if (code || paySim || shortcut || params.get('paydunya_success') || params.get('paydunya_cancel')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [profile, groups]);
@@ -404,6 +414,7 @@ export default function App() {
       <Suspense fallback={<LoadingScreen fullScreen={false} />}>
         {renderView()}
       </Suspense>
+      <InstallPrompt />
       <Toaster />
     </Layout>
   );

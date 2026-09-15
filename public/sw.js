@@ -1,4 +1,4 @@
-const CACHE_NAME = 'egayne-pwa-cache-v4';
+const CACHE_NAME = 'egayne-pwa-cache-v5';
 // Only /manifest.json here: the HTML document is handled separately below
 // (network-first, never cached — see the fetch handler) because it names the
 // hashed JS/CSS bundles for the CURRENT deploy, and those hashes change on
