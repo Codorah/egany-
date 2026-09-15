@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { EganyeIcon } from './ui/EganyeIcon';
+import { EGANYE_AVATARS, isEganyeAvatarId, getEganyeAvatarUrl } from './ui/EganyeAvatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -23,10 +24,16 @@ export function AvatarWorkshop({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isPresetAvatar = isEganyeAvatarId(value);
   const hasCustomPhoto =
     value &&
-    !value.includes('/avatars/avatar-') &&
+    !isPresetAvatar &&
     (value.startsWith('http') || value.startsWith('data:') || value.startsWith('blob:'));
+
+  const handleSelectPreset = (avatarId: string) => {
+    onChange?.(getEganyeAvatarUrl(avatarId));
+    toast.success('Avatar Eganyé sélectionné !');
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,8 +108,49 @@ export function AvatarWorkshop({
           {name}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
-          Personnalisez votre apparence sur Eganyé. Vous pouvez importer votre propre photo ou utiliser votre monogramme sécurisé.
+          Personnalisez votre apparence sur Eganyé. Choisissez un avatar illustré, importez votre propre photo, ou utilisez votre monogramme sécurisé.
         </p>
+      </div>
+
+      {/* Galerie des avatars illustrés Eganyé */}
+      <div className="w-full max-w-xs space-y-2">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
+          Avatars illustrés
+        </p>
+        <div className="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto pr-0.5">
+          {EGANYE_AVATARS.map((avatar) => {
+            const selected = isPresetAvatar && getEganyeAvatarUrl(value) === avatar.url;
+            return (
+              <button
+                key={avatar.id}
+                type="button"
+                onClick={() => handleSelectPreset(avatar.id)}
+                title={avatar.name}
+                aria-label={`Choisir l'avatar ${avatar.name}`}
+                className={`rounded-full p-0.5 cursor-pointer transition-all ${
+                  selected
+                    ? 'ring-2 ring-[#C96F4A] ring-offset-2 ring-offset-card'
+                    : 'ring-1 ring-border hover:ring-[#C96F4A]/50'
+                }`}
+              >
+                <img
+                  src={avatar.url}
+                  alt={avatar.name}
+                  width={40}
+                  height={40}
+                  className="w-full aspect-square rounded-full object-cover select-none"
+                  loading="lazy"
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 w-full max-w-xs text-muted-foreground/60">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] font-bold uppercase tracking-wide">ou</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
 
       {/* Boutons d'action */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { isEganyeAvatarId, getEganyeAvatarUrl } from './ui/EganyeAvatar';
 
 export type AvatarConfig = string;
 
@@ -27,10 +28,22 @@ export function CustomAvatar({
 }: CustomAvatarProps) {
   const cleanName = (name || 'Membre').trim();
 
-  // 1. Si l'utilisateur a une vraie photo de profil (URL web, Supabase Storage ou data:)
+  // 1. Avatar illustré Eganyé (choisi dans l'Atelier Avatar)
+  if (isEganyeAvatarId(photoURL)) {
+    return (
+      <img
+        src={getEganyeAvatarUrl(photoURL)}
+        alt={cleanName}
+        className={`rounded-full object-cover shadow-soft border-2 border-white/80 dark:border-border/80 select-none shrink-0 ${className}`}
+        style={{ width: size, height: size, minWidth: size, minHeight: size }}
+        loading="lazy"
+      />
+    );
+  }
+
+  // 2. Si l'utilisateur a une vraie photo de profil (URL web, Supabase Storage ou data:)
   const isRealPhoto =
     photoURL &&
-    !photoURL.includes('/avatars/avatar-') &&
     (photoURL.startsWith('http') || photoURL.startsWith('data:') || photoURL.startsWith('blob:'));
 
   if (isRealPhoto) {
@@ -49,7 +62,7 @@ export function CustomAvatar({
     );
   }
 
-  // 2. Monogramme Fintech Haute Couture (style WhatsApp / Apple / Wise)
+  // 3. Monogramme Fintech Haute Couture (style WhatsApp / Apple / Wise)
   // Calcul déterministe de la palette à partir du nom
   const charCode = cleanName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const palette = MONOGRAM_PALETTES[charCode % MONOGRAM_PALETTES.length];
