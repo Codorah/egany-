@@ -11,6 +11,8 @@ import { SuccessState } from './ui/SuccessState';
 import { ErrorState } from './ui/ErrorState';
 import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import { EganyeIllustration } from './ui/EganyeIllustration';
+import { EmptyState } from './ui/EmptyState';
+import { EganyeProgress } from './ui/EganyeProgress';
 import { LoadingScreen } from './ui/LoadingScreen';
 import { DashboardCharts } from './DashboardCharts';
 import {
@@ -55,20 +57,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
   const [showBalance, setShowBalance] = useState(true);
   const [showAllReservations, setShowAllReservations] = useState(false);
-
-  // Quick Recharge Modal
-  const [rechargeModalOpen, setRechargeModalOpen] = useState(false);
-  const [rechargeAmount, setRechargeAmount] = useState('25000');
-  const [rechargeMethod, setRechargeMethod] = useState<'tmoney' | 'flooz'>('tmoney');
-  const [rechargePhone, setRechargePhone] = useState(user.phone || '');
-  const [isRecharging, setIsRecharging] = useState(false);
-
-  // Quick Withdraw Modal
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('10000');
-  const [withdrawMethod, setWithdrawMethod] = useState<'tmoney' | 'flooz'>('tmoney');
-  const [withdrawPhone, setWithdrawPhone] = useState(user.phone || '');
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // Creation Flow — 4-step wizard
   const [view, setView] = useState<'list' | 'create'>('list');
@@ -314,44 +302,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     }
   };
 
-  const handleQuickRecharge = async () => {
-    const val = parseFloat(rechargeAmount);
-    if (!val || val <= 0) {
-      toast.error(t('bank_invalid_amount_error') || 'Veuillez saisir un montant valide.');
-      return;
-    }
-    setIsRecharging(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(`Demande de recharge de ${val.toLocaleString()} FCFA envoyée vers ${rechargePhone} via ${rechargeMethod === 'tmoney' ? 'T-Money' : 'Moov Flooz'}.`);
-      setRechargeModalOpen(false);
-    } catch {
-      toast.error(t('prof_recharge_error') || 'Erreur lors de la recharge.');
-    } finally {
-      setIsRecharging(false);
-    }
-  };
-
-  const handleQuickWithdraw = async () => {
-    const val = parseFloat(withdrawAmount);
-    if (!val || val <= 0) {
-      toast.error("Veuillez saisir un montant valide.");
-      return;
-    }
-    if (val > user.walletBalance) {
-      toast.error("Solde disponible insuffisant.");
-      return;
-    }
-    setIsWithdrawing(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(`Demande de retrait de ${val.toLocaleString()} FCFA vers ${withdrawPhone} reçue.`);
-      setWithdrawModalOpen(false);
-    } catch {
-      toast.error("Erreur lors de la demande de retrait.");
-    } finally {
-      setIsWithdrawing(false);
-    }
+  // handleCreateVault embarque l'objectif choisi dans la description au
+  // format « Objectif : N FCFA » faute de colonne dédiée côté DB — un seul
+  // point d'analyse pour ne pas diverger entre le total et l'affichage par coffre.
+  const getVaultGoal = (vault: PersonalVault) => {
+    const match = vault.description?.match(/(\d[\d\s]*)/);
+    const parsed = match ? parseInt(match[0].replace(/\s/g, ''), 10) : 0;
+    return parsed > 0 ? parsed : Math.max(vault.balance, 100000);
   };
 
   const getVaultIconInfo = (vaultName: string, description?: string) => {
@@ -374,56 +331,11 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     return { icon: 'savings' as const, bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
   };
 
-  // Calculations for Total Savings
+  // Calculations for Total Savings — jamais de chiffre inventé : à 0 coffre,
+  // l'épargne et l'objectif affichés sont 0, pas une donnée de démonstration.
   const totalSaved = vaults.reduce((sum, v) => sum + (v.balance || 0), 0);
-  const totalGoal = vaults.reduce((sum, v) => {
-    const match = v.description?.match(/(\d[\d\s]*)/);
-    const parsed = match ? parseInt(match[0].replace(/\s/g, ''), 10) : 0;
-    return sum + (parsed > 0 ? parsed : Math.max(v.balance * 1.5, 100000));
-  }, 0) || 500000;
-
-  const displaySaved = vaults.length > 0 ? totalSaved : 320000;
-  const displayGoal = vaults.length > 0 ? (totalGoal > 0 ? totalGoal : 500000) : 500000;
-  const progressPercent = Math.min(100, Math.round((displaySaved / displayGoal) * 100));
-
-  const SAMPLE_VAULTS = [
-    {
-      id: 'sample-1',
-      name: 'Voyage',
-      icon: 'travel' as const,
-      iconBg: 'bg-[#EAF2F8] text-[#3D7099]',
-      balance: 120000,
-      goal: 300000,
-      dateLabel: 'Déblocage : 12 déc. 2026',
-      statusLabel: 'En cours',
-      statusClass: 'bg-[#FFF4E5] text-[#C96F4A] border border-[#C96F4A]/25',
-      project: 'voyage' as const,
-    },
-    {
-      id: 'sample-2',
-      name: 'Études',
-      icon: 'studies' as const,
-      iconBg: 'bg-[#EBF5EA] text-[#718A68]',
-      balance: 150000,
-      goal: 150000,
-      dateLabel: 'Déblocage : 30 juin 2026',
-      statusLabel: '🔒 Verrouillée',
-      statusClass: 'bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25',
-      project: 'scolaire' as const,
-    },
-    {
-      id: 'sample-3',
-      name: 'Urgence',
-      icon: 'shield' as const,
-      iconBg: 'bg-[#FDF0EB] text-[#C96F4A]',
-      balance: 50000,
-      goal: 50000,
-      dateLabel: 'Disponible',
-      statusLabel: 'Débloqué',
-      statusClass: 'bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25',
-      project: 'urgence' as const,
-    },
-  ];
+  const totalGoal = vaults.reduce((sum, v) => sum + getVaultGoal(v), 0);
+  const progressPercent = totalGoal > 0 ? Math.min(100, Math.round((totalSaved / totalGoal) * 100)) : 0;
 
   if (loading) {
     return (
@@ -769,7 +681,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             <div className="flex items-center gap-2 pt-0.5">
               <button
                 type="button"
-                onClick={() => setRechargeModalOpen(true)}
+                onClick={() => onNavigate?.('wallet-recharge')}
                 className="inline-flex items-center gap-1.5 bg-white text-[#C96F4A] hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
               >
                 <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
@@ -778,7 +690,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
               <button
                 type="button"
-                onClick={() => setWithdrawModalOpen(true)}
+                onClick={() => onNavigate?.('wallet-withdraw')}
                 className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
               >
                 <EganyeIcon name="withdraw" size={13} strokeWidth={2} />
@@ -816,7 +728,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {t('bank_total_savings') || "Épargne totale"}
               </p>
               <p className="text-lg sm:text-xl font-serif font-black text-foreground">
-                {displaySaved.toLocaleString()} FCFA
+                {totalSaved.toLocaleString()} FCFA
               </p>
             </div>
           </div>
@@ -831,15 +743,10 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
         {/* Progress bar */}
         <div className="space-y-1.5 pt-0.5">
-          <div className="h-2.5 w-full bg-[#EFE2D0]/60 dark:bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#718A68] rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+          <EganyeProgress value={totalSaved} max={totalGoal || 1} variant="bar" tone="secondary" />
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium">
-              {t('bank_goal_prefix') || "Objectif :"} {displayGoal.toLocaleString()} FCFA
+              {t('bank_goal_prefix') || "Objectif :"} {totalGoal.toLocaleString()} FCFA
             </span>
             <span className="font-bold text-[#718A68]">
               {progressPercent}%
@@ -869,8 +776,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             {(showAllReservations ? vaults : vaults.slice(0, 4)).map((vault) => {
               const unlocked = isUnlocked(vault);
               const info = getVaultIconInfo(vault.name, vault.description);
-              const match = vault.description?.match(/(\d[\d\s]*)/);
-              const goal = match ? parseInt(match[0].replace(/\s/g, ''), 10) : (vault.balance > 0 ? vault.balance : 100000);
+              const goal = getVaultGoal(vault);
 
               return (
                 <div
@@ -914,40 +820,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             })}
           </div>
         ) : (
-          <div className="space-y-2.5">
-            {SAMPLE_VAULTS.map((sample) => (
-              <div
-                key={sample.id}
-                onClick={() => openCreateFlow(sample.project, sample.goal.toString())}
-                className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-[#C96F4A]/50 transition-colors cursor-pointer group"
-                title="Cliquer pour configurer cette épargne"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-11 h-11 rounded-2xl ${sample.iconBg} flex items-center justify-center shrink-0`}>
-                    <EganyeIcon name={sample.icon} size={20} />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-[#C96F4A] transition-colors">
-                      {sample.name}
-                    </h4>
-                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                      {sample.balance.toLocaleString()} / {sample.goal.toLocaleString()} FCFA
-                    </p>
-                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-                      {sample.dateLabel}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${sample.statusClass}`}>
-                    {sample.statusLabel}
-                  </span>
-                  <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <EmptyState
+            illustration="circle-empty"
+            title={t('bank_empty_title') || 'Aucune épargne pour le moment'}
+            description={t('bank_empty_desc') || "Crée ta première réserve d'argent pour commencer à épargner en toute sécurité."}
+            actionText="Créer ma première épargne"
+            onAction={() => openCreateFlow()}
+          />
         )}
       </div>
 
@@ -1192,192 +1071,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
         </DialogContent>
       </Dialog>
 
-      {/* ── MODAL RECHARGE MOBILE MONEY ── */}
-      <Dialog open={rechargeModalOpen} onOpenChange={setRechargeModalOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-background border border-border">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-lg font-bold">
-              {t('recharge_wallet_title') || "Recharger mon solde disponible"}
-            </DialogTitle>
-            <p className="text-xs text-muted-foreground">
-              {t('recharge_wallet_desc') || "Ajoutez des fonds via Mobile Money pour alimenter vos coffres et cotisations."}
-            </p>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-1">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">Montant (FCFA)</Label>
-              <Input
-                type="number"
-                min={500}
-                step={500}
-                placeholder="25 000"
-                value={rechargeAmount}
-                onChange={(e) => setRechargeAmount(e.target.value)}
-                className="rounded-xl h-12 text-lg font-serif font-black"
-              />
-              <div className="flex gap-2 pt-1">
-                {['5000', '10000', '25000', '50000'].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setRechargeAmount(amt)}
-                    className={`flex-1 py-1.5 px-2 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
-                      rechargeAmount === amt
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border hover:border-primary/50 text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {parseInt(amt).toLocaleString()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">Opérateur</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRechargeMethod('tmoney')}
-                  className={`p-3 rounded-xl border-2 flex items-center gap-2 font-bold text-xs cursor-pointer transition-colors ${
-                    rechargeMethod === 'tmoney'
-                      ? 'border-[#C96F4A] bg-[#C96F4A]/5 text-[#C96F4A]'
-                      : 'border-border text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#C96F4A]" />
-                  <span>T-Money (Togo)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRechargeMethod('flooz')}
-                  className={`p-3 rounded-xl border-2 flex items-center gap-2 font-bold text-xs cursor-pointer transition-colors ${
-                    rechargeMethod === 'flooz'
-                      ? 'border-[#718A68] bg-[#718A68]/5 text-[#718A68]'
-                      : 'border-border text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#718A68]" />
-                  <span>Moov Flooz</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">Numéro de téléphone</Label>
-              <Input
-                type="tel"
-                placeholder="90 00 00 00"
-                value={rechargePhone}
-                onChange={(e) => setRechargePhone(e.target.value)}
-                className="rounded-xl h-11 text-sm font-mono"
-              />
-            </div>
-
-            <Button
-              onClick={handleQuickRecharge}
-              disabled={isRecharging}
-              className="btn-shine w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer"
-            >
-              {isRecharging ? (
-                <EganyeIcon name="refresh" size={16} className="animate-spin mr-2" />
-              ) : (
-                <EganyeIcon name="plus" size={14} className="mr-2" />
-              )}
-              {isRecharging ? "Traitement..." : "Confirmer la recharge"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── MODAL RETRAIT MOBILE MONEY ── */}
-      <Dialog open={withdrawModalOpen} onOpenChange={setWithdrawModalOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-background border border-border">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-lg font-bold">
-              Retirer vers Mobile Money
-            </DialogTitle>
-            <p className="text-xs text-muted-foreground">
-              Transférez directement vos fonds disponibles vers votre compte mobile.
-            </p>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-1">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-foreground">Montant (FCFA)</Label>
-                <span className="text-[11px] text-muted-foreground">
-                  Dispo : {(user.walletBalance || 0).toLocaleString()} FCFA
-                </span>
-              </div>
-              <Input
-                type="number"
-                min={500}
-                step={500}
-                placeholder="10 000"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                className="rounded-xl h-12 text-lg font-serif font-black"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">Opérateur de réception</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWithdrawMethod('tmoney')}
-                  className={`p-3 rounded-xl border-2 flex items-center gap-2 font-bold text-xs cursor-pointer transition-colors ${
-                    withdrawMethod === 'tmoney'
-                      ? 'border-[#C96F4A] bg-[#C96F4A]/5 text-[#C96F4A]'
-                      : 'border-border text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#C96F4A]" />
-                  <span>T-Money (Togo)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWithdrawMethod('flooz')}
-                  className={`p-3 rounded-xl border-2 flex items-center gap-2 font-bold text-xs cursor-pointer transition-colors ${
-                    withdrawMethod === 'flooz'
-                      ? 'border-[#718A68] bg-[#718A68]/5 text-[#718A68]'
-                      : 'border-border text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#718A68]" />
-                  <span>Moov Flooz</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">Numéro de téléphone bénéficiaire</Label>
-              <Input
-                type="tel"
-                placeholder="90 00 00 00"
-                value={withdrawPhone}
-                onChange={(e) => setWithdrawPhone(e.target.value)}
-                className="rounded-xl h-11 text-sm font-mono"
-              />
-            </div>
-
-            <Button
-              onClick={handleQuickWithdraw}
-              disabled={isWithdrawing}
-              className="btn-shine w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer"
-            >
-              {isWithdrawing ? (
-                <EganyeIcon name="refresh" size={16} className="animate-spin mr-2" />
-              ) : (
-                <EganyeIcon name="withdraw" size={14} className="mr-2" />
-              )}
-              {isWithdrawing ? "Traitement..." : "Confirmer le retrait"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

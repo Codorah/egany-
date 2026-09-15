@@ -599,7 +599,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             groupId={group.id}
             user={profile}
             groupName={group.name}
-            creatorId={group.creatorId || group.createdBy}
+            creatorId={group.creatorId}
           />
         )}
       </div>

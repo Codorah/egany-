@@ -34,7 +34,8 @@ export type EganyeIconName =
   | 'goal' | 'gift' | 'investment'
   // Extra
   | 'search' | 'close' | 'chevron-right' | 'chevron-left' | 'plus' | 'arrow-up' | 'arrow-down'
-  | 'eye' | 'eye-off' | 'refresh' | 'star' | 'shield' | 'check' | 'loading';
+  | 'eye' | 'eye-off' | 'refresh' | 'star' | 'shield' | 'check' | 'loading'
+  | 'send' | 'camera' | 'trash' | 'copy' | 'shuffle' | 'list' | 'key' | 'fingerprint' | 'globe';
 
 interface EganyeIconProps {
   name: EganyeIconName;
@@ -750,6 +751,70 @@ function getPath(name: EganyeIconName, sw: number): React.ReactNode {
           d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
           {...p}
         />
+      );
+    case 'send':
+      return <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" {...p} />;
+    case 'camera':
+      return (
+        <>
+          <path d="M4 8a2 2 0 012-2h1.2l1-1.6A1.5 1.5 0 019.5 3.6h5a1.5 1.5 0 011.3.8L17 6h1a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8z" {...p} />
+          <circle cx="12" cy="13" r="3.5" {...p} />
+        </>
+      );
+    case 'trash':
+      return (
+        <>
+          <path d="M3 6h18" {...p} />
+          <path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v13a2 2 0 01-2 2H8a2 2 0 01-2-2V6h12z" {...p} />
+          <path d="M10 11v5M14 11v5" {...pThin} />
+        </>
+      );
+    case 'copy':
+      return (
+        <>
+          <rect x="9" y="9" width="12" height="12" rx="2" {...p} />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" {...p} />
+        </>
+      );
+    case 'shuffle':
+      return (
+        <>
+          <path d="M2 6h4l10 12h6" {...p} />
+          <path d="M18 6h4v4M2 18h4l3.5-4.2" {...p} />
+          <path d="M18 18h4v-4" {...p} />
+        </>
+      );
+    case 'list':
+      return (
+        <>
+          <path d="M8 6h13M8 12h13M8 18h13" {...p} />
+          <path d="M3 6h.01M3 12h.01M3 18h.01" {...p} />
+        </>
+      );
+    case 'key':
+      return (
+        <>
+          <circle cx="7" cy="15" r="4" {...p} />
+          <path d="M10 12l9-9m0 0h-4m4 0v4m-8 4l3 3" {...p} />
+        </>
+      );
+    case 'fingerprint':
+      return (
+        <>
+          <path d="M12 3a7 7 0 00-7 7c0 3.5.5 6.5 2 9" {...pThin} />
+          <path d="M12 3a7 7 0 017 7c0 1.5-.1 2.9-.4 4.2" {...pThin} />
+          <path d="M8 20c-1.2-2-2-5-2-8a6 6 0 0112 0c0 1 0 2-.2 3" {...p} />
+          <path d="M12 10a3 3 0 013 3c0 2.5-.6 4.7-1.6 6.5" {...pThin} />
+          <path d="M9 13a3 3 0 016 0" {...pThin} />
+        </>
+      );
+    case 'globe':
+      return (
+        <>
+          <circle cx="12" cy="12" r="9" {...p} />
+          <path d="M3 12h18" {...p} />
+          <path d="M12 3a14 14 0 010 18 14 14 0 010-18z" {...p} />
+        </>
       );
 
     default:

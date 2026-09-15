@@ -40,97 +40,25 @@ export function ActivityScreen({
   const { notifications, loading, markAsRead } = useNotifications(userId);
   const [filter, setFilter] = useState<FilterType>('all');
 
-  // Convert notifications and realistic mock circle events into rich timeline items
   const now = new Date();
 
-  // Baseline mock/demo activities matching the mockup to ensure immediate visual fidelity if notifications table is empty
-  const defaultActivities: DisplayActivityItem[] = [
-    {
-      id: 'act-1',
-      title: 'Cotisation enregistrée',
-      subtitle: 'Cercle Famille • Mensuelle',
-      category: 'cotisation',
-      time: '09:24',
-      date: now,
-      amount: 50000,
-      currency: 'FCFA',
-    },
-    {
-      id: 'act-2',
-      title: 'Recharge portefeuille',
-      subtitle: 'Orange Money',
-      category: 'recharge',
-      time: '08:12',
-      date: now,
-      amount: 20000,
-      currency: 'FCFA',
-    },
-    {
-      id: 'act-3',
-      title: 'Nouveau message',
-      subtitle: 'Cercle Amis',
-      category: 'message',
-      time: '07:45',
-      date: now,
-    },
-    {
-      id: 'act-4',
-      title: 'Nouveau membre',
-      subtitle: 'Aïssatou Diop a rejoint votre cercle',
-      category: 'member',
-      time: '18:32',
-      date: subDays(now, 1),
-    },
-    {
-      id: 'act-5',
-      title: 'Transfert envoyé',
-      subtitle: 'Mariam Fall',
-      category: 'transfer',
-      time: '16:20',
-      date: subDays(now, 1),
-      amount: -15000,
-      currency: 'FCFA',
-    },
-    {
-      id: 'act-6',
-      title: 'Épargne créée',
-      subtitle: 'Projet Maison • 6 mois',
-      category: 'savings',
-      time: '12 oct.',
-      date: subDays(now, 3),
-      amount: -25000,
-      currency: 'FCFA',
-    },
-    {
-      id: 'act-7',
-      title: 'Distribution',
-      subtitle: 'Cercle Solidarité • Phase 3',
-      category: 'distribution',
-      time: '10 oct.',
-      date: subDays(now, 3),
-      amount: 120000,
-      currency: 'FCFA',
-    },
-  ];
-
-  // Map real database notifications if present
-  const dbActivities: DisplayActivityItem[] = notifications.map((n) => {
+  // La table `notifications` ne porte aucun montant réel (voir Notification
+  // dans types.ts) : on ne doit donc jamais en inventer un. On classe
+  // uniquement par mots-clés pour choisir l'icône/le filtre, sans afficher
+  // de somme qui n'existe pas côté serveur.
+  const allItems: DisplayActivityItem[] = notifications.map((n) => {
     const created = n.createdAt ? new Date(n.createdAt) : now;
     let cat: DisplayActivityItem['category'] = 'message';
-    let amount: number | undefined;
 
     const titleLower = (n.title || '').toLowerCase();
     const msgLower = (n.message || '').toLowerCase();
 
     if (titleLower.includes('cotisation') || msgLower.includes('cotisation')) {
       cat = 'cotisation';
-      amount = 5000;
     } else if (titleLower.includes('payout') || titleLower.includes('distribution')) {
       cat = 'distribution';
-      amount = 50000;
     } else if (titleLower.includes('recharge') || titleLower.includes('dépôt')) {
       cat = 'recharge';
-      amount = 25000;
     } else if (titleLower.includes('membre') || msgLower.includes('rejoint')) {
       cat = 'member';
     }
@@ -142,7 +70,6 @@ export function ActivityScreen({
       category: cat,
       time: format(created, 'HH:mm'),
       date: created,
-      amount,
       currency: 'FCFA',
       onClick: () => {
         if (!n.read) markAsRead(n.id);
@@ -154,9 +81,6 @@ export function ActivityScreen({
       },
     };
   });
-
-  // Combine: use db activities if available, fallback to defaultActivities
-  const allItems = dbActivities.length > 0 ? dbActivities : defaultActivities;
 
   // Filter items
   const filteredItems = allItems.filter((item) => {

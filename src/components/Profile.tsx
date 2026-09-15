@@ -9,8 +9,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-import { Group, UserProfile, WalletTransaction, KycSubmission, AvatarConfig } from '@/types';
-import { useLanguage, AppLanguage } from '@/contexts/LanguageContext';
+import { Group, UserProfile, WalletTransaction, KycSubmission } from '@/types';
+import { useLanguage, type LanguageCode } from '@/contexts/LanguageContext';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { CustomAvatar } from './CustomAvatar';
 import { AvatarWorkshop } from './AvatarWorkshop';
@@ -18,8 +18,10 @@ import { BiometricPrompt } from './BiometricPrompt';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import { ChipPicker } from './ui/ChipPicker';
+import { StatusBadge } from './ui/StatusBadge';
 
 import { supabase } from '@/lib/supabase';
+import { mapWalletTransactionRow } from '@/lib/mappers';
 import { KYC_VERIFIED_LEVEL, submitKycDocument, fetchLatestKycSubmission } from '@/lib/kyc';
 import { useBiometrics } from '@/hooks/useBiometrics';
 import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
@@ -125,9 +127,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
 
   // Digital Mandate States
-  const [mandateName, setMandateName] = useState(user.digitalMandate?.name || '');
-  const [mandatePhone, setMandatePhone] = useState(user.digitalMandate?.phone || '');
-  const [mandatePermissions, setMandatePermissions] = useState<string[]>(user.digitalMandate?.permissions || ['view_contributions']);
+  const [mandateName, setMandateName] = useState(user.mandateName || '');
+  const [mandatePhone, setMandatePhone] = useState(user.mandatePhone || '');
+  const [mandatePermissions, setMandatePermissions] = useState<string[]>(user.mandatePermissions || ['view_contributions']);
   const [isSavingMandate, setIsSavingMandate] = useState(false);
 
   // Legal Modal
@@ -164,13 +166,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     (async () => {
       try {
         const { data, error } = await supabase
-          .from('transactions')
+          .from('wallet_transactions')
           .select('*')
           .eq('user_id', user.uid)
           .order('date', { ascending: false })
           .limit(10);
         if (!error && data && !cancelled) {
-          setWalletTransactions(data as any);
+          setWalletTransactions(data.map(mapWalletTransactionRow));
         }
       } catch (err) {
         console.error('Failed to fetch wallet transactions:', err);
@@ -287,13 +289,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     }
     setIsSavingMandate(true);
     try {
-      const mandate = {
-        name: mandateName.trim(),
-        phone: mandatePhone.trim(),
-        permissions: mandatePermissions,
-        updated_at: new Date().toISOString(),
-      };
-      const { error } = await supabase.from('profiles').update({ digital_mandate: mandate }).eq('id', user.uid);
+      const { error } = await supabase.from('profiles').update({
+        mandate_name: mandateName.trim() || null,
+        mandate_phone: mandatePhone.trim() || null,
+        mandate_permissions: mandatePermissions,
+      }).eq('id', user.uid);
       if (error) throw error;
       toast.success('Mandataire numérique enregistré !');
       setActiveSection(null);
@@ -606,11 +606,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       Carte nationale d'identité, passeport
                     </span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 mr-1 ${
-                    isKycOk ? 'bg-[#EBF5EA] text-[#718A68]' : 'bg-[#FFF4E5] text-[#C96F4A]'
-                  }`}>
-                    {isKycOk ? 'Vérifié' : 'À faire'}
-                  </span>
+                  <StatusBadge
+                    tone={isKycOk ? 'success' : 'warning'}
+                    label={isKycOk ? 'Vérifié' : 'À faire'}
+                    className="shrink-0 mr-1"
+                  />
                   <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
                 </button>
 
@@ -990,33 +990,41 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Vérification d’identité (KYC)')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-              {/* Statut actuel */}
-              <div className={`p-4 rounded-2xl border text-xs space-y-1 ${
-                isKycOk
-                  ? 'bg-[#EBF5EA] text-[#718A68] border-[#718A68]/30'
-                  : kycSubmission?.status === 'pending'
-                  ? 'bg-[#FFF4E5] text-[#C96F4A] border-[#C96F4A]/30'
-                  : 'bg-muted/60 text-muted-foreground border-border'
-              }`}>
-                <p className="font-bold text-sm flex items-center gap-1.5">
-                  <EganyeIcon name="shield" size={16} />
-                  <span>
-                    {isKycOk
-                      ? 'Identité vérifiée (Tier 2)'
-                      : kycSubmission?.status === 'pending'
-                      ? 'Document en cours d’examen'
-                      : 'Pièce d’identité non validée'}
-                  </span>
-                </p>
-                <p className="leading-relaxed">
-                  {isKycOk
-                    ? 'Votre compte dispose des plafonds complets et de la conformité UEMOA.'
-                    : kycSubmission?.status === 'pending'
-                    ? 'Votre document a bien été envoyé. Notre équipe valide généralement en moins de 24h.'
-                    : 'La vérification d’identité protège l’ensemble des membres de la tontine contre toute fraude.'}
-                </p>
-              </div>
+            {(() => {
+              const kycStatus: 'verified' | 'pending' | 'unverified' = isKycOk
+                ? 'verified'
+                : kycSubmission?.status === 'pending'
+                ? 'pending'
+                : 'unverified';
+              const KYC_STATUS_COPY = {
+                verified: {
+                  className: 'bg-[#EBF5EA] text-[#718A68] border-[#718A68]/30',
+                  title: 'Identité vérifiée (Tier 2)',
+                  desc: 'Votre compte dispose des plafonds complets et de la conformité UEMOA.',
+                },
+                pending: {
+                  className: 'bg-[#FFF4E5] text-[#C96F4A] border-[#C96F4A]/30',
+                  title: 'Document en cours d’examen',
+                  desc: 'Votre document a bien été envoyé. Notre équipe valide généralement en moins de 24h.',
+                },
+                unverified: {
+                  className: 'bg-muted/60 text-muted-foreground border-border',
+                  title: 'Pièce d’identité non validée',
+                  desc: 'La vérification d’identité protège l’ensemble des membres de la tontine contre toute fraude.',
+                },
+              } as const;
+              const copy = KYC_STATUS_COPY[kycStatus];
+
+              return (
+                <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+                  {/* Statut actuel */}
+                  <div className={`p-4 rounded-2xl border text-xs space-y-1 ${copy.className}`}>
+                    <p className="font-bold text-sm flex items-center gap-1.5">
+                      <EganyeIcon name="shield" size={16} />
+                      <span>{copy.title}</span>
+                    </p>
+                    <p className="leading-relaxed">{copy.desc}</p>
+                  </div>
 
               {!isKycOk && (
                 <div className="space-y-3 pt-1">
@@ -1072,7 +1080,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   </Button>
                 </div>
               )}
-            </div>
+                </div>
+              );
+            })()}
           </motion.div>
         )}
 
@@ -1421,9 +1431,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-2">
               {[
-                { code: 'fr' as AppLanguage, name: 'Français', desc: 'Langue officielle et administrative' },
-                { code: 'ee' as AppLanguage, name: 'Èʋegbe (Ewe)', desc: 'Togo Sud, Ghana & Bénin' },
-                { code: 'kbp' as AppLanguage, name: 'Kabɩyɛ (Kabyè)', desc: 'Togo Nord & Kara' },
+                { code: 'fr' as LanguageCode, name: 'Français', desc: 'Langue officielle et administrative' },
+                { code: 'ee' as LanguageCode, name: 'Èʋegbe (Ewe)', desc: 'Togo Sud, Ghana & Bénin' },
+                { code: 'kbp' as LanguageCode, name: 'Kabɩyɛ (Kabyè)', desc: 'Togo Nord & Kara' },
               ].map((lang) => (
                 <button
                   key={lang.code}

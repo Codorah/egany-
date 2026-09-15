@@ -88,7 +88,8 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
         content,
       });
       if (error) throw error;
-      fetchMessages();
+      // La souscription realtime (postgres_changes INSERT) déclenche déjà
+      // fetchMessages() sur ce même événement — pas besoin de le refaire ici.
     } catch (error) {
       console.error('Error sending message:', error);
       setNewMessage(content);

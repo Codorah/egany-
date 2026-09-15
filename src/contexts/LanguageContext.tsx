@@ -6818,11 +6818,13 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const LANGUAGE_CODES: LanguageCode[] = ['fr', 'en', 'ee', 'kbp', 'wo', 'bm'];
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { profile } = useAuth();
   const [language, setLanguageState] = useState<LanguageCode>(() => {
     const saved = localStorage.getItem('egayne_lang');
-    if (saved === 'fr' || saved === 'en' || saved === 'ee' || saved === 'kbp') {
+    if (LANGUAGE_CODES.includes(saved as LanguageCode)) {
       return saved as LanguageCode;
     }
     return 'fr';
@@ -6832,7 +6834,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (profile?.language) {
       const pLang = profile.language as LanguageCode;
-      if (['fr', 'en', 'ee', 'kbp'].includes(pLang) && pLang !== language) {
+      if (LANGUAGE_CODES.includes(pLang) && pLang !== language) {
         setLanguageState(pLang);
         localStorage.setItem('egayne_lang', pLang);
       }

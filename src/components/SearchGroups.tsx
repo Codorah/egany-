@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Group, UserProfile } from '@/types';
 import { requestToJoinGroup, hydrateGroups } from '@/lib/groups';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Search, Users, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Send } from 'lucide-react';
+import { EganyeSearch } from './ui/EganyeSearch';
 import { EmptyState } from './ui/EmptyState';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { Skeleton } from './ui/Skeleton';
@@ -83,15 +83,12 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder={t('sg_search_placeholder')}
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          className="pl-9 rounded-xl"
-        />
-      </div>
+      <EganyeSearch
+        placeholder={t('sg_search_placeholder')}
+        value={term}
+        onChange={setTerm}
+        className="max-w-md"
+      />
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

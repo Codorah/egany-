@@ -7,6 +7,7 @@ import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
 import { CustomAvatar } from './CustomAvatar';
 import { AmountDisplay } from './ui/AmountDisplay';
+import { EganyeProgress } from './ui/EganyeProgress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
@@ -59,7 +60,7 @@ export function Dashboard({
 
   // Financial calculations
   const availableBalance = user.walletBalance || 0;
-  const totalSaved = user.totalSaved || 320000;
+  const totalSaved = user.totalSaved ?? 0;
   const savingsGoal = 500000;
   const savingsPercent = Math.min(100, Math.round((totalSaved / savingsGoal) * 100));
 
@@ -386,12 +387,7 @@ export function Dashboard({
 
           {/* Progress bar */}
           <div className="space-y-1 pt-1">
-            <div className="h-2.5 w-full bg-[#EFE2D0]/60 dark:bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#718A68] rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${savingsPercent}%` }}
-              />
-            </div>
+            <EganyeProgress value={totalSaved} max={savingsGoal} variant="bar" tone="secondary" />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Objectif : {savingsGoal.toLocaleString()} FCFA</span>
               <span className="font-bold text-[#718A68]">{savingsPercent}%</span>

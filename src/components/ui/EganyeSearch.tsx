@@ -58,7 +58,7 @@ export function EganyeSearch({
     >
       <div className="absolute left-3.5 text-muted-foreground pointer-events-none">
         {loading ? (
-          <div className="w-[18px] h-[18px] border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
+          <EganyeIcon name="loading" size={18} className="animate-spin" />
         ) : (
           <EganyeIcon name="search" size={18} />
         )}
