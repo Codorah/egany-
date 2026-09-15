@@ -131,18 +131,27 @@ function avatarSvg(i) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 72 72" role="img" aria-label="Avatar Eganyé ${i + 1}">
   <defs>
     <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .06"/></feComponentTransfer></filter>
+    <clipPath id="disc"><circle cx="36" cy="36" r="34"/></clipPath>
   </defs>
   <circle cx="36" cy="36" r="34" fill="${bg}"/>
   <circle cx="36" cy="36" r="34" filter="url(#paper)" opacity=".8"/>
-  ${extra}
-  <path d="M14 66c3-19 41-19 44 0" fill="${shirt}"/>
-  <path d="M20 63c8-9 24-9 32 0" fill="${C.white}" opacity=".22"/>
-  ${hairShape}
-  <circle cx="36" cy="${headY}" r="13" fill="${s}"/>
-  <path d="M29 35c4 4 10 4 14 0" fill="none" stroke="${C.brown}" stroke-width="2.4" stroke-linecap="round" opacity=".78"/>
-  <circle cx="31" cy="29" r="1.4" fill="${C.brown}"/>
-  <circle cx="41" cy="29" r="1.4" fill="${C.brown}"/>
-  <path d="M24 18c7-10 23-8 29 2-10-3-19-2-29 2z" fill="${h}" opacity=".92"/>
+  <!-- Le buste descend jusqu'à y=66 et déborde donc du disque : sans ce clip
+       il se faisait couper à plat par le bord du viewBox, ce qui donnait des
+       épaules tranchées sous le cercle. -->
+  <g clip-path="url(#disc)">
+    ${extra}
+    <path d="M14 66c3-19 41-19 44 0" fill="${shirt}"/>
+    <path d="M20 63c8-9 24-9 32 0" fill="${C.white}" opacity=".22"/>
+    ${hairShape}
+    <circle cx="36" cy="${headY}" r="13" fill="${s}"/>
+    <path d="M29 35c4 4 10 4 14 0" fill="none" stroke="${C.brown}" stroke-width="2.4" stroke-linecap="round" opacity=".78"/>
+    <circle cx="31" cy="29" r="1.4" fill="${C.brown}"/>
+    <circle cx="41" cy="29" r="1.4" fill="${C.brown}"/>
+    <path d="M24 18c7-10 23-8 29 2-10-3-19-2-29 2z" fill="${h}" opacity=".92"/>
+  </g>
+  <!-- Anneau repris du monogramme : c'est lui qui fait cohabiter une marque
+       géométrique sobre et des visages chaleureux côte à côte. -->
+  <circle cx="36" cy="36" r="33" fill="none" stroke="${C.beige}" stroke-width="2"/>
 </svg>`;
 }
 
