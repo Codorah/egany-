@@ -135,6 +135,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   // Legal Modal
   const [legalDoc, setLegalDoc] = useState<'cgu' | 'reglement' | 'confidentialite' | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const isKycOk = (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL;
   const isAdminUser = user.role === 'admin' || user.email === 'codorah@hotmail.com';
@@ -1644,15 +1645,32 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               Annuler
             </Button>
             <Button
-              disabled={groups.length > 0}
-              onClick={() => {
-                toast.success('Votre compte a été clôturé.');
-                setShowDeleteConfirm(false);
-                onLogout?.();
+              disabled={groups.length > 0 || isDeletingAccount}
+              onClick={async () => {
+                setIsDeletingAccount(true);
+                try {
+                  // Annonçait la clôture sans rien supprimer : le profil, le
+                  // solde et l'historique restaient intacts derrière le message.
+                  const { data, error } = await supabase.rpc('request_account_deletion');
+                  if (error) throw error;
+                  const result = data as { success: boolean; message: string };
+                  if (!result.success) {
+                    toast.error(result.message);
+                    return;
+                  }
+                  toast.success(result.message);
+                  setShowDeleteConfirm(false);
+                  onLogout?.();
+                } catch (err: any) {
+                  console.error('Account deletion error:', err);
+                  toast.error(err.message || 'Impossible de supprimer le compte pour le moment.');
+                } finally {
+                  setIsDeletingAccount(false);
+                }
               }}
               className="bg-danger hover:bg-danger/90 text-white rounded-xl text-xs font-bold"
             >
-              Supprimer mon compte
+              {isDeletingAccount ? 'Suppression…' : 'Supprimer mon compte'}
             </Button>
           </DialogFooter>
         </DialogContent>
