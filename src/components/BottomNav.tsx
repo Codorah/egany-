@@ -96,11 +96,8 @@ export function BottomNav({
                       stiffness: 400,
                       damping: 32,
                     }}
-                    className="absolute -top-1 w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#C96F4A] via-[#D95B30] to-[#E5A93C] shadow-[0_6px_20px_rgba(201,111,74,0.45)] z-0"
-                  >
-                    {/* Halo d'aura interne */}
-                    <div className="absolute inset-0 rounded-2xl bg-white/15 animate-pulse" />
-                  </motion.div>
+                    className="gradient-sunset absolute -top-1 w-11 h-11 rounded-2xl shadow-soft z-0"
+                  />
                 )}
 
                 {/* ── ICÔNE AVEC REBOND TACTILE ── */}
@@ -133,7 +130,7 @@ export function BottomNav({
                   }}
                   className={`relative z-10 text-[10px] sm:text-[11px] font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
                     active
-                      ? 'font-black text-[#C96F4A] dark:text-[#E5A93C]'
+                      ? 'font-black text-primary'
                       : 'font-bold text-muted-foreground group-hover:text-foreground'
                   }`}
                 >
