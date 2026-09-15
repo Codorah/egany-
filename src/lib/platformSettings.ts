@@ -3,14 +3,23 @@ import { supabase } from './supabase';
 export interface PlatformSettings {
   maintenanceMode: boolean;
   allowSignups: boolean;
+  /** Commission prélevée sur le pot à chaque décaissement, en %. 0 = désactivée. */
+  payoutFeePercent: number;
+  /** Profil dont le portefeuille encaisse la commission. Sans lui, rien n'est prélevé. */
+  platformWalletId: string | null;
 }
 
-const DEFAULT_SETTINGS: PlatformSettings = { maintenanceMode: false, allowSignups: true };
+const DEFAULT_SETTINGS: PlatformSettings = {
+  maintenanceMode: false,
+  allowSignups: true,
+  payoutFeePercent: 0,
+  platformWalletId: null,
+};
 
 export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   const { data, error } = await supabase
     .from('platform_settings')
-    .select('maintenance_mode, allow_signups')
+    .select('maintenance_mode, allow_signups, payout_fee_percent, platform_wallet_id')
     .eq('id', 1)
     .maybeSingle();
 
@@ -18,7 +27,12 @@ export async function fetchPlatformSettings(): Promise<PlatformSettings> {
     if (error) console.warn('fetchPlatformSettings error:', error);
     return DEFAULT_SETTINGS;
   }
-  return { maintenanceMode: data.maintenance_mode, allowSignups: data.allow_signups };
+  return {
+    maintenanceMode: data.maintenance_mode,
+    allowSignups: data.allow_signups,
+    payoutFeePercent: Number(data.payout_fee_percent ?? 0),
+    platformWalletId: data.platform_wallet_id ?? null,
+  };
 }
 
 export async function updatePlatformSettings(
@@ -30,6 +44,8 @@ export async function updatePlatformSettings(
     .update({
       ...(patch.maintenanceMode !== undefined ? { maintenance_mode: patch.maintenanceMode } : {}),
       ...(patch.allowSignups !== undefined ? { allow_signups: patch.allowSignups } : {}),
+      ...(patch.payoutFeePercent !== undefined ? { payout_fee_percent: patch.payoutFeePercent } : {}),
+      ...(patch.platformWalletId !== undefined ? { platform_wallet_id: patch.platformWalletId } : {}),
       updated_at: new Date().toISOString(),
       updated_by: updatedBy,
     })
