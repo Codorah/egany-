@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 160 160" role="img" aria-label="Ganye onboarding">
+  <defs>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .055"/></feComponentTransfer></filter>
+    <filter id="soft"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#6C3A28" flood-opacity=".16"/></filter>
+  </defs>
+  <circle cx="80" cy="80" r="72" fill="#F4E7D5"/>
+  <circle cx="80" cy="80" r="72" filter="url(#paper)" opacity=".85"/>
+  <circle cx="27" cy="112" r="12" fill="#AF6B45"/><circle cx="126" cy="112" r="12" fill="#6F432D"/><path d="M9 150c4-18 31-18 36 0M108 150c4-18 31-18 36 0" fill="#718A68"/><path d="M24 135c22 19 75 18 98-1" fill="none" stroke="#C49A55" stroke-width="7" stroke-linecap="round"/>
+  <g filter="url(#soft)">
+    <path d="M35 155c5-35 85-35 90 0z" fill="#C96F4A"/>
+    <path d="M61 112l19 17 19-17v27H61z" fill="#FFF9F0" opacity=".24"/>
+    <rect x="67" y="96" width="25" height="25" rx="8" fill="#8E5738"/>
+    <circle cx="80" cy="68" r="35" fill="#8E5738"/>
+    <circle cx="45" cy="69" r="7" fill="#8E5738"/>
+    <circle cx="115" cy="69" r="7" fill="#8E5738"/>
+    <path d="M45 60c2-30 24-45 51-35 17 6 26 19 28 35-24-12-53-13-79 0z" fill="#3E2F24"/>
+    <path d="M46 52c14-22 46-27 68-5-24-7-43-5-68 5z" fill="#C96F4A"/>
+    <path d="M55 39c21-12 42-9 57 7-17-7-37-7-57-7z" fill="#718A68"/>
+    <circle cx="103" cy="43" r="13" fill="#C49A55"/>
+    <circle cx="61" cy="70" r="4" fill="#3E2F24"/><circle cx="86" cy="70" r="4" fill="#3E2F24"/>
+  <path d="M64 84c6 7 18 7 24 0" fill="none" stroke="#3E2F24" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

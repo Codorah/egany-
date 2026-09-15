@@ -1,6 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" fill="none">
-  <!-- Eganyé Wordmark -->
-  <text x="8" y="34" font-family="Poppins, sans-serif" font-weight="800" font-size="34" fill="#3E2F24" letter-spacing="-0.5">
-    <tspan>e</tspan><tspan fill="#C96F4A">g</tspan><tspan>anyé</tspan>
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64" role="img" aria-label="Eganyé">
+  <text x="0" y="46" font-family="Nunito, Arial Rounded MT Bold, Trebuchet MS, Arial, sans-serif" font-size="48" font-weight="900" fill="#3E2F24" letter-spacing="0">Eganyé</text>
 </svg>

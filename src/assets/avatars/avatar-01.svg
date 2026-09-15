@@ -1,64 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Background circle -->
-  <circle cx="50" cy="50" r="48" fill="#F3E5D4"/>
-
-  <!-- Shoulders & Torso -->
-  <path d="M22 92C22 79 32 72 41 72H59C68 72 78 79 78 92V96H22V92Z" fill="#C96F4A"/>
-
-  <!-- Inner Collar / Shirt detail -->
-  <path d="M42 72L50 82L58 72H42Z" fill="#FFFDFC"/>
-  <path d="M45 72L50 78L55 72" stroke="#C96F4A" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-
-  <!-- Neck -->
-  <rect x="44" y="58" width="12" height="16" rx="3" fill="#6F472B"/>
-  <rect x="44" y="66" width="12" height="8" rx="2" fill="#58361E" opacity="0.35"/>
-
-  <!-- Ears -->
-  <circle cx="32" cy="48" r="4.5" fill="#6F472B"/>
-  <circle cx="32" cy="48" r="2.2" fill="#58361E" opacity="0.4"/>
-  <circle cx="68" cy="48" r="4.5" fill="#6F472B"/>
-  <circle cx="68" cy="48" r="2.2" fill="#58361E" opacity="0.4"/>
-
-  <!-- Head / Face Base -->
-  <path d="M33 42C33 30 40 24 50 24C60 24 67 30 67 42C67 54 59 62 50 62C41 62 33 54 33 42Z" fill="#6F472B"/>
-
-  <!-- Eyebrows -->
-  <path d="M40 40C42 39 45 39 47 41" stroke="#1A1410" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M60 40C58 39 55 39 53 41" stroke="#1A1410" stroke-width="1.8" stroke-linecap="round"/>
-
-  <!-- Eyes -->
-  <ellipse cx="43.5" cy="46" rx="2.2" ry="2.5" fill="#140E0B"/>
-  <circle cx="44.2" cy="45.2" r="0.7" fill="#FFFDFC"/>
-  <ellipse cx="56.5" cy="46" rx="2.2" ry="2.5" fill="#140E0B"/>
-  <circle cx="57.2" cy="45.2" r="0.7" fill="#FFFDFC"/>
-
-  <!-- Nose -->
-  <path d="M49 48V52C47.8 52.8 48.5 54 50 54C51.5 54 52.2 52.8 51 52V48" stroke="#58361E" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-
-  <!-- Warm Smile -->
-  <path d="M45 56.5C47.5 58.5 52.5 58.5 55 56.5" stroke="#1A1410" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-
-  <!-- Cheeks highlight -->
-  <circle cx="39" cy="51" r="3" fill="#C96F4A" opacity="0.2"/>
-  <circle cx="61" cy="51" r="3" fill="#C96F4A" opacity="0.2"/>
-
-  <!-- Glasses if any -->
-  
-
-  <!-- Hair -->
-  
-        <!-- Braids gathered back -->
-        <path d="M28 42C28 26 36 20 50 20C64 20 72 26 72 42C72 48 70 54 68 56C64 48 64 36 64 30C58 26 42 26 36 30C36 36 36 48 32 56C30 54 28 48 28 42Z" fill="#1C1510"/>
-        <path d="M38 24C42 23 48 23 52 23" stroke="#4A3427" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M34 30C40 28 48 28 56 29" stroke="#4A3427" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M27 46C26 56 28 66 31 72C33 66 33 58 33 50" fill="#1C1510"/>
-        <path d="M73 46C74 56 72 66 69 72C67 66 67 58 67 50" fill="#1C1510"/>
-      
-
-  <!-- Accessories (earrings, etc.) -->
-  
-      <!-- Gold stud earrings -->
-      <circle cx="32" cy="49" r="1.8" fill="#C49A55"/>
-      <circle cx="68" cy="49" r="1.8" fill="#C49A55"/>
-    
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 72 72" role="img" aria-label="Avatar Eganyé 1">
+  <defs>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .06"/></feComponentTransfer></filter>
+  </defs>
+  <circle cx="36" cy="36" r="34" fill="#EFE2D0"/>
+  <circle cx="36" cy="36" r="34" filter="url(#paper)" opacity=".8"/>
+  <circle cx="46" cy="22" r="5" fill="#C49A55"/>
+  <path d="M14 66c3-19 41-19 44 0" fill="#C49A55"/>
+  <path d="M20 63c8-9 24-9 32 0" fill="#FFF9F0" opacity=".22"/>
+  <path d="M19 30c0-11 7-18 17-18s17 7 17 18c-7-5-23-5-34 0z" fill="#3E2F24"/>
+  <circle cx="36" cy="28" r="13" fill="#8E5738"/>
+  <path d="M29 35c4 4 10 4 14 0" fill="none" stroke="#3E2F24" stroke-width="2.4" stroke-linecap="round" opacity=".78"/>
+  <circle cx="31" cy="29" r="1.4" fill="#3E2F24"/>
+  <circle cx="41" cy="29" r="1.4" fill="#3E2F24"/>
+  <path d="M24 18c7-10 23-8 29 2-10-3-19-2-29 2z" fill="#3E2F24" opacity=".92"/>
 </svg>
