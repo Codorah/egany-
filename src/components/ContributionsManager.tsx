@@ -21,15 +21,17 @@ interface ContributionsManagerProps {
   group: Group;
   user: UserProfile;
   onBack: () => void;
+  onNavigateToVerification?: () => void;
 }
 
-export function ContributionsManager({ group, user, onBack }: ContributionsManagerProps) {
+export function ContributionsManager({ group, user, onBack, onNavigateToVerification }: ContributionsManagerProps) {
   const { t } = useLanguage();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showKycPrompt, setShowKycPrompt] = useState(false);
   // Une opération financière (déclarer/valider/rejeter un paiement) par
   // clé "action-cibleId" à la fois : un double-tap sur mobile réseau lent
   // ne doit jamais créer deux fois la même écriture comptable.
@@ -498,6 +500,8 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
                               <DeclarePaymentDialog
                                 contribution={c}
                                 onSubmit={(ref) => handleSubmitProof(c.id, ref)}
+                                isKycVerified={(user.kycLevel ?? 1) >= 2}
+                                onKycRequired={() => setShowKycPrompt(true)}
                               />
                             )}
                             {c.status === 'pending_approval' && (
@@ -562,16 +566,55 @@ export function ContributionsManager({ group, user, onBack }: ContributionsManag
           </div>
         )}
       </div>
+
+      {/* Dialogue de vérification d'identité juste-à-temps */}
+      <Dialog open={showKycPrompt} onOpenChange={setShowKycPrompt}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 text-center space-y-3 bg-card border border-border">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF4E5] text-[#C96F4A] mx-auto flex items-center justify-center">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="font-serif text-lg font-black text-foreground">
+              Vérification d'identité requise
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              Pour que votre cotisation de {group.contributionAmount.toLocaleString()} {group.currency} soit validée en toute sécurité, veuillez confirmer votre identité (Carte d'identité nationale, passeport ou carte d'électeur).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              onClick={() => {
+                setShowKycPrompt(false);
+                onNavigateToVerification?.();
+              }}
+              className="w-full rounded-xl h-11 font-bold bg-[#C96F4A] hover:bg-[#B8623E] text-white cursor-pointer"
+            >
+              Vérifier ma pièce d'identité
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowKycPrompt(false)}
+              className="w-full rounded-xl text-xs text-muted-foreground cursor-pointer"
+            >
+              Plus tard
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function DeclarePaymentDialog({
   contribution,
-  onSubmit
+  onSubmit,
+  isKycVerified = true,
+  onKycRequired,
 }: {
-  contribution: Contribution,
-  onSubmit: (reference: string) => void
+  contribution: Contribution;
+  onSubmit: (reference: string) => void;
+  isKycVerified?: boolean;
+  onKycRequired?: () => void;
 }) {
   const { t } = useLanguage();
   const [reference, setReference] = useState('');
@@ -598,13 +641,27 @@ function DeclarePaymentDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={
-        <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer">
-          <CheckCircle2 className="w-4 h-4" />
-          {t('declare')}
-        </Button>
-      } />
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (open && !isKycVerified) {
+        onKycRequired?.();
+        return;
+      }
+      setIsOpen(open);
+    }}>
+      <DialogTrigger
+        onClick={(e) => {
+          if (!isKycVerified) {
+            e.preventDefault();
+            onKycRequired?.();
+          }
+        }}
+        render={
+          <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer">
+            <CheckCircle2 className="w-4 h-4" />
+            {t('declare')}
+          </Button>
+        }
+      />
       <DialogContent className="rounded-3xl">
         <DialogHeader>
           <DialogTitle className="font-serif">{t('declare_payment')}</DialogTitle>

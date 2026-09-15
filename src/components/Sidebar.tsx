@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, Bell, Landmark, User, CalendarDays, Store, Bot, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, Landmark, User, CalendarDays, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SidebarProps {
@@ -33,8 +33,6 @@ export function Sidebar({ user, currentView = 'dashboard', onNavigate }: Sidebar
 
   const secondaryItems = [
     { id: 'calendar', label: t('calendar'), icon: <CalendarDays className="w-5 h-5" /> },
-    { id: 'marketplace', label: t('marketplace'), icon: <Store className="w-5 h-5" /> },
-    { id: 'ai-assistant', label: t('ai_assistant'), icon: <Bot className="w-5 h-5" /> },
   ];
 
   if (user?.role === 'admin') {

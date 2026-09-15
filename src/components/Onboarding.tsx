@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { LanguageSwitcher } from './ui/LanguageSwitcher';
+import { EganyeLogo } from './ui/EganyeLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import {
   ArrowRight,
   ArrowLeft,
@@ -114,8 +116,8 @@ function AuthLayout({
         </div>
 
         <div className="relative z-10 flex flex-col items-center gap-3 pt-2">
-          <div className="w-[86px] h-[86px] rounded-full bg-white/95 shadow-elevated flex items-center justify-center">
-            <img src="/logo-mark.png" alt="eganyé" className="w-14 h-14 object-contain" />
+          <div className="w-[86px] h-[86px] rounded-full bg-white/95 shadow-elevated flex items-center justify-center p-2">
+            <img src="/favicon.svg" alt="Eganyé" className="w-14 h-14 object-contain rounded-2xl" />
           </div>
           <span className="text-2xl font-serif font-bold text-white lowercase tracking-tight drop-shadow-sm">
             eganyé
@@ -255,6 +257,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const [isResendingOtp, setIsResendingOtp] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [legalModal, setLegalModal] = useState<'cgu' | 'confidentialite' | null>(null);
 
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -986,18 +989,18 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 46, repeat: Infinity, ease: 'linear' }}
                 />
-                <motion.img
-                  src="/logo-mark.png"
-                  alt="eganyé"
-                  className="relative w-24 h-24 object-contain"
+                <motion.div
+                  className="relative flex items-center justify-center"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-                />
+                >
+                  <EganyeLogo size={88} />
+                </motion.div>
               </div>
 
               <div className="space-y-3">
-                <h1 className="text-5xl font-serif font-bold text-foreground tracking-tight lowercase">eganyé</h1>
+                <h1 className="text-5xl font-serif font-black text-foreground tracking-tight lowercase">eganyé</h1>
                 <p className="text-base leading-relaxed text-muted-foreground font-medium max-w-sm mx-auto">
                   {t('onb_welcome_desc')}
                 </p>
@@ -1020,6 +1023,25 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                 >
                   {t('onb_already_have_account')}
                 </Button>
+
+                {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
+                <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setLegalModal('cgu')}
+                    className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                  >
+                    Conditions d'utilisation
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => setLegalModal('confidentialite')}
+                    className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                  >
+                    Confidentialité
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -1087,6 +1109,57 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
         </AnimatePresence>
       </div>
+
+      {/* ── MODALE LÉGALE CONFORMITÉ STORES (ACCESSIBLE AVANT INSCRIPTION) ── */}
+      <Dialog open={legalModal !== null} onOpenChange={(open) => !open && setLegalModal(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-3xl p-6 bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-serif font-black text-foreground">
+              {legalModal === 'cgu' ? "Conditions Générales d'Utilisation" : "Politique de Confidentialité"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Application financière Eganyé — Dernière mise à jour : 2026
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="text-xs text-muted-foreground space-y-3 pt-2 leading-relaxed">
+            {legalModal === 'cgu' ? (
+              <>
+                <p>
+                  <strong>1. Objet du Service :</strong> Eganyé est une plateforme technologique d’épargne collaborative et individuelle destinée à faciliter les tontines rotatives et l'inclusion financière.
+                </p>
+                <p>
+                  <strong>2. Engagements des membres :</strong> Tout membre participant à un cercle s’engage sur l'honneur et par signature numérique à honorer l'ensemble de ses cotisations jusqu’au terme du cycle.
+                </p>
+                <p>
+                  <strong>3. Intégrité des transactions :</strong> Les dépôts et retraits s'effectuent via les réseaux Mobile Money agréés (T-Money, Moov Flooz, Orange Money, MTN MoMo). Eganyé applique un registre comptable à partie double infalsifiable.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  <strong>1. Protection des données :</strong> Eganyé s’engage à protéger la confidentialité de vos informations personnelles. Vos pièces d’identité KYC ne sont utilisées qu'à des fins de conformité légale et financière.
+                </p>
+                <p>
+                  <strong>2. Chiffrement & Sécurité :</strong> Tous vos codes PIN et mots de passe sont hachés de manière irréversible via bcrypt côté serveur. Vos flux financiers sont chiffrés de bout en bout.
+                </p>
+                <p>
+                  <strong>3. Droit de suppression :</strong> Vous pouvez demander la suppression intégrale de vos données personnelles et de votre compte à tout moment depuis les Paramètres de votre Profil.
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="pt-3">
+            <Button
+              onClick={() => setLegalModal(null)}
+              className="w-full rounded-2xl h-10 bg-[#C96F4A] hover:bg-[#B85C36] text-white text-xs font-bold"
+            >
+              J'ai compris
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

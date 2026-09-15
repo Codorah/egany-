@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="60" fill="#E8EFE5" opacity="0.6"/>
+      <!-- Sparkles / rays -->
+      <path d="M80 14V22M80 138V146M14 80H22M138 80H146" stroke="#C49A55" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="120" cy="40" r="3" fill="#C49A55"/>
+      <circle cx="38" cy="48" r="2.5" fill="#C49A55"/>
+      <!-- Character: Smiling woman holding coins -->
+      <path d="M52 140C52 118 64 108 80 108C96 108 108 118 108 140V144H52V140Z" fill="#C96F4A"/>
+      <path d="M72 108L80 118L88 108H72Z" fill="#FFFDFC"/>
+      <rect x="74" y="94" width="12" height="16" rx="3" fill="#6F472B"/>
+      <path d="M64 74C64 62 71 56 80 56C89 56 96 62 96 74C96 85 89 92 80 92C71 92 64 85 64 74Z" fill="#6F472B"/>
+      <!-- Hair: high puff -->
+      <ellipse cx="80" cy="48" rx="18" ry="12" fill="#1C1510"/>
+      <path d="M63 76C63 64 68 58 80 58C92 58 97 64 97 76C94 66 90 63 80 63C70 63 66 66 63 76Z" fill="#1C1510"/>
+      <!-- Face -->
+      <ellipse cx="74" cy="74" rx="2" ry="2.2" fill="#3E2F24"/>
+      <ellipse cx="86" cy="74" rx="2" ry="2.2" fill="#3E2F24"/>
+      <path d="M75 83C77.5 85.5 82.5 85.5 85 83" stroke="#3E2F24" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Hands holding floating golden coin -->
+      <circle cx="80" cy="106" r="14" fill="#C49A55"/>
+      <circle cx="80" cy="106" r="11" fill="none" stroke="#FFFDFC" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <text x="80" y="110" font-family="Poppins" font-weight="800" font-size="12" fill="#FFFDFC" text-anchor="middle">F</text>
+      <!-- Small coins around -->
+      <circle cx="112" cy="78" r="8" fill="#C49A55"/>
+      <text x="112" y="81" font-family="Poppins" font-weight="700" font-size="8" fill="#FFFDFC" text-anchor="middle">+</text>
+      <circle cx="48" cy="88" r="7" fill="#C49A55" opacity="0.85"/>
+    </svg>

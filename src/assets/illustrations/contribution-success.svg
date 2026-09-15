@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <!-- Circle of people symbol -->
+      <circle cx="80" cy="80" r="54" fill="#E8EFE5" opacity="0.6"/>
+      <circle cx="80" cy="80" r="44" fill="none" stroke="#718A68" stroke-width="2" stroke-dasharray="6 4"/>
+      <!-- 4 community nodes -->
+      <circle cx="80" cy="36" r="8" fill="#C96F4A"/>
+      <circle cx="124" cy="80" r="8" fill="#C49A55"/>
+      <circle cx="80" cy="124" r="8" fill="#566C50"/>
+      <circle cx="36" cy="80" r="8" fill="#3E2F24"/>
+      <!-- Center Coin Dropped with Motion Ripple -->
+      <circle cx="80" cy="80" r="24" fill="#FFFDFC" stroke="#C49A55" stroke-width="2"/>
+      <circle cx="80" cy="80" r="16" fill="#C49A55"/>
+      <text x="80" y="85" font-family="Poppins" font-weight="800" font-size="15" fill="#FFFDFC" text-anchor="middle">✓</text>
+      <!-- Ripple arcs -->
+      <path d="M70 60C76 58 84 58 90 60" stroke="#C96F4A" stroke-width="2" stroke-linecap="round"/>
+      <path d="M66 100C74 102 86 102 94 100" stroke="#C96F4A" stroke-width="2" stroke-linecap="round"/>
+    </svg>

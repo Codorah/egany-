@@ -1,77 +1,32 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createAvatar } from '@dicebear/core';
-import {
-  notionists,
-  avataaars,
-  adventurer,
-  openPeeps,
-  micah,
-  personas,
-} from '@dicebear/collection';
-import { Upload, Shuffle, Loader2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
+import { EganyeIcon } from './ui/EganyeIcon';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AvatarWorkshopProps {
   value?: AvatarConfig;
   onChange?: (value: AvatarConfig) => void;
   name?: string;
   userId?: string;
-  /** Real photo upload needs an authenticated Supabase session (Storage RLS
-   * checks auth.uid()) — not available yet during onboarding, before the
-   * account exists. Defaults to true for the post-signup Profile screen. */
   allowPhotoUpload?: boolean;
 }
 
-// Each DiceBear style has its own distinct Options type, so a homogeneous
-// array can't stay precisely typed style-by-style — we only ever pass the
-// universal `seed` option, so `any` here is a deliberate, narrow trade-off.
-const ILLUSTRATED_STYLES: { id: string; label: string; style: any }[] = [
-  { id: 'notionists', label: 'Notionists', style: notionists },
-  { id: 'avataaars', label: 'Avataaars', style: avataaars },
-  { id: 'adventurer', label: 'Aventurier', style: adventurer },
-  { id: 'openPeeps', label: 'Peeps', style: openPeeps },
-  { id: 'micah', label: 'Micah', style: micah },
-  { id: 'personas', label: 'Personas', style: personas },
-];
-
-function generateIllustratedAvatar(styleId: string, seed: string): string {
-  const entry = ILLUSTRATED_STYLES.find((s) => s.id === styleId) || ILLUSTRATED_STYLES[0];
-  return createAvatar(entry.style, { seed }).toDataUri();
-}
-
-export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPhotoUpload = true }: AvatarWorkshopProps) {
-  const { t } = useLanguage();
-  const [mode, setMode] = useState<'illustrated' | 'photo'>('illustrated');
-  const [styleId, setStyleId] = useState<string>(ILLUSTRATED_STYLES[0].id);
-  const [seed, setSeed] = useState<string>(name || 'eganye');
+export function AvatarWorkshop({
+  value,
+  onChange,
+  name = 'Membre',
+  userId,
+  allowPhotoUpload = true,
+}: AvatarWorkshopProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const illustratedPreview = useMemo(() => generateIllustratedAvatar(styleId, seed), [styleId, seed]);
-
-  // The default style/seed is generated and shown immediately, but onChange
-  // only fires on explicit interaction — without this, a user who never
-  // touches the picker ends up with no avatar saved at all, despite one
-  // being visibly previewed the whole time.
-  useEffect(() => {
-    if (!value) onChange?.(illustratedPreview);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handlePickStyle = (id: string) => {
-    setStyleId(id);
-    onChange?.(generateIllustratedAvatar(id, seed));
-  };
-
-  const handleShuffle = () => {
-    const newSeed = Math.random().toString(36).slice(2, 10);
-    setSeed(newSeed);
-    onChange?.(generateIllustratedAvatar(styleId, newSeed));
-  };
+  const hasCustomPhoto =
+    value &&
+    !value.includes('/avatars/avatar-') &&
+    (value.startsWith('http') || value.startsWith('data:') || value.startsWith('blob:'));
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,92 +34,80 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
     e.target.value = '';
 
     if (!file.type.startsWith('image/')) {
-      toast.error(t('avw_invalid_image_error'));
+      toast.error('Veuillez sélectionner un fichier image valide (JPG, PNG).');
       return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La taille de l’image ne doit pas dépasser 5 Mo.');
+      return;
+    }
+
     if (!userId) {
-      toast.error(t('avw_no_account_error'));
+      // Local preview if not yet authenticated
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          onChange?.(reader.result);
+          toast.success('Photo sélectionnée !');
+        }
+      };
+      reader.readAsDataURL(file);
       return;
     }
 
     setIsUploading(true);
     try {
-      const path = `${userId}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const path = `${userId}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true });
+
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       onChange?.(data.publicUrl);
-      toast.success(t('avw_photo_updated_success'));
+      toast.success('Photo de profil mise à jour avec succès !');
     } catch (err: any) {
-      toast.error(err.message || t('avw_upload_failed_error'));
+      console.error('Avatar upload error:', err);
+      toast.error(err.message || 'Erreur lors du téléversement de la photo');
     } finally {
       setIsUploading(false);
     }
   };
 
-  const currentPreview = value || (mode === 'illustrated' ? illustratedPreview : undefined);
+  const handleRemovePhoto = () => {
+    onChange?.('');
+    toast.success('Photo retirée. Votre monogramme officiel est maintenant actif.');
+  };
 
   return (
-    <div className="flex flex-col items-center text-center space-y-4 py-2">
+    <div className="flex flex-col items-center text-center space-y-5 py-3">
+      {/* Aperçu en direct */}
       <div className="relative">
-        <CustomAvatar photoURL={currentPreview} name={name} size={96} />
+        <div className="ring-4 ring-[#C96F4A]/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft">
+          <CustomAvatar photoURL={value} name={name} size={104} />
+        </div>
         {isUploading && (
-          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-white animate-spin" />
+          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+            <EganyeIcon name="loading" size={28} className="text-white animate-spin" />
           </div>
         )}
       </div>
 
-      {allowPhotoUpload && (
-        <div className="flex gap-1 bg-muted p-1 rounded-full border border-border">
-          <button
-            type="button"
-            onClick={() => setMode('illustrated')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer ${mode === 'illustrated' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-          >
-            {t('avw_illustrated_tab')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('photo')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer ${mode === 'photo' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
-          >
-            {t('avw_photo_tab')}
-          </button>
-        </div>
-      )}
+      <div>
+        <h3 className="text-base font-serif font-black text-foreground">
+          {name}
+        </h3>
+        <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
+          Personnalisez votre apparence sur Eganyé. Vous pouvez importer votre propre photo ou utiliser votre monogramme sécurisé.
+        </p>
+      </div>
 
-      {(mode === 'illustrated' || !allowPhotoUpload) ? (
-        <div className="w-full space-y-3">
-          <div className="flex flex-wrap justify-center gap-2">
-            {ILLUSTRATED_STYLES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => handlePickStyle(s.id)}
-                className={`px-2.5 py-1.5 rounded-xl text-[13px] font-bold border transition-colors cursor-pointer ${
-                  styleId === s.id
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card text-foreground border-border hover:bg-muted'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <Button
-            onClick={handleShuffle}
-            variant="outline"
-            size="sm"
-            className="rounded-xl text-xs font-bold border-border text-foreground hover:bg-muted cursor-pointer flex items-center gap-1.5 mx-auto"
-          >
-            <Shuffle className="w-3.5 h-3.5" />
-            <span>{t('avw_shuffle_button')}</span>
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-2">
+      {/* Boutons d'action */}
+      {allowPhotoUpload && (
+        <div className="w-full max-w-xs space-y-2 pt-1">
           <input
             ref={fileInputRef}
             type="file"
@@ -172,21 +115,37 @@ export function AvatarWorkshop({ value, onChange, name = 'User', userId, allowPh
             className="hidden"
             onChange={handleFileSelect}
           />
+
           <Button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            size="sm"
             disabled={isUploading}
-            className="rounded-xl text-xs font-bold border-border text-foreground hover:bg-muted cursor-pointer flex items-center gap-1.5"
+            className="w-full rounded-2xl h-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white font-bold text-xs gap-2 shadow-xs cursor-pointer"
           >
-            <Upload className="w-3.5 h-3.5" />
-            <span>{isUploading ? t('avw_uploading_ellipsis') : t('avw_upload_photo_button')}</span>
+            <EganyeIcon name="camera" size={16} />
+            <span>{hasCustomPhoto ? 'Changer de photo' : 'Importer une photo'}</span>
           </Button>
-          <p className="text-[13px] text-muted-foreground max-w-xs">
-            {t('avw_photo_storage_note')}
-          </p>
+
+          {hasCustomPhoto && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleRemovePhoto}
+              disabled={isUploading}
+              className="w-full rounded-2xl h-10 border-[#EFE2D0] dark:border-border text-xs font-semibold text-muted-foreground hover:text-danger cursor-pointer"
+            >
+              <EganyeIcon name="trash" size={14} className="mr-1.5" />
+              <span>Utiliser le monogramme classique</span>
+            </Button>
+          )}
         </div>
       )}
+
+      {/* Note de réassurance */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[11px] text-muted-foreground max-w-xs">
+        <EganyeIcon name="shield" size={14} className="text-[#718A68] shrink-0" />
+        <span>Votre photo est visible uniquement par les membres de vos cercles d’épargne.</span>
+      </div>
     </div>
   );
 }

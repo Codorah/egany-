@@ -1,52 +1,96 @@
+import React from 'react';
+
 export type AvatarConfig = string;
 
 interface CustomAvatarProps {
-  photoURL?: string;
+  photoURL?: string | null;
   name?: string;
   className?: string;
   size?: number;
 }
 
-export function CustomAvatar({ photoURL, name = 'User', className = '', size = 80 }: CustomAvatarProps) {
-  const initial = (name.trim().charAt(0) || 'E').toUpperCase();
+// Palettes de dégradés fintech chaudes et élégantes basées sur la charte Eganyé
+const MONOGRAM_PALETTES = [
+  { from: '#C96F4A', to: '#E5A93C', text: '#FFFFFF', border: '#B85C36' }, // Terracotta & Or
+  { from: '#718A68', to: '#4F6C46', text: '#FFFFFF', border: '#3E5736' }, // Sauge & Forêt
+  { from: '#D48B28', to: '#F0C05A', text: '#2D1F17', border: '#B57218' }, // Ocre Solaire
+  { from: '#3D5072', to: '#6B82A8', text: '#FFFFFF', border: '#2C3B55' }, // Sahel Indigo
+  { from: '#C25953', to: '#E07A5F', text: '#FFFFFF', border: '#A6413B' }, // Corail Épicé
+  { from: '#2D1F17', to: '#694D3B', text: '#F8F0E4', border: '#1C130D' }, // Café Espresso
+];
 
-  // Vibrant gradient palette based on first character code
-  const gradients = [
-    'from-amber-500 to-orange-600',
-    'from-emerald-500 to-teal-600',
-    'from-blue-500 to-indigo-600',
-    'from-purple-500 to-pink-600',
-    'from-rose-500 to-red-600',
-    'from-orange-500 to-amber-600'
-  ];
+export function CustomAvatar({
+  photoURL,
+  name = 'Membre',
+  className = '',
+  size = 48,
+}: CustomAvatarProps) {
+  const cleanName = (name || 'Membre').trim();
 
-  const charCode = name.charCodeAt(0) || 65;
-  const selectedGradient = gradients[charCode % gradients.length];
+  // 1. Si l'utilisateur a une vraie photo de profil (URL web, Supabase Storage ou data:)
+  const isRealPhoto =
+    photoURL &&
+    !photoURL.includes('/avatars/avatar-') &&
+    (photoURL.startsWith('http') || photoURL.startsWith('data:') || photoURL.startsWith('blob:'));
 
-  if (photoURL && (photoURL.startsWith('http') || photoURL.startsWith('data:'))) {
+  if (isRealPhoto) {
     return (
       <img
         src={photoURL}
-        alt={name}
-        className={`rounded-full object-cover shadow-soft border border-white/30 ${className}`}
+        alt={cleanName}
+        className={`rounded-full object-cover shadow-soft border-2 border-white/80 dark:border-border/80 select-none shrink-0 ${className}`}
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
+        loading="lazy"
+        onError={(e) => {
+          // Fallback to monogram if photo fails to load
+          e.currentTarget.style.display = 'none';
+        }}
       />
     );
   }
 
+  // 2. Monogramme Fintech Haute Couture (style WhatsApp / Apple / Wise)
+  // Calcul déterministe de la palette à partir du nom
+  const charCode = cleanName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const palette = MONOGRAM_PALETTES[charCode % MONOGRAM_PALETTES.length];
+
+  // Extraction propre des initiales (jusqu'à 2 lettres majuscules)
+  const words = cleanName.split(/\s+/).filter(Boolean);
+  let initials = 'E';
+  if (words.length >= 2) {
+    initials = (words[0][0] + words[1][0]).toUpperCase();
+  } else if (words.length === 1 && words[0].length >= 2) {
+    initials = words[0].slice(0, 2).toUpperCase();
+  } else if (words.length === 1) {
+    initials = words[0][0].toUpperCase();
+  }
+
+  // Taille de police proportionnelle
+  const fontSize = Math.max(11, Math.round(size * 0.40));
+
   return (
     <div
-      className={`rounded-full bg-gradient-to-br ${selectedGradient} text-white font-serif font-black flex items-center justify-center shadow-soft border border-white/30 select-none ${className}`}
-      style={{ width: size, height: size, minWidth: size, minHeight: size, fontSize: Math.max(size * 0.42, 14) }}
+      className={`rounded-full shadow-soft flex items-center justify-center font-serif font-black select-none shrink-0 border border-white/30 dark:border-white/10 ${className}`}
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        minHeight: size,
+        background: `linear-gradient(135deg, ${palette.from}, ${palette.to})`,
+        color: palette.text,
+        fontSize,
+      }}
+      title={cleanName}
+      aria-label={`Avatar de ${cleanName}`}
     >
-      {initial}
+      <span>{initials}</span>
     </div>
   );
 }
 
 export const DEFAULT_AVATAR = {
-  skin: '#F59E0B',
-  role: 'commercante',
-  primaryColor: '#EA580C',
-  background: '#FFE4E6'
+  skin: '#6F472B',
+  role: 'member',
+  primaryColor: '#C96F4A',
+  background: '#F8F0E4',
 };

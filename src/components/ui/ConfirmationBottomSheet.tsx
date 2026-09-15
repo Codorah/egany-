@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldAlert, ArrowDown, CreditCard, Send, Wallet, X, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
+import { EganyeMascot } from './EganyeMascot';
 
 interface ConfirmationBottomSheetProps {
   isOpen: boolean;
@@ -114,56 +115,64 @@ export function ConfirmationBottomSheet({
 
               {/* Body */}
               <div className="px-6 py-2 space-y-4">
-                <p className="text-sm text-muted-foreground leading-relaxed font-normal">
-                  {description}
-                </p>
-
-                {/* Amount Highlight */}
-                {amount !== undefined && (
-                  <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
-                    <span className="text-[13px] uppercase font-black text-muted-foreground tracking-widest">
-                      Montant de l'opération
-                    </span>
-                    <span className={`text-2xl font-black mt-1 ${
-                      type === 'debit' ? 'text-danger' : 'text-secondary'
-                    }`}>
-                      {amount.toLocaleString()} {currency}
-                    </span>
+                {isLoading ? (
+                  <div className="py-4 flex flex-col items-center justify-center space-y-2">
+                    <EganyeMascot variant="payment" size={90} message="Validation de l’opération en cours..." />
                   </div>
-                )}
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground leading-relaxed font-normal">
+                      {description}
+                    </p>
 
-                {/* Transfer Diagram Visual */}
-                {amount !== undefined && (
-                  <div className="flex items-center justify-between px-6 py-2 text-xs text-muted-foreground font-bold bg-muted/50 rounded-2xl border border-border">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="p-2 bg-card rounded-full shadow-xs border border-border">
-                        {type === 'recharge' ? <CreditCard className="w-4 h-4 text-foreground" /> : <Wallet className="w-4 h-4 text-foreground" />}
+                    {/* Amount Highlight */}
+                    {amount !== undefined && (
+                      <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
+                        <span className="text-[13px] uppercase font-black text-muted-foreground tracking-widest">
+                          Montant de l'opération
+                        </span>
+                        <span className={`text-2xl font-black mt-1 ${
+                          type === 'debit' ? 'text-danger' : 'text-secondary'
+                        }`}>
+                          {amount.toLocaleString()} {currency}
+                        </span>
                       </div>
-                      <span className="text-[13px]">{type === 'recharge' ? 'Mon Mobile Money' : 'Mon Portefeuille'}</span>
-                    </div>
+                    )}
 
-                    <div className="flex-1 flex flex-col items-center justify-center relative px-2">
-                      <div className="w-full h-0.5 border-t-2 border-dashed border-border" />
-                      <div className="absolute top-1/2 -translate-y-1/2 p-0.5 bg-brand text-white rounded-full shadow-xs">
-                        <ArrowDown className="w-3 h-3 rotate-270" />
+                    {/* Transfer Diagram Visual */}
+                    {amount !== undefined && (
+                      <div className="flex items-center justify-between px-6 py-2 text-xs text-muted-foreground font-bold bg-muted/50 rounded-2xl border border-border">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="p-2 bg-card rounded-full shadow-xs border border-border">
+                            {type === 'recharge' ? <CreditCard className="w-4 h-4 text-foreground" /> : <Wallet className="w-4 h-4 text-foreground" />}
+                          </div>
+                          <span className="text-[13px]">{type === 'recharge' ? 'Mon Mobile Money' : 'Mon Portefeuille'}</span>
+                        </div>
+
+                        <div className="flex-1 flex flex-col items-center justify-center relative px-2">
+                          <div className="w-full h-0.5 border-t-2 border-dashed border-border" />
+                          <div className="absolute top-1/2 -translate-y-1/2 p-0.5 bg-brand text-white rounded-full shadow-xs">
+                            <ArrowDown className="w-3 h-3 rotate-270" />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="p-2 bg-card rounded-full shadow-xs border border-border">
+                            {type === 'recharge' ? <Wallet className="w-4 h-4 text-secondary" /> : <Send className="w-4 h-4 text-secondary" />}
+                          </div>
+                          <span className="text-[13px]">{type === 'recharge' ? 'Portefeuille eganyé' : 'Cercle de Tontine'}</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="p-2 bg-card rounded-full shadow-xs border border-border">
-                        {type === 'recharge' ? <Wallet className="w-4 h-4 text-secondary" /> : <Send className="w-4 h-4 text-secondary" />}
+                    {/* Secure / Protection Badge — uniquement pertinent pour une opération financière */}
+                    {amount !== undefined && (
+                      <div className="flex items-center gap-2 text-[13px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
+                        <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
+                        <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
                       </div>
-                      <span className="text-[13px]">{type === 'recharge' ? 'Portefeuille eganyé' : 'Cercle de Tontine'}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Secure / Protection Badge — uniquement pertinent pour une opération financière */}
-                {amount !== undefined && (
-                  <div className="flex items-center gap-2 text-[13px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
-                    <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
-                    <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
 

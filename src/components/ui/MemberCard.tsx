@@ -24,7 +24,7 @@ export function MemberCard({ avatarUrl, name, subtitle, trailing, tone = 'defaul
       } ${className}`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <CustomAvatar photoURL={avatarUrl} name={name} size={28} />
+        <CustomAvatar photoURL={avatarUrl} name={name} size={36} />
         <div className="min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{name}</p>
           {subtitle && <div className="text-[12px] text-muted-foreground truncate">{subtitle}</div>}

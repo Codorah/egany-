@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="56" fill="#EFE2D0"/>
+      <!-- Cloud with slash -->
+      <path d="M52 94C45 94 40 89 40 82C40 76 45 71 51 71C53 62 61 56 70 56C78 56 85 61 88 68C91 66 94 65 98 65C106 65 112 71 112 79C112 80 112 81 111 82C116 84 120 88 120 94C120 101 114 106 107 106H52C45 106 52 94 52 94Z" fill="#FFFDFC" stroke="#C96F4A" stroke-width="2.5"/>
+      <!-- Disconnect slash -->
+      <path d="M48 116L112 50" stroke="#A95636" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- Phone below with signal -->
+      <circle cx="80" cy="126" r="4" fill="#3E2F24"/>
+      <path d="M72 134C77 131 83 131 88 134" stroke="#3E2F24" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>

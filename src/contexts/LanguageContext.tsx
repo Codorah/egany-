@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-export type LanguageCode = 'fr' | 'en' | 'ee' | 'kbp';
+export type LanguageCode = 'fr' | 'en' | 'ee' | 'kbp' | 'wo' | 'bm';
 
 export interface LanguageContextType {
   language: LanguageCode;
@@ -11,55 +11,71 @@ export interface LanguageContextType {
   t: (key: string) => string;
 }
 
-const translations: Record<string, Record<LanguageCode, string>> = {
+const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   // Navigation / App Layout
   app_name: {
-    fr: 'égané',
-    en: 'égané',
-    ee: 'égané',
-    kbp: 'égané'
+    fr: 'Eganyé',
+    en: 'Eganyé',
+    ee: 'Eganyé',
+    kbp: 'Eganyé',
+    wo: 'Eganyé',
+    bm: 'Eganyé'
   },
   dashboard: {
-    fr: 'Tableau de bord',
-    en: 'Dashboard',
-    ee: 'Nuxaxlẽdzesi',
-    kbp: 'Kɩɖɛzaɣ ñɩnɖɛ'
+    fr: 'Accueil',
+    en: 'Home',
+    ee: 'Aƒe',
+    kbp: 'Kpɛndɩyɛ',
+    wo: 'Dalal',
+    bm: 'Kɛnɛ'
   },
   profile: {
     fr: 'Mon Profil',
     en: 'My Profile',
     ee: 'Nye Ŋkɔmeɖeɖe',
-    kbp: 'Man ma-ɖɔkɔtɔ'
+    kbp: 'Man ma-ɖɔkɔtɔ',
+    wo: 'Sama Jëmm',
+    bm: 'N ka Dugukolo'
   },
   create_group: {
-    fr: 'Créer une Tontine',
-    en: 'Create a Tontine',
-    ee: 'Wɔ Tontine',
-    kbp: 'Ma tontine'
+    fr: 'Créer un Cercle',
+    en: 'Create a Circle',
+    ee: 'Wɔ Cercle',
+    kbp: 'Ma nɖɩɛ',
+    wo: 'Sos Kureel',
+    bm: 'Ton dabilen'
   },
   join_group: {
     fr: 'Rejoindre un Cercle',
     en: 'Join a Circle',
     ee: 'Ge Ɖe Ha me',
-    kbp: 'Kpɛndɩ nɖɩɛ taa'
+    kbp: 'Kpɛndɩ nɖɩɛ taa',
+    wo: 'Bokk ci Kureel',
+    bm: 'Don Ton kɔnɔ'
   },
   admin_panel: {
     fr: 'Administration',
     en: 'Administration',
     ee: 'Dziɖuɖu',
-    kbp: 'Ñʋʋdʋ'
+    kbp: 'Ñʋʋdʋ',
+    wo: 'Yor-kat',
+    bm: 'Kuntigiya'
   },
   calendar: {
     fr: 'Calendrier',
     en: 'Calendar',
     ee: 'Ŋkeke Xexlẽme',
-    kbp: 'Kɩyakʋ kalɩyʋ'
+    kbp: 'Kɩyakʋ kalɩyʋ',
+    wo: 'Arminaat',
+    bm: 'Kalo'
   },
   search_circles: {
     fr: 'Rechercher un cercle',
     en: 'Search for a circle',
     ee: 'Di Ha aɖe',
-    kbp: 'Pɔzɩ nɖɩɛ nakɛyɛ'
+    kbp: 'Pɔzɩ nɖɩɛ nakɛyɛ',
+    wo: 'Wër Kureel',
+    bm: 'Ton ɲini'
   },
   marketplace: {
     fr: 'Services Annexes',

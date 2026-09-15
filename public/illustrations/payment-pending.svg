@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="56" fill="#EFE2D0" opacity="0.8"/>
+      <!-- Hourglass / Clock centered -->
+      <circle cx="80" cy="80" r="42" fill="#FFFDFC" stroke="#C49A55" stroke-width="3"/>
+      <!-- Clock hands -->
+      <path d="M80 54V80L98 90" stroke="#C96F4A" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="80" cy="80" r="5" fill="#C96F4A"/>
+      <!-- Pulsing dots indicating wait -->
+      <circle cx="60" cy="132" r="4" fill="#C49A55" opacity="0.4"/>
+      <circle cx="80" cy="132" r="5" fill="#C49A55"/>
+      <circle cx="100" cy="132" r="4" fill="#C49A55" opacity="0.4"/>
+      <text x="80" y="38" font-family="Poppins" font-weight="700" font-size="11" fill="#3E2F24" text-anchor="middle">En cours...</text>
+    </svg>

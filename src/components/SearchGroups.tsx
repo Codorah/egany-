@@ -106,7 +106,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={Users}
+          illustration="no-circles"
           title={t('sg_empty_title')}
           description={t('sg_empty_desc')}
         />

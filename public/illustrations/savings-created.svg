@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="56" fill="#F3E5D4" opacity="0.7"/>
+      <!-- Safe / Vault box -->
+      <rect x="46" y="58" width="68" height="64" rx="14" fill="#3E2F24"/>
+      <rect x="52" y="64" width="56" height="52" rx="10" fill="#FFFDFC"/>
+      <!-- Safe dial / Lock -->
+      <circle cx="80" cy="90" r="16" fill="#C96F4A"/>
+      <circle cx="80" cy="90" r="12" fill="#F8F0E4"/>
+      <circle cx="80" cy="90" r="5" fill="#A95636"/>
+      <!-- Coin dropping in slot on top -->
+      <rect x="68" y="55" width="24" height="6" rx="3" fill="#C49A55"/>
+      <circle cx="80" cy="40" r="13" fill="#C49A55"/>
+      <text x="80" y="45" font-family="Poppins" font-weight="800" font-size="13" fill="#FFFDFC" text-anchor="middle">F</text>
+      <!-- Arrow down motion -->
+      <path d="M80 48V53M77 51L80 54L83 51" stroke="#C49A55" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- Little sprout on side = growth -->
+      <path d="M120 70C120 60 128 58 132 58C132 66 128 72 120 70Z" fill="#718A68"/>
+      <path d="M120 70V82" stroke="#566C50" stroke-width="2" stroke-linecap="round"/>
+    </svg>

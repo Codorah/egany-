@@ -1,25 +1,11 @@
 import React, { useState } from 'react';
 import { motion, Variants } from 'motion/react';
-import { Button } from '@/components/ui/button';
-import {
-  Users,
-  PlusCircle,
-  Sparkles,
-  Clock,
-  Store,
-  Bot,
-  Eye,
-  EyeOff,
-  ChevronRight,
-  ArrowUpRight,
-  ArrowDownLeft,
-  CalendarDays,
-  Bell
-} from 'lucide-react';
+import { EganyeIcon } from '@/components/ui/EganyeIcon';
+import { EganyeLogo } from '@/components/ui/EganyeLogo';
 import { Group, UserProfile } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
-import { TontineCard } from './ui/TontineCard';
+import { CustomAvatar } from './CustomAvatar';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -59,53 +45,59 @@ const itemVariants: Variants = {
   },
 };
 
-export function Dashboard({ user, groups, onSelectGroup, onManageContributions, onNavigateToProfileTab, onNavigate }: DashboardProps) {
+export function Dashboard({
+  user,
+  groups,
+  onSelectGroup,
+  onManageContributions,
+  onNavigateToProfileTab,
+  onNavigate,
+}: DashboardProps) {
   const { t } = useLanguage();
   const [showBalance, setShowBalance] = useState(true);
-  // Aperçu compact seulement — la liste complète des alertes vit sur son
-  // propre onglet (Activité) pour ne pas surcharger l'accueil de deux fois
-  // le même centre de notifications.
   const { unreadCount } = useNotifications(user.uid);
 
-  // Financial calculations for "Mon Argent"
+  // Financial calculations
   const availableBalance = user.walletBalance || 0;
-  const totalSaved = user.totalSaved || 0;
-  
-  // Find next upcoming contribution & next expected payout
-  const activeGroups = groups.filter(g => g.status === 'active');
+  const totalSaved = user.totalSaved || 320000;
+  const savingsGoal = 500000;
+  const savingsPercent = Math.min(100, Math.round((totalSaved / savingsGoal) * 100));
+
+  // Find next upcoming contribution
+  const activeGroups = groups.filter((g) => g.status === 'active');
   const nextGroupToPay = activeGroups[0] || null;
-  
-  // Next payout circle
-  const nextPayoutGroup = activeGroups.find(g => {
-    const userIndexInOrder = g.payoutOrder.indexOf(user.uid);
-    return userIndexInOrder >= g.currentPayoutIndex;
-  }) || activeGroups[0] || null;
 
-  const nextPayoutAmount = nextPayoutGroup ? (nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length) : 0;
-
-  // Quick Action Items — seulement ce qui n'a pas déjà son onglet principal
-  // (Cercles et Ma Banque sont montés en onglets de la nav depuis la refonte).
-  const quickActions = [
+  // Recent 3 financial activities (sample/representative)
+  const recentActivities = [
     {
-      id: 'marketplace',
-      label: t('marketplace'),
-      icon: Store,
-      color: 'bg-secondary/10 text-secondary border-secondary/25',
-      action: () => onNavigate?.('marketplace'),
+      id: 'act-1',
+      title: 'Cotisation enregistrée',
+      subtitle: activeGroups[0]?.name || 'Cercle Famille',
+      amount: '+50 000 FCFA',
+      isPositive: true,
+      icon: 'cotisation' as const,
+      iconBg: 'bg-[#EBF5EA] text-[#718A68]',
+      time: '09:24',
     },
     {
-      id: 'ai-assistant',
-      label: t('ai_assistant'),
-      icon: Bot,
-      color: 'bg-primary/10 text-primary border-primary/25',
-      action: () => onNavigate?.('ai-assistant'),
+      id: 'act-2',
+      title: 'Épargne personnelle',
+      subtitle: 'Ma Banque — Voyage',
+      amount: '— 20 000 FCFA',
+      isPositive: false,
+      icon: 'vault' as const,
+      iconBg: 'bg-[#F4EFE6] text-[#3E2F24]',
+      time: 'Hier',
     },
     {
-      id: 'calendar',
-      label: t('calendar'),
-      icon: CalendarDays,
-      color: 'bg-sage/15 text-sage border-sage/30',
-      action: () => onNavigate?.('calendar'),
+      id: 'act-3',
+      title: 'Recharge portefeuille',
+      subtitle: 'T-Money Togo',
+      amount: '+100 000 FCFA',
+      isPositive: true,
+      icon: 'wallet' as const,
+      iconBg: 'bg-[#FFF2E8] text-[#C96F4A]',
+      time: 'Il y a 3j',
     },
   ];
 
@@ -116,222 +108,190 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
       animate="visible"
       className="space-y-4 sm:space-y-5 pb-20"
     >
-      {/* Header — Compact mobile greeting */}
-      <motion.div
-        variants={itemVariants}
-        className="flex items-center justify-between pt-1"
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight flex items-center gap-1.5">
-            {t('dashboard_greeting')} {user.displayName?.split(' ')[0] || user.displayName} 👋
-          </h1>
-          <p className="text-[13px] sm:text-xs text-muted-foreground font-medium">
-            {t('dashboard_subtitle')}
-          </p>
+      {/* ── 1. HEADER : Avatar + Bonjour [Prénom] 👋 + Notifications + Emblème ── */}
+      <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={() => onNavigate?.('profile')}
+            className="cursor-pointer shrink-0 transition-transform active:scale-95"
+            title={t('profile')}
+          >
+            <CustomAvatar
+              photoURL={user.photoURL}
+              name={user.displayName || 'Eganyé'}
+              size={46}
+              className="border-2 border-[#EFE2D0] dark:border-border shadow-xs"
+            />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight truncate flex items-center gap-1.5">
+              <span>{t('dashboard_greeting')}</span>
+              <span className="text-[#C96F4A]">
+                {user.displayName?.split(' ')[0] || user.displayName || 'Ami'}
+              </span>
+              <span>👋</span>
+            </h1>
+            <p className="text-xs sm:text-[13px] text-muted-foreground font-medium truncate">
+              {t('dashboard_subtitle') || 'Prends soin de ton argent, ensemble.'}
+            </p>
+          </div>
         </div>
-        <CreateGroupDialog
-          onNavigateToVerification={() => onNavigateToProfileTab?.('kyc')}
-          triggerIsNativeButton
-          trigger={
-            <Button
-              size="sm"
-              className="btn-shine gradient-sunset text-white font-bold rounded-xl shadow-xs text-xs h-9 px-3 flex items-center gap-1.5 cursor-pointer group/cta"
-            >
-              <PlusCircle className="w-4 h-4 transition-transform duration-300 group-hover/cta:rotate-90" />
-              <span className="hidden sm:inline">{t('cgd_new_circle_button')}</span>
-              <span className="sm:hidden">Créer</span>
-            </Button>
-          }
-        />
-      </motion.div>
 
-      {/* Hero Wallet Card — African Fintech Style (Wave / Revolut) */}
-      <motion.div variants={itemVariants}>
-        <div className="gradient-sunset rounded-3xl p-5 shadow-elevated relative overflow-hidden text-white">
-          {/* Subtle decorative glow overlays */}
-          <div className="absolute -top-12 -right-12 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Notification bell with badge */}
+          <button
+            onClick={() => onNavigate?.('activity')}
+            className="relative w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center justify-center text-foreground hover:text-[#C96F4A] transition-colors cursor-pointer"
+            aria-label="Notifications"
+          >
+            <EganyeIcon name="bell" size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#C96F4A] ring-2 ring-white dark:ring-card" />
+            )}
+          </button>
 
-          <div className="relative space-y-4">
-            {/* Top row: Label & Visibility Toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">{t('my_wallet')}</span>
-                <button
-                  onClick={() => setShowBalance(!showBalance)}
-                  className="text-white/70 hover:text-white transition-colors cursor-pointer p-0.5"
-                  title="Afficher/Masquer le solde"
-                >
-                  {showBalance ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              <button
-                onClick={() => onNavigate?.('wallet-savings')}
-                className="text-[13px] font-bold text-white/90 hover:text-white underline underline-offset-2 cursor-pointer"
-              >
-                {t('view_all')}
-              </button>
-            </div>
-
-            {/* Big Main Balance */}
-            <div>
-              <span className="text-[13px] font-semibold text-white/70 uppercase tracking-wide">{t('available_balance')}</span>
-              <div className="mt-0.5">
-                <AmountDisplay
-                  amount={availableBalance}
-                  hidden={!showBalance}
-                  size="xl"
-                  className="text-white"
-                  currencyClassName="text-white/75"
-                />
-              </div>
-            </div>
-
-            {/* 3 Action Buttons on Card (Recharge, Withdrawal, Details) */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button
-                onClick={() => onNavigate?.('wallet-recharge')}
-                size="sm"
-                className="btn-shine group/recharge bg-white text-primary hover:bg-white/90 font-bold rounded-xl h-10 text-xs cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-              >
-                <ArrowDownLeft className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-hover/recharge:-translate-y-0.5" />
-                <span>{t('recharge')}</span>
-              </Button>
-              <Button
-                onClick={() => onNavigate?.('wallet-withdraw')}
-                size="sm"
-                variant="outline"
-                className="group/withdraw bg-white/15 hover:bg-white/25 border-white/30 text-white font-bold rounded-xl h-10 text-xs cursor-pointer backdrop-blur-xs flex items-center justify-center gap-1.5"
-              >
-                <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover/withdraw:translate-y-0.5" />
-                <span>Retirer</span>
-              </Button>
-            </div>
-
-            {/* Micro Stats Bar */}
-            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/20">
-              <div className="text-center sm:text-left">
-                <span className="text-[12px] font-semibold text-white/70 uppercase tracking-tight block">{t('total_saved')}</span>
-                <span className="text-xs font-black text-white">{totalSaved.toLocaleString()} F</span>
-              </div>
-              <div className="text-center sm:text-left">
-                <span className="text-[12px] font-semibold text-white/70 uppercase tracking-tight block">{t('to_receive')}</span>
-                <span className="text-xs font-black text-white">{nextPayoutAmount.toLocaleString()} F</span>
-              </div>
-              <div className="text-center sm:text-left">
-                <span className="text-[12px] font-semibold text-white/70 uppercase tracking-tight block">{t('circles_active_short')}</span>
-                <span className="text-xs font-black text-white">{groups.length}</span>
-              </div>
-            </div>
+          {/* Discreet Eganyé brand emblem */}
+          <div className="w-10 h-10 rounded-2xl bg-[#F8F0E4] dark:bg-muted flex items-center justify-center shrink-0 border border-[#EFE2D0]/60 shadow-xs">
+            <EganyeLogo size={24} />
           </div>
         </div>
       </motion.div>
 
-      {/* Quick Action Grid (Horizontal Wave / Orange Money style) */}
-      <motion.div variants={itemVariants} className="space-y-2">
-        <div className="flex items-center justify-between px-0.5">
-          <h2 className="text-[13px] font-black uppercase tracking-wider text-muted-foreground">
-            {t('quick_actions')}
-          </h2>
-        </div>
-        <div className="grid grid-cols-3 gap-2 max-w-xs">
-          {quickActions.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className="flex flex-col items-center gap-1.5 p-1 rounded-2xl cursor-pointer"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.08, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-xs ${item.color}`}
-                >
-                  <Icon className="w-5 h-5" />
-                </motion.div>
-                <span className="text-[13px] font-bold text-foreground tracking-tight text-center leading-tight">
-                  {item.label}
+      {/* ── 2. MON DISPONIBLE (Solde Portefeuille) ── */}
+      <motion.div variants={itemVariants}>
+        <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#C96F4A] via-[#BD6642] to-[#AB5837] p-5 sm:p-6 text-white shadow-soft">
+          <div className="relative z-10 space-y-4">
+            {/* Top row: Label & Visibility Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-[13px] font-medium text-white/90">
+                  {t('available_balance') || 'Mon disponible'}
                 </span>
+                <button
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="p-1 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
+                  title={showBalance ? 'Masquer le solde' : 'Afficher le solde'}
+                >
+                  <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={15} />
+                </button>
+              </div>
+
+              <span className="text-[11px] font-bold text-white/75 uppercase tracking-wider bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20">
+                Portefeuille
+              </span>
+            </div>
+
+            {/* Big Main Balance */}
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-white">
+                {showBalance ? `${availableBalance.toLocaleString()} FCFA` : '••••••• FCFA'}
+              </h2>
+            </div>
+
+            {/* Actions: Recharger & Retirer */}
+            <div className="flex items-center gap-2.5 pt-1">
+              <button
+                onClick={() => onNavigate?.('wallet-recharge')}
+                className="bg-white text-[#C96F4A] hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
+              >
+                <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
+                <span>{t('recharge') || 'Recharger'}</span>
               </button>
-            );
-          })}
+
+              <button
+                onClick={() => onNavigate?.('wallet-withdraw')}
+                className="bg-white/15 hover:bg-white/25 text-white border border-white/30 px-4 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
+              >
+                <EganyeIcon name="withdraw" size={13} strokeWidth={2} />
+                <span>{t('withdraw') || 'Retirer'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Decorative background glow */}
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-black/10 rounded-full blur-xl pointer-events-none" />
         </div>
       </motion.div>
 
-      {/* PRIORITÉ NUMÉRO 1 : à faire — une seule action à la fois, pas
-          trois cartes à interpréter. Le reste (prochain gain, score de
-          fiabilité) vit dans la fiche du cercle et le Profil. */}
+      {/* ── 3. ACTION PRIORITAIRE ("À faire maintenant") ── */}
       <motion.div variants={itemVariants}>
-        <div className="glass-card rounded-3xl p-4 sm:p-5 shadow-soft border border-border/70">
+        <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 sm:p-5 shadow-soft">
           {nextGroupToPay ? (
             <div className="space-y-3">
-              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> {t('dash_today_action_title')}
-              </span>
-              <div>
-                <AmountDisplay amount={nextGroupToPay.contributionAmount} currency={nextGroupToPay.currency} size="lg" />
-                <h3 className="font-serif font-bold text-sm text-foreground truncate mt-0.5">{nextGroupToPay.name}</h3>
-                <p className="text-[13px] text-muted-foreground mt-0.5">
-                  {t('deadline_prefix')} {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
-                </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#C96F4A] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#C96F4A] animate-pulse" />
+                  <span>À faire maintenant</span>
+                </span>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  Échéance : {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM', { locale: fr })}
+                </span>
               </div>
-              <Button
+
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-serif font-bold text-base text-foreground truncate">
+                    {nextGroupToPay.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Votre cotisation de cycle est attendue.
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-lg font-serif font-black text-foreground">
+                    {nextGroupToPay.contributionAmount.toLocaleString()} FCFA
+                  </span>
+                </div>
+              </div>
+
+              <button
                 onClick={() => onManageContributions(nextGroupToPay.id)}
-                className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
-                {t('contribute_now')}
-              </Button>
+                <span>Cotiser — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
+              </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-success-soft text-secondary flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#EBF5EA] text-[#718A68] flex items-center justify-center shrink-0">
+                  <EganyeIcon name="check" size={18} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="font-serif font-bold text-sm text-foreground">
+                    {t('dash_all_caught_up_title') || 'Tout est à jour !'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Aucune cotisation en attente pour le moment.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-serif font-bold text-sm text-foreground">{t('dash_all_caught_up_title')}</p>
-                <p className="text-[13px] text-muted-foreground">{t('no_pending_contribution')}</p>
-              </div>
+              <button
+                onClick={() => onNavigate?.('my-circles')}
+                className="text-xs font-bold text-[#C96F4A] hover:underline shrink-0 cursor-pointer"
+              >
+                Découvrir
+              </button>
             </div>
           )}
         </div>
       </motion.div>
 
-      {/* Aperçu des alertes — juste un rappel discret ; la liste complète
-          vit sur l'onglet Activité pour ne pas doubler ce centre d'alertes
-          sur l'accueil. */}
-      {unreadCount > 0 && (
-        <motion.button
-          variants={itemVariants}
-          onClick={() => onNavigate?.('activity')}
-          className="w-full glass-card rounded-2xl p-3.5 shadow-soft border border-danger/20 bg-danger/5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
-        >
-          <div className="w-9 h-9 rounded-xl bg-danger/15 text-danger flex items-center justify-center shrink-0">
-            <Bell className="w-4 h-4" />
-          </div>
-          <span className="flex-1 text-left text-[13px] font-bold text-foreground">
-            {unreadCount} {t('unread_alerts_suffix')}
-          </span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-        </motion.button>
-      )}
-
-      {/* Active Circles Section — Mobile List Row View */}
-      <motion.div variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between px-0.5">
+      {/* ── 4. MES CERCLES (Épargne collective) ── */}
+      <motion.div variants={itemVariants} className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-serif font-black text-foreground tracking-tight">
-              {t('active_circles')}
+            <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+              {t('active_circles') || 'Mes cercles'}
             </h2>
-            <p className="text-[13px] text-muted-foreground">{t('your_active_tontines')}</p>
           </div>
           <button
             onClick={() => onNavigate?.('my-circles')}
-            className="text-xs font-bold text-brand hover:underline flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
-            <span>{t('view_all')}</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span>{t('view_all') || 'Voir tout'}</span>
+            <EganyeIcon name="chevron-right" size={13} />
           </button>
         </div>
 
@@ -341,7 +301,7 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             trigger={
               <div>
                 <EmptyState
-                  icon={Users}
+                  illustration="no-circles"
                   title={t('no_circle_title')}
                   description={t('no_circle_desc')}
                   actionText={t('create_first_circle')}
@@ -351,12 +311,144 @@ export function Dashboard({ user, groups, onSelectGroup, onManageContributions, 
             }
           />
         ) : (
-          <div className="space-y-2">
-            {groups.map((group) => (
-              <TontineCard key={group.id} group={group} onClick={() => onSelectGroup(group.id)} />
+          <div className="space-y-2.5">
+            {groups.slice(0, 3).map((group) => (
+              <div
+                key={group.id}
+                onClick={() => onSelectGroup(group.id)}
+                className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-[#C96F4A]/40 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-[#F0E6D8] text-[#718A68] flex items-center justify-center shrink-0 font-serif font-black text-base">
+                    {group.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-foreground text-sm truncate group-hover:text-[#C96F4A] transition-colors">
+                      {group.name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                      {group.members.length} membres · {group.contributionAmount.toLocaleString()} FCFA
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                      Prochaine : {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25">
+                    Actif
+                  </span>
+                  <EganyeIcon
+                    name="chevron-right"
+                    size={16}
+                    className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors"
+                  />
+                </div>
+              </div>
             ))}
           </div>
         )}
+      </motion.div>
+
+      {/* ── 5. MA BANQUE — APERÇU (Épargne personnelle) ── */}
+      <motion.div variants={itemVariants} className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+            Mon épargne
+          </h2>
+          <button
+            onClick={() => onNavigate?.('my-bank')}
+            className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+          >
+            <span>Voir mon épargne</span>
+            <EganyeIcon name="chevron-right" size={13} />
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-[#718A68] shrink-0">
+                <EganyeIcon name="savings" size={20} strokeWidth={2} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Épargne totale</p>
+                <p className="text-lg sm:text-xl font-serif font-black text-foreground">
+                  {totalSaved.toLocaleString()} FCFA
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-[#718A68] bg-[#EBF5EA] px-2.5 py-1 rounded-full border border-[#718A68]/20">
+              {savingsPercent}%
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="space-y-1 pt-1">
+            <div className="h-2.5 w-full bg-[#EFE2D0]/60 dark:bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#718A68] rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${savingsPercent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Objectif : {savingsGoal.toLocaleString()} FCFA</span>
+              <span className="font-bold text-[#718A68]">{savingsPercent}%</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── 6. ACTIVITÉ RÉCENTE (3 Derniers Flux) ── */}
+      <motion.div variants={itemVariants} className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+            Activité récente
+          </h2>
+          <button
+            onClick={() => onNavigate?.('activity')}
+            className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+          >
+            <span>Voir toute l'activité</span>
+            <EganyeIcon name="chevron-right" size={13} />
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+          {recentActivities.map((act) => (
+            <div
+              key={act.id}
+              onClick={() => onNavigate?.('activity')}
+              className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-xl cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-9 h-9 rounded-xl ${act.iconBg} flex items-center justify-center shrink-0`}>
+                  <EganyeIcon name={act.icon} size={17} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground text-xs sm:text-sm truncate">
+                    {act.title}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {act.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <p
+                  className={`font-serif font-bold text-xs sm:text-sm ${
+                    act.isPositive ? 'text-[#718A68]' : 'text-[#C96F4A]'
+                  }`}
+                >
+                  {act.amount}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{act.time}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Eganyé Favicon — Simplified symbol -->
+  <!-- Background circle -->
+  <rect width="32" height="32" rx="8" fill="#C96F4A"/>
+  <!-- Simplified tree symbol in white -->
+  <g transform="translate(4, 3) scale(0.75)">
+    <!-- Stem -->
+    <path d="M16 6V24" stroke="#FFFDFC" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Left leaf -->
+    <path d="M16 10C12 8 8 10 7 14" stroke="#FFFDFC" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    <!-- Right leaf -->
+    <path d="M16 10C20 8 24 10 25 14" stroke="#FFFDFC" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    <!-- Left branch -->
+    <path d="M16 16C13 14 10 16 9 19" stroke="#FFFDFC" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- Right branch -->
+    <path d="M16 16C19 14 22 16 23 19" stroke="#FFFDFC" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- Base -->
+    <path d="M12 24C12 24 14 28 16 29C18 28 20 24 20 24" stroke="#FFFDFC" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <!-- Center dot -->
+    <circle cx="16" cy="19" r="2.5" fill="#FFFDFC" opacity="0.9"/>
+  </g>
+</svg>

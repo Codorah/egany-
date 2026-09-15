@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="56" fill="#E8EFE5" opacity="0.5"/>
+      <!-- Peaceful sleeping wallet / calendar calm -->
+      <rect x="52" y="64" width="56" height="42" rx="10" fill="#3E2F24"/>
+      <path d="M52 74H108" stroke="#FFFDFC" stroke-width="1.5" opacity="0.3"/>
+      <circle cx="96" cy="86" r="4" fill="#C49A55"/>
+      <!-- Peaceful Zzz's -->
+      <text x="110" y="54" font-family="Poppins" font-weight="700" font-size="16" fill="#C96F4A">Z</text>
+      <text x="122" y="44" font-family="Poppins" font-weight="700" font-size="12" fill="#C96F4A" opacity="0.7">z</text>
+      <text x="130" y="36" font-family="Poppins" font-weight="700" font-size="9" fill="#C96F4A" opacity="0.45">z</text>
+      <!-- Peaceful plant branch -->
+      <path d="M38 108C44 98 48 96 58 98" stroke="#718A68" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="46" cy="98" r="3" fill="#718A68"/>
+    </svg>

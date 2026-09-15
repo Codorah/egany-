@@ -6,6 +6,8 @@ const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'en', label: 'EN' },
   { code: 'ee', label: 'EWE' },
   { code: 'kbp', label: 'KBY' },
+  { code: 'wo', label: 'WOL' },
+  { code: 'bm', label: 'BAM' },
 ];
 
 interface LanguageSwitcherProps {
@@ -39,7 +41,7 @@ export function LanguageSwitcher({ value, onChange, variant = 'grid', className 
   }
 
   return (
-    <div className={`grid grid-cols-4 gap-1 bg-muted p-1 rounded-xl ${className}`}>
+    <div className={`grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-muted p-1.5 rounded-xl ${className}`}>
       {LANGUAGES.map(({ code, label }) => (
         <button
           key={code}

@@ -26,21 +26,37 @@ import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disburse
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { MemberCard } from './ui/MemberCard';
 import { StatusBadge } from './ui/StatusBadge';
+import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import QRCode from 'qrcode';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface GroupDetailsProps {
   group: Group;
   onBack: () => void;
+  onNavigateToVerification?: () => void;
 }
 
 type Section = 'cotisations' | 'membres' | 'calendrier' | 'discussion' | 'documents' | 'parametres';
 
-export function GroupDetails({ group, onBack }: GroupDetailsProps) {
+export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupDetailsProps) {
   const { profile } = useAuth();
   const { t } = useLanguage();
   const [section, setSection] = React.useState<Section | null>(null);
   const [isCompleting, setIsCompleting] = React.useState(false);
+
+  // Conformité Android / Capacitor : le retour matériel ferme d'abord la sous-section
+  useBackHandler(
+    React.useCallback(() => {
+      if (section !== null) {
+        setSection(null);
+        return true;
+      }
+      onBack();
+      return true;
+    }, [section, onBack]),
+    true
+  );
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
   const [members, setMembers] = React.useState<Record<string, UserProfile>>({});
@@ -389,7 +405,14 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
           </CardContent>
         </Card>
 
-        {profile && <ContributionsManager group={group} user={profile} onBack={() => setSection(null)} />}
+        {profile && (
+          <ContributionsManager
+            group={group}
+            user={profile}
+            onBack={() => setSection(null)}
+            onNavigateToVerification={onNavigateToVerification}
+          />
+        )}
 
         <ConfirmationBottomSheet
           isOpen={isConfirmDistributeOpen}
@@ -571,7 +594,14 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
     return (
       <div className="space-y-5">
         {sectionHeader(t('gd_nav_discussion'))}
-        {profile && <Chat groupId={group.id} user={profile} />}
+        {profile && (
+          <Chat
+            groupId={group.id}
+            user={profile}
+            groupName={group.name}
+            creatorId={group.creatorId || group.createdBy}
+          />
+        )}
       </div>
     );
   }
@@ -642,89 +672,144 @@ export function GroupDetails({ group, onBack }: GroupDetailsProps) {
   /* les 6 accès secondaires. Plus de tout empilé et développé d'un coup.  */
   /* -------------------------------------------------------------------- */
 
-  const links: { id: Section; label: string; icon: typeof Users }[] = [
-    { id: 'cotisations', label: t('gd_nav_cotisations'), icon: Landmark },
-    { id: 'membres', label: t('gd_nav_membres'), icon: Users },
-    { id: 'calendrier', label: t('calendar'), icon: CalendarDays },
-    { id: 'discussion', label: t('gd_nav_discussion'), icon: MessageSquare },
-    { id: 'documents', label: t('gd_nav_documents'), icon: FileText },
-    { id: 'parametres', label: t('gd_nav_parametres'), icon: Settings },
+  const daysRemaining = Math.max(0, Math.ceil((new Date(group.nextPayoutDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+  const links: { id: Section; label: string; icon: EganyeIconName; bg: string; text: string }[] = [
+    { id: 'cotisations', label: t('gd_nav_cotisations') || 'Cotisations', icon: 'cotisation', bg: 'bg-[#EBF5EA]', text: 'text-[#718A68]' },
+    { id: 'membres', label: t('gd_nav_membres') || 'Membres', icon: 'members', bg: 'bg-[#F4EFE6]', text: 'text-[#3E2F24]' },
+    { id: 'calendrier', label: t('calendar') || 'Calendrier', icon: 'calendar-finance', bg: 'bg-[#FEF6E9]', text: 'text-[#C49A55]' },
+    { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-[#EAF2F8]', text: 'text-[#3D7099]' },
+    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-[#C96F4A]' },
+    { id: 'parametres', label: t('gd_nav_parametres') || 'Paramètres', icon: 'settings', bg: 'bg-muted', text: 'text-muted-foreground' },
   ];
 
   return (
-    <div className="space-y-5 pb-6">
-      <div className="flex items-start justify-between gap-3">
-        <Button variant="ghost" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer -ml-2">
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          {t('gd_back')}
+    <div className="space-y-4 sm:space-y-5 pb-16">
+      {/* Bouton Retour */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer -ml-2 text-xs font-bold">
+          <EganyeIcon name="chevron-left" size={16} className="mr-1" />
+          <span>{t('gd_back') || 'Retour'}</span>
         </Button>
       </div>
 
-      <div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground">{group.name}</h1>
-          <Badge variant={group.status === 'active' ? 'default' : 'secondary'} className="rounded-full">
-            {group.status === 'active' ? t('status_active') : t('status_completed')}
-          </Badge>
+      {/* 1. Header du Cercle */}
+      <div className="flex items-center gap-3.5 bg-white dark:bg-card p-4 rounded-3xl border border-[#EFE2D0] dark:border-border/80 shadow-soft">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-[#718A68] flex items-center justify-center shrink-0 font-serif font-black text-xl border border-[#EFE2D0]">
+          {group.name.slice(0, 2).toUpperCase()}
         </div>
-        <p className="text-muted-foreground text-sm mt-1">{group.description}</p>
-      </div>
-
-      {/* Prochaine cotisation */}
-      <div className="glass-card rounded-3xl p-4 sm:p-5 shadow-soft border border-border/70 space-y-3">
-        <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5" /> {t('gd_next_contribution_title')}
-        </span>
-        <div>
-          <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="lg" />
-          <p className="text-[13px] text-muted-foreground mt-0.5">
-            {t('deadline_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-serif font-black tracking-tight text-foreground truncate">
+              {group.name}
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF5EA] text-[#718A68] shrink-0">
+              {group.status === 'active' ? 'Actif' : 'Terminé'}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+            {group.members.length} {group.members.length > 1 ? 'membres participants' : 'membre participant'}
           </p>
+          {group.description && (
+            <p className="text-xs text-muted-foreground/80 line-clamp-1 mt-0.5">
+              {group.description}
+            </p>
+          )}
         </div>
-        <Button
-          onClick={() => setSection('cotisations')}
-          className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-10 cursor-pointer"
-        >
-          {t('contribute_now')}
-        </Button>
       </div>
 
-      {/* Ma situation */}
-      <div className="glass-card rounded-2xl p-4 shadow-soft border border-border/70 grid grid-cols-2 gap-3">
+      {/* 2. Bloc Principal : Prochaine Cotisation */}
+      <div className="bg-white dark:bg-card rounded-3xl p-5 shadow-soft border border-[#EFE2D0] dark:border-border/80 space-y-3.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-[#C96F4A] flex items-center gap-1.5">
+            <EganyeIcon name="pending" size={14} />
+            <span>Prochaine cotisation</span>
+          </span>
+          <span className="text-xs font-bold text-muted-foreground">
+            Dans {daysRemaining} {daysRemaining > 1 ? 'jours' : 'jour'}
+          </span>
+        </div>
+
+        <div className="flex items-baseline justify-between">
+          <div>
+            <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="lg" />
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Échéance : {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSection('cotisations')}
+          className="w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
+        >
+          <span>Cotiser — {group.contributionAmount.toLocaleString()} {group.currency}</span>
+        </button>
+      </div>
+
+      {/* Bannière de vérification progressive (Juste-à-temps) */}
+      {profile && (profile.kycLevel ?? 1) < 2 && (
+        <div className="bg-[#FFF8F2] dark:bg-card border border-[#C96F4A]/25 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center shrink-0">
+              <EganyeIcon name="shield" size={16} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-xs text-foreground truncate">Vérification de sécurité</p>
+              <p className="text-[11px] text-muted-foreground truncate">Recommandée avant le premier tour financier</p>
+            </div>
+          </div>
+          {onNavigateToVerification && (
+            <Button
+              size="sm"
+              onClick={onNavigateToVerification}
+              className="bg-[#C96F4A] hover:bg-[#B8623E] text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0 cursor-pointer"
+            >
+              Valider ma CNI
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* 3. Ma Situation */}
+      <div className="bg-white dark:bg-card rounded-2xl p-4 shadow-soft border border-[#EFE2D0] dark:border-border/80 grid grid-cols-2 gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_my_situation_title')}</span>
-          <p className="text-sm font-serif font-black text-foreground mt-0.5">
-            {myContributed !== null ? myContributed.toLocaleString() : '...'} {group.currency} {t('gd_my_contributed_label')}
+          <span className="text-[11px] font-bold uppercase text-muted-foreground block">Mon total cotisé</span>
+          <p className="text-base font-serif font-black text-foreground mt-0.5">
+            {myContributed !== null ? myContributed.toLocaleString() : '0'} {group.currency}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_my_position_label')}</span>
-          <p className="text-sm font-serif font-black text-foreground mt-0.5">
-            {myPositionIdx >= 0 ? `${myPositionIdx + 1} / ${group.members.length}` : '-'}
+          <span className="text-[11px] font-bold uppercase text-muted-foreground block">Position dans le cycle</span>
+          <p className="text-base font-serif font-black text-[#718A68] mt-0.5">
+            {myPositionIdx >= 0 ? `#${myPositionIdx + 1} sur ${group.members.length}` : '-'}
           </p>
         </div>
       </div>
 
-      {/* Accès secondaires */}
-      <div className="glass-card rounded-2xl shadow-soft border border-border/70 overflow-hidden">
-        {links.map((link, idx) => {
-          const Icon = link.icon;
-          return (
+      {/* 4. Sections Secondaires (6 accès nets) */}
+      <div className="space-y-2 pt-1">
+        <h3 className="font-serif font-black text-sm text-foreground uppercase tracking-wider px-1">
+          Espace de gestion
+        </h3>
+        <div className="bg-white dark:bg-card rounded-2xl shadow-soft border border-[#EFE2D0] dark:border-border/80 overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+          {links.map((link) => (
             <button
               key={link.id}
               onClick={() => setSection(link.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer ${
-                idx > 0 ? 'border-t border-border/60' : ''
-              }`}
+              className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 active:bg-muted transition-colors cursor-pointer group"
             >
-              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Icon className="w-4.5 h-4.5" />
+              <div className={`w-9 h-9 rounded-xl ${link.bg} ${link.text} flex items-center justify-center shrink-0`}>
+                <EganyeIcon name={link.icon} size={18} />
               </div>
-              <span className="flex-1 font-bold text-sm text-foreground">{link.label}</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-[#C96F4A] transition-colors">
+                {link.label}
+              </span>
+              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors" />
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );

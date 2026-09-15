@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" fill="none">
+  <!-- Eganyé Standard Logo -->
+  <g transform="translate(4, 0)">
+    <path d="M12 42C14 50 22 56 32 56C42 56 50 50 52 42C44 48 20 48 12 42Z" fill="#C96F4A"/>
+    <path d="M30 38C24 38 15 32 15 22C15 14 23 10 29 16C31 18 32 24 30 38Z" fill="#C96F4A"/>
+    <path d="M32 38C29 30 29 18 32 8C35 18 35 30 32 38Z" fill="#718A68"/>
+    <path d="M34 38C40 38 49 32 49 22C49 14 41 10 35 16C33 18 32 24 34 38Z" fill="#C96F4A"/>
+    <circle cx="32" cy="40" r="3.5" fill="#C49A55"/>
+    <circle cx="32" cy="40" r="1.8" fill="#FFFDFC"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="74" y="42" font-family="Poppins, sans-serif" font-weight="800" font-size="30" fill="#3E2F24" letter-spacing="-0.5">
+    Eganyé
+  </text>
+</svg>

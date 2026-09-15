@@ -28,6 +28,8 @@ const MONTHS_BY_LANG: Record<LanguageCode, string[]> = {
   en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   ee: ['Dzv', 'Dzd', 'Ted', 'Afɔ', 'Dam', 'Mas', 'Sia', 'Deasi', 'Any', 'Kel', 'Ade', 'Dzm'],
   kbp: ['Oza', 'Ake', 'Maa', 'Ave', 'Mee', 'Zui', 'Zul', 'Aou', 'Sep', 'Okt', 'Noo', 'Dee'],
+  wo: ['Sam', 'Fee', 'Mar', 'Awr', 'Mee', 'Suw', 'Sul', 'Ut', 'Set', 'Okt', 'Now', 'Des'],
+  bm: ['Zan', 'Feb', 'Mar', 'Awr', 'Mɛ', 'Zuw', 'Zul', 'Uti', 'Sɛt', 'Ɔkɔ', 'Nɔw', 'Des'],
 };
 
 export function DashboardCharts({ user, groups }: DashboardChartsProps) {
@@ -36,7 +38,8 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
     try {
       const d = new Date(dateString);
       if (isNaN(d.getTime())) return t('chart_none');
-      return `${MONTHS_BY_LANG[language][d.getMonth()]} ${d.getFullYear()}`;
+      const months = MONTHS_BY_LANG[language] || MONTHS_BY_LANG.fr;
+      return `${months[d.getMonth()]} ${d.getFullYear()}`;
     } catch {
       return t('chart_none');
     }

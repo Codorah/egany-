@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="58" fill="#E8EFE5" opacity="0.7"/>
+      <!-- Big green check with laurel leaves -->
+      <circle cx="80" cy="80" r="36" fill="#718A68"/>
+      <circle cx="80" cy="80" r="42" fill="none" stroke="#C49A55" stroke-width="2" stroke-dasharray="4 3"/>
+      <path d="M68 80L76 88L94 70" stroke="#FFFDFC" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Laurel leaves -->
+      <path d="M38 60C38 80 50 100 66 108" stroke="#566C50" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M122 60C122 80 110 100 94 108" stroke="#566C50" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <circle cx="40" cy="68" r="3.5" fill="#C49A55"/>
+      <circle cx="48" cy="86" r="3.5" fill="#C49A55"/>
+      <circle cx="120" cy="68" r="3.5" fill="#C49A55"/>
+      <circle cx="112" cy="86" r="3.5" fill="#C49A55"/>
+      <!-- Top star -->
+      <path d="M80 24L82 28H86L83 31L84 35L80 33L76 35L77 31L74 28H78L80 24Z" fill="#C49A55"/>
+    </svg>

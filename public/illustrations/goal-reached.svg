@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <!-- Confetti & Celebration bursts -->
+      <circle cx="40" cy="38" r="4" fill="#C96F4A"/>
+      <circle cx="120" cy="42" r="4" fill="#C49A55"/>
+      <circle cx="34" cy="92" r="3.5" fill="#718A68"/>
+      <circle cx="126" cy="98" r="3.5" fill="#C96F4A"/>
+      <path d="M50 26L54 32M110 24L106 30M80 18V24" stroke="#C49A55" stroke-width="2" stroke-linecap="round"/>
+      <!-- Big Trophy / Cup -->
+      <path d="M60 54H100V80C100 92 90 98 80 98C70 98 60 92 60 80V54Z" fill="#C49A55"/>
+      <path d="M52 60H60V74H52C48 74 46 70 46 67C46 64 48 60 52 60Z" fill="#C49A55" stroke="#C49A55" stroke-width="1.5"/>
+      <path d="M108 60H100V74H108C112 74 114 70 114 67C114 64 112 60 108 60Z" fill="#C49A55" stroke="#C49A55" stroke-width="1.5"/>
+      <!-- Star on trophy -->
+      <path d="M80 66L82.5 72H88L83.5 75.5L85 81L80 77.5L75 81L76.5 75.5L72 72H77.5L80 66Z" fill="#FFFDFC"/>
+      <!-- Stem and Base -->
+      <rect x="76" y="98" width="8" height="16" fill="#A95636"/>
+      <rect x="62" y="114" width="36" height="12" rx="4" fill="#3E2F24"/>
+      <text x="80" y="123" font-family="Poppins" font-weight="800" font-size="8" fill="#FFFDFC" text-anchor="middle">100%</text>
+    </svg>

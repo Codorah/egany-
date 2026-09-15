@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Eganyé App Icon — For mobile homescreen -->
+  <!-- Background with subtle gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C96F4A"/>
+      <stop offset="100%" stop-color="#A95636"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  
+  <!-- White tree symbol centered -->
+  <g transform="translate(128, 80) scale(4)">
+    <!-- Stem -->
+    <path d="M32 14V42" stroke="#FFFDFC" stroke-width="3" stroke-linecap="round"/>
+    <!-- Left leaf -->
+    <path d="M16 36C16 36 12 24 20 16C24 12 28 12 32 14" stroke="#FFFDFC" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Right leaf -->
+    <path d="M48 36C48 36 52 24 44 16C40 12 36 12 32 14" stroke="#FFFDFC" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Small leaf branches -->
+    <path d="M32 22C28 20 24 22 22 26" stroke="#FFFDFC" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M32 22C36 20 40 22 42 26" stroke="#FFFDFC" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <path d="M32 30C29 28 26 30 24 33" stroke="#FFFDFC" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <path d="M32 30C35 28 38 30 40 33" stroke="#FFFDFC" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.75"/>
+    <!-- Base -->
+    <path d="M26 42C26 42 28 48 32 50C36 48 38 42 38 42" stroke="#FFFDFC" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- People circles -->
+    <circle cx="20" cy="40" r="3.5" fill="#FFFDFC" opacity="0.6"/>
+    <circle cx="44" cy="40" r="3.5" fill="#FFFDFC" opacity="0.6"/>
+    <!-- Center circle -->
+    <circle cx="32" cy="36" r="4.5" fill="#FFFDFC"/>
+    <circle cx="32" cy="36" r="2.5" fill="#C96F4A"/>
+  </g>
+  
+  <!-- "Eganyé" text at bottom -->
+  <text x="256" y="440" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="48" fill="#FFFDFC" letter-spacing="1" opacity="0.95">
+    Eganyé
+  </text>
+</svg>

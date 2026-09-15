@@ -31,6 +31,8 @@ const LANGUAGE_LABELS: { code: LanguageCode; label: string }[] = [
   { code: 'en', label: 'English' },
   { code: 'ee', label: 'Éwé' },
   { code: 'kbp', label: 'Kabiyè' },
+  { code: 'wo', label: 'Wolof' },
+  { code: 'bm', label: 'Bamanankan' },
 ];
 
 export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
@@ -64,7 +66,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
           onClick={() => onNavigate?.('dashboard')}
         >
           <img
-            src="/icons/icon-128.png"
+            src="/logo-compact.svg"
             alt="eganyé"
             className="w-8 h-8 rounded-xl shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-105"
           />

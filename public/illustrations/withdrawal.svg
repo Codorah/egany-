@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="56" fill="#E8EFE5" opacity="0.6"/>
+      <!-- ATM / Mobile agent booth illustration -->
+      <rect x="42" y="44" width="76" height="84" rx="14" fill="#3E2F24"/>
+      <rect x="50" y="52" width="60" height="40" rx="8" fill="#FFFDFC"/>
+      <rect x="58" y="60" width="44" height="24" rx="4" fill="#E8EFE5"/>
+      <text x="80" y="76" font-family="Poppins" font-weight="800" font-size="11" fill="#566C50" text-anchor="middle">REÇU</text>
+      <!-- Cash dispenser slot with bills popping out -->
+      <rect x="54" y="100" width="52" height="6" rx="3" fill="#F8F0E4"/>
+      <!-- Bills coming out -->
+      <rect x="58" y="104" width="44" height="26" rx="4" fill="#718A68"/>
+      <rect x="62" y="108" width="36" height="18" rx="2" fill="none" stroke="#FFFDFC" stroke-width="1.2"/>
+      <circle cx="80" cy="117" r="4" fill="#FFFDFC"/>
+      <!-- Hand retrieving cash -->
+      <path d="M48 136C60 130 72 132 84 126" stroke="#6F472B" stroke-width="6" stroke-linecap="round"/>
+    </svg>

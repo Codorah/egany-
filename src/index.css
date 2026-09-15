@@ -1,5 +1,9 @@
-/* Polices de la charte eganyé : Poppins pour les titres et les montants,
-   Nunito pour le texte courant et les boutons — rond, chaleureux, humain. */
+/* ================================================================
+   EGANYÉ — DESIGN SYSTEM
+   ================================================================
+   Polices : Poppins (titres, montants) + Nunito (texte courant)
+   Palette : Terracotta · Olive · Crème · Beige · Brun · Or discret
+   ================================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -12,13 +16,18 @@
     --font-serif: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 
-    --color-eganye-gold: #C9962E;
-    --color-eganye-orange: #C96F4A;
-    --color-eganye-beige: #EFE2D0;
-    --color-eganye-cream: #FDF8F1;
-    --color-eganye-green: #5B7F5B;
+    /* ── Eganyé Brand Tokens ── */
+    --color-eganye-terracotta: #C96F4A;
+    --color-eganye-terracotta-dark: #A95636;
+    --color-eganye-olive: #718A68;
+    --color-eganye-olive-dark: #566C50;
     --color-eganye-brown: #3E2F24;
+    --color-eganye-cream: #F8F0E4;
+    --color-eganye-beige: #EFE2D0;
+    --color-eganye-white: #FFFDFC;
+    --color-eganye-gold: #C49A55;
 
+    /* ── Semantic Aliases ── */
     --color-brand: var(--brand);
     --color-brand-deep: var(--brand-deep);
     --color-sage: var(--sage);
@@ -32,6 +41,7 @@
     --color-danger-soft: var(--danger-soft);
     --color-chip: var(--chip);
     --color-ink-soft: var(--ink-soft);
+    --color-gold: var(--gold);
 
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -73,35 +83,37 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ================================================================
+   MODE CLAIR — CHARTE OFFICIELLE EGANYÉ
+   ================================================================
+   Chaque couleur a un rôle, elle n'est pas décorative :
+
+     Terracotta   #C96F4A → action importante (cotiser, créer, rejoindre)
+     Terracotta-d #A95636 → hover/pressed du terracotta
+     Olive        #718A68 → argent sécurisé, validation, confiance, épargne
+     Olive foncé  #566C50 → hover/pressed de l'olive
+     Brun profond #3E2F24 → texte principal, titres
+     Crème        #F8F0E4 → fond principal
+     Beige        #EFE2D0 → cartes secondaires, bordures, séparations
+     Blanc doux   #FFFDFC → surface cartes principales
+     Or discret   #C49A55 → usage TRÈS limité (badges spéciaux)
+     Rouge doux   #B4483F → retard, pénalité, erreur
+     Ambre doux   #B5842A → en attente, warning
+   ================================================================ */
 :root {
-    /* ================= CHARTE EGANYÉ — MODE CLAIR ==================
-       Chaque couleur a un rôle, elle n'est pas décorative :
-
-         Terracotta   #C96F4A → action importante (cotiser, créer, rejoindre)
-         Vert olive   #5B7F5B → argent sécurisé, validation, confiance
-         Sauge clair  #8CA087 → éléments secondaires, états calmes
-         Brun profond #3E2F24 → texte d'appui, accents terreux
-         Crème        #F8F4ED → fond principal
-         Beige clair  #EFE2D0 → cartes, bordures et séparations
-         Rouge doux            → retard, pénalité
-         Ocre doux             → en attente
-
-       Le vert ne doit PAS être utilisé partout : il perd son sens de
-       « validé / sécurisé » s'il sert aussi de couleur d'accent générique.
-       ================================================================= */
-    --background: #F8F4ED;
+    --background: #F8F0E4;
     --foreground: #3E2F24;
-    --card: #FDF8F1;
+    --card: #FFFDFC;
     --card-foreground: #3E2F24;
-    --popover: #FDF8F1;
+    --popover: #FFFDFC;
     --popover-foreground: #3E2F24;
 
     /* Action principale — terracotta */
     --primary: #C96F4A;
     --primary-foreground: #FFFFFF;
 
-    /* Argent, sécurité, validation — vert olive */
-    --secondary: #5B7F5B;
+    /* Argent, sécurité, validation — olive */
+    --secondary: #718A68;
     --secondary-foreground: #FFFFFF;
 
     --muted: #EFE2D0;
@@ -116,28 +128,28 @@
     --ring: #C96F4A;
 
     --brand: #C96F4A;
-    --brand-deep: #A85A39;
+    --brand-deep: #A95636;
     --sage: #8CA087;
     --brown: #6B5744;
-    --success: #5B7F5B;
+    --success: #718A68;
     --success-soft: #E7EDE3;
-    --success-deep: #3F5A3F;
+    --success-deep: #566C50;
     --danger: #B4483F;
     --danger-soft: #F9E5E3;
     --warning: #B5842A;
     --warning-soft: #FAEFD9;
     --chip: #EFE2D0;
     --ink-soft: #6B5744;
-    --gold: #C9962E;
+    --gold: #C49A55;
 
     --chart-1: #C96F4A;
-    --chart-2: #5B7F5B;
+    --chart-2: #718A68;
     --chart-3: #8CA087;
     --chart-4: #6B5744;
-    --chart-5: #C9962E;
+    --chart-5: #C49A55;
     --radius: 1rem;
 
-    --sidebar: #F8F4ED;
+    --sidebar: #F8F0E4;
     --sidebar-foreground: #3E2F24;
     --sidebar-primary: #C96F4A;
     --sidebar-primary-foreground: #FFFFFF;
@@ -159,7 +171,7 @@
     --primary: #DD8760;
     --primary-foreground: #211810;
 
-    --secondary: #7DA073;
+    --secondary: #8CA87E;
     --secondary-foreground: #1C2318;
 
     --muted: #372B1F;
@@ -175,9 +187,9 @@
 
     --brand: #DD8760;
     --brand-deep: #C96F4A;
-    --success: #7DA073;
-    --success-soft: rgba(125, 160, 115, 0.18);
-    --success-deep: #5B7F5B;
+    --success: #8CA87E;
+    --success-soft: rgba(140, 168, 126, 0.18);
+    --success-deep: #718A68;
     --danger: #E58A93;
     --danger-soft: rgba(178, 58, 72, 0.22);
     --sage: #9FB399;
@@ -186,11 +198,11 @@
     --warning-soft: rgba(214, 163, 69, 0.18);
     --chip: #372B1F;
     --ink-soft: #CDBBA0;
-    --gold: #E3B15C;
+    --gold: #D4AD6A;
 
     --chart-1: #DD8760;
-    --chart-2: #7DA073;
-    --chart-3: #E3B15C;
+    --chart-2: #8CA87E;
+    --chart-3: #D4AD6A;
     --chart-4: #C7AE8C;
     --chart-5: #CDBBA0;
 
@@ -203,6 +215,10 @@
     --sidebar-border: #423523;
     --sidebar-ring: #DD8760;
 }
+
+/* ================================================================
+   BASE LAYER
+   ================================================================ */
 
 @layer base {
   * {
@@ -217,9 +233,9 @@
   }
 }
 
-/* ======================================================== */
-/* CARD STYLES — Soft & Clean (matching mockup)             */
-/* ======================================================== */
+/* ================================================================
+   CARD STYLES — Warm & Premium
+   ================================================================ */
 
 /* Primary card style: opaque white, ultra-soft shadow, fine border */
 .glass-card {
@@ -235,42 +251,62 @@
 
 /* Bottom nav: clean, barely transparent */
 .glass-nav {
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 253, 252, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
 }
 
 .dark .glass-nav {
   background: rgba(33, 24, 16, 0.97);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
 }
 
-/* ======================================================== */
-/* GRADIENTS — Refined & Warm                               */
-/* ======================================================== */
+/* Eganyé Card — unified card class */
+.eganye-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.eganye-card-elevated {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 8px -2px rgba(62, 47, 36, 0.06), 0 8px 24px -8px rgba(62, 47, 36, 0.12);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* ================================================================
+   GRADIENTS — Refined & Warm
+   ================================================================ */
 
 .gradient-sunset {
-  background: linear-gradient(135deg, #C96F4A 0%, #B8623F 55%, #A85A39 100%);
+  background: linear-gradient(135deg, #C96F4A 0%, #B8623F 55%, #A95636 100%);
+}
+
+.gradient-olive {
+  background: linear-gradient(135deg, #566C50 0%, #718A68 55%, #8CA087 100%);
 }
 
 .gradient-emerald {
-  background: linear-gradient(135deg, #3F5A3F 0%, #5B7F5B 55%, #7DA073 100%);
+  background: linear-gradient(135deg, #566C50 0%, #718A68 55%, #8CA087 100%);
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, #A97A1E 0%, #C9962E 50%, #E3B15C 100%);
+  background: linear-gradient(135deg, #A97A1E 0%, #C49A55 50%, #D4AD6A 100%);
 }
 
 .gradient-card {
   background: linear-gradient(135deg, #2C2117 0%, #3A2C1E 50%, #211810 100%);
 }
 
-/* ======================================================== */
-/* SHADOWS — Ultra-soft, matching mockup's flat feel        */
-/* ======================================================== */
+/* ================================================================
+   SHADOWS — Ultra-soft, matching warmth
+   ================================================================ */
 
 .shadow-soft {
   box-shadow: 0 1px 3px 0 rgba(62, 47, 36, 0.05), 0 4px 14px -10px rgba(62, 47, 36, 0.28);
@@ -280,18 +316,25 @@
   box-shadow: 0 2px 6px -2px rgba(62, 47, 36, 0.08), 0 14px 30px -16px rgba(62, 47, 36, 0.4);
 }
 
+.shadow-card {
+  box-shadow: 0 1px 2px 0 rgba(62, 47, 36, 0.04), 0 6px 20px -6px rgba(62, 47, 36, 0.1);
+}
+
 .glow-orange {
-  box-shadow: 0 8px 20px -8px rgba(168, 90, 57, 0.55);
+  box-shadow: 0 8px 20px -8px rgba(169, 86, 54, 0.55);
+}
+
+.glow-olive {
+  box-shadow: 0 8px 20px -8px rgba(113, 138, 104, 0.5);
 }
 
 .glow-emerald {
-  box-shadow: 0 8px 20px -8px rgba(63, 90, 63, 0.5);
+  box-shadow: 0 8px 20px -8px rgba(113, 138, 104, 0.5);
 }
 
-/* ======================================================== */
-/* TOUCH FEEDBACK — every control must answer the finger     */
-/* Spring-like press + release, soft hover lift on desktop  */
-/* ======================================================== */
+/* ================================================================
+   TOUCH FEEDBACK — spring press + release
+   ================================================================ */
 
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
@@ -312,11 +355,7 @@ summary:active {
   transition-duration: 90ms;
 }
 
-/* Cards and list rows that navigate somewhere press in more gently than a
-   button — these must outrank the generic button/[role="button"] press
-   rule below for elements that are also real <button>s or role="button"
-   (clickable rows need one of those for keyboard/AT users, but shouldn't
-   punch in as hard as a real action button). */
+/* Cards and list rows — gentler press */
 .press-row:active,
 button.press-row:active,
 [role="button"].press-row:active {
@@ -324,7 +363,7 @@ button.press-row:active,
   background-color: var(--muted);
 }
 
-/* Desktop-only hover lift — skipped on touch so it never gets "stuck" */
+/* Desktop-only hover lift */
 @media (hover: hover) and (pointer: fine) {
   button:not(:disabled):not([data-slot="icon-button"]):hover,
   [role="button"]:not([aria-disabled="true"]):hover {
@@ -337,7 +376,7 @@ button.press-row:active,
   }
 }
 
-/* Keyboard users get the same affordance as a visible focus ring */
+/* Keyboard focus ring */
 :where(button, [role="button"], a[href], input, select, textarea):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -360,11 +399,9 @@ button.press-row:active,
   }
 }
 
-/* ======================================================== */
-/* PRIMARY CTA SHINE — one soft light sweep on hover, never  */
-/* looping. Opt-in via .btn-shine on the handful of buttons  */
-/* that actually drive the page's main action.               */
-/* ======================================================== */
+/* ================================================================
+   PRIMARY CTA SHINE — soft light sweep on hover
+   ================================================================ */
 
 .btn-shine {
   position: relative;
@@ -395,9 +432,9 @@ button.press-row:active,
   }
 }
 
-/* ======================================================== */
-/* MICRO-ANIMATIONS                                         */
-/* ======================================================== */
+/* ================================================================
+   MICRO-ANIMATIONS
+   ================================================================ */
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -414,9 +451,61 @@ button.press-row:active,
   to { transform: translateY(-2px); }
 }
 
-/* ======================================================== */
-/* SCROLLBAR — Minimal & elegant                            */
-/* ======================================================== */
+/* Logo launch animation */
+@keyframes eganye-logo-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-logo-appear {
+  animation: eganye-logo-appear 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Success checkmark draw animation */
+@keyframes eganye-check-draw {
+  0% {
+    stroke-dashoffset: 36;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-check-draw {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: eganye-check-draw 500ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms forwards;
+}
+
+/* Gentle fade-in-up for page transitions */
+@keyframes eganye-fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: eganye-fade-in-up 300ms ease-out forwards;
+}
+
+/* ================================================================
+   SCROLLBAR — Minimal & elegant
+   ================================================================ */
 
 ::-webkit-scrollbar {
   width: 5px;
@@ -436,9 +525,9 @@ button.press-row:active,
   background: rgba(201, 111, 74, 0.35);
 }
 
-/* ======================================================== */
-/* GLOBAL INTERACTION REFINEMENTS                           */
-/* ======================================================== */
+/* ================================================================
+   INPUT REFINEMENTS
+   ================================================================ */
 
 input, textarea, select {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -447,4 +536,30 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(201, 111, 74, 0.1);
+}
+
+/* ================================================================
+   EGANYÉ UTILITY CLASSES
+   ================================================================ */
+
+/* Trust score gauge — circular progress */
+.eganye-gauge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eganye-gauge svg {
+  transform: rotate(-90deg);
+}
+
+/* Timeline connector line */
+.eganye-timeline-line {
+  position: absolute;
+  left: 1.125rem;
+  top: 2.75rem;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
 }

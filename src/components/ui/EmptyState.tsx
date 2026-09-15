@@ -1,61 +1,82 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EganyeIllustration, type EganyeIllustrationName } from './EganyeIllustration';
+import { EganyeMascot, type MascotVariant } from './EganyeMascot';
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
-  illustration?: string;
+  /** Eganyé illustration name (preferred) */
+  illustration?: EganyeIllustrationName;
+  /** Mascot variant */
+  mascotVariant?: MascotVariant;
+  /** Legacy: image URL fallback */
+  illustrationUrl?: string;
   title: string;
   description: string;
   actionText?: string;
   onAction?: () => void;
+  secondaryActionText?: string;
+  onSecondaryAction?: () => void;
 }
 
+/**
+ * EganyeEmptyState — Warm, branded empty state with Eganyé illustrations or Ganyé mascot.
+ */
 export function EmptyState({
-  icon: Icon,
-  illustration = '/fintech-piggybank.png',
+  illustration,
+  mascotVariant,
+  illustrationUrl,
   title,
   description,
   actionText,
   onAction,
+  secondaryActionText,
+  onSecondaryAction,
 }: EmptyStateProps) {
-  const currentTheme = {
-    bg: 'bg-primary/10',
-    text: 'text-primary',
-    border: 'border-primary/20',
-    button: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className={`glass-card p-8 sm:p-10 rounded-3xl border ${currentTheme.border} text-center flex flex-col items-center justify-center max-w-md mx-auto my-6 space-y-4`}
+      className="glass-card p-6 sm:p-8 rounded-3xl border border-[#EFE2D0] dark:border-border text-center flex flex-col items-center justify-center max-w-md mx-auto my-4 space-y-4"
     >
-      {illustration ? (
-        <div className="w-36 h-36 relative overflow-hidden rounded-2xl p-2 bg-muted/20 border border-border/40">
-          <img src={illustration} alt={title} className="w-full h-full object-contain" />
+      {mascotVariant ? (
+        <EganyeMascot variant={mascotVariant} size={110} />
+      ) : illustration ? (
+        <EganyeIllustration name={illustration} width={130} />
+      ) : illustrationUrl ? (
+        <div className="w-32 h-32 relative overflow-hidden rounded-2xl p-2 bg-muted/20 border border-border/40">
+          <img src={illustrationUrl} alt={title} className="w-full h-full object-contain" />
         </div>
-      ) : Icon ? (
-        <div className={`p-4 rounded-2xl ${currentTheme.bg} ${currentTheme.text}`}>
-          <Icon className="w-8 h-8" />
-        </div>
-      ) : null}
+      ) : (
+        <EganyeMascot variant="empty" size={100} />
+      )}
 
       <div className="space-y-1">
-        <h3 className="text-lg font-serif font-black text-foreground">{title}</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">{description}</p>
+        <h3 className="text-base sm:text-lg font-serif font-black text-foreground">{title}</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs">{description}</p>
       </div>
 
-      {actionText && onAction && (
-        <Button
-          onClick={onAction}
-          className={`btn-shine rounded-2xl px-6 py-2 h-10 text-xs font-bold ${currentTheme.button}`}
-        >
-          {actionText}
-        </Button>
+      {(actionText || secondaryActionText) && (
+        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 w-full max-w-xs">
+          {actionText && onAction && (
+            <Button
+              onClick={onAction}
+              className="w-full rounded-2xl h-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white font-bold text-xs cursor-pointer shadow-xs"
+            >
+              {actionText}
+            </Button>
+          )}
+          {secondaryActionText && onSecondaryAction && (
+            <Button
+              variant="outline"
+              onClick={onSecondaryAction}
+              className="w-full rounded-2xl h-10 border-[#EFE2D0] dark:border-border text-xs font-semibold cursor-pointer"
+            >
+              {secondaryActionText}
+            </Button>
+          )}
+        </div>
       )}
     </motion.div>
   );

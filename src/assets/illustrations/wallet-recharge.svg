@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+      <circle cx="80" cy="80" r="72" fill="#F8F0E4"/>
+      <circle cx="80" cy="80" r="58" fill="#F3E5D4" opacity="0.7"/>
+      <!-- Smartphone sending money to wallet -->
+      <rect x="30" y="50" width="34" height="60" rx="8" fill="#3E2F24"/>
+      <rect x="34" y="56" width="26" height="44" rx="4" fill="#FFFDFC"/>
+      <circle cx="47" cy="104" r="2.5" fill="#FFFDFC"/>
+      <!-- Screen icon on phone -->
+      <circle cx="47" cy="74" r="7" fill="#C96F4A"/>
+      <path d="M47 70V78M44 73L47 70L50 73" stroke="#FFFDFC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Dynamic Money Flow Arc -->
+      <path d="M66 74C82 60 98 62 108 72" stroke="#C49A55" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="4 3"/>
+      <!-- Wallet -->
+      <rect x="96" y="70" width="46" height="34" rx="7" fill="#A95636"/>
+      <path d="M96 78H142" stroke="#3E2F24" stroke-width="2"/>
+      <circle cx="132" cy="87" r="4" fill="#C49A55"/>
+      <circle cx="132" cy="87" r="2" fill="#FFFDFC"/>
+      <!-- Floating coin -->
+      <circle cx="87" cy="58" r="10" fill="#C49A55"/>
+      <text x="87" y="62" font-family="Poppins" font-weight="800" font-size="10" fill="#FFFDFC" text-anchor="middle">F</text>
+      <!-- Success check -->
+      <circle cx="80" cy="132" r="12" fill="#718A68"/>
+      <path d="M75 132L78 135L85 128" stroke="#FFFDFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>

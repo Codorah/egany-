@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="eganyeTerracotta" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#C96F4A"/>
+      <stop offset="100%" stopColor="#AB5837"/>
+    </linearGradient>
+    <linearGradient id="eganyeGold" x1="28" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#F7C96E"/>
+      <stop offset="100%" stopColor="#E5A93C"/>
+    </linearGradient>
+    <filter id="eganyeShadow" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#2D1F17" floodOpacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- 1. Courbe majestueuse du E et boucle supérieure tontine -->
+  <path d="M48 14C44 10 37 8 28 8C16 8 8 18 8 32C8 46 16 56 28 56C37 56 44 54 48 50" stroke="url(#eganyeTerracotta)" stroke-width="6.5" stroke-linecap="round" filter="url(#eganyeShadow)"/>
+
+  <!-- 2. Boucle centrale de rotation d'argent -->
+  <path d="M12 32H38C44.6274 32 50 26.6274 50 20C50 13.3726 44.6274 8 38 8" stroke="url(#eganyeTerracotta)" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- 3. Boucle inférieure mutuelle -->
+  <path d="M26 32H40C46.6274 32 52 37.3726 52 44C52 50.6274 46.6274 56 40 56C34 56 30 52 28 48" stroke="url(#eganyeTerracotta)" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- 4. Pièce d'or centrale étincelante (Eganyé = Mon Argent) -->
+  <circle cx="35" cy="32" r="6.5" fill="url(#eganyeGold)" stroke="#FFFDF9" stroke-width="2"/>
+  <circle cx="36.5" cy="30.5" r="1.8" fill="#FFFFFF"/>
+</svg>

@@ -37,7 +37,7 @@ export function ChooseCircleToPay({ groups, onSelect, onBack }: ChooseCircleToPa
 
       {groups.length === 0 ? (
         <EmptyState
-          icon={Users}
+          illustration="no-circles"
           title={t('cotiser_no_circle')}
           description={t('no_circle_desc')}
         />

@@ -248,6 +248,10 @@ export default function App() {
               group={payable[0]}
               user={activeProfile}
               onBack={() => setView('dashboard')}
+              onNavigateToVerification={() => {
+                setProfileTab('kyc');
+                setView('profile');
+              }}
             />
           );
         }
@@ -286,14 +290,22 @@ export default function App() {
       case 'ai-assistant':
         return <AIAssistant user={activeProfile} groups={groups} />;
       case 'my-bank':
-        return <MyBank user={activeProfile} groups={groups} />;
+        return <MyBank user={activeProfile} groups={groups} onNavigate={(v) => setView(v as View)} />;
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':
         return (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'contributions':
         return selectedGroup ? (
-          <ContributionsManager group={selectedGroup} user={activeProfile} onBack={() => setView('dashboard')} />
+          <ContributionsManager
+            group={selectedGroup}
+            user={activeProfile}
+            onBack={() => setView('dashboard')}
+            onNavigateToVerification={() => {
+              setProfileTab('kyc');
+              setView('profile');
+            }}
+          />
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'join':
         return joinCode ? (
@@ -309,7 +321,14 @@ export default function App() {
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'group-details':
         return selectedGroup ? (
-          <GroupDetails group={selectedGroup} onBack={() => setView('dashboard')} />
+          <GroupDetails
+            group={selectedGroup}
+            onBack={() => setView('dashboard')}
+            onNavigateToVerification={() => {
+              setProfileTab('kyc');
+              setView('profile');
+            }}
+          />
         ) : (
           <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />
         );
