@@ -6813,6 +6813,63 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'By submitting this request, you authorize our partner to review your eganyé reputation score in order to process it.',
     ee: 'Ne nètsɔ biabia sia la, èda mɔ na míaƒe hadɔwɔla be wòakpɔ wò eganyé ŋkɔ nyui xexlẽme be wòadzra ɖo.',
     kbp: 'Ye ŋ-tiyi pɔzʋʋ ŋga yɔ, ŋ-ha waɖɛ ɖo-taabalʋ se ɩ-cɔnɩ ño-eganyé ñɩm hɩɖɛ kɩlaʋ nɛ ɩ-lakɩ-kɩ tʋmɩyɛ.'
+  },
+
+  // Ces clés manquaient : t() renvoyant la clé elle-même quand elle est
+  // absente, le motif `t('x') || 'Texte'` n'affichait jamais le repli — les
+  // écrans montraient « bank_total_savings » ou « error_title » tels quels.
+  // Sans entrée ee/kbp ici, t() retombe sur le français, ce qui reste lisible.
+  bank_total_savings: {
+    fr: 'Épargne totale',
+    en: 'Total savings'
+  },
+  bank_goal_prefix: {
+    fr: 'Objectif :',
+    en: 'Goal:'
+  },
+  bank_my_reservations: {
+    fr: 'Mes réservations',
+    en: 'My reservations'
+  },
+  bank_view_all: {
+    fr: 'Voir tout',
+    en: 'View all'
+  },
+  error_title: {
+    fr: 'Un problème est survenu',
+    en: 'Something went wrong'
+  },
+  error_desc: {
+    fr: "Cette page n'a pas pu se charger. Réessayez dans un instant.",
+    en: 'This page could not load. Try again in a moment.'
+  },
+  offline_title: {
+    fr: 'Pas de connexion',
+    en: 'No connection'
+  },
+  offline_desc: {
+    fr: 'Vérifiez votre connexion internet, puis réessayez.',
+    en: 'Check your internet connection, then try again.'
+  },
+  server_error_title: {
+    fr: 'Erreur serveur',
+    en: 'Server error'
+  },
+  server_error_desc: {
+    fr: 'Nos serveurs rencontrent un problème. Réessayez dans un instant.',
+    en: 'Our servers are having trouble. Try again in a moment.'
+  },
+  maintenance_title: {
+    fr: 'Maintenance en cours',
+    en: 'Under maintenance'
+  },
+  maintenance_desc: {
+    fr: 'Eganyé est temporairement indisponible. Revenez dans quelques instants.',
+    en: 'Eganyé is temporarily unavailable. Come back in a few moments.'
+  },
+  retry: {
+    fr: 'Réessayer',
+    en: 'Try again'
   }
 };
 

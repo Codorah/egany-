@@ -28,6 +28,7 @@ import {
   supabase
 } from '@/lib/supabase';
 import { fetchPlatformSettings } from '@/lib/platformSettings';
+import { notifyUser } from '@/lib/notify';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -363,6 +364,16 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       })
       .eq('id', userId);
     if (error) throw error;
+
+    // Première entrée du fil d'activité : sans elle, un compte tout neuf
+    // ouvre un écran Activité vide, ce qui donne l'impression que rien n'a
+    // fonctionné. L'échec d'envoi n'est pas bloquant, le compte existe déjà.
+    notifyUser({
+      userId,
+      title: 'Bienvenue sur Eganyé',
+      message: 'Votre compte est créé. Rejoignez un cercle ou créez le vôtre pour commencer à épargner.',
+      type: 'system',
+    }).catch((err) => console.warn('Welcome notification skipped:', err));
 
     toast.success(t('onb_account_created_success'));
     onComplete(intent ?? undefined);

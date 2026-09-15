@@ -25,6 +25,7 @@ import { EganyeIcon } from './ui/EganyeIcon';
 import { SignaturePad } from './SignaturePad';
 import { supabase } from '@/lib/supabase';
 import { KYC_VERIFIED_LEVEL } from '@/lib/kyc';
+import { notifyUser } from '@/lib/notify';
 import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -274,6 +275,14 @@ export function CreateGroupDialog({
         frequency: values.frequency,
         membersCount: values.maxMembers,
       });
+
+      notifyUser({
+        userId: user.id,
+        title: 'Cercle créé',
+        message: `« ${values.name.trim()} » est prêt. Partagez le code ${joinCode} pour inviter vos proches.`,
+        type: 'system',
+        link: `/group/${newGroup.id}`,
+      }).catch((err) => console.warn('Circle creation notification skipped:', err));
 
       toast.success('Votre cercle a été créé avec succès !');
       onGroupCreated?.(newGroup.id);
