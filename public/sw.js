@@ -1,14 +1,19 @@
-const CACHE_NAME = 'egayne-pwa-cache-v3';
-// Only paths guaranteed to exist as-is in the production build: the built
-// JS/CSS bundles are hashed (e.g. /assets/index-abc123.js) and unknown ahead
-// of time, so they're picked up organically by the fetch handler below on
-// first load instead of being precached here. The old list included dev-only
-// source paths (/src/main.tsx, /src/App.tsx) that 404 in production, which
-// made cache.addAll() reject and the install event fail outright — meaning
-// offline mode never actually activated once deployed.
+const CACHE_NAME = 'egayne-pwa-cache-v4';
+// Only /manifest.json here: the HTML document is handled separately below
+// (network-first, never cached — see the fetch handler) because it names the
+// hashed JS/CSS bundles for the CURRENT deploy, and those hashes change on
+// every build. The built JS/CSS bundles themselves (e.g. /assets/index-abc123.js)
+// are unknown ahead of time, so they're picked up organically by the fetch
+// handler on first load instead of being precached here. The old list
+// included '/' and '/index.html', which caused this exact production outage:
+// a visitor's browser kept serving a cached index.html from a previous
+// deploy, whose <script>/<link> tags pointed at asset hashes that no longer
+// exist post-deploy — Vercel's SPA catch-all rewrite then served index.html
+// (text/html) for those JS/CSS requests instead, breaking the app with MIME
+// type errors. It also previously included dev-only source paths
+// (/src/main.tsx, /src/App.tsx) that 404 in production, which made
+// cache.addAll() reject and the install event fail outright.
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
   '/manifest.json'
 ];
 
@@ -51,6 +56,25 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome extension requests or other non-http resources
   if (!url.protocol.startsWith('http')) return;
+
+  // Navigation requests (the HTML document) must always come from the
+  // network first: it's what names the hashed JS/CSS files for the current
+  // deploy, so serving a stale cached copy after a new deploy points the
+  // browser at bundles that no longer exist (see CACHE_NAME comment above —
+  // this is exactly what broke production). Only fall back to the cached
+  // shell when genuinely offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
