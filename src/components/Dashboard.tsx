@@ -160,7 +160,7 @@ export function Dashboard({
 
       {/* ── 2. MON DISPONIBLE (Solde Portefeuille) ── */}
       <motion.div variants={itemVariants}>
-        <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#C96F4A] via-[#BD6642] to-[#AB5837] p-5 sm:p-6 text-white shadow-soft">
+        <div className="gradient-sunset-hero relative overflow-hidden rounded-[26px] p-5 sm:p-6 text-white shadow-soft">
           <div className="relative z-10 space-y-4">
             {/* Top row: Label & Visibility Toggle */}
             <div className="flex items-center justify-between">
@@ -184,9 +184,13 @@ export function Dashboard({
 
             {/* Big Main Balance */}
             <div>
-              <h2 className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-white">
-                {showBalance ? `${availableBalance.toLocaleString()} FCFA` : '••••••• FCFA'}
-              </h2>
+              <AmountDisplay
+                amount={availableBalance}
+                hidden={!showBalance}
+                size="xl"
+                className="text-white"
+                currencyClassName="text-white/80"
+              />
             </div>
 
             {/* Actions: Recharger & Retirer */}
@@ -248,7 +252,7 @@ export function Dashboard({
 
               <button
                 onClick={() => onManageContributions(nextGroupToPay.id)}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
+                className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <span>Cotiser — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
               </button>

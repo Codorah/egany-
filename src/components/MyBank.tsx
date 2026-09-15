@@ -40,7 +40,7 @@ type ProjectCategory = 'scolaire' | 'voyage' | 'maison' | 'urgence' | 'commerce'
 
 const PROJECT_CATEGORIES: { id: ProjectCategory; labelKey: string; icon: EganyeIconName; bg: string; color: string }[] = [
   { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies', bg: 'bg-[#EBF5EA]', color: 'text-[#718A68]' },
-  { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel', bg: 'bg-[#EAF2F8]', color: 'text-[#3D7099]' },
+  { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel', bg: 'bg-info-soft', color: 'text-info' },
   { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-[#C96F4A]' },
   { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-[#C96F4A]' },
   { id: 'commerce', labelKey: 'bank_project_commerce', icon: 'coin', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
@@ -314,7 +314,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const getVaultIconInfo = (vaultName: string, description?: string) => {
     const text = `${vaultName} ${description || ''}`.toLowerCase();
     if (text.includes('voyag') || text.includes('trave') || text.includes('vol') || text.includes('vacanc')) {
-      return { icon: 'travel' as const, bg: 'bg-[#EAF2F8] text-[#3D7099]' };
+      return { icon: 'travel' as const, bg: 'bg-info-soft text-info' };
     }
     if (text.includes('étud') || text.includes('etud') || text.includes('scol') || text.includes('ecol') || text.includes('univ')) {
       return { icon: 'studies' as const, bg: 'bg-[#EBF5EA] text-[#718A68]' };
@@ -621,7 +621,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {createStep < CREATE_TOTAL_STEPS ? (
                   <Button
                     onClick={handleCreateNextStep}
-                    className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold cursor-pointer"
+                    className="btn-shine gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
                   >
                     Continuer
                   </Button>
@@ -629,7 +629,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   <Button
                     onClick={handleCreateVault}
                     disabled={creating}
-                    className="btn-shine flex-1 h-12 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold cursor-pointer"
+                    className="btn-shine gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
                   >
                     {creating ? <EganyeIcon name="refresh" size={16} className="animate-spin mr-2" /> : null}
                     {creating ? "Création en cours..." : "Créer mon épargne"}
@@ -657,7 +657,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       </div>
 
       {/* 2. Hero Card: Mon solde disponible (avec Recharger & Retirer) */}
-      <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#C96F4A] via-[#BD6642] to-[#AB5837] p-5 sm:p-6 text-white shadow-soft">
+      <div className="gradient-sunset-hero relative overflow-hidden rounded-[26px] p-5 sm:p-6 text-white shadow-soft">
         <div className="flex items-center justify-between gap-3 relative z-10">
           <div className="space-y-3 flex-1 min-w-0">
             <p className="text-xs sm:text-[13px] font-medium text-white/90">
@@ -836,7 +836,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           type="button"
           onClick={() => openCreateFlow()}
           disabled={!canCreateVault}
-          className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
           <span>+ Créer une épargne</span>
@@ -997,7 +997,8 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {/* Buttons Déposer / Retirer */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Button
-                    className="btn-shine h-11 font-bold rounded-xl bg-[#718A68] hover:bg-[#607757] text-white cursor-pointer"
+                    variant="secondary"
+                    className="btn-shine h-11 font-bold rounded-xl cursor-pointer"
                     onClick={handleDeposit}
                     disabled={actionBusy}
                   >

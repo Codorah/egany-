@@ -682,7 +682,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 {/* Switch direct Biométrie */}
                 <div className="flex items-center justify-between px-4 py-3.5">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-[#EAF2F8] text-[#3D7099] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-info-soft text-info flex items-center justify-center shrink-0">
                       <EganyeIcon name="fingerprint" size={16} />
                     </div>
                     <div className="min-w-0">
@@ -765,11 +765,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   onClick={() => setActiveSection('language')}
                   className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-[#EAF2F8] text-[#3D7099] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-info-soft text-info flex items-center justify-center shrink-0">
                     <EganyeIcon name="globe" size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#3D7099] transition-colors">
+                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-info transition-colors">
                       Langue de l’application
                     </span>
                     <span className="text-[11px] text-muted-foreground truncate block">
@@ -969,7 +969,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer mt-2"
+                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {savingProfile ? 'Enregistrement...' : 'Enregistrer les modifications'}
               </Button>
@@ -1074,7 +1074,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <Button
                     onClick={handleSubmitKyc}
                     disabled={isSubmittingKyc}
-                    className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer mt-2"
+                    className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
                   >
                     {isSubmittingKyc ? 'Envoi en cours...' : 'Soumettre ma pièce d’identité'}
                   </Button>
@@ -1135,7 +1135,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleSaveMandate}
                 disabled={isSavingMandate}
-                className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer mt-2"
+                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingMandate ? 'Enregistrement...' : 'Enregistrer le mandataire'}
               </Button>
@@ -1178,7 +1178,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleChangePin}
                 disabled={isSavingPin || newPin.length !== 4}
-                className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer mt-2"
+                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingPin ? 'Modification...' : 'Valider mon nouveau code PIN'}
               </Button>
@@ -1219,7 +1219,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleChangePassword}
                 disabled={isSavingPassword || newPassword.length < 6}
-                className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer mt-2"
+                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingPassword ? 'Mise à jour...' : 'Changer mon mot de passe'}
               </Button>
@@ -1241,7 +1241,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             {renderSubHeader('Portefeuille Mobile Money')}
 
             {/* Solde card */}
-            <div className="rounded-3xl bg-gradient-to-br from-[#C96F4A] to-[#B8623E] p-5 text-white shadow-soft space-y-3">
+            <div className="gradient-sunset rounded-3xl p-5 text-white shadow-soft space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-white/90">Solde disponible</span>
                 <button
@@ -1319,7 +1319,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <Button
                   onClick={handleRecharge}
                   disabled={isRecharging}
-                  className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer"
+                  className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
                   {isRecharging ? 'Paiement en cours...' : 'Confirmer la recharge'}
                 </Button>
@@ -1376,7 +1376,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <Button
                   onClick={handleWithdrawReview}
                   disabled={isWithdrawing}
-                  className="btn-shine w-full h-12 rounded-2xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-sm cursor-pointer"
+                  className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
                   {isWithdrawing ? 'Vérification...' : 'Continuer le retrait'}
                 </Button>

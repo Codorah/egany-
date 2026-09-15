@@ -42,9 +42,13 @@ export function TontineCard({ group, onClick }: TontineCardProps) {
         <p className="text-[12px] text-muted-foreground mt-0.5">
           {group.members.length} {t('member')}s · {t(`freq_${group.frequency}`)}
         </p>
-        <p className="text-xs font-bold text-primary font-serif mt-0.5">
-          {group.contributionAmount.toLocaleString()} {group.currency}
-        </p>
+        <AmountDisplay
+          amount={group.contributionAmount}
+          currency={group.currency}
+          size="sm"
+          className="text-primary mt-0.5"
+          currencyClassName="text-primary/70"
+        />
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0">

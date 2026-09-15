@@ -74,7 +74,7 @@ export function CircleHub({
           trigger={
             <button
               type="button"
-              className="bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
+              className="btn-shine gradient-sunset text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
             >
               <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
               <span>Créer un cercle</span>
@@ -156,7 +156,7 @@ export function CircleHub({
             />
             <button
               type="submit"
-              className="h-11 px-4 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
+              className="btn-shine gradient-sunset h-11 px-4 rounded-xl text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
             >
               Valider
             </button>

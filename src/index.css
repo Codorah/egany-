@@ -39,6 +39,8 @@
     --color-success-deep: var(--success-deep);
     --color-danger: var(--danger);
     --color-danger-soft: var(--danger-soft);
+    --color-info: var(--info);
+    --color-info-soft: var(--info-soft);
     --color-chip: var(--chip);
     --color-ink-soft: var(--ink-soft);
     --color-gold: var(--gold);
@@ -138,6 +140,8 @@
     --danger-soft: #F9E5E3;
     --warning: #B5842A;
     --warning-soft: #FAEFD9;
+    --info: #3D7099;
+    --info-soft: #EAF2F8;
     --chip: #EFE2D0;
     --ink-soft: #6B5744;
     --gold: #C49A55;
@@ -196,6 +200,8 @@
     --brown: #C7AE8C;
     --warning: #D6A345;
     --warning-soft: rgba(214, 163, 69, 0.18);
+    --info: #6B9DC5;
+    --info-soft: rgba(61, 112, 153, 0.2);
     --chip: #372B1F;
     --ink-soft: #CDBBA0;
     --gold: #D4AD6A;
@@ -286,6 +292,13 @@
 
 .gradient-sunset {
   background: linear-gradient(135deg, #C96F4A 0%, #B8623F 55%, #A95636 100%);
+}
+
+/* Hero/solde cards — mêmes teintes que .gradient-sunset, dégradé diagonal
+   légèrement plus doux (via un point médian distinct) pour les grandes
+   surfaces pleine largeur. */
+.gradient-sunset-hero {
+  background: linear-gradient(to bottom right, #C96F4A 0%, #BD6642 55%, #AB5837 100%);
 }
 
 .gradient-olive {

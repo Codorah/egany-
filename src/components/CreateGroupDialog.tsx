@@ -315,7 +315,7 @@ export function CreateGroupDialog({
         nativeButton={trigger ? triggerIsNativeButton : true}
         render={
           trigger || (
-            <Button className="btn-shine flex items-center gap-2 bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer">
+            <Button className="btn-shine gradient-sunset flex items-center gap-2 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer">
               <EganyeIcon name="plus" size={18} strokeWidth={2.5} />
               <span>Créer un cercle</span>
             </Button>
@@ -781,14 +781,14 @@ export function CreateGroupDialog({
                   <Button
                     type="button"
                     onClick={handleNextStep}
-                    className="flex-1 bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
+                    className="btn-shine gradient-sunset flex-1 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
                   >
                     Continuer
                   </Button>
                 ) : (
                   <Button
                     type="submit"
-                    className="btn-shine flex-1 bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
+                    className="btn-shine gradient-sunset flex-1 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Création en cours...' : 'Créer mon cercle'}

@@ -678,7 +678,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     { id: 'cotisations', label: t('gd_nav_cotisations') || 'Cotisations', icon: 'cotisation', bg: 'bg-[#EBF5EA]', text: 'text-[#718A68]' },
     { id: 'membres', label: t('gd_nav_membres') || 'Membres', icon: 'members', bg: 'bg-[#F4EFE6]', text: 'text-[#3E2F24]' },
     { id: 'calendrier', label: t('calendar') || 'Calendrier', icon: 'calendar-finance', bg: 'bg-[#FEF6E9]', text: 'text-[#C49A55]' },
-    { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-[#EAF2F8]', text: 'text-[#3D7099]' },
+    { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-info-soft', text: 'text-info' },
     { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-[#C96F4A]' },
     { id: 'parametres', label: t('gd_nav_parametres') || 'Paramètres', icon: 'settings', bg: 'bg-muted', text: 'text-muted-foreground' },
   ];
@@ -742,7 +742,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         <button
           type="button"
           onClick={() => setSection('cotisations')}
-          className="w-full h-11 rounded-xl bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
+          className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
         >
           <span>Cotiser — {group.contributionAmount.toLocaleString()} {group.currency}</span>
         </button>

@@ -35,8 +35,8 @@ export const EganyeButton = React.forwardRef<HTMLButtonElement, EganyeButtonProp
     }[size];
 
     const variantStyles = {
-      primary: 'bg-gradient-to-r from-[#C96F4A] to-[#B8623E] hover:from-[#B8623E] hover:to-[#A95636] text-white shadow-soft',
-      secondary: 'bg-[#718A68] hover:bg-[#607757] text-white shadow-soft',
+      primary: 'btn-shine gradient-sunset text-white shadow-soft',
+      secondary: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-soft',
       outline: 'border-2 border-[#EFE2D0] dark:border-border text-foreground hover:bg-muted/50',
       ghost: 'text-foreground hover:bg-muted/60',
       white: 'bg-white text-[#C96F4A] hover:bg-white/90 shadow-soft',
@@ -74,7 +74,7 @@ export function EganyeCard({ variant = 'white', interactive = false, children, c
   const variantStyles = {
     white: 'bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft text-foreground',
     cream: 'bg-[#FDFBF7] dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft text-foreground',
-    sunset: 'bg-gradient-to-br from-[#C96F4A] via-[#BD6642] to-[#AB5837] text-white shadow-soft relative overflow-hidden',
+    sunset: 'gradient-sunset-hero text-white shadow-soft relative overflow-hidden',
     glass: 'bg-card/80 backdrop-blur-md border border-border/80 shadow-soft text-foreground',
   }[variant];
 
