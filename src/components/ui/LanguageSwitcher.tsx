@@ -1,13 +1,15 @@
 import React from 'react';
 import { LanguageCode } from '@/contexts/LanguageContext';
 
+// Wolof et Bambara existent dans LanguageCode mais restent quasi non
+// traduits (moins de 15 clés sur ~1120 dans LanguageContext.tsx) — masqués
+// ici tant que de vraies traductions n'existent pas, pour ne pas présenter
+// une langue qui retomberait silencieusement en français partout.
 const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'fr', label: 'FR' },
   { code: 'en', label: 'EN' },
   { code: 'ee', label: 'EWE' },
   { code: 'kbp', label: 'KBY' },
-  { code: 'wo', label: 'WOL' },
-  { code: 'bm', label: 'BAM' },
 ];
 
 interface LanguageSwitcherProps {
@@ -41,7 +43,7 @@ export function LanguageSwitcher({ value, onChange, variant = 'grid', className 
   }
 
   return (
-    <div className={`grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-muted p-1.5 rounded-xl ${className}`}>
+    <div className={`grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-muted p-1.5 rounded-xl ${className}`}>
       {LANGUAGES.map(({ code, label }) => (
         <button
           key={code}

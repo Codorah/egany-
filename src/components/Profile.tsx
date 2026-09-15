@@ -1432,8 +1432,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-2">
               {[
                 { code: 'fr' as LanguageCode, name: 'Français', desc: 'Langue officielle et administrative' },
+                { code: 'en' as LanguageCode, name: 'English', desc: 'Anglais international' },
                 { code: 'ee' as LanguageCode, name: 'Èʋegbe (Ewe)', desc: 'Togo Sud, Ghana & Bénin' },
                 { code: 'kbp' as LanguageCode, name: 'Kabɩyɛ (Kabyè)', desc: 'Togo Nord & Kara' },
+                // Wolof et Bambara masqués tant que leurs traductions ne sont pas prêtes
+                // (< 15 clés sur ~1120 dans LanguageContext.tsx) — voir LanguageSwitcher.tsx.
               ].map((lang) => (
                 <button
                   key={lang.code}

@@ -26,13 +26,14 @@ interface NavbarProps {
   onNavigate?: (view: string) => void;
 }
 
+// Wolof et Bambara masqués tant que leurs traductions ne sont pas prêtes
+// (voir LanguageSwitcher.tsx) — la sélection retomberait sinon en français
+// sur la quasi-totalité de l'appli sans aucun indice pour l'utilisateur.
 const LANGUAGE_LABELS: { code: LanguageCode; label: string }[] = [
   { code: 'fr', label: 'Français' },
   { code: 'en', label: 'English' },
   { code: 'ee', label: 'Éwé' },
   { code: 'kbp', label: 'Kabiyè' },
-  { code: 'wo', label: 'Wolof' },
-  { code: 'bm', label: 'Bamanankan' },
 ];
 
 export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
