@@ -488,14 +488,17 @@ export function AdminDashboard() {
       </div>
 
       {/* --- PLATFORM STATISTICS GRID --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 2x2 dès le plus petit écran : en pleine largeur empilée, ces quatre
+          cartes imposaient ~520 px de défilement avant le moindre bouton
+          d'action de l'admin. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         
         {/* Card 1: Users */}
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
               <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_registered_members')}</span>
-              <span className="text-3xl font-serif font-black text-foreground block">{totalUsers}</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-foreground block">{totalUsers}</span>
               <span className="text-[13px] text-muted-foreground font-medium block">
                 {standardUsersCount} {t('admin_users_word')} • {adminCount} {t('admin_admins_word')}
               </span>
@@ -508,10 +511,10 @@ export function AdminDashboard() {
 
         {/* Card 2: Groups */}
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
               <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_tontine_circles')}</span>
-              <span className="text-3xl font-serif font-black text-foreground block">{totalGroupsCount}</span>
+              <span className="text-2xl sm:text-3xl font-serif font-black text-foreground block">{totalGroupsCount}</span>
               <span className="text-[13px] text-muted-foreground font-medium block">
                 {activeGroupsCount} {t('admin_active_word')} • {pendingGroupsCount} {t('status_pending')}
               </span>
@@ -524,7 +527,7 @@ export function AdminDashboard() {
 
         {/* Card 3: Platform Volume */}
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
               <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_cumulative_volume')}</span>
               <span className="text-xl font-serif font-black text-foreground block truncate max-w-[160px]">
@@ -542,7 +545,7 @@ export function AdminDashboard() {
 
         {/* Card 4: Reputation health */}
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1 w-full">
               <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_reputation_health')}</span>
               <div className="flex items-baseline gap-2">
@@ -784,7 +787,90 @@ export function AdminDashboard() {
             </CardHeader>
 
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* Mobile : le tableau à six colonnes obligeait à balayer
+                  latéralement pour lire une seule ligne de membre. Même
+                  contenu, empilé, sans défilement horizontal. */}
+              <div className="md:hidden divide-y divide-border">
+                {filteredUsers.length === 0 ? (
+                  <p className="py-12 text-center text-xs font-medium text-muted-foreground">
+                    {t('admin_no_member_found')}
+                  </p>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <div key={u.uid} className="space-y-3 px-4 py-4">
+                      <div className="flex items-start gap-3">
+                        <CustomAvatar photoURL={u.photoURL} name={u.displayName} size={40} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{u.displayName}</p>
+                          <p className="truncate text-[12px] text-muted-foreground">{u.email}</p>
+                        </div>
+                        <Badge className={`shrink-0 border-none px-2 py-0.5 text-[11px] font-bold uppercase ${
+                          u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {u.role === 'admin' ? t('admin_administrator') : t('member')}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-4 rounded-xl bg-muted/50 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {t('admin_reputation_col')}
+                          </p>
+                          <p className={`font-serif text-sm font-black ${
+                            u.reputationScore >= 85 ? 'text-secondary'
+                              : u.reputationScore >= 70 ? 'text-sage'
+                              : u.reputationScore >= 50 ? 'text-brand' : 'text-danger'
+                          }`}>
+                            {u.reputationScore}
+                            <span className="ml-1 text-[11px] font-bold uppercase text-muted-foreground">
+                              {u.reputationScore >= 85 ? 'S-Tier' : u.reputationScore >= 70 ? 'A-Tier' : u.reputationScore >= 50 ? 'B-Tier' : 'C-Tier'}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="ml-auto text-right">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {t('admin_wallet_col')}
+                          </p>
+                          <p className="font-serif text-sm font-black text-foreground">
+                            {(u.walletBalance || 0).toLocaleString()} F CFA
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSelectUserToEdit(u)}
+                          className="h-10 flex-1 rounded-xl text-[13px] font-black uppercase text-brand"
+                        >
+                          {t('admin_adjust')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleRole(u)}
+                          className={`h-10 w-10 rounded-xl p-0 ${u.role === 'admin' ? 'text-brand' : 'text-muted-foreground'}`}
+                          title={u.role === 'admin' ? t('admin_demote_user') : t('admin_promote_admin')}
+                        >
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteUser(u.uid, u.displayName)}
+                          className="h-10 w-10 rounded-xl p-0 text-muted-foreground hover:bg-danger-soft hover:text-danger"
+                          title={t('admin_delete_user')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
@@ -945,7 +1031,83 @@ export function AdminDashboard() {
             </CardHeader>
 
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* Mobile : sept colonnes ne tiennent pas sur un téléphone. */}
+              <div className="md:hidden divide-y divide-border">
+                {filteredGroups.length === 0 ? (
+                  <p className="py-12 text-center text-xs font-medium text-muted-foreground">
+                    {t('admin_no_group_found')}
+                  </p>
+                ) : (
+                  filteredGroups.map((g) => {
+                    const payoutCompleted = g.payoutOrder ? g.currentPayoutIndex : 0;
+                    const totalPayoutRounds = g.members?.length || 0;
+                    return (
+                      <div key={g.id} className="space-y-3 px-4 py-4">
+                        <div className="flex items-start gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold text-foreground">{g.name}</p>
+                            <p className="truncate text-[12px] text-muted-foreground">
+                              {t('admin_invite_code')} : {g.joinCode || t('admin_none_word')}
+                            </p>
+                          </div>
+                          <Badge className={`shrink-0 border-none px-2 py-0.5 text-[11px] font-bold uppercase ${
+                            g.status === 'active' ? 'bg-secondary/10 text-secondary'
+                              : g.status === 'pending' ? 'bg-brand/10 text-brand'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {g.status === 'active' ? t('admin_status_active') : g.status === 'pending' ? t('admin_status_init') : t('admin_status_closed')}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-muted/50 px-3 py-2">
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {t('admin_installment_amount')}
+                            </p>
+                            <p className="font-serif text-sm font-black text-foreground">
+                              {g.contributionAmount.toLocaleString()} {g.currency || 'XOF'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {t('members')}
+                            </p>
+                            <p className="text-sm font-bold text-foreground">{g.members?.length || 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {t('admin_payout_cycle')}
+                            </p>
+                            <p className="text-sm font-bold text-foreground">
+                              {payoutCompleted}<span className="text-muted-foreground"> / {totalPayoutRounds}</span>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {t('frequency')}
+                            </p>
+                            <p className="text-sm font-bold capitalize text-foreground">
+                              {g.frequency === 'daily' ? t('freq_daily') : g.frequency === 'weekly' ? t('freq_weekly') : g.frequency === 'monthly' ? t('freq_monthly') : g.frequency}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteGroup(g.id, g.name)}
+                          className="h-10 w-full rounded-xl text-[13px] font-bold text-muted-foreground hover:bg-danger-soft hover:text-danger"
+                        >
+                          <Trash2 className="mr-1.5 h-4 w-4" />
+                          {t('admin_delete_group_perm')}
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
@@ -1512,7 +1674,50 @@ export function AdminDashboard() {
 
                 <TabsContent value="ledger-entries">
                   <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
-                    <div className="overflow-x-auto max-h-[450px]">
+                    {/* Mobile : le journal comptable est la liste la plus
+                        dense de l'admin ; en tableau elle n'était lisible
+                        qu'en balayant de côté. */}
+                    <div className="md:hidden max-h-[450px] divide-y divide-border overflow-y-auto">
+                      {ledgerEntries.length === 0 ? (
+                        <p className="py-6 text-center text-xs italic text-muted-foreground">
+                          {t('admin_no_ledger_entry')}
+                        </p>
+                      ) : (
+                        ledgerEntries.map((entry) => (
+                          <div key={entry.id} className="space-y-1.5 px-4 py-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono text-[12px] text-muted-foreground">
+                                {new Date(entry.createdAt).toLocaleTimeString()}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {entry.type === 'credit' ? (
+                                  <Badge className="h-4 rounded-sm border border-secondary/20 bg-success-soft px-1 text-[11px] font-black uppercase tracking-wider text-secondary">{t('admin_credit')}</Badge>
+                                ) : (
+                                  <Badge className="h-4 rounded-sm border border-danger/20 bg-danger-soft px-1 text-[11px] font-black uppercase tracking-wider text-danger">{t('admin_debit')}</Badge>
+                                )}
+                                <span className={`font-bold text-sm ${entry.type === 'credit' ? 'text-secondary' : 'text-danger'}`}>
+                                  {entry.type === 'credit' ? '+' : '-'}{entry.amount.toLocaleString()} {entry.currency}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="font-mono text-[12px]">
+                              {entry.account.startsWith('user_wallet:') ? (
+                                <span className="font-semibold text-foreground">{t('admin_wallet_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
+                              ) : entry.account.startsWith('tontine_group:') ? (
+                                <span className="font-semibold text-eganye-gold">{t('admin_circle_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
+                              ) : (
+                                <span className="font-semibold text-muted-foreground">{entry.account}</span>
+                              )}
+                            </p>
+                            <p className="truncate font-mono text-[11px] text-muted-foreground">
+                              {t('admin_counterparty_col')} : {entry.counterparty}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="hidden max-h-[450px] overflow-x-auto md:block">
                       <Table>
                         <TableHeader className="bg-muted">
                           <TableRow>
