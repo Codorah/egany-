@@ -290,9 +290,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     {
       title: t('banner_mamas_title'),
       description: t('onb_slide1_desc'),
-      // Fond studio sombre du rendu : il se marie au dégradé noir que la
-      // slide superpose déjà, là où il jurerait sur le crème de l'app.
-      image: '/brand-visuals/slide-advisor.webp',
+      image: '/onboarding-mamas.png',
     },
     {
       title: t('onb_slide2_title'),
