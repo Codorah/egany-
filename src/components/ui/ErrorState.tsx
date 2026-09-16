@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { EganyeIllustration, type EganyeIllustrationName } from './EganyeIllustration';
+import { BrandVisual } from './BrandVisual';
 import { EganyeIcon } from './EganyeIcon';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -54,6 +55,10 @@ export function ErrorState({
 
   const c = config[variant] || config.error;
   const illustrationName = illustration || c.ill;
+  // Un appelant qui impose une illustration précise garde la main ; sinon on
+  // sert le rendu de marque, plus incarné qu'un pictogramme sur un écran qui
+  // annonce déjà une mauvaise nouvelle.
+  const useBrandVisual = !illustration;
   const resolvedTitle = title || c.title;
   const resolvedDescription = description || c.desc;
   const resolvedRetryLabel = retryLabel || t('retry') || 'Réessayer';
@@ -66,7 +71,11 @@ export function ErrorState({
         ' flex flex-col items-center justify-center text-center px-6 gap-5 bg-background'
       }
     >
-      <EganyeIllustration name={illustrationName} width={140} />
+      {useBrandVisual ? (
+        <BrandVisual name={variant === 'offline' ? 'error' : 'failed'} height={190} alt="" />
+      ) : (
+        <EganyeIllustration name={illustrationName} width={140} />
+      )}
 
       <div className="space-y-1.5 max-w-xs">
         <h2 className="text-lg font-serif font-black text-foreground">{resolvedTitle}</h2>

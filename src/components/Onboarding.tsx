@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { LanguageSwitcher } from './ui/LanguageSwitcher';
 import { EganyeLogo } from './ui/EganyeLogo';
+import { BrandVisual, type BrandVisualName } from './ui/BrandVisual';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -77,7 +78,7 @@ const OTP_LENGTH = 8;
  * largeur d'écran sans se déformer verticalement.
  */
 function AuthLayout({
-  onBack, backLabel, title, desc, children, footer, compact = false,
+  onBack, backLabel, title, desc, children, footer, compact = false, visual,
 }: {
   onBack?: () => void;
   backLabel: string;
@@ -86,6 +87,7 @@ function AuthLayout({
   children: React.ReactNode;
   footer?: React.ReactNode;
   compact?: boolean;
+  visual?: BrandVisualName;
 }) {
   return (
     <div className="relative w-full min-h-screen md:min-h-[860px] bg-background overflow-hidden flex flex-col">
@@ -117,8 +119,8 @@ function AuthLayout({
         </div>
 
         <div className="relative z-10 flex flex-col items-center gap-3 pt-2">
-          <div className="w-[86px] h-[86px] rounded-full bg-white/95 shadow-elevated flex items-center justify-center p-2">
-            <img src="/favicon.svg" alt="Eganyé" className="w-14 h-14 object-contain rounded-2xl" />
+          <div className="w-[86px] h-[86px] rounded-full bg-white/95 shadow-elevated flex items-center justify-center p-1.5 overflow-hidden">
+            <img src="/brand-visuals/logo-coin.webp" alt="Eganyé" className="w-full h-full object-contain" />
           </div>
           <span className="text-2xl font-serif font-bold text-white lowercase tracking-tight drop-shadow-sm">
             eganyé
@@ -128,11 +130,18 @@ function AuthLayout({
 
       {/* Zone de saisie */}
       <div className="relative z-10 flex-1 flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] -mt-4">
-        <div className="space-y-2 text-right">
-          <h1 className="text-[30px] leading-tight font-serif font-bold text-foreground tracking-tight text-balance">
-            {title}
-          </h1>
-          <p className="text-[15px] leading-relaxed text-muted-foreground font-medium">{desc}</p>
+        <div className="flex items-end gap-3">
+          {/* Masqué sous 380 px : le personnage volerait de la place au
+              formulaire sur les petits écrans, qui priment ici. */}
+          {visual && (
+            <BrandVisual name={visual} height={120} className="hidden min-[380px]:block shrink-0" alt="" />
+          )}
+          <div className="flex-1 space-y-2 text-right">
+            <h1 className="text-[30px] leading-tight font-serif font-bold text-foreground tracking-tight text-balance">
+              {title}
+            </h1>
+            <p className="text-[15px] leading-relaxed text-muted-foreground font-medium">{desc}</p>
+          </div>
         </div>
 
         <div className="mt-6 space-y-5">{children}</div>
@@ -623,6 +632,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         backLabel={t('a11y_back')}
         title={t('onb_login_title')}
         desc={t('onb_login_desc')}
+        visual="welcome"
         footer={
           <button
             type="button"
@@ -684,6 +694,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         backLabel={t('a11y_back')}
         title={t('onb_signup_title')}
         desc={t('onb_signup_desc')}
+        visual="signup"
         footer={
           <button
             type="button"

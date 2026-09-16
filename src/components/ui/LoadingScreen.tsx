@@ -1,6 +1,6 @@
 import React from 'react';
 import { EganyeLogo } from './EganyeLogo';
-import { EganyeMascot } from './EganyeMascot';
+import { BrandVisual } from './BrandVisual';
 
 interface LoadingScreenProps {
   message?: string;
@@ -25,7 +25,7 @@ export function LoadingScreen({
       }`}
     >
       {withMascot ? (
-        <EganyeMascot variant="loading" size={90} />
+        <BrandVisual name="welcome" height={200} alt="" />
       ) : (
         <div className="animate-logo-appear relative">
           <EganyeLogo size={60} />

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { AmountDisplay } from './AmountDisplay';
 import { EganyeIllustration, type EganyeIllustrationName } from './EganyeIllustration';
+import { BrandVisual } from './BrandVisual';
 
 interface SuccessStateProps {
   illustration?: EganyeIllustrationName;
@@ -38,41 +39,15 @@ export function SuccessState({
       transition={{ duration: 0.3 }}
       className="glass-card rounded-3xl border border-secondary/20 p-8 sm:p-10 text-center flex flex-col items-center justify-center max-w-md mx-auto my-6 space-y-4"
     >
-      {/* Animated check circle */}
+      {/* Le rendu de marque porte déjà la coche : un second pictogramme
+          animé au-dessus ferait redite, et son vert vif jure avec l olive
+          de la charte. */}
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 16, delay: 0.1 }}
       >
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full bg-success-soft flex items-center justify-center">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <path
-                d="M10 20L17 27L30 13"
-                stroke="var(--success)"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="animate-check-draw"
-              />
-            </svg>
-          </div>
-          {/* Sparkle particles */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.8] }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="absolute -top-1 -right-1 w-4 h-4 rounded-full"
-            style={{ backgroundColor: 'var(--gold)' }}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.8] }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full"
-            style={{ backgroundColor: 'var(--primary)' }}
-          />
-        </div>
+        <BrandVisual name="success" height={190} alt="" />
       </motion.div>
 
       <div className="space-y-1.5">
