@@ -1,9 +1,18 @@
 import { supabase } from './supabase';
 
+/**
+ * 'contribution_share' prélève une cotisation par distribution. C'est
+ * arithmétiquement 1/N du pot (pot = cotisation × N), donc le taux effectif
+ * dépend de la taille du cercle : 10 membres → 10 %, mais 5 membres → 20 %.
+ * 'percent' applique au contraire le même taux quelle que soit la taille.
+ */
+export type PayoutFeeMode = 'none' | 'contribution_share' | 'percent';
+
 export interface PlatformSettings {
   maintenanceMode: boolean;
   allowSignups: boolean;
-  /** Commission prélevée sur le pot à chaque décaissement, en %. 0 = désactivée. */
+  payoutFeeMode: PayoutFeeMode;
+  /** Utilisé uniquement quand payoutFeeMode vaut 'percent'. */
   payoutFeePercent: number;
   /** Profil dont le portefeuille encaisse la commission. Sans lui, rien n'est prélevé. */
   platformWalletId: string | null;
@@ -12,6 +21,7 @@ export interface PlatformSettings {
 const DEFAULT_SETTINGS: PlatformSettings = {
   maintenanceMode: false,
   allowSignups: true,
+  payoutFeeMode: 'none',
   payoutFeePercent: 0,
   platformWalletId: null,
 };
@@ -19,7 +29,7 @@ const DEFAULT_SETTINGS: PlatformSettings = {
 export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   const { data, error } = await supabase
     .from('platform_settings')
-    .select('maintenance_mode, allow_signups, payout_fee_percent, platform_wallet_id')
+    .select('maintenance_mode, allow_signups, payout_fee_mode, payout_fee_percent, platform_wallet_id')
     .eq('id', 1)
     .maybeSingle();
 
@@ -30,6 +40,7 @@ export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   return {
     maintenanceMode: data.maintenance_mode,
     allowSignups: data.allow_signups,
+    payoutFeeMode: (data.payout_fee_mode ?? 'none') as PayoutFeeMode,
     payoutFeePercent: Number(data.payout_fee_percent ?? 0),
     platformWalletId: data.platform_wallet_id ?? null,
   };
@@ -44,6 +55,7 @@ export async function updatePlatformSettings(
     .update({
       ...(patch.maintenanceMode !== undefined ? { maintenance_mode: patch.maintenanceMode } : {}),
       ...(patch.allowSignups !== undefined ? { allow_signups: patch.allowSignups } : {}),
+      ...(patch.payoutFeeMode !== undefined ? { payout_fee_mode: patch.payoutFeeMode } : {}),
       ...(patch.payoutFeePercent !== undefined ? { payout_fee_percent: patch.payoutFeePercent } : {}),
       ...(patch.platformWalletId !== undefined ? { platform_wallet_id: patch.platformWalletId } : {}),
       updated_at: new Date().toISOString(),
