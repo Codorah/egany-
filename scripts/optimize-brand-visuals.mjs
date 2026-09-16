@@ -32,6 +32,15 @@ const JOBS = {
   'mascot-error': { src: 'avatar_page_erreur2.png', height: 560 },
   'mascot-success': { src: 'coche.png', height: 560, centerCrop: [0.3, 0.42] },
   'mascot-failed': { src: 'Design sans titre.png', height: 560, centerCrop: [0.3, 0.42] },
+  // Pièce photographiée sur textile : carrée, chaleureuse, elle sert de
+  // héros à l'écran d'accueil là où un logo vectoriel resterait froid.
+  'coin-textile': { src: 'logo2.png', height: 720 },
+  // Fond studio sombre incrusté : inutilisable sur le crème de l'app, mais
+  // parfait en slide plein écran, où un dégradé noir passe déjà par-dessus.
+  'slide-advisor': { src: 'avatar_inscription.png', height: 900 },
+  // Même pose abattue qu'avatar_page_erreur2 mais avec un panneau clair
+  // incrusté : réservée à la maintenance, affichée en carte.
+  'mascot-maintenance': { src: 'avatar_page_erreur.png', height: 560, centerCrop: [0.32, 0.4] },
 };
 
 async function main() {

@@ -290,7 +290,9 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     {
       title: t('banner_mamas_title'),
       description: t('onb_slide1_desc'),
-      image: '/onboarding-mamas.png',
+      // Fond studio sombre du rendu : il se marie au dégradé noir que la
+      // slide superpose déjà, là où il jurerait sur le crème de l'app.
+      image: '/brand-visuals/slide-advisor.webp',
     },
     {
       title: t('onb_slide2_title'),
@@ -1004,22 +1006,22 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
           {screen === 'welcome' && (
             <motion.div key="welcome" {...fade} className="text-center space-y-8 py-4">
-              <div className="relative mx-auto w-44 h-44 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-eganye-beige" />
-                <motion.div
-                  className="absolute inset-6 rounded-full border-[1.5px] border-dashed border-brand/25"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 46, repeat: Infinity, ease: 'linear' }}
+              {/* La pièce photographiée sur textile porte l'accueil mieux
+                  qu'un logo posé sur un disque : c'est la première image de
+                  la marque que voit l'utilisatrice. */}
+              <motion.div
+                className="relative mx-auto w-44 h-44"
+                initial={{ scale: 0.86, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 16, delay: 0.15 }}
+              >
+                <img
+                  src="/brand-visuals/coin-textile.webp"
+                  alt="Eganyé"
+                  className="w-full h-full rounded-full object-cover shadow-elevated"
+                  draggable={false}
                 />
-                <motion.div
-                  className="relative flex items-center justify-center"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-                >
-                  <EganyeLogo size={88} />
-                </motion.div>
-              </div>
+              </motion.div>
 
               <div className="space-y-3">
                 <h1 className="text-5xl font-serif font-black text-foreground tracking-tight lowercase">eganyé</h1>

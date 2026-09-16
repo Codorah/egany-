@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EganyeIcon } from './EganyeIcon';
-import { EganyeLogo } from './EganyeLogo';
+import { BrandVisual } from './BrandVisual';
 
 /**
  * Invitation à installer Eganyé en PWA.
@@ -159,7 +159,9 @@ export function InstallPrompt() {
             </button>
 
             <div className="flex items-start gap-3.5">
-              <EganyeLogo size={46} />
+              {/* Le personnage présente une tablette : c'est exactement le
+                  geste que la modale propose, mettre l'app sur un appareil. */}
+              <BrandVisual name="tablet" height={92} className="-my-1 shrink-0" alt="" />
               <div className="min-w-0 pr-6">
                 <h2
                   id="install-prompt-title"

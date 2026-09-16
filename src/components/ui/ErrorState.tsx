@@ -72,7 +72,11 @@ export function ErrorState({
       }
     >
       {useBrandVisual ? (
-        <BrandVisual name={variant === 'offline' ? 'error' : 'failed'} height={190} alt="" />
+        <BrandVisual
+          name={variant === 'offline' ? 'error' : variant === 'maintenance' ? 'maintenance' : 'failed'}
+          height={190}
+          alt=""
+        />
       ) : (
         <EganyeIllustration name={illustrationName} width={140} />
       )}

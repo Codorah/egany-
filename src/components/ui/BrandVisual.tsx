@@ -19,7 +19,10 @@ export type BrandVisualName =
   | 'error'
   | 'success'
   | 'failed'
-  | 'logo-coin';
+  | 'logo-coin'
+  | 'coin-textile'
+  | 'slide-advisor'
+  | 'maintenance';
 
 const FILES: Record<BrandVisualName, string> = {
   welcome: 'mascot-welcome',
@@ -29,6 +32,9 @@ const FILES: Record<BrandVisualName, string> = {
   success: 'mascot-success',
   failed: 'mascot-failed',
   'logo-coin': 'logo-coin',
+  'coin-textile': 'coin-textile',
+  'slide-advisor': 'slide-advisor',
+  maintenance: 'mascot-maintenance',
 };
 
 /**
@@ -37,7 +43,7 @@ const FILES: Record<BrandVisualName, string> = {
  * fait disparaître au lieu d'essayer de le détourer — ce qui mangerait la
  * chemise blanche du personnage.
  */
-const NEEDS_CARD = new Set<BrandVisualName>(['success', 'failed']);
+const NEEDS_CARD = new Set<BrandVisualName>(['success', 'failed', 'maintenance']);
 
 interface BrandVisualProps {
   name: BrandVisualName;
