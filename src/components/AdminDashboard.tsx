@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow } from '@/lib/mappers';
 import { hydrateGroups } from '@/lib/groups';
@@ -75,6 +75,11 @@ export function AdminDashboard() {
 
   // Selected user for adjustments (Reputation score / walletBalance)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  // Le panneau d'ajustement est rendu tout en haut de la page, à ~290 lignes
+  // de JSX au-dessus du bouton qui l'ouvre. Sur téléphone on tape « Ajuster »
+  // au fond de la liste des membres et il ne se passe visiblement rien : le
+  // panneau s'est ouvert hors de l'écran, loin au-dessus.
+  const editorRef = useRef<HTMLDivElement | null>(null);
   const [reputationInput, setReputationInput] = useState<number>(75);
   const [walletInput, setWalletInput] = useState<number>(0);
   const [isSavingUserChanges, setIsSavingUserChanges] = useState(false);
@@ -367,6 +372,10 @@ export function AdminDashboard() {
     setEditingUser(user);
     setReputationInput(user.reputationScore);
     setWalletInput(user.walletBalance || 0);
+    // Au tour de rendu suivant, une fois le panneau monté.
+    requestAnimationFrame(() => {
+      editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   };
 
   const handleSaveUserTuning = async () => {
@@ -561,10 +570,11 @@ export function AdminDashboard() {
       <AnimatePresence>
         {editingUser && (
           <motion.div
+            ref={editorRef}
             initial={{ opacity: 0, scale: 0.98, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: -10 }}
-            className="p-1"
+            className="scroll-mt-4 p-1"
           >
             <Card className="border-2 border-brand bg-muted rounded-3xl overflow-hidden shadow-md">
               <CardHeader className="bg-brand/5 p-5 border-b border-border flex flex-row items-center justify-between">
