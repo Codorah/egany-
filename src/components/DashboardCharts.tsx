@@ -106,19 +106,12 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
 
   // 1. Process overall balance evolution
   const balanceData = useMemo(() => {
+    // Sans opération, on ne trace RIEN. La version précédente fabriquait une
+    // courbe sur trois mois en plaçant un point à 40 % du solde actuel — une
+    // progression d'épargne qui n'a jamais eu lieu, dessinée avec l'autorité
+    // d'un graphique. Un état vide est moins joli et infiniment plus honnête.
     if (transactions.length === 0) {
-      // Fallback: If no transactions yet, show starting from 0 to current balance
-      const now = new Date();
-      const past = new Date();
-      past.setMonth(past.getMonth() - 2);
-      const prev = new Date();
-      prev.setMonth(prev.getMonth() - 1);
-
-      return [
-        { name: getMonthName(past.toISOString()), Balance: 0 },
-        { name: getMonthName(prev.toISOString()), Balance: Math.round(user.walletBalance * 0.4) },
-        { name: getMonthName(now.toISOString()), Balance: user.walletBalance }
-      ];
+      return [];
     }
 
     const data: { name: string; Balance: number }[] = [];
@@ -253,6 +246,14 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
           </div>
 
           <div className="h-[220px] w-full">
+            {balanceData.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center gap-1.5 px-6">
+                <p className="font-bold text-sm text-foreground">Pas encore d’historique</p>
+                <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[16rem]">
+                  Votre courbe d’épargne se dessinera dès votre première opération.
+                </p>
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={balanceData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
@@ -291,6 +292,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                 />
               </LineChart>
             </ResponsiveContainer>
+            )}
           </div>
         </CardContent>
       </Card>

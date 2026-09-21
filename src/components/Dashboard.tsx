@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'motion/react';
-import { EganyeIcon } from '@/components/ui/EganyeIcon';
+import { EganyeIcon, type EganyeIconName } from '@/components/ui/EganyeIcon';
 import { EganyeLogo } from '@/components/ui/EganyeLogo';
-import { Group, UserProfile } from '@/types';
+import { Group, UserProfile, WalletTransaction } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
 import { CustomAvatar } from './CustomAvatar';
@@ -10,7 +10,9 @@ import { AmountDisplay } from './ui/AmountDisplay';
 import { EganyeProgress } from './ui/EganyeProgress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotifications } from '@/hooks/useNotifications';
-import { format } from 'date-fns';
+import { supabase, createChannel } from '@/lib/supabase';
+import { mapWalletTransactionRow } from '@/lib/mappers';
+import { format, formatDistanceToNowStrict, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface DashboardProps {
@@ -68,39 +70,76 @@ export function Dashboard({
   const activeGroups = groups.filter((g) => g.status === 'active');
   const nextGroupToPay = activeGroups[0] || null;
 
-  // Recent 3 financial activities (sample/representative)
-  const recentActivities = [
-    {
-      id: 'act-1',
-      title: 'Cotisation enregistrée',
-      subtitle: activeGroups[0]?.name || 'Cercle Famille',
-      amount: '+50 000 FCFA',
-      isPositive: true,
-      icon: 'cotisation' as const,
-      iconBg: 'bg-[#EBF5EA] text-[#718A68]',
-      time: '09:24',
-    },
-    {
-      id: 'act-2',
-      title: 'Épargne personnelle',
-      subtitle: 'Ma Banque — Voyage',
-      amount: '— 20 000 FCFA',
-      isPositive: false,
-      icon: 'vault' as const,
-      iconBg: 'bg-[#F4EFE6] text-[#3E2F24]',
-      time: 'Hier',
-    },
-    {
-      id: 'act-3',
-      title: 'Recharge portefeuille',
-      subtitle: 'T-Money Togo',
-      amount: '+100 000 FCFA',
-      isPositive: true,
-      icon: 'wallet' as const,
-      iconBg: 'bg-[#FFF2E8] text-[#C96F4A]',
-      time: 'Il y a 3j',
-    },
-  ];
+  // Activité récente — les VRAIES opérations du portefeuille.
+  //
+  // Cet écran affichait jusqu'ici trois lignes écrites en dur (« Recharge
+  // portefeuille +100 000 FCFA », « Cotisation enregistrée +50 000 FCFA »),
+  // identiques pour tout le monde et sans aucun rapport avec le compte. Sur
+  // un produit d'épargne, montrer des mouvements d'argent inventés sur
+  // l'écran d'accueil ne relève pas du décor : on y lit son solde, on croit
+  // ce qu'on y voit.
+  const [recentActivities, setRecentActivities] = useState<WalletTransaction[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadActivities = async () => {
+      const { data, error } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .eq('user_id', user.uid)
+        .order('date', { ascending: false })
+        .limit(3);
+      if (cancelled) return;
+      if (error) console.error('Dashboard activities error:', error);
+      setRecentActivities((data ?? []).map(mapWalletTransactionRow));
+      setActivitiesLoading(false);
+    };
+
+    loadActivities();
+
+    // Le solde se met à jour tout seul (canal temps réel de `profiles`) ; sans
+    // ça, la liste juste en dessous resterait figée et les deux se
+    // contrediraient à l'écran.
+    const channel = createChannel(`dashboard-tx-${user.uid}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${user.uid}` },
+        () => loadActivities()
+      )
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [user.uid]);
+
+  /**
+   * « 09:24 » aujourd'hui, « il y a 3 j » ensuite. Une heure précise n'a de
+   * sens que pour ce qui vient d'arriver ; passé la journée, c'est l'ancienneté
+   * qui renseigne.
+   */
+  const formatRelativeDate = (iso: string): string => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+    if (isToday(date)) return format(date, 'HH:mm');
+    return `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
+  };
+
+  /** Icône et teinte selon la nature du mouvement. */
+  const activityLook = (tx: WalletTransaction): { icon: EganyeIconName; bg: string } => {
+    switch (tx.type) {
+      case 'recharge':
+        return { icon: 'wallet', bg: 'bg-[#FFF2E8] text-[#C96F4A]' };
+      case 'contribution_debit':
+        return { icon: 'cotisation', bg: 'bg-[#EBF5EA] text-[#718A68]' };
+      case 'payout_credit':
+        return { icon: 'distribution', bg: 'bg-[#EBF5EA] text-[#718A68]' };
+      case 'withdraw':
+        return { icon: 'withdraw', bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
+      default:
+        return { icon: 'money', bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
+    }
+  };
 
   return (
     <motion.div
@@ -416,38 +455,78 @@ export function Dashboard({
         </div>
 
         <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-          {recentActivities.map((act) => (
-            <div
-              key={act.id}
-              onClick={() => onNavigate?.('activity')}
-              className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-xl cursor-pointer"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-9 h-9 rounded-xl ${act.iconBg} flex items-center justify-center shrink-0`}>
-                  <EganyeIcon name={act.icon} size={17} />
+          {activitiesLoading ? (
+            // Trois lignes grises plutôt qu'un vide : l'écran garde sa hauteur
+            // et ne sursaute pas quand les données arrivent.
+            <div className="space-y-3 py-1" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 px-2">
+                  <div className="w-9 h-9 rounded-xl bg-muted animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 w-2/5 rounded bg-muted animate-pulse" />
+                    <div className="h-2.5 w-1/4 rounded bg-muted animate-pulse" />
+                  </div>
+                  <div className="h-3 w-16 rounded bg-muted animate-pulse" />
                 </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-foreground text-xs sm:text-sm truncate">
-                    {act.title}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    {act.subtitle}
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-right shrink-0">
-                <p
-                  className={`font-serif font-bold text-xs sm:text-sm ${
-                    act.isPositive ? 'text-[#718A68]' : 'text-[#C96F4A]'
-                  }`}
-                >
-                  {act.amount}
-                </p>
-                <p className="text-[10px] text-muted-foreground">{act.time}</p>
-              </div>
+              ))}
             </div>
-          ))}
+          ) : recentActivities.length === 0 ? (
+            <div className="py-7 px-3 text-center space-y-1.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#FFF2E8] text-[#C96F4A] flex items-center justify-center mx-auto">
+                <EganyeIcon name="wallet" size={20} />
+              </div>
+              <p className="font-bold text-foreground text-sm pt-1">Aucune opération pour l’instant</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[15rem] mx-auto">
+                Rechargez votre portefeuille pour commencer à cotiser.
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigate?.('wallet-recharge')}
+                className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity pt-1 cursor-pointer"
+              >
+                Recharger mon portefeuille
+              </button>
+            </div>
+          ) : (
+            recentActivities.map((act) => {
+              const look = activityLook(act);
+              // Le montant est signé en base : le signe porte le sens, la
+              // couleur ne fait que le souligner.
+              const positive = act.amount >= 0;
+              return (
+                <div
+                  key={act.id}
+                  onClick={() => onNavigate?.('activity')}
+                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-xl cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-xl ${look.bg} flex items-center justify-center shrink-0`}>
+                      <EganyeIcon name={look.icon} size={17} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-foreground text-xs sm:text-sm truncate">
+                        {act.description || 'Opération'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {act.status === 'pending' ? 'En attente' : formatRelativeDate(act.date)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <p
+                      className={`font-serif font-bold text-xs sm:text-sm tabular-nums ${
+                        positive ? 'text-[#718A68]' : 'text-[#C96F4A]'
+                      }`}
+                    >
+                      {positive ? '+' : '−'}{Math.abs(act.amount).toLocaleString()} FCFA
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{formatRelativeDate(act.date)}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </motion.div>
     </motion.div>
