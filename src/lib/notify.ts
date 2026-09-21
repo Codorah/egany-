@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 import { apiFetch } from './apiBase';
 
 export interface NotifyParams {
@@ -10,61 +9,34 @@ export interface NotifyParams {
 }
 
 /**
- * Records an in-app notification and best-effort delivers it by email too.
- * Delivery failures never throw - the in-app notification is the source of
- * truth and must always land.
+ * Enregistre une notification et la relaie par e-mail, SMS ou WhatsApp selon
+ * les préférences de la destinataire.
+ *
+ * Tout se passe côté serveur (api/notify.ts). Auparavant, le navigateur lisait
+ * lui-même l'adresse et le téléphone de la personne à prévenir dans la table
+ * des profils — ce qui supposait que n'importe quel compte connecté puisse
+ * lire les coordonnées de tous les autres. Dans un produit où des inconnues
+ * se retrouvent dans un même cercle d'épargne, cela revenait à publier un
+ * annuaire : de quoi démarcher, arnaquer ou harceler.
+ *
+ * Depuis la migration 0012, les profils ne sont lisibles que par leur
+ * propriétaire. Le navigateur envoie donc un identifiant, jamais un contact,
+ * et c'est la base qui décide — par ses règles d'accès — si l'expéditrice a
+ * le droit d'écrire à cette personne.
+ *
+ * Un échec n'interrompt jamais l'action en cours : prévenir est important,
+ * mais moins que l'opération qui a déclenché la notification.
  */
 export async function notifyUser(params: NotifyParams): Promise<void> {
-  const { userId, title, message, type, link } = params;
-
-  const { error } = await supabase.from('notifications').insert({
-    user_id: userId,
-    title,
-    message,
-    type,
-    read: false,
-    ...(link ? { link } : {})
-  });
-  if (error) {
-    console.error('Error creating notification:', error);
-    return;
-  }
-
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('email_notifications_enabled, email, sms_notifications_enabled, whatsapp_notifications_enabled, phone')
-      .eq('id', userId)
-      .single();
-    if (!profile) return;
-
-    const deliveries: Promise<any>[] = [];
-    if (profile.email_notifications_enabled && profile.email) {
-      deliveries.push(
-        apiFetch('/api/send-email', {
-          method: 'POST',
-          body: JSON.stringify({ to: profile.email, subject: title, message })
-        }).catch((err) => console.warn('Email delivery failed:', err))
-      );
+    const response = await apiFetch('/api/notify', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      console.warn('Notification non enregistrée :', response.status);
     }
-    if (profile.sms_notifications_enabled && profile.phone) {
-      deliveries.push(
-        apiFetch('/api/send-sms', {
-          method: 'POST',
-          body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
-        }).catch((err) => console.warn('SMS delivery failed:', err))
-      );
-    }
-    if (profile.whatsapp_notifications_enabled && profile.phone) {
-      deliveries.push(
-        apiFetch('/api/send-whatsapp', {
-          method: 'POST',
-          body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
-        }).catch((err) => console.warn('WhatsApp delivery failed:', err))
-      );
-    }
-    await Promise.allSettled(deliveries);
   } catch (err) {
-    console.warn('Multi-channel notification delivery skipped:', err);
+    console.warn('Notification impossible :', err);
   }
 }

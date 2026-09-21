@@ -21,12 +21,16 @@ export function useReminders(profile: UserProfile | null, groups: Group[]) {
 
         if (daysUntilPayout <= 3 && daysUntilPayout >= 0 && group.lastReminderSentAt !== currentPeriodKey) {
           try {
-            // Update group first to prevent double triggers
-            const { error } = await supabase
-              .from('groups')
-              .update({ last_reminder_period: currentPeriodKey })
-              .eq('id', group.id);
+            // Réservation de la période côté serveur : un membre n'a plus le
+            // droit d'écrire dans la fiche du cercle (0012), et cet appel est
+            // atomique — si deux téléphones se réveillent en même temps, un
+            // seul obtient la période et un seul rappel part.
+            const { data: claimed, error } = await supabase.rpc('claim_reminder_period', {
+              p_group_id: group.id,
+              p_period: currentPeriodKey,
+            });
             if (error) throw error;
+            if (!claimed) continue;
 
             const notificationsBatch = group.members.map(memberId =>
               notifyUser({

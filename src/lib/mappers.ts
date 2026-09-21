@@ -21,6 +21,19 @@ import { LedgerEntry, AuditLog } from '@/lib/ledger';
 export const PROFILE_COLUMNS =
   'id, email, display_name, avatar_config, avatar_url, reputation_score, total_saved, groups_joined, role, wallet_balance, language, theme, biometrics_enabled, push_enabled, email_notifications_enabled, sms_notifications_enabled, whatsapp_notifications_enabled, created_at, updated_at, kyc_level, kyc_verified_at, mandate_name, mandate_phone, mandate_permissions, subscription_plan, subscription_expires_at, first_name, last_name, date_of_birth, phone, bank_tier, bank_subscription_expires_at';
 
+/**
+ * Ce qu'on peut afficher d'une AUTRE personne : de quoi la reconnaître dans
+ * une liste de membres, et rien de plus.
+ *
+ * Depuis la migration 0012, la table `profiles` n'est lisible que par son
+ * propriétaire — les listes de membres passent donc par la vue
+ * `member_profiles`, qui n'expose ni adresse, ni téléphone, ni date de
+ * naissance, ni nom civil. Ces champs valaient annuaire ouvert pour qui
+ * voulait démarcher ou harceler des co-membres.
+ */
+export const MEMBER_PROFILE_COLUMNS =
+  'id, display_name, avatar_config, avatar_url, reputation_score, kyc_level';
+
 export function mapProfileRow(row: Record<string, any>): UserProfile {
   return {
     uid: row.id,

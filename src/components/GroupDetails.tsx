@@ -19,7 +19,7 @@ import { ContributionsManager } from './ContributionsManager';
 import { CalendarView } from './CalendarView';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { supabase } from '@/lib/supabase';
-import { mapProfileRow, PROFILE_COLUMNS } from '@/lib/mappers';
+import { mapProfileRow, MEMBER_PROFILE_COLUMNS } from '@/lib/mappers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
@@ -78,7 +78,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         setMembers({});
         return;
       }
-      const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).in('id', group.members);
+      const { data, error } = await supabase.from('member_profiles').select(MEMBER_PROFILE_COLUMNS).in('id', group.members);
       if (error) {
         console.error('Error fetching members:', error);
         return;
