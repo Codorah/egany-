@@ -94,6 +94,49 @@ const SOFTPAY_ROUTES: Record<string, SoftpayRoute> = {
   },
 };
 
+/**
+ * Frais du prestataire, recalculés côté serveur à partir des réglages en base.
+ *
+ * Le navigateur envoie le montant NET voulu ; c'est ici, et seulement ici, que
+ * l'on décide du montant facturé. Faire confiance à un « montant brut » envoyé
+ * par le client permettrait de payer 200 F pour s'en faire créditer 100 000.
+ *
+ * Doit rester aligné sur computeDepositFee (src/lib/platformSettings.ts), qui
+ * affiche le même calcul à l'écran avant paiement.
+ */
+async function computeGrossAmount(net: number): Promise<{ net: number; fee: number; gross: number }> {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const none = { net, fee: 0, gross: net };
+
+  if (!supabaseUrl || !serviceKey) return none;
+
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/platform_settings`
+        + '?id=eq.1&select=deposit_fee_enabled,deposit_fee_percent,deposit_fee_fixed,deposit_fee_min',
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!response.ok) return none;
+
+    const rows: any[] = await response.json();
+    const settings = rows?.[0];
+    if (!settings?.deposit_fee_enabled) return none;
+
+    const proportional = (net * Number(settings.deposit_fee_percent ?? 0)) / 100;
+    const fee = Math.max(
+      Math.ceil(proportional + Number(settings.deposit_fee_fixed ?? 0)),
+      Number(settings.deposit_fee_min ?? 0)
+    );
+    return { net, fee, gross: net + fee };
+  } catch (error) {
+    // Frais indisponibles : on facture le montant net plutôt que d'empêcher
+    // la recharge. La plateforme absorbe la commission sur ce dépôt-là.
+    console.warn('[paydunya] Réglages de frais illisibles, dépôt sans frais :', error);
+    return none;
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -108,6 +151,9 @@ export default async function handler(req: any, res: any) {
     if (!userId || !Number.isFinite(parsedAmount) || parsedAmount < 200) {
       return res.status(400).json({ error: 'Requête invalide (utilisateur ou montant).' });
     }
+
+    // `parsedAmount` est le net voulu ; `gross` est ce que paie l'utilisatrice.
+    const { net: netAmount, fee, gross } = await computeGrossAmount(Math.round(parsedAmount));
 
     const masterKey = process.env.PAYDUNYA_MASTER_KEY;
     const privateKey = process.env.PAYDUNYA_PRIVATE_KEY;
@@ -127,7 +173,7 @@ export default async function handler(req: any, res: any) {
       // Hors production seulement : parcours simulé, pour travailler l'interface.
       // Il ne crédite aucun portefeuille (seul le webhook en a le droit).
       console.log('[paydunya] Identifiants absents — parcours simulé (aucun crédit).');
-      const simUrl = `${origin}/?paydunya_sim=true&amount=${parsedAmount}&userId=${userId}`
+      const simUrl = `${origin}/?paydunya_sim=true&amount=${gross}&net=${netAmount}&userId=${userId}`
         + `&userName=${encodeURIComponent(userName || '')}&userEmail=${encodeURIComponent(userEmail || '')}`
         + `&phone=${encodeURIComponent(phone || '')}&operator=${encodeURIComponent(paymentMethod || '')}`;
       return res.status(200).json({ id: 'sim_session_id', url: simUrl, mode: 'redirect', simulated: true });
@@ -153,8 +199,11 @@ export default async function handler(req: any, res: any) {
       headers: authHeaders,
       body: JSON.stringify({
         invoice: {
-          total_amount: parsedAmount,
-          description: 'Recharge de portefeuille eganyé',
+          // Le brut : net voulu + frais du prestataire, ajoutés par-dessus.
+          total_amount: gross,
+          description: fee > 0
+            ? `Recharge de portefeuille eganyé (${netAmount} FCFA + ${fee} FCFA de frais)`
+            : 'Recharge de portefeuille eganyé',
           name: 'Recharge eganyé',
           // Préremplit nom/email/téléphone sur la page Paydunya hébergée.
           // Doit être imbriqué DANS "invoice" (pas à la racine du corps de
@@ -179,12 +228,17 @@ export default async function handler(req: any, res: any) {
         },
         // Repris tel quel dans la confirmation : c'est ainsi que le webhook
         // sait quel portefeuille créditer, sans faire confiance au client.
+        // `netAmount` est ce que le
+        // webhook créditera : surtout PAS invoice.total_amount, qui contient
+        // les frais du prestataire et créditerait 1025 pour 1000 voulus.
         custom_data: {
           userId,
           userName,
           userEmail,
           phone,
           paymentMethod,
+          netAmount,
+          feeAmount: fee,
         },
       }),
     });

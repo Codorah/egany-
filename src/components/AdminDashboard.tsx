@@ -88,6 +88,13 @@ export function AdminDashboard() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [allowSignups, setAllowSignups] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  // Frais du prestataire sur les dépôts. Saisis en texte pour ne pas gêner la
+  // frappe (un champ numérique contrôlé qui reparse à chaque touche empêche
+  // d'écrire « 2.5 » : le point disparaît dès qu'il est tapé).
+  const [depositFeeEnabled, setDepositFeeEnabled] = useState(false);
+  const [depositFeePercent, setDepositFeePercent] = useState('0');
+  const [depositFeeFixed, setDepositFeeFixed] = useState('0');
+  const [depositFeeMin, setDepositFeeMin] = useState('0');
 
   // Ledger & Reconciliation States
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
@@ -151,6 +158,10 @@ export function AdminDashboard() {
       const settings = await fetchPlatformSettings();
       setMaintenanceMode(settings.maintenanceMode);
       setAllowSignups(settings.allowSignups);
+      setDepositFeeEnabled(settings.depositFeeEnabled);
+      setDepositFeePercent(String(settings.depositFeePercent));
+      setDepositFeeFixed(String(settings.depositFeeFixed));
+      setDepositFeeMin(String(settings.depositFeeMin));
 
     } catch (error) {
       handleAdminError(error, 'admin_collections');
@@ -1454,6 +1465,118 @@ export function AdminDashboard() {
                     className={`h-8 font-bold text-xs rounded-xl cursor-pointer ${allowSignups ? 'bg-secondary hover:bg-secondary/90 text-white' : 'border-border'}`}
                   >
                     {allowSignups ? t('admin_signups_active') : t('admin_blocked')}
+                  </Button>
+                </div>
+
+                {/* Frais du prestataire de paiement sur les dépôts.
+                    Paramétrable ici parce que la grille Paydunya peut changer
+                    et qu'elle ne doit pas vivre en dur dans le code. */}
+                <div className="p-4 border rounded-2xl bg-muted/20 border-border space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-foreground">Frais de dépôt (Paydunya)</p>
+                      <p className="text-[13px] text-muted-foreground">
+                        Ajoutés au montant voulu : qui recharge 1 000 F paie 1 000 F + frais et reçoit bien 1 000 F.
+                      </p>
+                    </div>
+                    <Button
+                      variant={depositFeeEnabled ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isSavingSettings}
+                      onClick={async () => {
+                        const next = !depositFeeEnabled;
+                        setIsSavingSettings(true);
+                        const { data: authData } = await supabase.auth.getUser();
+                        const result = await updatePlatformSettings({ depositFeeEnabled: next }, authData.user?.id || '');
+                        setIsSavingSettings(false);
+                        if (!result.success) {
+                          toast.error(result.message || "Impossible d'enregistrer ce réglage.");
+                          return;
+                        }
+                        setDepositFeeEnabled(next);
+                        toast.info(next ? 'Frais de dépôt activés.' : 'Frais de dépôt désactivés.');
+                      }}
+                      className={`h-8 font-bold text-xs rounded-xl cursor-pointer shrink-0 ${depositFeeEnabled ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border'}`}
+                    >
+                      {depositFeeEnabled ? 'Activés' : 'Désactivés'}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold text-foreground">Pourcentage (%)</Label>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={depositFeePercent}
+                        onChange={(e) => setDepositFeePercent(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold text-foreground">Part fixe (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={depositFeeFixed}
+                        onChange={(e) => setDepositFeeFixed(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold text-foreground">Minimum (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={depositFeeMin}
+                        onChange={(e) => setDepositFeeMin(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[13px] text-muted-foreground">
+                    Sur un dépôt de 1 000 FCFA, l'utilisatrice paierait{' '}
+                    <strong className="text-foreground">
+                      {(() => {
+                        const pct = parseFloat(depositFeePercent) || 0;
+                        const fixed = parseFloat(depositFeeFixed) || 0;
+                        const min = parseFloat(depositFeeMin) || 0;
+                        if (!depositFeeEnabled) return '1 000';
+                        const fee = Math.max(Math.ceil((1000 * pct) / 100 + fixed), min);
+                        return (1000 + fee).toLocaleString('fr-FR');
+                      })()}{' '}
+                      FCFA
+                    </strong>.
+                  </p>
+
+                  <Button
+                    size="sm"
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const pct = parseFloat(depositFeePercent);
+                      const fixed = parseFloat(depositFeeFixed);
+                      const min = parseFloat(depositFeeMin);
+                      if ([pct, fixed, min].some((v) => !Number.isFinite(v) || v < 0)) {
+                        toast.error('Les trois valeurs doivent être des nombres positifs.');
+                        return;
+                      }
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const result = await updatePlatformSettings(
+                        { depositFeePercent: pct, depositFeeFixed: fixed, depositFeeMin: min },
+                        authData.user?.id || ''
+                      );
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer ces réglages.");
+                        return;
+                      }
+                      toast.success('Grille de frais enregistrée.');
+                    }}
+                    className="h-9 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Enregistrer la grille
                   </Button>
                 </div>
 

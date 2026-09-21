@@ -8,6 +8,7 @@ import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WifiOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { apiUrl } from '@/lib/apiBase';
 
 // Lazy-loaded: kept out of the main bundle since Dashboard/Onboarding are
 // the only screens needed for first paint (logged-in home, logged-out auth).
@@ -113,7 +114,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
-  const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; userId: string; userName: string; userEmail: string; phone: string; operator: string } | null>(null);
+  const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; netAmount: number; userId: string; userName: string; userEmail: string; phone: string; operator: string } | null>(null);
 
   // Handle URL parameters for joining and Paydunya recharges
   React.useEffect(() => {
@@ -137,14 +138,17 @@ export default function App() {
     // Paydunya Simulation Trigger
     const paySim = params.get('paydunya_sim');
     if (paySim === 'true') {
+      // `amount` est le brut affiché à payer, `net` ce qui doit arriver sur le
+      // portefeuille (la différence étant les frais du prestataire).
       const amount = parseFloat(params.get('amount') || '0');
+      const netAmount = parseFloat(params.get('net') || '') || amount;
       const userId = params.get('userId') || '';
       const userName = params.get('userName') || '';
       const userEmail = params.get('userEmail') || '';
       const phone = params.get('phone') || '';
       const operator = params.get('operator') || '';
       if (amount && userId) {
-        setPaydunyaSim({ amount, userId, userName, userEmail, phone, operator });
+        setPaydunyaSim({ amount, netAmount, userId, userName, userEmail, phone, operator });
       }
     }
 
@@ -373,8 +377,25 @@ export default function App() {
         userEmail={paydunyaSim.userEmail}
         initialPhone={paydunyaSim.phone}
         initialOperator={paydunyaSim.operator}
-        onSuccess={(amount) => {
-          window.location.href = `${window.location.origin}/?paydunya_success=true&amount=${amount}`;
+        onSuccess={async () => {
+          // Parcours simulé (développement uniquement) : c'est ici que le
+          // crédit a lieu, via un endpoint qui refuse de s'exécuter dès qu'un
+          // vrai paiement est possible. En production ce composant n'est
+          // jamais monté — le crédit vient du webhook Paydunya.
+          try {
+            await fetch(apiUrl('/api/dev-simulate-payment'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: paydunyaSim.userId,
+                amount: paydunyaSim.netAmount,
+                reference: `${paydunyaSim.userId}_${paydunyaSim.amount}`,
+              }),
+            });
+          } catch (err) {
+            console.error('Crédit simulé impossible :', err);
+          }
+          window.location.href = `${window.location.origin}/?paydunya_success=true`;
         }}
         onCancel={() => {
           window.location.href = `${window.location.origin}/?paydunya_cancel=true`;

@@ -81,7 +81,20 @@ export default async function handler(req: any, res: any) {
     }
 
     // ---- 2. Montant et bénéficiaire : depuis la confirmation, pas du POST ----
-    const amount = Number(confirmation?.invoice?.total_amount);
+    //
+    // On crédite le NET, pas invoice.total_amount : le total facturé inclut
+    // les frais du prestataire, ajoutés par-dessus le montant voulu. Créditer
+    // le total rendrait les frais gratuits pour l'utilisatrice et ferait
+    // porter la commission à la plateforme sur chaque dépôt.
+    //
+    // custom_data est posé par notre propre serveur au moment de créer la
+    // facture et nous revient via Paydunya — pas via le POST entrant. Repli
+    // sur le total pour les factures créées avant l'ajout des frais.
+    const grossAmount = Number(confirmation?.invoice?.total_amount);
+    const netFromCustomData = Number(confirmation?.custom_data?.netAmount);
+    const amount = Number.isFinite(netFromCustomData) && netFromCustomData > 0
+      ? netFromCustomData
+      : grossAmount;
     const userId: string | undefined = confirmation?.custom_data?.userId;
 
     if (!userId || !Number.isFinite(amount) || amount <= 0) {
@@ -119,16 +132,9 @@ export default async function handler(req: any, res: any) {
     }
 
     // ---- 4. Trace visible par l'utilisatrice ----
-    await supabase.from('wallet_transactions').insert({
-      user_id: userId,
-      amount,
-      type: 'recharge',
-      description: 'Recharge de portefeuille via Paydunya',
-      status: 'completed',
-      payment_method: 'paydunya',
-      reference: (ledger as any)?.transactionId || invoiceToken,
-    });
-
+    // La ligne wallet_transactions est désormais écrite par
+    // execute_financial_transaction elle-même (migration 0010), dans la même
+    // transaction que le mouvement d'argent : l'insérer ici la dupliquerait.
     await supabase.from('notifications').insert({
       user_id: userId,
       title: 'Portefeuille rechargé',

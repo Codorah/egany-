@@ -24,7 +24,13 @@ import { supabase } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
 import { KYC_VERIFIED_LEVEL, submitKycDocument, fetchLatestKycSubmission } from '@/lib/kyc';
 import { useBiometrics } from '@/hooks/useBiometrics';
-import { executeFinancialTransaction, verifyUserPin, setUserPin } from '@/lib/ledger';
+import { requestWalletWithdrawal, verifyUserPin, setUserPin } from '@/lib/ledger';
+import {
+  computeDepositFee,
+  fetchPlatformSettings,
+  type DepositFeeBreakdown,
+  type PlatformSettings,
+} from '@/lib/platformSettings';
 import { PAYDUNYA_COUNTRIES, getOperatorsForCountry, findOperatorLabel } from '@/lib/paydunyaMethods';
 import { apiUrl } from '@/lib/apiBase';
 import { useBackHandler } from '@/hooks/useBackHandler';
@@ -106,6 +112,26 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [rechargeMethod, setRechargeMethod] = useState('tmoney_tg');
   const [rechargePhone, setRechargePhone] = useState(user.phone || '');
   const [isRecharging, setIsRecharging] = useState(false);
+
+  // Frais du prestataire sur les dépôts. Lus en base plutôt qu'en dur : la
+  // grille Paydunya peut changer, et l'administrateur doit pouvoir l'ajuster
+  // sans redéploiement.
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlatformSettings()
+      .then((s) => { if (!cancelled) setPlatformSettings(s); })
+      .catch((err) => console.error('fetchPlatformSettings error:', err));
+    return () => { cancelled = true; };
+  }, []);
+
+  // Ce que l'utilisatrice veut recevoir (net), ce que Paydunya prélève (fee),
+  // et ce qui sera réellement débité de son Mobile Money (gross).
+  const depositBreakdown: DepositFeeBreakdown | null = React.useMemo(() => {
+    const net = parseFloat(rechargeAmount);
+    if (!platformSettings || !Number.isFinite(net) || net <= 0) return null;
+    return computeDepositFee(net, platformSettings);
+  }, [rechargeAmount, platformSettings]);
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const withdrawIdempotencyKeyRef = React.useRef<string | null>(null);
@@ -336,6 +362,10 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       // Le portefeuille n'est crédité qu'après un vrai paiement Paydunya
       // confirmé (App.tsx gère le retour ?paydunya_success=true) — on ne
       // crédite jamais directement ici.
+      //
+      // `amount` est le montant NET voulu sur le portefeuille. Le serveur
+      // recalcule lui-même les frais et facture le brut : le montant facturé
+      // ne se décide jamais d'après une valeur envoyée par le navigateur.
       const response = await fetch(apiUrl('/api/create-paydunya-checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -422,27 +452,19 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       // vers Mobile Money : l'argent est réservé (débité) immédiatement, puis
       // un admin l'envoie manuellement et marque la demande traitée. Le solde
       // est remboursé automatiquement si l'admin marque le retrait en échec.
-      const result = await executeFinancialTransaction({
+      //
+      // Le débit et la ligne « en attente » sont écrits ensemble côté Postgres
+      // (request_wallet_withdrawal) : auparavant c'étaient deux appels, et si
+      // le second échouait l'argent était débité sans qu'aucune demande
+      // n'apparaisse dans la file de l'administrateur.
+      const result = await requestWalletWithdrawal({
         idempotencyKey: withdrawIdempotencyKeyRef.current,
-        userId: user.uid,
         amount: amt,
-        currency: 'FCFA',
-        description: `Retrait vers ${withdrawMethodLabel} (${withdrawPhone})`,
-        actionType: 'wallet_withdrawal',
-        debitAccount: `user_wallet:${user.uid}`,
-        creditAccount: 'mobile_money_payout_pending',
+        paymentMethod: withdrawMethod,
+        phone: withdrawPhone,
+        methodLabel: withdrawMethodLabel,
       });
       if (!result.success) throw new Error(result.message);
-
-      await supabase.from('wallet_transactions').insert({
-        user_id: user.uid,
-        amount: amt,
-        type: 'withdraw',
-        description: `Retrait vers ${withdrawMethodLabel} (${withdrawPhone})`,
-        status: 'pending',
-        reference: withdrawPhone,
-        payment_method: withdrawMethod,
-      });
 
       withdrawIdempotencyKeyRef.current = null;
       toast.success(`Retrait de ${amt.toLocaleString()} FCFA initié vers ${withdrawMethodLabel}.`);
@@ -1295,7 +1317,37 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     onChange={(e) => setRechargeAmount(e.target.value)}
                     className="rounded-xl h-11 text-base font-bold"
                   />
+                  <p className="text-[11px] text-muted-foreground">
+                    Le montant que vous recevrez sur votre portefeuille.
+                  </p>
                 </div>
+
+                {/* Récapitulatif des frais — affiché avant de payer, jamais
+                    après : personne ne doit découvrir le montant réellement
+                    débité sur l'écran de son opérateur. */}
+                {depositBreakdown && depositBreakdown.fee > 0 && (
+                  <div className="rounded-2xl border border-[#EFE2D0] dark:border-border/80 bg-muted/50 p-3.5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Vous recevez</span>
+                      <span className="font-bold text-foreground tabular-nums">
+                        {depositBreakdown.net.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Frais opérateur</span>
+                      <span className="font-bold text-foreground tabular-nums">
+                        + {depositBreakdown.fee.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground">Total à payer</span>
+                      <span className="text-sm font-serif font-black text-[#C96F4A] tabular-nums">
+                        {depositBreakdown.gross.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold text-foreground">Opérateur</Label>
@@ -1322,7 +1374,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   disabled={isRecharging}
                   className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
-                  {isRecharging ? 'Paiement en cours...' : 'Confirmer la recharge'}
+                  {isRecharging
+                    ? 'Paiement en cours...'
+                    : depositBreakdown && depositBreakdown.fee > 0
+                      ? `Payer ${depositBreakdown.gross.toLocaleString()} FCFA`
+                      : 'Confirmer la recharge'}
                 </Button>
               </div>
             ) : (

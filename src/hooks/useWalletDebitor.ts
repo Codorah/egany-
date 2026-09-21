@@ -72,15 +72,11 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                   await supabase.from('contributions').update({ penalty_status: 'paid' }).eq('id', cont.id);
                 }
 
-                await supabase.from('wallet_transactions').insert({
-                  user_id: profile.uid,
-                  amount: -totalDue,
-                  type: 'contribution_debit',
-                  description: `Cotisation automatique - ${group.name} (${cont.period || 'Période'})${penaltyNote}`,
-                  status: 'completed',
-                  payment_method: 'wallet',
-                  reference: ledgerResult.transactionId || cont.id
-                });
+                // La ligne d'historique est écrite par
+                // execute_financial_transaction (migration 0010), dans la même
+                // transaction que le débit — l'insérer ici la dupliquerait, et
+                // le client n'a de toute façon plus le droit d'écrire dans
+                // wallet_transactions.
 
                 await notifyUser({
                   userId: profile.uid,

@@ -94,6 +94,39 @@ export async function executeFinancialTransaction(params: {
   return data as { success: boolean; message: string; transactionId?: string };
 }
 
+/**
+ * Demande de retrait : débit du portefeuille ET ligne `pending` pour
+ * l'administrateur, dans une seule transaction Postgres.
+ *
+ * Remplace l'enchaînement executeFinancialTransaction + insert client, où un
+ * échec du second appel laissait l'utilisatrice débitée sans qu'aucune demande
+ * n'apparaisse dans la file — l'argent disparaissait. Depuis la migration 0010
+ * le client n'a d'ailleurs plus le droit d'écrire dans wallet_transactions.
+ */
+export async function requestWalletWithdrawal(params: {
+  idempotencyKey: string;
+  amount: number;
+  paymentMethod: string;
+  phone: string;
+  methodLabel: string;
+}): Promise<{ success: boolean; message: string; transactionId?: string }> {
+  const { ip } = await getDeviceInfo();
+  const { data, error } = await supabase.rpc('request_wallet_withdrawal', {
+    p_idempotency_key: params.idempotencyKey,
+    p_amount: params.amount,
+    p_payment_method: params.paymentMethod,
+    p_phone: params.phone,
+    p_method_label: params.methodLabel,
+    p_ip: ip,
+  });
+
+  if (error) {
+    console.error('requestWalletWithdrawal RPC error:', error);
+    return { success: false, message: error.message };
+  }
+  return data as { success: boolean; message: string; transactionId?: string };
+}
+
 export interface PendingWithdrawal {
   id: string;
   userId: string;
@@ -126,7 +159,10 @@ export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
     userId: row.user_id,
     userName: row.profiles?.display_name || 'Utilisateur',
     userEmail: row.profiles?.email || '',
-    amount: Number(row.amount),
+    // Les lignes de retrait sont stockées en négatif depuis 0010 (l'argent
+    // sort du portefeuille, et l'historique affiche un montant signé). Ici
+    // l'admin raisonne en « combien envoyer », donc valeur absolue.
+    amount: Math.abs(Number(row.amount)),
     paymentMethod: row.payment_method || '',
     reference: row.reference,
     date: row.date,
