@@ -48,9 +48,14 @@
 -- requête PostgREST venue du navigateur, elle, s'exécute toujours en
 -- 'authenticated'. C'est un signal que l'appelant ne peut pas falsifier, et
 -- il évite de réécrire les trois fonctions d'argent pour y poser un drapeau.
+-- SECURITY INVOKER, et non DEFINER : une fonction DEFINER s'exécute sous
+-- l'identité de son propriétaire, si bien que `current_user` y vaudrait
+-- toujours 'postgres' — y compris pour une écriture venue du navigateur. La
+-- garde ci-dessous serait alors vraie en permanence et ne bloquerait rien.
+-- (Erreur commise puis corrigée : le test d'intrusion l'a révélée.)
 create or replace function public.prevent_privileged_profile_changes()
 returns trigger
-language plpgsql security definer set search_path = public
+language plpgsql security invoker set search_path = public
 as $$
 declare
   v_allowed boolean := current_user not in ('authenticated', 'anon');
@@ -102,8 +107,28 @@ create trigger trg_prevent_privileged_profile_changes
 --
 -- RLS filtre les lignes, pas les colonnes — d'où ce retrait de privilège au
 -- niveau colonne, qui se combine avec la policy existante.
-revoke select (security_pin_hash, pin_failed_attempts, pin_locked_until, fcm_token)
-  on public.profiles from authenticated, anon;
+-- Retirer le privilège au niveau TABLE d'abord : Postgres n'autorise pas à
+-- soustraire une colonne d'un SELECT accordé sur la table entière. Un simple
+-- `revoke select (colonnes)` n'aurait donc eu aucun effet.
+--
+-- Conséquence côté application : `select('*')` sur profiles échoue désormais,
+-- d'où la liste explicite PROFILE_COLUMNS (src/lib/mappers.ts).
+--
+-- `anon` perd la lecture entièrement : la policy exige déjà
+-- auth.role() = 'authenticated', donc ce rôle ne lisait aucune ligne.
+revoke select on public.profiles from authenticated, anon;
+
+grant select (
+  id, email, display_name, avatar_config, avatar_url,
+  reputation_score, total_saved, groups_joined, role, wallet_balance,
+  language, theme, biometrics_enabled, push_enabled,
+  email_notifications_enabled, sms_notifications_enabled,
+  whatsapp_notifications_enabled, created_at, updated_at,
+  kyc_level, kyc_verified_at, mandate_name, mandate_phone,
+  mandate_permissions, subscription_plan, subscription_expires_at,
+  first_name, last_name, date_of_birth, phone,
+  bank_tier, bank_subscription_expires_at
+) on public.profiles to authenticated;
 
 
 -- ----------------------------------------------------------------------------
@@ -131,9 +156,10 @@ create policy "contributions_update_owner_creator_or_admin" on public.contributi
     public.is_group_creator(group_id) or public.is_admin() or user_id = auth.uid()
   );
 
+-- SECURITY INVOKER pour la même raison qu'au point 1.
 create or replace function public.prevent_self_settling_contribution()
 returns trigger
-language plpgsql security definer set search_path = public
+language plpgsql security invoker set search_path = public
 as $$
 declare
   -- Même raisonnement qu'au point 1 : execute_financial_transaction solde la

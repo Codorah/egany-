@@ -1,6 +1,6 @@
 import React from 'react';
 import { supabase } from '@/lib/supabase';
-import { mapProfileRow } from '@/lib/mappers';
+import { mapProfileRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { Group, UserProfile, GroupMemberRole } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   React.useEffect(() => {
     const fetchProfiles = async () => {
       if (allUids.length === 0) return;
-      const { data, error } = await supabase.from('profiles').select('*').in('id', allUids);
+      const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).in('id', allUids);
       if (error) {
         console.error('Error fetching member profiles:', error);
         return;

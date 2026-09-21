@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, createChannel } from '@/lib/supabase';
-import { mapProfileRow } from '@/lib/mappers';
+import { mapProfileRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { UserProfile } from '@/types';
 
 export function useAuth() {
@@ -13,7 +13,7 @@ export function useAuth() {
     let profileChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const loadProfile = async (uid: string) => {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
+      const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).eq('id', uid).single();
       if (error) {
         console.error('Profile fetch error:', error);
         setLoading(false);

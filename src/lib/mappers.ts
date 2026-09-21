@@ -1,6 +1,26 @@
 import { Contribution, Group, GroupDocument, KycSubmission, MarketplaceRequest, MarketplaceService, Message, Notification, Payout, PersonalVault, UserProfile, WalletTransaction } from '@/types';
 import { LedgerEntry, AuditLog } from '@/lib/ledger';
 
+/**
+ * Colonnes de `profiles` lisibles depuis l'application.
+ *
+ * `select('*')` n'est plus possible : l'empreinte du code PIN, le compteur
+ * d'échecs, la date de déverrouillage et le jeton de notification ont été
+ * retirés des privilèges de lecture du rôle `authenticated` (migration 0011).
+ * Ils étaient auparavant lisibles par toute personne connectée — et un PIN à
+ * quatre chiffres n'a que 10 000 valeurs possibles, donc publier son empreinte
+ * revient à publier le PIN.
+ *
+ * Postgres refuse `*` dès qu'une seule colonne échappe au privilège, d'où
+ * cette liste explicite. Une colonne ajoutée à la table devra être ajoutée
+ * ici pour apparaître dans l'application.
+ */
+// Doit rester une chaîne littérale d'un seul tenant : supabase-js déduit le
+// type du résultat en analysant ce texte. Un tableau suivi de .join() lui fait
+// perdre l'inférence, et chaque colonne devient alors une erreur de type.
+export const PROFILE_COLUMNS =
+  'id, email, display_name, avatar_config, avatar_url, reputation_score, total_saved, groups_joined, role, wallet_balance, language, theme, biometrics_enabled, push_enabled, email_notifications_enabled, sms_notifications_enabled, whatsapp_notifications_enabled, created_at, updated_at, kyc_level, kyc_verified_at, mandate_name, mandate_phone, mandate_permissions, subscription_plan, subscription_expires_at, first_name, last_name, date_of_birth, phone, bank_tier, bank_subscription_expires_at';
+
 export function mapProfileRow(row: Record<string, any>): UserProfile {
   return {
     uid: row.id,

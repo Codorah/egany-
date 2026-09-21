@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow } from '@/lib/mappers';
+import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
 import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal } from '@/lib/ledger';
@@ -130,7 +130,7 @@ export function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: userRows, error: usersError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data: userRows, error: usersError } = await supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false });
       if (usersError) throw usersError;
       setUsers((userRows ?? []).map(mapProfileRow));
 
