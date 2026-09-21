@@ -286,21 +286,27 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     setScreen(next);
   };
 
+  // Photographies réelles sous licence Unsplash (voir public/PHOTO-CREDITS.md
+  // et scripts/fetch-onboarding-photos.mjs). Elles remplacent des images
+  // générées dont les visages et les mains ne tenaient pas le plein écran —
+  // sur un produit d'épargne communautaire, le premier écran est celui qui
+  // installe la confiance. Cadrées en portrait et encodées en WebP : 0,4 Mo
+  // au total contre 2,7 Mo, ce qui compte sur une connexion mobile.
   const slides = [
     {
       title: t('banner_mamas_title'),
       description: t('onb_slide1_desc'),
-      image: '/onboarding-mamas.png',
+      image: '/onboarding/mamas.webp',
     },
     {
       title: t('onb_slide2_title'),
       description: t('onb_slide2_desc'),
-      image: '/young-savers.png',
+      image: '/onboarding/young-savers.webp',
     },
     {
       title: t('onb_slide3_title'),
       description: t('onb_slide3_desc'),
-      image: '/vendor-success.png',
+      image: '/onboarding/vendor.webp',
     }
   ];
 

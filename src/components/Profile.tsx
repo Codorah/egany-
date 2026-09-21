@@ -18,6 +18,7 @@ import { BiometricPrompt } from './BiometricPrompt';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import { ChipPicker } from './ui/ChipPicker';
+import { PaymentPendingCard } from './ui/PaymentPendingCard';
 import { StatusBadge } from './ui/StatusBadge';
 
 import { supabase } from '@/lib/supabase';
@@ -124,6 +125,16 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       .catch((err) => console.error('fetchPlatformSettings error:', err));
     return () => { cancelled = true; };
   }, []);
+
+  // Paiement SoftPay en cours : l'opérateur a poussé une demande de code sur
+  // le téléphone et on attend que l'utilisatrice la valide.
+  const [pendingPayment, setPendingPayment] = useState<{
+    invoiceToken: string;
+    netAmount: number;
+    grossAmount: number;
+    operatorLabel: string;
+    phone: string;
+  } | null>(null);
 
   // Ce que l'utilisatrice veut recevoir (net), ce que Paydunya prélève (fee),
   // et ce qui sera réellement débité de son Mobile Money (gross).
@@ -384,11 +395,17 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       const data = await response.json().catch(() => null);
 
       if (data?.mode === 'direct' && data?.invoiceToken) {
-        // Paydunya a envoyé une notification USSD/PIN directement sur le
-        // téléphone : on reste sur eganyé, le crédit reste géré par le webhook.
-        toast.success('Confirmez le paiement Mobile Money reçu sur votre téléphone pour finaliser la recharge.');
-        setRechargeAmount('');
-        setActiveSection(null);
+        // Paydunya a envoyé une demande de code directement sur le téléphone :
+        // on reste sur eganyé et on montre où en est le paiement, au lieu de
+        // refermer le formulaire sur un message fugace. Le crédit reste géré
+        // par le webhook.
+        setPendingPayment({
+          invoiceToken: data.invoiceToken,
+          netAmount: depositBreakdown?.net ?? amt,
+          grossAmount: depositBreakdown?.gross ?? amt,
+          operatorLabel: findOperatorLabel(rechargeMethod),
+          phone: rechargePhone,
+        });
         return;
       }
 
@@ -1280,6 +1297,24 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </p>
             </div>
 
+            {/* Paiement en attente de validation sur le téléphone : il prend
+                toute la place, parce que c'est la seule chose à faire à cet
+                instant. Le reste du portefeuille attendra. */}
+            {pendingPayment ? (
+              <PaymentPendingCard
+                invoiceToken={pendingPayment.invoiceToken}
+                netAmount={pendingPayment.netAmount}
+                grossAmount={pendingPayment.grossAmount}
+                operatorLabel={pendingPayment.operatorLabel}
+                phone={pendingPayment.phone}
+                onDone={() => {
+                  setPendingPayment(null);
+                  setRechargeAmount('');
+                }}
+                onRetry={() => setPendingPayment(null)}
+              />
+            ) : (
+            <>
             {/* Sélecteur Recharger / Retirer */}
             <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-2xl">
               <button
@@ -1438,6 +1473,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   {isWithdrawing ? 'Vérification...' : 'Continuer le retrait'}
                 </Button>
               </div>
+            )}
+            </>
             )}
           </motion.div>
         )}

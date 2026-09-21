@@ -699,10 +699,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             </div>
           </div>
 
-          {/* Smiling woman portrait from mockup */}
+          {/* Portrait souriant — même photo que la deuxième diapo d'accueil,
+              donc déjà en cache à ce stade du parcours. `object-top` garde le
+              visage dans le disque : un cadrage centré couperait le front. */}
           <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-white/30 shadow-inner bg-[#A95636]/40">
             <img
-              src="/young-savers.png"
+              src="/onboarding/young-savers.webp"
               alt="Ma Banque Épargne"
               className="w-full h-full object-cover object-top"
               onError={(e) => {
