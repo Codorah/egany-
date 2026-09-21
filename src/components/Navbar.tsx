@@ -184,7 +184,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                 </div>
 
                 <DropdownMenuSeparator className="my-1" />
-                {(user.role === 'admin' || user.email === 'codorah@hotmail.com') && (
+                {user.role === 'admin' && (
                   <DropdownMenuItem onClick={() => onNavigate?.('admin')} className="rounded-xl cursor-pointer">
                     <ShieldCheck className="mr-2 h-4 w-4 text-secondary" />
                     <span className="font-bold">{t('admin_panel')}</span>

@@ -1,3 +1,5 @@
+import { requireUserOr401 } from './_requireUser';
+
 import Anthropic from '@anthropic-ai/sdk';
 
 export default async function handler(req: any, res: any) {
@@ -6,6 +8,10 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // Relais fermé : sans ce contrôle, n'importe qui sur Internet pouvait
+    // faire envoyer des messages sur les comptes d'eganyé (voir _requireUser).
+    if (!(await requireUserOr401(req, res))) return;
+
     const { message, context } = req.body;
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'message est requis.' });

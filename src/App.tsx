@@ -9,6 +9,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WifiOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiUrl } from '@/lib/apiBase';
+import { AdminGate } from '@/components/AdminGate';
 
 // Lazy-loaded: kept out of the main bundle since Dashboard/Onboarding are
 // the only screens needed for first paint (logged-in home, logged-out auth).
@@ -123,7 +124,7 @@ export default function App() {
     // Hidden admin route detection (/admin or ?admin=true)
     const isAdminRoute = window.location.pathname.includes('/admin') || params.get('admin') === 'true';
     if (isAdminRoute && activeProfile) {
-      if (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') {
+      if (activeProfile.role === 'admin') {
         setView('admin');
       }
     }
@@ -308,7 +309,13 @@ export default function App() {
       case 'profile':
         return <Profile user={activeProfile} groups={groups} defaultTab={profileTab} onLogout={handleLogout} onNavigate={(v) => setView(v as View)} />;
       case 'admin':
-        return (activeProfile.role === 'admin' || activeProfile.email === 'codorah@hotmail.com') ? <AdminDashboard /> : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
+        // Le rôle décide de l'accès ; la ré-authentification protège la
+        // session laissée ouverte (voir AdminGate).
+        return activeProfile.role === 'admin' ? (
+          <AdminGate user={activeProfile} onCancel={() => setView('dashboard')}>
+            <AdminDashboard />
+          </AdminGate>
+        ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'contributions':
         return selectedGroup ? (
           <ContributionsManager
@@ -355,7 +362,7 @@ export default function App() {
     return <LoadingScreen message="Chargement de votre espace…" />;
   }
 
-  const isAdminUser = activeProfile?.role === 'admin' || activeProfile?.email === 'codorah@hotmail.com';
+  const isAdminUser = activeProfile?.role === 'admin';
   if (maintenanceMode && !isAdminUser) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground px-6 text-center gap-4">

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { apiUrl } from './apiBase';
+import { apiFetch } from './apiBase';
 
 export interface NotifyParams {
   userId: string;
@@ -41,27 +41,24 @@ export async function notifyUser(params: NotifyParams): Promise<void> {
     const deliveries: Promise<any>[] = [];
     if (profile.email_notifications_enabled && profile.email) {
       deliveries.push(
-        fetch(apiUrl('/api/send-email'), {
+        apiFetch('/api/send-email', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.email, subject: title, message })
         }).catch((err) => console.warn('Email delivery failed:', err))
       );
     }
     if (profile.sms_notifications_enabled && profile.phone) {
       deliveries.push(
-        fetch(apiUrl('/api/send-sms'), {
+        apiFetch('/api/send-sms', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
         }).catch((err) => console.warn('SMS delivery failed:', err))
       );
     }
     if (profile.whatsapp_notifications_enabled && profile.phone) {
       deliveries.push(
-        fetch(apiUrl('/api/send-whatsapp'), {
+        apiFetch('/api/send-whatsapp', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: profile.phone, message: `${title} - ${message}` })
         }).catch((err) => console.warn('WhatsApp delivery failed:', err))
       );

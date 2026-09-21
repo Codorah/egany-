@@ -13,3 +13,29 @@ export function apiUrl(path: string): string {
   }
   return path;
 }
+
+/**
+ * Appel d'un endpoint /api en tant qu'utilisatrice connectée.
+ *
+ * Les endpoints qui font envoyer un message (SMS, e-mail, WhatsApp) ou qui
+ * consomment une clé payante exigent désormais un jeton : sans lui, ils
+ * étaient des relais ouverts sur Internet (voir api/_requireUser.ts). Ce
+ * helper évite d'oublier l'en-tête d'un appel à l'autre.
+ *
+ * Import paresseux de supabase.ts : apiBase est importé par du code très bas
+ * niveau, et une dépendance en dur créerait un cycle d'imports.
+ */
+export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const { supabase } = await import('./supabase');
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+
+  return fetch(apiUrl(path), {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+  });
+}

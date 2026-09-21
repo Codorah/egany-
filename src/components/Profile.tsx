@@ -175,7 +175,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const isKycOk = (user.kycLevel ?? 1) >= KYC_VERIFIED_LEVEL;
-  const isAdminUser = user.role === 'admin' || user.email === 'codorah@hotmail.com';
+  const isAdminUser = user.role === 'admin';
 
   useEffect(() => {
     if (focusCard) setWalletAction(focusCard);

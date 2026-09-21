@@ -1,9 +1,15 @@
+import { requireUserOr401 } from './_requireUser';
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // Relais fermé : sans ce contrôle, n'importe qui sur Internet pouvait
+    // faire envoyer des messages sur les comptes d'eganyé (voir _requireUser).
+    if (!(await requireUserOr401(req, res))) return;
+
     const { to, message } = req.body;
     if (!to || !message) {
       return res.status(400).json({ error: 'to et message sont requis.' });

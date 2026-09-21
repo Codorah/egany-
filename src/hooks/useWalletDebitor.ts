@@ -69,7 +69,11 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
                 }
 
                 if (pendingPenalty > 0) {
-                  await supabase.from('contributions').update({ penalty_status: 'paid' }).eq('id', cont.id);
+                  // Passe par une fonction serveur : depuis la migration 0011,
+                  // un membre ne peut plus écrire lui-même « payé » sur une
+                  // cotisation ou sa pénalité — c'était une déclaration de
+                  // paiement sans preuve, que n'importe qui pouvait émettre.
+                  await supabase.rpc('settle_contribution_penalty', { p_contribution_id: cont.id });
                 }
 
                 // La ligne d'historique est écrite par
