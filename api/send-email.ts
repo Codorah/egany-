@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import { requireUserOr401 } from './_requireUser';
 
 export default async function handler(req: any, res: any) {
@@ -8,11 +9,33 @@ export default async function handler(req: any, res: any) {
   try {
     // Relais fermé : sans ce contrôle, n'importe qui sur Internet pouvait
     // faire envoyer des messages sur les comptes d'eganyé (voir _requireUser).
-    if (!(await requireUserOr401(req, res))) return;
+    const caller = await requireUserOr401(req, res);
+    if (!caller) return;
 
     const { to, subject, message } = req.body;
     if (!to || !subject || !message) {
       return res.status(400).json({ error: 'to, subject et message sont requis.' });
+    }
+
+    // Même authentifié, rien n'empêchait d'envoyer vers n'importe quelle
+    // adresse : un compte créé pour l'occasion pouvait spammer des tiers ou
+    // usurper le domaine d'eganyé pour du hameçonnage. On ne relaie plus que
+    // vers l'adresse réellement enregistrée sur le compte de l'appelant.
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(503).json({ error: 'Service indisponible.' });
+    }
+    const supabase = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', caller.id)
+      .single();
+    if (!profile?.email || profile.email !== to) {
+      return res.status(403).json({ error: 'Destinataire non autorisé.' });
     }
 
     const apiKey = process.env.RESEND_API_KEY;
