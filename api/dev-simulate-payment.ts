@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireUserOr401 } from './_requireUser';
 
 /**
  * Crédit d'un portefeuille pour le parcours de paiement SIMULÉ, hors production.
@@ -48,10 +49,19 @@ export default async function handler(req: any, res: any) {
     });
   }
 
+  // Sans ce contrôle, l'endpoint était joignable sans aucune session sur un
+  // déploiement preview Vercel (VERCEL_ENV !== 'production') dès que les clés
+  // Paydunya n'étaient pas configurées — un distributeur d'argent public.
+  const caller = await requireUserOr401(req, res);
+  if (!caller) return;
+
   const { userId, amount, reference } = req.body ?? {};
   const parsedAmount = Number(amount);
   if (!userId || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
     return res.status(400).json({ error: 'Requête invalide (utilisateur ou montant).' });
+  }
+  if (userId !== caller.id) {
+    return res.status(403).json({ error: 'Vous ne pouvez simuler un paiement que pour votre propre compte.' });
   }
 
   try {
