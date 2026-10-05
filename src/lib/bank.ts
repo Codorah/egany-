@@ -46,13 +46,21 @@ export async function createPersonalVault(params: {
 }
 
 export async function depositToVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
-  const { data, error } = await supabase.rpc('deposit_to_vault', { p_vault_id: vaultId, p_amount: amount });
+  const { data, error } = await supabase.rpc('deposit_to_vault', {
+    p_vault_id: vaultId,
+    p_amount: amount,
+    p_idempotency_key: crypto.randomUUID(),
+  });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string };
 }
 
 export async function withdrawFromVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
-  const { data, error } = await supabase.rpc('withdraw_from_vault', { p_vault_id: vaultId, p_amount: amount });
+  const { data, error } = await supabase.rpc('withdraw_from_vault', {
+    p_vault_id: vaultId,
+    p_amount: amount,
+    p_idempotency_key: crypto.randomUUID(),
+  });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string };
 }
