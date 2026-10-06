@@ -4495,18 +4495,6 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.',
     kbp: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.'
   },
-  onb_or_continue_with: {
-    fr: 'Ou continuer avec',
-    en: 'Or continue with',
-    ee: 'Alo yi edzi kple',
-    kbp: 'Yaa ɖɔ nɛ pɩ-yɔɔ'
-  },
-  onb_google_signin: {
-    fr: 'Connexion via Google',
-    en: 'Sign in with Google',
-    ee: 'Ge Ɖe Eme To Google Dzi',
-    kbp: 'Kpɛndɩ Google yɔɔ'
-  },
   onb_already_have_account: {
     fr: "J'ai déjà un compte, me connecter",
     en: 'I already have an account, log me in',

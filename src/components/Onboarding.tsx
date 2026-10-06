@@ -21,7 +21,6 @@ import {
   Link2
 } from 'lucide-react';
 import {
-  signInWithGoogle,
   signInWithEmail,
   sendPasswordResetCode,
   verifyPasswordResetCode,
@@ -214,38 +213,6 @@ function OtpBoxes({
   );
 }
 
-function GoogleBlock({
-  onGoogle, dividerLabel, buttonLabel,
-}: {
-  onGoogle: () => void;
-  dividerLabel: string;
-  buttonLabel: string;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="flex-grow h-px bg-border" />
-        <span className="text-sm font-semibold text-muted-foreground">{dividerLabel}</span>
-        <div className="flex-grow h-px bg-border" />
-      </div>
-      <Button
-        onClick={onGoogle}
-        variant="outline"
-        size="lg"
-        className="w-full rounded-2xl border-border bg-card hover:bg-muted text-foreground gap-3"
-      >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.85 2.99c.92-2.75 3.51-4.51 6.76-4.51z" />
-          <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.47h6.44c-.28 1.47-1.11 2.71-2.36 3.56l3.66 2.84c2.14-1.98 3.38-4.89 3.38-8.51z" />
-          <path fill="#FBBC05" d="M5.24 10.55c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.39 2.96C.5 4.77 0 6.83 0 9s.5 4.23 1.39 6.04l3.85-3.49z" />
-          <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.01.68-2.31 1.09-3.95 1.09-3.25 0-5.84-1.76-6.76-4.51L1.74 16.8C3.72 20.33 7.7 23 12 23z" />
-        </svg>
-        {buttonLabel}
-      </Button>
-    </div>
-  );
-}
-
 export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const { language, setLanguage, t } = useLanguage();
 
@@ -313,18 +280,6 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   /* ------------------------------------------------------------------ */
   /* Actions                                                             */
   /* ------------------------------------------------------------------ */
-
-  const handleGoogleSignIn = async () => {
-    try {
-      // Supabase redirige toute la page vers Google puis revient sur l'URL de
-      // callback — c'est useAuth qui récupère la session au retour.
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-    } catch (err: any) {
-      console.error('Google auth error:', err);
-      toast.error(t('onb_auth_error_prefix'));
-    }
-  };
 
   const handleLogin = async () => {
     if (!email.includes('@')) {
@@ -589,14 +544,6 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
     </button>
   );
 
-  const googleBlock = (
-    <GoogleBlock
-      onGoogle={handleGoogleSignIn}
-      dividerLabel={t('onb_or_continue_with')}
-      buttonLabel={t('onb_google_signin')}
-    />
-  );
-
   const otpBoxes = (
     <OtpBoxes
       digits={otpDigits}
@@ -686,8 +633,6 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
           {isSubmittingAuth ? t('onb_connecting_ellipsis') : t('nav_login')}
           {!isSubmittingAuth && <ArrowRight className="w-5 h-5" />}
         </Button>
-
-        {googleBlock}
       </AuthLayout>
     );
   }
@@ -767,8 +712,6 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
           {t('onb_next_step_button')}
           <ArrowRight className="w-5 h-5" />
         </Button>
-
-        {googleBlock}
       </AuthLayout>
     );
   }

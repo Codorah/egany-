@@ -21,9 +21,6 @@ export const createChannel = (topic: string) => {
   return supabase.channel(topic);
 };
 
-export const signInWithGoogle = () =>
-  supabase.auth.signInWithOAuth({ provider: 'google' });
-
 export const logout = () => supabase.auth.signOut();
 
 export const signUpWithEmail = (email: string, password: string, displayName?: string) =>
