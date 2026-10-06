@@ -91,21 +91,39 @@ export function ActivityScreen({
     return true;
   });
 
-  // Group by periods: Aujourd'hui, Hier, Il y a 3 jours / Antérieures
+  // Regroupement par période réelle. Tout ce qui n'était ni d'aujourd'hui ni
+  // d'hier était auparavant étiqueté « Il y a 3 jours » — y compris une
+  // opération vieille d'un mois. Dans un historique d'argent, une date
+  // fausse fait douter de tout le relevé.
   const groups: { period: string; items: DisplayActivityItem[] }[] = [];
+
+  const isWithinLastWeek = (date: Date) => isAfter(date, subDays(new Date(), 7));
+  const isWithinLastMonth = (date: Date) => isAfter(date, subDays(new Date(), 30));
 
   const todayItems = filteredItems.filter((i) => isToday(i.date));
   const yesterdayItems = filteredItems.filter((i) => isYesterday(i.date));
-  const olderItems = filteredItems.filter((i) => !isToday(i.date) && !isYesterday(i.date));
+  const thisWeekItems = filteredItems.filter(
+    (i) => !isToday(i.date) && !isYesterday(i.date) && isWithinLastWeek(i.date)
+  );
+  const thisMonthItems = filteredItems.filter(
+    (i) => !isWithinLastWeek(i.date) && isWithinLastMonth(i.date)
+  );
+  const olderItems = filteredItems.filter((i) => !isWithinLastMonth(i.date));
 
   if (todayItems.length > 0) {
-    groups.push({ period: "Aujourd'hui", items: todayItems });
+    groups.push({ period: t('act_period_today'), items: todayItems });
   }
   if (yesterdayItems.length > 0) {
-    groups.push({ period: 'Hier', items: yesterdayItems });
+    groups.push({ period: t('act_period_yesterday'), items: yesterdayItems });
+  }
+  if (thisWeekItems.length > 0) {
+    groups.push({ period: t('act_period_this_week'), items: thisWeekItems });
+  }
+  if (thisMonthItems.length > 0) {
+    groups.push({ period: t('act_period_this_month'), items: thisMonthItems });
   }
   if (olderItems.length > 0) {
-    groups.push({ period: 'Il y a 3 jours', items: olderItems });
+    groups.push({ period: t('act_period_older'), items: olderItems });
   }
 
   const getCategoryConfig = (cat: DisplayActivityItem['category']): { bg: string; icon: EganyeIconName; iconColor: string } => {

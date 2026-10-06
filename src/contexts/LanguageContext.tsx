@@ -3345,6 +3345,36 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: 'Fɔŋdefe Si Gagbugbɔna:',
     kbp: 'Liidiye kɩsɩɩʋʋ kɩɖɛɣʋʋ:'
   },
+  act_period_today: {
+    fr: "Aujourd'hui",
+    en: 'Today',
+    ee: 'Egbe',
+    kbp: 'Sɔnɔ'
+  },
+  act_period_yesterday: {
+    fr: 'Hier',
+    en: 'Yesterday',
+    ee: 'Etsɔ',
+    kbp: 'Sɔsɔɔ'
+  },
+  act_period_this_week: {
+    fr: 'Cette semaine',
+    en: 'This week',
+    ee: 'Kɔsiɖa sia me',
+    kbp: 'Kpɩtaʋ kʋnɛ taa'
+  },
+  act_period_this_month: {
+    fr: 'Ce mois-ci',
+    en: 'This month',
+    ee: 'Ɣleti sia me',
+    kbp: 'Fenaɣ kʋnɛ taa'
+  },
+  act_period_older: {
+    fr: 'Plus ancien',
+    en: 'Older',
+    ee: 'Gbãtɔwo',
+    kbp: 'Pʋʋyʋ taa'
+  },
   chart_no_contributions: {
     fr: 'Aucune cotisation à afficher pour ce cercle.',
     en: 'No contributions to show for this circle.',
