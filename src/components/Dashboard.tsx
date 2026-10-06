@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, Variants } from 'motion/react';
 import { EganyeIcon, type EganyeIconName } from '@/components/ui/EganyeIcon';
-import { EganyeLogo } from '@/components/ui/EganyeLogo';
 import { Group, UserProfile, WalletTransaction } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
@@ -190,10 +189,9 @@ export function Dashboard({
             )}
           </button>
 
-          {/* Discreet Eganyé brand emblem */}
-          <div className="w-10 h-10 rounded-2xl bg-[#F8F0E4] dark:bg-muted flex items-center justify-center shrink-0 border border-[#EFE2D0]/60 shadow-xs">
-            <EganyeLogo size={24} />
-          </div>
+          {/* L'emblème qui se trouvait ici doublonnait avec le logo du
+              header, placé juste au-dessus : deux fois la même marque à
+              trois centimètres d'écart, pour aucune information. */}
         </div>
       </motion.div>
 

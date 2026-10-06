@@ -3,6 +3,7 @@ import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages,
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from './NotificationBell';
 import { CustomAvatar } from './CustomAvatar';
+import { EganyeLogo } from '@/components/ui/EganyeLogo';
 import { useLanguage, LanguageCode } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
@@ -66,10 +67,12 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
           className="flex items-center gap-2 cursor-pointer group select-none" 
           onClick={() => onNavigate?.('dashboard')}
         >
-          <img
-            src="/logo-compact.svg"
-            alt="eganyé"
-            className="w-8 h-8 rounded-xl shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-105"
+          {/* Une seule identité : la pièce ronde. Le header servait
+              /logo-compact.svg, un carré arrondi, quand tout le reste de
+              l'application utilise EganyeLogo — deux logos pour une marque. */}
+          <EganyeLogo
+            size={32}
+            className="shrink-0 transition-transform duration-300 group-hover:scale-105"
           />
           <div className="flex flex-col">
             <span className="text-lg font-serif font-black tracking-tight text-foreground lowercase leading-none">
