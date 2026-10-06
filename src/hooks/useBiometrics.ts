@@ -164,20 +164,31 @@ export function useBiometrics() {
       // specific credential enrolled for this account, not "any platform
       // authenticator present on this device".
       if (window.PublicKeyCredential && navigator.credentials) {
+        const storedCredentialId = localStorage.getItem('eganye_biometrics_credential_id');
+
+        // Sans identifiant enrôlé pour CE compte, `allowCredentials` était
+        // simplement omis — et le navigateur acceptait alors n'importe quel
+        // capteur de l'appareil. Sur un téléphone partagé (cas courant),
+        // l'empreinte d'un proche ouvrait donc la session. On refuse : la
+        // saisie du mot de passe prend le relais.
+        if (!storedCredentialId) {
+          console.warn('Biometrics: aucun identifiant enrôlé pour ce compte sur cet appareil.');
+          setIsAuthenticating(false);
+          return false;
+        }
+
         try {
           const challenge = new Uint8Array(32);
           window.crypto.getRandomValues(challenge);
-
-          const storedCredentialId = localStorage.getItem('eganye_biometrics_credential_id');
 
           const credential = await navigator.credentials.get({
             publicKey: {
               challenge,
               userVerification: "required",
               timeout: 60000,
-              ...(storedCredentialId
-                ? { allowCredentials: [{ id: base64ToBuffer(storedCredentialId), type: 'public-key' as const }] }
-                : {})
+              allowCredentials: [
+                { id: base64ToBuffer(storedCredentialId), type: 'public-key' as const },
+              ],
             }
           });
           setIsAuthenticating(false);
