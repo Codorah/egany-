@@ -148,27 +148,15 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
 
   // 2. Process group monthly contributions
   const contributionData = useMemo(() => {
-    const selectedGroupObj = groups.find(g => g.id === selectedGroupId);
-
     // Filter contributions by selected group
     const filtered = selectedGroupId === 'all'
       ? contributions
       : contributions.filter(c => c.groupId === selectedGroupId);
 
     if (filtered.length === 0) {
-      // Return beautiful sample/empty state data based on group contribution amount
-      const now = new Date();
-      const baseAmount = selectedGroupObj ? selectedGroupObj.contributionAmount : 10000;
-      return Array.from({ length: 3 }).map((_, i) => {
-        const d = new Date();
-        d.setMonth(now.getMonth() - (2 - i));
-        const monthName = getMonthName(d.toISOString());
-        return {
-          name: monthName,
-          [paidLabel]: 0,
-          [pendingLabel]: baseAmount,
-        };
-      });
+      // Pas de cotisation réelle à afficher : un graphique vide, honnête,
+      // vaut mieux qu'une pénalité ou un montant inventés.
+      return [];
     }
 
     // Group by month
@@ -329,6 +317,11 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
           )}
 
           <div className="h-[220px] w-full">
+            {contributionData.length === 0 ? (
+              <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground text-center px-6">
+                {t('chart_no_contributions')}
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={contributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -362,6 +355,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
                 <Bar dataKey={pendingLabel} fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </CardContent>
       </Card>

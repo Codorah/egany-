@@ -27,7 +27,7 @@ const AIAssistant = lazy(() => import('@/components/AIAssistant').then((m) => ({
 const MyBank = lazy(() => import('@/components/MyBank').then((m) => ({ default: m.MyBank })));
 const ActivityScreen = lazy(() => import('@/components/ActivityScreen').then((m) => ({ default: m.ActivityScreen })));
 const ChooseCircleToPay = lazy(() => import('@/components/ChooseCircleToPay').then((m) => ({ default: m.ChooseCircleToPay })));
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
@@ -46,7 +46,7 @@ type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'cont
 
 export default function App() {
   const { t } = useLanguage();
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuthContext();
   const activeProfile = profile;
 
   // Light mode by default on all devices

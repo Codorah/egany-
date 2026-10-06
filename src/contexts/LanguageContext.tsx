@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export type LanguageCode = 'fr' | 'en' | 'ee' | 'kbp' | 'wo' | 'bm';
@@ -3344,6 +3344,12 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Recurring contribution:',
     ee: 'Fɔŋdefe Si Gagbugbɔna:',
     kbp: 'Liidiye kɩsɩɩʋʋ kɩɖɛɣʋʋ:'
+  },
+  chart_no_contributions: {
+    fr: 'Aucune cotisation à afficher pour ce cercle.',
+    en: 'No contributions to show for this circle.',
+    ee: 'Fɔŋdefe aɖeke meli be woaɖe afia na ha sia o.',
+    kbp: 'Liidiye nakɛyɛ fɛyɩ se pɩsɩɣnɩ tontine ɖɩnɛ yɔɔ.'
   },
 
   // Profile.tsx — full page i18n pass (Sprint 7)
@@ -6878,7 +6884,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const LANGUAGE_CODES: LanguageCode[] = ['fr', 'en', 'ee', 'kbp', 'wo', 'bm'];
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const { profile } = useAuth();
+  const { profile } = useAuthContext();
   const [language, setLanguageState] = useState<LanguageCode>(() => {
     const saved = localStorage.getItem('egayne_lang');
     if (LANGUAGE_CODES.includes(saved as LanguageCode)) {

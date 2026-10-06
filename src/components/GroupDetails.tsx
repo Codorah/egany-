@@ -20,7 +20,7 @@ import { CalendarView } from './CalendarView';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { supabase } from '@/lib/supabase';
 import { mapProfileRow, MEMBER_PROFILE_COLUMNS } from '@/lib/mappers';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
@@ -40,7 +40,7 @@ interface GroupDetailsProps {
 type Section = 'cotisations' | 'membres' | 'calendrier' | 'discussion' | 'documents' | 'parametres';
 
 export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupDetailsProps) {
-  const { profile } = useAuth();
+  const { profile } = useAuthContext();
   const { t } = useLanguage();
   const [section, setSection] = React.useState<Section | null>(null);
   const [isCompleting, setIsCompleting] = React.useState(false);

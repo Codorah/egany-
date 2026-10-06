@@ -12,23 +12,39 @@ export function useAuth() {
   useEffect(() => {
     let profileChannel: ReturnType<typeof supabase.channel> | null = null;
 
-    const loadProfile = async (uid: string) => {
+    const fetchProfile = async (uid: string) => {
       const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).eq('id', uid).single();
       if (error) {
         console.error('Profile fetch error:', error);
-        setLoading(false);
-        return;
+        return null;
       }
-      setProfile(mapProfileRow(data));
+      return mapProfileRow(data);
+    };
+
+    const loadProfile = async (uid: string) => {
+      const fresh = await fetchProfile(uid);
+      if (fresh) setProfile(fresh);
       setLoading(false);
 
       // Real-time updates (equivalent of the previous Firestore onSnapshot),
       // so wallet balance / reputation / role changes reflect live.
+      //
+      // On ne construit PAS le profil depuis payload.new : depuis la migration
+      // 0011, `profiles` n'est plus lisible en bloc (privilèges accordés
+      // colonne par colonne), et la charge utile temps réel peut arriver
+      // incomplète. Une colonne absente devient `Number(undefined)` = NaN —
+      // et comme tous les affichages écrivent `(walletBalance || 0)`, NaN
+      // étant falsy, l'écran annonçait un solde de 0 alors que la base
+      // contenait le bon montant. On relit donc la ligne par le même chemin
+      // autoritaire que le chargement initial.
       profileChannel = createChannel(`profile-${uid}`)
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${uid}` },
-          (payload) => setProfile(mapProfileRow(payload.new))
+          async () => {
+            const fresh = await fetchProfile(uid);
+            if (fresh) setProfile(fresh);
+          }
         )
         .subscribe();
     };
