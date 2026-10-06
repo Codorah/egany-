@@ -1,71 +1,69 @@
 import React from 'react';
 
-export interface EganyeAvatarMeta {
-  id: string;
-  name: string;
-  gender: 'female' | 'male';
-  url: string;
-}
+/**
+ * Avatars eganyé : un emoji, ou rien.
+ *
+ * Les 24 avatars illustrés qui occupaient ce fichier ont été retirés. Un jeu
+ * d'illustrations figées qui prétend représenter des personnes finit
+ * toujours par caricaturer celles qui ne s'y reconnaissent pas — teint,
+ * coiffure, traits, genre assigné à un prénom. Pour une application dont le
+ * public est précisément celui qui est d'ordinaire mal représenté, le coût
+ * est réel et le bénéfice nul.
+ *
+ * Il reste donc trois possibilités, dans cet ordre : sa propre photo, un
+ * emoji choisi librement, ou le monogramme formé des initiales (voir
+ * CustomAvatar) — le comportement par défaut que tout le monde connaît
+ * déjà par WhatsApp.
+ */
 
-export const EGANYE_AVATARS: EganyeAvatarMeta[] = [
-  { id: 'avatar-01', name: 'Amina', gender: 'female', url: '/avatars/avatar-01.svg' },
-  { id: 'avatar-02', name: 'Kofi', gender: 'male', url: '/avatars/avatar-02.svg' },
-  { id: 'avatar-03', name: 'Fatou', gender: 'female', url: '/avatars/avatar-03.svg' },
-  { id: 'avatar-04', name: 'Ibrahim', gender: 'male', url: '/avatars/avatar-04.svg' },
-  { id: 'avatar-05', name: 'Awa', gender: 'female', url: '/avatars/avatar-05.svg' },
-  { id: 'avatar-06', name: 'Moussa', gender: 'male', url: '/avatars/avatar-06.svg' },
-  { id: 'avatar-07', name: 'Zainab', gender: 'female', url: '/avatars/avatar-07.svg' },
-  { id: 'avatar-08', name: 'Kwame', gender: 'male', url: '/avatars/avatar-08.svg' },
-  { id: 'avatar-09', name: 'Mariam', gender: 'female', url: '/avatars/avatar-09.svg' },
-  { id: 'avatar-10', name: 'Tariq', gender: 'male', url: '/avatars/avatar-10.svg' },
-  { id: 'avatar-11', name: 'Nia', gender: 'female', url: '/avatars/avatar-11.svg' },
-  { id: 'avatar-12', name: 'Oumar', gender: 'male', url: '/avatars/avatar-12.svg' },
-  { id: 'avatar-13', name: 'Yasmine', gender: 'female', url: '/avatars/avatar-13.svg' },
-  { id: 'avatar-14', name: 'Sekou', gender: 'male', url: '/avatars/avatar-14.svg' },
-  { id: 'avatar-15', name: 'Binta', gender: 'female', url: '/avatars/avatar-15.svg' },
-  { id: 'avatar-16', name: 'Chidi', gender: 'male', url: '/avatars/avatar-16.svg' },
-  { id: 'avatar-17', name: 'Halima', gender: 'female', url: '/avatars/avatar-17.svg' },
-  { id: 'avatar-18', name: 'Bakary', gender: 'male', url: '/avatars/avatar-18.svg' },
-  { id: 'avatar-19', name: 'Adama', gender: 'female', url: '/avatars/avatar-19.svg' },
-  { id: 'avatar-20', name: 'Femi', gender: 'male', url: '/avatars/avatar-20.svg' },
-  { id: 'avatar-21', name: 'Kadiatou', gender: 'female', url: '/avatars/avatar-21.svg' },
-  { id: 'avatar-22', name: 'Malik', gender: 'male', url: '/avatars/avatar-22.svg' },
-  { id: 'avatar-23', name: 'Sokhna', gender: 'female', url: '/avatars/avatar-23.svg' },
-  { id: 'avatar-24', name: 'David', gender: 'male', url: '/avatars/avatar-24.svg' },
+/** Préfixe de stockage, pour distinguer un emoji d'une URL de photo. */
+const EMOJI_PREFIX = 'emoji:';
+
+/**
+ * Jeu d'emojis proposé. Volontairement sans visages humains stylisés aux
+ * teints variables (même problème que les illustrations) : des symboles,
+ * des animaux, des plantes, des objets du quotidien et des marqueurs de
+ * réussite, où chacune choisit ce qui lui parle.
+ */
+export const EGANYE_EMOJIS: string[] = [
+  '😀', '😄', '😊', '🙂', '😎', '🤗', '🥳', '😇',
+  '🌟', '✨', '⭐', '🔥', '💫', '🌈', '☀️', '🌙',
+  '🌳', '🌴', '🌻', '🌺', '🌸', '🍀', '🌾', '🪴',
+  '🦁', '🐘', '🦋', '🐝', '🦜', '🐬', '🦚', '🐓',
+  '🏡', '🛖', '🚲', '⚽', '🎵', '🥁', '📚', '🎨',
+  '💎', '👑', '🏆', '🎯', '🧺', '🛍️', '🍲', '🥭',
 ];
 
-export function isEganyeAvatarId(val?: string | null): boolean {
-  if (!val) return false;
-  const clean = val.replace(/^eganye:/, '').replace(/^\/avatars\//, '').replace(/\.svg$/, '');
-  return EGANYE_AVATARS.some((a) => a.id === clean);
+export function isEmojiAvatar(val?: string | null): boolean {
+  return !!val && val.startsWith(EMOJI_PREFIX);
 }
 
-export function getEganyeAvatarUrl(idOrUrl?: string | null): string {
-  if (!idOrUrl) return EGANYE_AVATARS[0].url;
-  const clean = idOrUrl.replace(/^eganye:/, '').replace(/^\/avatars\//, '').replace(/\.svg$/, '');
-  const match = EGANYE_AVATARS.find((a) => a.id === clean);
-  return match ? match.url : idOrUrl;
+/** Emoji nu, sans son préfixe de stockage. */
+export function getEmojiAvatar(val?: string | null): string {
+  if (!isEmojiAvatar(val)) return '';
+  return val!.slice(EMOJI_PREFIX.length);
+}
+
+/** Valeur à enregistrer en base pour un emoji donné. */
+export function toEmojiAvatarValue(emoji: string): string {
+  return `${EMOJI_PREFIX}${emoji}`;
 }
 
 interface EganyeAvatarProps {
-  id?: string;
+  emoji?: string;
   size?: number;
   className?: string;
-  alt?: string;
 }
 
-export function EganyeAvatar({ id = 'avatar-01', size = 64, className = '', alt = 'Eganyé Avatar' }: EganyeAvatarProps) {
-  const url = getEganyeAvatarUrl(id);
-
+export function EganyeAvatar({ emoji = '😊', size = 64, className = '' }: EganyeAvatarProps) {
   return (
-    <img
-      src={url}
-      alt={alt}
-      width={size}
-      height={size}
-      className={`rounded-full object-cover select-none shrink-0 ${className}`}
-      style={{ width: size, height: size, minWidth: size, minHeight: size }}
-      loading="lazy"
-    />
+    <div
+      className={`rounded-full bg-muted flex items-center justify-center select-none shrink-0 ${className}`}
+      style={{ width: size, height: size, minWidth: size, minHeight: size, fontSize: Math.round(size * 0.55) }}
+      role="img"
+      aria-label={`Avatar ${emoji}`}
+    >
+      <span>{emoji}</span>
+    </div>
   );
 }

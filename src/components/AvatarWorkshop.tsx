@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { CustomAvatar, AvatarConfig } from './CustomAvatar';
 import { EganyeIcon } from './ui/EganyeIcon';
-import { EGANYE_AVATARS, isEganyeAvatarId, getEganyeAvatarUrl } from './ui/EganyeAvatar';
+import { EGANYE_EMOJIS, isEmojiAvatar, getEmojiAvatar, toEmojiAvatarValue } from './ui/EganyeAvatar';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -24,15 +24,14 @@ export function AvatarWorkshop({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isPresetAvatar = isEganyeAvatarId(value);
+  const selectedEmoji = isEmojiAvatar(value) ? getEmojiAvatar(value) : '';
   const hasCustomPhoto =
     value &&
-    !isPresetAvatar &&
+    !selectedEmoji &&
     (value.startsWith('http') || value.startsWith('data:') || value.startsWith('blob:'));
 
-  const handleSelectPreset = (avatarId: string) => {
-    onChange?.(getEganyeAvatarUrl(avatarId));
-    toast.success('Avatar Eganyé sélectionné !');
+  const handleSelectEmoji = (emoji: string) => {
+    onChange?.(toEmojiAvatarValue(emoji));
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,9 +83,9 @@ export function AvatarWorkshop({
     }
   };
 
-  const handleRemovePhoto = () => {
+  const handleUseInitials = () => {
     onChange?.('');
-    toast.success('Photo retirée. Votre monogramme officiel est maintenant actif.');
+    toast.success('Vos initiales sont de nouveau affichées.');
   };
 
   return (
@@ -108,39 +107,32 @@ export function AvatarWorkshop({
           {name}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
-          Personnalisez votre apparence sur Eganyé. Choisissez un avatar illustré, importez votre propre photo, ou utilisez votre monogramme sécurisé.
+          Importez votre photo, choisissez un emoji, ou gardez vos initiales.
         </p>
       </div>
 
-      {/* Galerie des avatars illustrés Eganyé */}
+      {/* Sélection d'un emoji */}
       <div className="w-full max-w-xs space-y-2">
         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
-          Avatars illustrés
+          Choisir un emoji
         </p>
-        <div className="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto pr-0.5">
-          {EGANYE_AVATARS.map((avatar) => {
-            const selected = isPresetAvatar && getEganyeAvatarUrl(value) === avatar.url;
+        <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
+          {EGANYE_EMOJIS.map((emoji) => {
+            const selected = selectedEmoji === emoji;
             return (
               <button
-                key={avatar.id}
+                key={emoji}
                 type="button"
-                onClick={() => handleSelectPreset(avatar.id)}
-                title={avatar.name}
-                aria-label={`Choisir l'avatar ${avatar.name}`}
-                className={`rounded-full p-0.5 cursor-pointer transition-all ${
+                onClick={() => handleSelectEmoji(emoji)}
+                aria-label={`Choisir l'emoji ${emoji}`}
+                aria-pressed={selected}
+                className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
                   selected
-                    ? 'ring-2 ring-[#C96F4A] ring-offset-2 ring-offset-card'
-                    : 'ring-1 ring-border hover:ring-[#C96F4A]/50'
+                    ? 'bg-[#C96F4A]/15 ring-2 ring-[#C96F4A]'
+                    : 'bg-muted/60 hover:bg-muted ring-1 ring-transparent'
                 }`}
               >
-                <img
-                  src={avatar.url}
-                  alt={avatar.name}
-                  width={40}
-                  height={40}
-                  className="w-full aspect-square rounded-full object-cover select-none"
-                  loading="lazy"
-                />
+                <span>{emoji}</span>
               </button>
             );
           })}
@@ -174,16 +166,16 @@ export function AvatarWorkshop({
             <span>{hasCustomPhoto ? 'Changer de photo' : 'Importer une photo'}</span>
           </Button>
 
-          {hasCustomPhoto && (
+          {(hasCustomPhoto || selectedEmoji) && (
             <Button
               type="button"
               variant="outline"
-              onClick={handleRemovePhoto}
+              onClick={handleUseInitials}
               disabled={isUploading}
               className="w-full rounded-2xl h-10 border-[#EFE2D0] dark:border-border text-xs font-semibold text-muted-foreground hover:text-danger cursor-pointer"
             >
               <EganyeIcon name="trash" size={14} className="mr-1.5" />
-              <span>Utiliser le monogramme classique</span>
+              <span>Revenir à mes initiales</span>
             </Button>
           )}
         </div>

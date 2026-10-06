@@ -1,5 +1,5 @@
 import React from 'react';
-import { isEganyeAvatarId, getEganyeAvatarUrl } from './ui/EganyeAvatar';
+import { isEmojiAvatar, getEmojiAvatar } from './ui/EganyeAvatar';
 
 export type AvatarConfig = string;
 
@@ -28,16 +28,32 @@ export function CustomAvatar({
 }: CustomAvatarProps) {
   const cleanName = (name || 'Membre').trim();
 
-  // 1. Avatar illustré Eganyé (choisi dans l'Atelier Avatar)
-  if (isEganyeAvatarId(photoURL)) {
+  // Palette déterministe tirée du nom : le monogramme et l'emoji partagent
+  // ainsi la même couleur, et une même personne garde la sienne d'un écran
+  // à l'autre.
+  const charCode = cleanName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const palette = MONOGRAM_PALETTES[charCode % MONOGRAM_PALETTES.length];
+
+  // 1. Emoji choisi par la personne.
+  if (isEmojiAvatar(photoURL)) {
     return (
-      <img
-        src={getEganyeAvatarUrl(photoURL)}
-        alt={cleanName}
-        className={`rounded-full object-cover shadow-soft border-2 border-white/80 dark:border-border/80 select-none shrink-0 ${className}`}
-        style={{ width: size, height: size, minWidth: size, minHeight: size }}
-        loading="lazy"
-      />
+      <div
+        className={`rounded-full shadow-soft flex items-center justify-center select-none shrink-0 border border-white/30 dark:border-white/10 ${className}`}
+        style={{
+          width: size,
+          height: size,
+          minWidth: size,
+          minHeight: size,
+          background: `linear-gradient(135deg, ${palette.from}, ${palette.to})`,
+          fontSize: Math.round(size * 0.52),
+          lineHeight: 1,
+        }}
+        title={cleanName}
+        role="img"
+        aria-label={`Avatar de ${cleanName}`}
+      >
+        <span>{getEmojiAvatar(photoURL)}</span>
+      </div>
     );
   }
 
@@ -62,11 +78,7 @@ export function CustomAvatar({
     );
   }
 
-  // 3. Monogramme Fintech Haute Couture (style WhatsApp / Apple / Wise)
-  // Calcul déterministe de la palette à partir du nom
-  const charCode = cleanName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const palette = MONOGRAM_PALETTES[charCode % MONOGRAM_PALETTES.length];
-
+  // 3. Monogramme : les initiales sur la couleur du nom, comme WhatsApp.
   // Extraction propre des initiales (jusqu'à 2 lettres majuscules)
   const words = cleanName.split(/\s+/).filter(Boolean);
   let initials = 'E';
