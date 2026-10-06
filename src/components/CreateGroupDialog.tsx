@@ -30,6 +30,64 @@ import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+/**
+ * Alphabet du code d'invitation : sans 0/O, 1/I/L ni U/V.
+ *
+ * Ces codes se lisent à voix haute et se retapent à la main depuis un
+ * message WhatsApp — les paires ambiguës provoquaient des « le code ne
+ * marche pas » qui n'étaient que des confusions de caractères.
+ */
+const JOIN_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTWXYZ23456789';
+const JOIN_CODE_LENGTH = 6;
+
+/**
+ * Math.random() n'est pas imprévisible : son état interne se déduit de
+ * quelques tirages observés. Or le code d'invitation est la SEULE chose qui
+ * protège un cercle privé — le deviner, c'est pouvoir demander à le
+ * rejoindre. On tire donc dans le générateur cryptographique du navigateur.
+ */
+function generateJoinCode(): string {
+  const bytes = new Uint8Array(JOIN_CODE_LENGTH);
+  crypto.getRandomValues(bytes);
+  let code = '';
+  for (const byte of bytes) {
+    code += JOIN_CODE_ALPHABET[byte % JOIN_CODE_ALPHABET.length];
+  }
+  return code;
+}
+
+/**
+ * La colonne `join_code` est UNIQUE en base, et rien ne vérifiait la
+ * collision : deux cercles tirant le même code faisaient échouer la
+ * création du second, sans nouvel essai, avec une erreur incompréhensible
+ * pour l'organisatrice. On relance donc le tirage sur violation d'unicité
+ * (code Postgres 23505) plutôt que d'abandonner.
+ */
+async function insertGroupWithUniqueJoinCode(groupData: Record<string, unknown>) {
+  const MAX_ATTEMPTS = 5;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const result = await supabase
+      .from('groups')
+      .insert({ ...groupData, join_code: generateJoinCode() })
+      .select()
+      .single();
+
+    const isDuplicateJoinCode =
+      result.error?.code === '23505' && result.error.message.includes('join_code');
+
+    if (!isDuplicateJoinCode) return result;
+  }
+
+  return {
+    data: null,
+    error: {
+      message: "Impossible de générer un code d'invitation disponible. Réessayez.",
+      code: '23505',
+    } as any,
+  };
+}
+
 function buildFormSchema(t: (key: string) => string) {
   return z.object({
     name: z.string().min(2, t('cgd_err_name_min') || 'Le nom doit comporter au moins 2 caractères'),
@@ -38,7 +96,14 @@ function buildFormSchema(t: (key: string) => string) {
     frequency: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
     currency: z.string().min(1),
     distributionMethod: z.enum(['sequential', 'draw', 'auction']),
-    maxMembers: z.number().min(2, 'Le cercle doit compter au moins 2 participants').max(500),
+    // Plafond aligné sur le champ du formulaire (max={100}). Le schéma
+    // autorisait 500 : au-delà de 100, et en mensuel, la dernière
+    // participante attendrait des décennies son tour — un cercle qui ne
+    // tourne jamais n'est pas une tontine.
+    maxMembers: z
+      .number()
+      .min(2, 'Le cercle doit compter au moins 2 participants')
+      .max(100, 'Un cercle ne peut pas dépasser 100 participants'),
     startDate: z.string().min(1, 'La date de début est requise'),
     isPrivate: z.boolean(),
     penaltiesEnabled: z.boolean(),
@@ -223,7 +288,6 @@ export function CreateGroupDialog({
         return;
       }
 
-      const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       const startDate = new Date(values.startDate).toISOString();
 
       const groupData = {
@@ -238,7 +302,6 @@ export function CreateGroupDialog({
         status: 'active',
         start_date: startDate,
         next_payout_date: calculateNextPayoutDate(startDate, values.frequency),
-        join_code: joinCode,
         creator_id: user.id,
         ...(values.penaltiesEnabled ? {
           penalty_type: 'fixed',
@@ -248,12 +311,9 @@ export function CreateGroupDialog({
         } : {}),
       };
 
-      const { data: newGroup, error: groupError } = await supabase
-        .from('groups')
-        .insert(groupData)
-        .select()
-        .single();
+      const { data: newGroup, error: groupError } = await insertGroupWithUniqueJoinCode(groupData);
       if (groupError) throw groupError;
+      if (!newGroup) throw new Error('Création du cercle impossible.');
 
       // Inscrire le créateur comme premier membre actif du cercle
       const { error: memberError } = await supabase
@@ -265,6 +325,10 @@ export function CreateGroupDialog({
           payout_position: 0,
         });
       if (memberError) throw memberError;
+
+      // Le code retenu est celui que la base a réellement accepté (le helper
+      // relance le tirage en cas de collision), pas celui du premier essai.
+      const joinCode = newGroup.join_code as string;
 
       // Afficher l'écran de partage festif
       setCreatedGroup({
