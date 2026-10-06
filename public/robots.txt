@@ -1,0 +1,21 @@
+# eganyé — https://eganye.codorah.com
+# Tontine et cercles d'épargne en Afrique de l'Ouest.
+
+User-agent: *
+Allow: /
+
+# Les fonctions serverless ne sont pas du contenu : rien à indexer, et les
+# faire explorer consomme inutilement du quota de crawl.
+Disallow: /api/
+
+# Le panneau d'administration ne doit jamais apparaître dans les résultats.
+Disallow: /admin
+Disallow: /*?admin=
+
+# Les retours de paiement portent des paramètres de session : ce sont des
+# pages de passage, pas des pages à indexer (et elles créeraient du contenu
+# dupliqué sur l'accueil).
+Disallow: /*?paydunya_
+Disallow: /*?shortcut=
+
+Sitemap: https://eganye.codorah.com/sitemap.xml

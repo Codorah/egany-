@@ -3,8 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>eganyé — Épargne en cercle & tontine</title>
-    <meta name="description" content="Gérez vos cercles d'épargne (tontines) en Afrique de l'Ouest : cotisations, tours de distribution, portefeuille et score de fiabilité, le tout dans une seule application." />
+    <title>eganyé — Tontine digitale & cercles d'épargne en Afrique de l'Ouest</title>
+    <meta name="description" content="eganyé digitalise la tontine : créez votre cercle d'épargne, suivez les cotisations et les tours de distribution, encaissez par Mobile Money (T-Money, Moov, Wave) et bâtissez votre score de fiabilité. Togo et Afrique de l'Ouest." />
+    <link rel="canonical" href="https://eganye.codorah.com/" />
+
+    <!-- Partage social : sans ces balises, un lien eganyé collé dans WhatsApp
+         (le principal canal de diffusion : les codes d'invitation s'y
+         partagent) n'affiche aucun aperçu — ni titre, ni visuel. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="eganyé" />
+    <meta property="og:url" content="https://eganye.codorah.com/" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="eganyé — La tontine digitale, simple et sûre" />
+    <meta property="og:description" content="Créez votre cercle d'épargne, cotisez par Mobile Money et suivez chaque tour en toute transparence. Pensée pour les commerçantes et la jeunesse d'Afrique de l'Ouest." />
+    <meta property="og:image" content="https://eganye.codorah.com/logo-emblem.png" />
+    <meta property="og:image:alt" content="Logo eganyé" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="eganyé — La tontine digitale, simple et sûre" />
+    <meta name="twitter:description" content="Créez votre cercle d'épargne, cotisez par Mobile Money et suivez chaque tour en toute transparence." />
+    <meta name="twitter:image" content="https://eganye.codorah.com/logo-emblem.png" />
+
+    <!-- Données structurées : décrit à Google ce qu'est eganyé, pour que la
+         recherche « tontine » puisse rattacher la marque au service. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://eganye.codorah.com/#organization",
+          "name": "eganyé",
+          "url": "https://eganye.codorah.com/",
+          "logo": "https://eganye.codorah.com/logo-emblem.png",
+          "description": "Plateforme de tontine digitale et de cercles d'épargne pour l'Afrique de l'Ouest.",
+          "areaServed": [
+            { "@type": "Country", "name": "Togo" },
+            { "@type": "Country", "name": "Sénégal" },
+            { "@type": "Country", "name": "Bénin" },
+            { "@type": "Country", "name": "Burkina Faso" },
+            { "@type": "Country", "name": "Côte d'Ivoire" },
+            { "@type": "Country", "name": "Mali" }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://eganye.codorah.com/#website",
+          "url": "https://eganye.codorah.com/",
+          "name": "eganyé",
+          "inLanguage": "fr",
+          "publisher": { "@id": "https://eganye.codorah.com/#organization" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "eganyé",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "Android, iOS, Web",
+          "url": "https://eganye.codorah.com/",
+          "description": "Application de tontine digitale : création de cercles d'épargne, suivi des cotisations, tours de distribution, portefeuille Mobile Money et score de fiabilité.",
+          "inLanguage": ["fr", "en"],
+          "publisher": { "@id": "https://eganye.codorah.com/#organization" },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "XOF"
+          }
+        }
+      ]
+    }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -39,6 +105,35 @@
   </head>
   <body class="bg-[#F8F0E4] dark:bg-[#211810]">
     <div id="root"></div>
+    <!-- Repli sans JavaScript. Sert deux publics : les robots d'indexation
+         qui n'exécutent pas JavaScript (ils ne voyaient jusqu'ici qu'une
+         division vide), et la visiteuse dont le navigateur bloque les
+         scripts. Le contenu décrit le service réellement rendu — pas de
+         texte caché destiné aux seuls moteurs. -->
+    <noscript>
+      <main style="max-width:40rem;margin:0 auto;padding:2rem 1rem;font-family:system-ui,sans-serif;color:#211810;line-height:1.6">
+        <h1>eganyé — la tontine digitale</h1>
+        <p>
+          eganyé digitalise la tontine, cette pratique d'épargne en cercle où
+          chaque membre cotise à tour de rôle et reçoit la cagnotte quand son
+          tour arrive.
+        </p>
+        <h2>Ce que permet l'application</h2>
+        <ul>
+          <li>Créer un cercle d'épargne journalier, hebdomadaire ou mensuel</li>
+          <li>Suivre les cotisations de chaque membre en toute transparence</li>
+          <li>Définir l'ordre des tours, par tirage au sort ou ordre fixe</li>
+          <li>Cotiser et encaisser par Mobile Money (T-Money, Moov, Wave, Orange Money)</li>
+          <li>Bâtir un score de fiabilité fondé sur la ponctualité des versements</li>
+          <li>Mettre de côté dans une banque personnelle à objectif</li>
+        </ul>
+        <p>
+          Pensée pour les commerçantes et la jeunesse du Togo et d'Afrique de
+          l'Ouest. L'application nécessite JavaScript pour fonctionner :
+          veuillez l'activer, puis recharger la page.
+        </p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
