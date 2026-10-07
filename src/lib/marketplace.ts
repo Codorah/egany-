@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { mapMarketplaceRequestRow, mapMarketplaceServiceRow } from './mappers';
+import { isOffline, OFFLINE_MONEY_MESSAGE } from './ledger';
 import { MarketplaceRequest, MarketplaceService } from '@/types';
 
 export async function fetchActiveServices(): Promise<MarketplaceService[]> {
@@ -61,6 +62,8 @@ export async function approveMarketplaceCredit(params: {
   repaymentDeadline: string;
   adminNotes?: string;
 }): Promise<{ success: boolean; message: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('approve_marketplace_credit', {
     p_request_id: params.requestId,
     p_approved_amount: params.approvedAmount,
@@ -76,6 +79,8 @@ export async function repayMarketplaceCredit(params: {
   amount: number;
   idempotencyKey: string;
 }): Promise<{ success: boolean; message: string; remainingBalance?: number }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('repay_marketplace_credit', {
     p_request_id: params.requestId,
     p_amount: params.amount,

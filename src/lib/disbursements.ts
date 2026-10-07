@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isOffline, OFFLINE_MONEY_MESSAGE } from './ledger';
 import { Frequency } from '@/types';
 import { addDays, parseISO } from 'date-fns';
 
@@ -35,6 +36,8 @@ export async function executePayoutDisbursement(params: {
   discountAmount?: number;
   adminUserId: string;
 }): Promise<{ success: boolean; message: string; transactionId?: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('execute_payout_disbursement', {
     p_group_id: params.groupId,
     p_beneficiary_id: params.beneficiaryId,
@@ -56,6 +59,8 @@ export async function executePayoutDisbursement(params: {
  * result, it never re-rolls.
  */
 export async function drawPayoutBeneficiary(groupId: string): Promise<{ success: boolean; beneficiaryId?: string; message?: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('draw_payout_beneficiary', { p_group_id: groupId });
   if (error) {
     console.error('drawPayoutBeneficiary RPC error:', error);

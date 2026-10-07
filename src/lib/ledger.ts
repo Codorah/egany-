@@ -27,6 +27,29 @@ export interface AuditLog {
   idempotencyKey?: string;
 }
 
+/**
+ * Garde hors connexion, commune à toutes les opérations d'argent.
+ *
+ * La bannière hors-ligne annonçait déjà que « recharge, retrait, cotisation
+ * et création/adhésion de cercle sont désactivés » — mais rien ne les
+ * désactivait : l'état `isOnline` n'était transmis à aucun écran. La
+ * personne lançait donc l'opération, qui échouait sur une erreur réseau
+ * brute, après avoir cru l'avoir engagée.
+ *
+ * Le contrôle est posé ici, au point de passage obligé de l'argent, plutôt
+ * que répété dans chaque écran : aucun nouveau chemin de paiement ne pourra
+ * l'oublier. Rien n'est mis en file d'attente : un mouvement d'argent n'est
+ * réel que lorsque le serveur l'a validé (idempotence, grand livre, verrou
+ * de ligne), et rejouer plus tard une intention prise hors ligne sur un
+ * solde devenu faux est précisément ce qu'il faut éviter.
+ */
+export const OFFLINE_MONEY_MESSAGE =
+  "Vous êtes hors connexion. Les opérations d'argent attendent le retour du réseau : rien n'est engagé sans confirmation du serveur.";
+
+export function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
 export async function getDeviceInfo(): Promise<{ device: string; ip: string }> {
   if (typeof window === 'undefined') {
     return { device: 'Server Environment', ip: 'Non disponible' };
@@ -72,6 +95,8 @@ export async function executeFinancialTransaction(params: {
   creditAccount: string;
   metadata?: { contributionId?: string; groupId?: string };
 }): Promise<{ success: boolean; message: string; transactionId?: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { ip } = await getDeviceInfo();
   const { data, error } = await supabase.rpc('execute_financial_transaction', {
     p_idempotency_key: params.idempotencyKey,
@@ -110,6 +135,8 @@ export async function requestWalletWithdrawal(params: {
   phone: string;
   methodLabel: string;
 }): Promise<{ success: boolean; message: string; transactionId?: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { ip } = await getDeviceInfo();
   const { data, error } = await supabase.rpc('request_wallet_withdrawal', {
     p_idempotency_key: params.idempotencyKey,

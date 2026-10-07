@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { mapPersonalVaultRow } from './mappers';
+import { isOffline, OFFLINE_MONEY_MESSAGE } from './ledger';
 import { PersonalVault } from '@/types';
 
 export const BANK_TIER_MAX_VAULTS: Record<string, number> = {
@@ -26,6 +27,8 @@ export async function fetchMyVaults(userId: string): Promise<PersonalVault[]> {
 }
 
 export async function subscribeBankTier(tier: 'starter' | 'growth' | 'unlimited'): Promise<{ success: boolean; message: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('subscribe_bank_tier', { p_tier: tier });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string };
@@ -46,6 +49,8 @@ export async function createPersonalVault(params: {
 }
 
 export async function depositToVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('deposit_to_vault', {
     p_vault_id: vaultId,
     p_amount: amount,
@@ -56,6 +61,8 @@ export async function depositToVault(vaultId: string, amount: number): Promise<{
 }
 
 export async function withdrawFromVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
+  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+
   const { data, error } = await supabase.rpc('withdraw_from_vault', {
     p_vault_id: vaultId,
     p_amount: amount,
