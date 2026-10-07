@@ -124,12 +124,26 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Le bénéficiaire n''existe pas.');
   END IF;
 
+  -- Le pot ne part que vers un membre actif de CE cercle : sans ce contrôle,
+  -- l'organisatrice pouvait désigner n'importe quel compte de la plateforme.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.group_members
+    WHERE group_id = p_group_id AND user_id = p_beneficiary_id AND status = 'active'
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le bénéficiaire n''est pas membre actif de ce cercle.');
+  END IF;
+
   SELECT count(*) INTO v_num_members FROM public.group_members
   WHERE group_id = p_group_id AND status = 'active';
 
   v_total_pot := v_group.contribution_amount * v_num_members;
   IF p_discount_amount < 0 OR p_discount_amount >= v_total_pot THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le montant du rabais est invalide.');
+  END IF;
+  -- Seule, une bénéficiaire n'a personne à qui redistribuer le rabais : il
+  -- serait retiré du pot sans être crédité nulle part.
+  IF p_discount_amount > 0 AND v_num_members < 2 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Un rabais d''enchère suppose au moins deux membres actifs.');
   END IF;
 
   v_idempotency_key := 'payout_' || p_group_id::text || '_cycle_' || v_group.current_payout_index::text;

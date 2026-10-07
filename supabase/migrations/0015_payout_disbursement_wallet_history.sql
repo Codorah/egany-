@@ -17,6 +17,13 @@
 --
 -- Le type `payout_credit` existe déjà dans la contrainte CHECK de la table
 -- (posée dès 0001) : il n'avait simplement jamais été utilisé.
+--
+-- Corrigé au passage, dans la même fonction :
+--   - le bénéficiaire doit être membre actif du cercle (avant : n'importe
+--     quel compte de la plateforme pouvait recevoir le pot) ;
+--   - un rabais est refusé s'il n'y a personne pour le recevoir (cercle à
+--     un seul membre actif) : il disparaissait du pot ;
+--   - plus d'IP factice dans audit_logs (même correctif que 0017).
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.execute_payout_disbursement(
@@ -68,12 +75,26 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Le bénéficiaire n''existe pas.');
   END IF;
 
+  -- Le pot ne part que vers un membre actif de CE cercle : sans ce contrôle,
+  -- l'organisatrice pouvait désigner n'importe quel compte de la plateforme.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.group_members
+    WHERE group_id = p_group_id AND user_id = p_beneficiary_id AND status = 'active'
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Le bénéficiaire n''est pas membre actif de ce cercle.');
+  END IF;
+
   SELECT count(*) INTO v_num_members FROM public.group_members
   WHERE group_id = p_group_id AND status = 'active';
 
   v_total_pot := v_group.contribution_amount * v_num_members;
   IF p_discount_amount < 0 OR p_discount_amount >= v_total_pot THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le montant du rabais est invalide.');
+  END IF;
+  -- Seule, une bénéficiaire n'a personne à qui redistribuer le rabais : il
+  -- serait retiré du pot sans être crédité nulle part.
+  IF p_discount_amount > 0 AND v_num_members < 2 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Un rabais d''enchère suppose au moins deux membres actifs.');
   END IF;
 
   v_idempotency_key := 'payout_' || p_group_id::text || '_cycle_' || v_group.current_payout_index::text;
@@ -182,7 +203,7 @@ BEGIN
   VALUES (p_beneficiary_id, 'Fonds de tontine reçus !', 'Félicitations ! Vous avez reçu votre payout de ' || v_beneficiary_payout || ' ' || v_group.currency || ' pour le cycle ' || (v_group.current_payout_index + 1) || '.', 'payout', '/group/' || p_group_id);
 
   INSERT INTO public.audit_logs (user_id, action, details, ip, device, status, idempotency_key)
-  VALUES (p_admin_user_id, 'payout_disbursement', 'Décaissement de tontine pour le groupe [' || v_group.name || '] : ' || v_beneficiary_name || ' reçoit ' || v_beneficiary_payout || ' ' || v_group.currency || ' (Rabais: ' || p_discount_amount || ', Commission: ' || v_fee || ')', '197.221.34.8', 'Système Tontine', 'success', v_idempotency_key);
+  VALUES (p_admin_user_id, 'payout_disbursement', 'Décaissement de tontine pour le groupe [' || v_group.name || '] : ' || v_beneficiary_name || ' reçoit ' || v_beneficiary_payout || ' ' || v_group.currency || ' (Rabais: ' || p_discount_amount || ', Commission: ' || v_fee || ')', 'non disponible', 'Système Tontine', 'success', v_idempotency_key);
 
   INSERT INTO public.messages (group_id, user_id, user_name, is_system, content)
   VALUES (p_group_id, null, 'Système Tontine', true, CASE WHEN p_discount_amount > 0
@@ -195,7 +216,7 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'message', 'Décaissement de ' || v_beneficiary_payout || ' ' || v_group.currency || ' exécuté avec succès.', 'transactionId', v_transaction_id, 'fee', v_fee);
 EXCEPTION WHEN others THEN
   INSERT INTO public.audit_logs (user_id, action, details, ip, device, status)
-  VALUES (p_admin_user_id, 'payout_disbursement', 'ÉCHEC : ' || sqlerrm, '197.221.34.8', 'Système Tontine', 'failure');
+  VALUES (p_admin_user_id, 'payout_disbursement', 'ÉCHEC : ' || sqlerrm, 'non disponible', 'Système Tontine', 'failure');
   RETURN jsonb_build_object('success', false, 'message', sqlerrm);
 END;
 $$;
