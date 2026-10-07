@@ -1,4 +1,4 @@
-const CACHE_NAME = 'egayne-pwa-cache-v7';
+const CACHE_NAME = 'egayne-pwa-cache-v8';
 // Only /manifest.json here: the HTML document is handled separately below
 // (network-first, never cached — see the fetch handler) because it names the
 // hashed JS/CSS bundles for the CURRENT deploy, and those hashes change on
@@ -56,6 +56,27 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome extension requests or other non-http resources
   if (!url.protocol.startsWith('http')) return;
+
+  // Les appels à l'API Supabase ne passent JAMAIS par le cache.
+  //
+  // La stratégie stale-while-revalidate ci-dessous rend d'abord la copie en
+  // cache, puis rafraîchit en arrière-plan. Appliquée à /rest/v1/profiles,
+  // elle affichait donc un ancien solde comme s'il était à jour — y compris
+  // en ligne, et sans que rien ne l'indique. Dans une application d'argent,
+  // un solde faux affiché avec aplomb est pire qu'un écran vide : il fonde
+  // une décision (cotiser, retirer) sur un montant qui n'existe plus.
+  //
+  // Deuxième raison : ces réponses sont des données personnelles et
+  // financières, et le Cache API les laissait en clair sur le disque, lisibles
+  // par la session suivante sur un appareil partagé.
+  //
+  // Conséquence assumée : hors connexion, les données ne s'affichent pas —
+  // la bannière hors-ligne le dit, et les opérations d'argent sont bloquées
+  // (voir src/lib/ledger.ts). La coquille de l'application, elle, reste bien
+  // en cache : l'app s'ouvre sans réseau.
+  if (url.hostname.endsWith('.supabase.co') || url.pathname.startsWith('/api/')) {
+    return;
+  }
 
   // Navigation requests (the HTML document) must always come from the
   // network first: it's what names the hashed JS/CSS files for the current
