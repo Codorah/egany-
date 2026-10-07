@@ -61,54 +61,64 @@ function getPath(name: EganyeIconName, sw: number): React.ReactNode {
     // ═══════════════════════════════════════════
     // NAVIGATION
     // ═══════════════════════════════════════════
+    // Les cinq icônes de la navigation principale sont dessinées en masses
+    // pleines, et non au trait comme le reste du jeu. À 20 px — leur taille
+    // réelle dans la barre du bas — un tracé de 1,8 px réparti sur quatre ou
+    // neuf formes distinctes ne se lit plus : il ne reste qu'une poussière de
+    // points gris, impossible à identifier d'un coup d'œil. Une silhouette
+    // pleine garde sa signature à n'importe quelle taille.
     case 'home':
       return (
-        <>
-          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z" {...p} />
-          <path d="M9 21V14h6v7" {...p} />
-        </>
+        <path
+          d="M11.3 2.6a1.1 1.1 0 011.4 0l8.2 6.9c.3.2.4.5.4.9V20a1.8 1.8 0 01-1.8 1.8h-4.2a.6.6 0 01-.6-.6v-5a1 1 0 00-1-1h-3.2a1 1 0 00-1 1v5a.6.6 0 01-.6.6H4.5A1.8 1.8 0 012.7 20v-9.6c0-.4.1-.7.4-.9l8.2-6.9z"
+          fill="currentColor"
+        />
       );
+    // Le cercle de tontine : l'anneau, et les membres placés autour.
     case 'circle':
       return (
         <>
-          <circle cx="12" cy="12" r="9" {...p} />
-          <circle cx="12" cy="9" r="2" {...p} />
-          <circle cx="8" cy="14.5" r="1.5" {...pThin} />
-          <circle cx="16" cy="14.5" r="1.5" {...pThin} />
-          <path d="M9 18c0-1.5 1.5-2.5 3-2.5s3 1 3 2.5" {...pThin} />
+          <path
+            d="M12 2.8a9.2 9.2 0 100 18.4 9.2 9.2 0 000-18.4zm0 2.6a6.6 6.6 0 110 13.2 6.6 6.6 0 010-13.2z"
+            fill="currentColor"
+          />
+          <circle cx="12" cy="3.6" r="2.4" fill="currentColor" />
+          <circle cx="4.7" cy="16.8" r="2.4" fill="currentColor" />
+          <circle cx="19.3" cy="16.8" r="2.4" fill="currentColor" />
         </>
       );
+    // L'ancien tracé était un soleil à huit rayons autour d'un cercle : neuf
+    // formes, qui n'évoquaient ni l'activité ni l'historique — plutôt des
+    // réglages. Trois barres montantes se lisent sans légende.
     case 'activity':
       return (
         <>
-          <path d="M12 3v4" {...p} />
-          <path d="M5.5 7l2.8 2.8" {...p} />
-          <path d="M3 13.5h4" {...p} />
-          <path d="M5.5 20l2.8-2.8" {...p} />
-          <path d="M12 21v-4" {...p} />
-          <path d="M18.5 20l-2.8-2.8" {...p} />
-          <path d="M21 13.5h-4" {...p} />
-          <path d="M18.5 7l-2.8 2.8" {...p} />
-          <circle cx="12" cy="12" r="3" {...p} />
+          <rect x="3" y="13.5" width="4.4" height="7.5" rx="1.6" fill="currentColor" />
+          <rect x="9.8" y="8.5" width="4.4" height="12.5" rx="1.6" fill="currentColor" />
+          <rect x="16.6" y="3.5" width="4.4" height="17.5" rx="1.6" fill="currentColor" />
         </>
       );
+    // Un coffre, pas un temple grec à colonnes : « Ma Banque » désigne les
+    // coffres personnels où l'on met de l'argent de côté sous clé. Les sept
+    // traits fins de l'ancienne façade fusionnaient en une tache à 20 px.
     case 'bank':
       return (
         <>
-          <path d="M3 21h18" {...p} />
-          <path d="M5 21V11" {...p} />
-          <path d="M19 21V11" {...p} />
-          <path d="M9 21V14" {...p} />
-          <path d="M15 21V14" {...p} />
-          <path d="M12 3L2 9h20L12 3z" {...p} />
-          <path d="M3 9h18" {...p} />
+          <path
+            d="M4.6 3.2h14.8a2.4 2.4 0 012.4 2.4v12.8a2.4 2.4 0 01-2.4 2.4h-.6v.6a.6.6 0 01-1.2 0v-.6H6.4v.6a.6.6 0 01-1.2 0v-.6h-.6a2.4 2.4 0 01-2.4-2.4V5.6a2.4 2.4 0 012.4-2.4zm7.4 4.6a4.2 4.2 0 100 8.4 4.2 4.2 0 000-8.4z"
+            fill="currentColor"
+          />
+          <circle cx="12" cy="12" r="1.7" fill="currentColor" />
         </>
       );
     case 'profile':
       return (
         <>
-          <circle cx="12" cy="8" r="4" {...p} />
-          <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" {...p} />
+          <circle cx="12" cy="7.6" r="4.4" fill="currentColor" />
+          <path
+            d="M12 13.6c-4.4 0-7.9 2.6-7.9 6.3 0 .8.6 1.3 1.4 1.3h13c.8 0 1.4-.5 1.4-1.3 0-3.7-3.5-6.3-7.9-6.3z"
+            fill="currentColor"
+          />
         </>
       );
 
