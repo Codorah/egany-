@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import LegalDocumentDialog from './LegalDocumentDialog';
+import { LEGAL_DOCUMENTS, LEGAL_DOC_ORDER, type LegalDocId } from '@/lib/legalDocuments';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -170,7 +172,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [isSavingMandate, setIsSavingMandate] = useState(false);
 
   // Legal Modal
-  const [legalDoc, setLegalDoc] = useState<'cgu' | 'reglement' | 'confidentialite' | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
@@ -881,7 +883,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       Conditions & Confidentialité
                     </span>
                     <span className="text-[11px] text-muted-foreground truncate block">
-                      Règlement des tontines, CGU, protection des données
+                      CGU, règlement des cercles, microcrédit, données, mentions légales
                     </span>
                   </div>
                   <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
@@ -1635,18 +1637,17 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             {renderSubHeader('Conditions & Légal')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-2">
-              {[
-                { key: 'cgu' as const, title: 'Conditions Générales d’Utilisation (CGU)' },
-                { key: 'reglement' as const, title: 'Règlement des Cercles et Tontines' },
-                { key: 'confidentialite' as const, title: 'Politique de Confidentialité et Données' },
-              ].map((doc) => (
+              {LEGAL_DOC_ORDER.map((id) => LEGAL_DOCUMENTS[id]).map((doc) => (
                 <button
-                  key={doc.key}
+                  key={doc.id}
                   type="button"
-                  onClick={() => setLegalDoc(doc.key)}
-                  className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-border hover:bg-muted/40 transition-colors text-left cursor-pointer"
+                  onClick={() => setLegalDoc(doc.id)}
+                  className="w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-border hover:bg-muted/40 transition-colors text-left cursor-pointer"
                 >
-                  <span className="text-xs font-bold text-foreground">{doc.title}</span>
+                  <span className="space-y-0.5">
+                    <span className="block text-xs font-bold text-foreground">{doc.title}</span>
+                    <span className="block text-[11px] text-muted-foreground">{doc.audience}</span>
+                  </span>
                   <EganyeIcon name="chevron-right" size={14} className="text-muted-foreground" />
                 </button>
               ))}
@@ -1654,6 +1655,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── DOCUMENTS LÉGAUX ── */}
+      <LegalDocumentDialog docId={legalDoc} onClose={() => setLegalDoc(null)} />
 
       {/* ── MODALE ATELIER D'AVATAR ── */}
       <Dialog open={isAvatarWorkshopOpen} onOpenChange={setIsAvatarWorkshopOpen}>

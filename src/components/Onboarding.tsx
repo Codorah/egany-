@@ -6,7 +6,8 @@ import { EganyeLogo } from './ui/EganyeLogo';
 import { BrandVisual, type BrandVisualName } from './ui/BrandVisual';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import LegalDocumentDialog from './LegalDocumentDialog';
+import type { LegalDocId } from '@/lib/legalDocuments';
 import {
   ArrowRight,
   ArrowLeft,
@@ -234,7 +235,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   const [isResendingOtp, setIsResendingOtp] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  const [legalModal, setLegalModal] = useState<'cgu' | 'confidentialite' | null>(null);
+  const [legalModal, setLegalModal] = useState<LegalDocId | null>(null);
 
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -1081,56 +1082,8 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
         </AnimatePresence>
       </div>
 
-      {/* ── MODALE LÉGALE CONFORMITÉ STORES (ACCESSIBLE AVANT INSCRIPTION) ── */}
-      <Dialog open={legalModal !== null} onOpenChange={(open) => !open && setLegalModal(null)}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-3xl p-6 bg-card border border-border">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-serif font-black text-foreground">
-              {legalModal === 'cgu' ? "Conditions Générales d'Utilisation" : "Politique de Confidentialité"}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Application financière Eganyé — Dernière mise à jour : 2026
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="text-xs text-muted-foreground space-y-3 pt-2 leading-relaxed">
-            {legalModal === 'cgu' ? (
-              <>
-                <p>
-                  <strong>1. Objet du Service :</strong> Eganyé est une plateforme technologique d’épargne collaborative et individuelle destinée à faciliter les tontines rotatives et l'inclusion financière.
-                </p>
-                <p>
-                  <strong>2. Engagements des membres :</strong> Tout membre participant à un cercle s’engage sur l'honneur et par signature numérique à honorer l'ensemble de ses cotisations jusqu’au terme du cycle.
-                </p>
-                <p>
-                  <strong>3. Intégrité des transactions :</strong> Les dépôts et retraits s'effectuent via les réseaux Mobile Money agréés (T-Money, Moov Flooz, Orange Money, MTN MoMo). Eganyé applique un registre comptable à partie double infalsifiable.
-                </p>
-              </>
-            ) : (
-              <>
-                <p>
-                  <strong>1. Protection des données :</strong> Eganyé s’engage à protéger la confidentialité de vos informations personnelles. Vos pièces d’identité KYC ne sont utilisées qu'à des fins de conformité légale et financière.
-                </p>
-                <p>
-                  <strong>2. Chiffrement & Sécurité :</strong> Tous vos codes PIN et mots de passe sont hachés de manière irréversible via bcrypt côté serveur. Vos flux financiers sont chiffrés de bout en bout.
-                </p>
-                <p>
-                  <strong>3. Droit de suppression :</strong> Vous pouvez demander la suppression intégrale de vos données personnelles et de votre compte à tout moment depuis les Paramètres de votre Profil.
-                </p>
-              </>
-            )}
-          </div>
-
-          <div className="pt-3">
-            <Button
-              onClick={() => setLegalModal(null)}
-              className="w-full rounded-2xl h-10 bg-[#C96F4A] hover:bg-[#B85C36] text-white text-xs font-bold"
-            >
-              J'ai compris
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* ── DOCUMENTS LÉGAUX (ACCESSIBLES AVANT INSCRIPTION, EXIGÉ PAR LES STORES) ── */}
+      <LegalDocumentDialog docId={legalModal} onClose={() => setLegalModal(null)} />
     </div>
   );
 }

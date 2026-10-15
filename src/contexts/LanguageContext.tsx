@@ -6832,6 +6832,12 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: 'Míaƒe ekiplɔ ye ana kakaɖedzi ga home nyagbe la ŋu.',
     kbp: 'Ɖo-tʋmɩyɛ nzʋlʋmɩyɛ tɔzʋʋ liidiye ñɩma kɩ-tɛŋŋ.'
   },
+  // Les documents légaux n'existent qu'en français (version qui fait foi) ;
+  // ewe et kabyè retombent sur le libellé français.
+  mkt_read_credit_terms: {
+    fr: 'Lire les conditions du microcrédit',
+    en: 'Read the microcredit terms (in French)'
+  },
   mkt_consent_disclaimer: {
     fr: 'En soumettant cette demande, vous autorisez notre partenaire à consulter votre score de réputation eganyé pour la traiter.',
     en: 'By submitting this request, you authorize our partner to review your eganyé reputation score in order to process it.',

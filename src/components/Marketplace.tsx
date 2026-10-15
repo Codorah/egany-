@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import LegalDocumentDialog from './LegalDocumentDialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest, repayMarketplaceCredit } from '@/lib/marketplace';
@@ -43,6 +44,7 @@ export function Marketplace({ user }: MarketplaceProps) {
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creditAmount, setCreditAmount] = useState('');
+  const [showCreditTerms, setShowCreditTerms] = useState(false);
   const [repayAmount, setRepayAmount] = useState('');
   const [isRepaying, setIsRepaying] = useState(false);
   const repayIdempotencyKeyRef = React.useRef<string | null>(null);
@@ -376,6 +378,18 @@ export function Marketplace({ user }: MarketplaceProps) {
                         <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                         <p className="text-xs text-brand-deep leading-relaxed">
                           {t('mkt_consent_disclaimer')}
+                          {selectedService.category === 'credit' && (
+                            <>
+                              {' '}
+                              <button
+                                type="button"
+                                onClick={() => setShowCreditTerms(true)}
+                                className="font-bold underline cursor-pointer"
+                              >
+                                {t('mkt_read_credit_terms')}
+                              </button>
+                            </>
+                          )}
                         </p>
                       </div>
                       <Button
@@ -393,6 +407,7 @@ export function Marketplace({ user }: MarketplaceProps) {
           )}
         </DialogContent>
       </Dialog>
+      <LegalDocumentDialog docId={showCreditTerms ? 'credit' : null} onClose={() => setShowCreditTerms(false)} />
     </div>
   );
 }

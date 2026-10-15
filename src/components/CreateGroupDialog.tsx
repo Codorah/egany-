@@ -29,6 +29,7 @@ import { notifyUser } from '@/lib/notify';
 import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
 import { useLanguage } from '@/contexts/LanguageContext';
+import LegalDocumentDialog from './LegalDocumentDialog';
 
 /**
  * Alphabet du code d'invitation : sans 0/O, 1/I/L ni U/V.
@@ -183,6 +184,7 @@ export function CreateGroupDialog({
   } | null>(null);
 
   const [copiedCode, setCopiedCode] = useState(false);
+  const [showReglement, setShowReglement] = useState(false);
 
   // Valeur par défaut de date de début : dans 7 jours
   const defaultStartDate = useMemo(() => {
@@ -377,6 +379,7 @@ export function CreateGroupDialog({
   };
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
@@ -815,7 +818,14 @@ export function CreateGroupDialog({
                           Engagement de solidarité Eganyé
                         </Label>
                         <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Je m'engage sur l'honneur à honorer mes versements et à respecter la confiance accordée par les membres de ce cercle.
+                          Je m'engage sur l'honneur à honorer mes versements et à respecter la confiance accordée par les membres de ce cercle.{' '}
+                          <button
+                            type="button"
+                            onClick={() => setShowReglement(true)}
+                            className="font-bold text-[#C96F4A] hover:underline cursor-pointer"
+                          >
+                            Lire le règlement des cercles
+                          </button>
                         </p>
                         {errors.termsAccepted && (
                           <span className="text-[11px] text-danger font-medium block">{errors.termsAccepted.message}</span>
@@ -873,5 +883,7 @@ export function CreateGroupDialog({
         )}
       </DialogContent>
     </Dialog>
+    <LegalDocumentDialog docId={showReglement ? 'reglement' : null} onClose={() => setShowReglement(false)} />
+    </>
   );
 }
