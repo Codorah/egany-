@@ -26,7 +26,9 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
   useEffect(() => {
     const fetchGroup = async () => {
       try {
-        const { data: groupRows, error } = await supabase.from('groups').select('*').eq('join_code', joinCode);
+        // Un cercle privé n'est plus lisible par tous (migration 0021) : le
+        // code d'invitation est le secret, vérifié côté serveur.
+        const { data: groupRows, error } = await supabase.rpc('find_group_by_join_code', { p_code: joinCode });
         if (error) throw error;
 
         if (!groupRows || groupRows.length === 0) {
