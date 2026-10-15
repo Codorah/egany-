@@ -5,6 +5,7 @@ import { EGANYE_EMOJIS, isEmojiAvatar, getEmojiAvatar, toEmojiAvatarValue } from
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AvatarWorkshopProps {
   value?: AvatarConfig;
@@ -21,6 +22,7 @@ export function AvatarWorkshop({
   userId,
   allowPhotoUpload = true,
 }: AvatarWorkshopProps) {
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,12 +42,12 @@ export function AvatarWorkshop({
     e.target.value = '';
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner un fichier image valide (JPG, PNG).');
+      toast.error(t('avw_invalid_image'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('La taille de l’image ne doit pas dépasser 5 Mo.');
+      toast.error(t('avw_image_too_big'));
       return;
     }
 
@@ -55,7 +57,7 @@ export function AvatarWorkshop({
       reader.onload = () => {
         if (typeof reader.result === 'string') {
           onChange?.(reader.result);
-          toast.success('Photo sélectionnée !');
+          toast.success(t('avw_photo_selected'));
         }
       };
       reader.readAsDataURL(file);
@@ -74,10 +76,10 @@ export function AvatarWorkshop({
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       onChange?.(data.publicUrl);
-      toast.success('Photo de profil mise à jour avec succès !');
+      toast.success(t('avw_photo_updated'));
     } catch (err: any) {
       console.error('Avatar upload error:', err);
-      toast.error(err.message || 'Erreur lors du téléversement de la photo');
+      toast.error(err.message || t('avw_upload_error'));
     } finally {
       setIsUploading(false);
     }
@@ -85,7 +87,7 @@ export function AvatarWorkshop({
 
   const handleUseInitials = () => {
     onChange?.('');
-    toast.success('Vos initiales sont de nouveau affichées.');
+    toast.success(t('avw_initials_restored'));
   };
 
   return (
@@ -107,14 +109,14 @@ export function AvatarWorkshop({
           {name}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
-          Importez votre photo, choisissez un emoji, ou gardez vos initiales.
+          {t('avw_intro')}
         </p>
       </div>
 
       {/* Sélection d'un emoji */}
       <div className="w-full max-w-xs space-y-2">
         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
-          Choisir un emoji
+          {t('avw_choose_emoji')}
         </p>
         <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
           {EGANYE_EMOJIS.map((emoji) => {
@@ -124,7 +126,7 @@ export function AvatarWorkshop({
                 key={emoji}
                 type="button"
                 onClick={() => handleSelectEmoji(emoji)}
-                aria-label={`Choisir l'emoji ${emoji}`}
+                aria-label={`${t('avw_choose_emoji_aria')} ${emoji}`}
                 aria-pressed={selected}
                 className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
                   selected
@@ -163,7 +165,7 @@ export function AvatarWorkshop({
             className="w-full rounded-2xl h-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white font-bold text-xs gap-2 shadow-xs cursor-pointer"
           >
             <EganyeIcon name="camera" size={16} />
-            <span>{hasCustomPhoto ? 'Changer de photo' : 'Importer une photo'}</span>
+            <span>{hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}</span>
           </Button>
 
           {(hasCustomPhoto || selectedEmoji) && (
@@ -175,7 +177,7 @@ export function AvatarWorkshop({
               className="w-full rounded-2xl h-10 border-[#EFE2D0] dark:border-border text-xs font-semibold text-muted-foreground hover:text-danger cursor-pointer"
             >
               <EganyeIcon name="trash" size={14} className="mr-1.5" />
-              <span>Revenir à mes initiales</span>
+              <span>{t('avw_back_to_initials')}</span>
             </Button>
           )}
         </div>
@@ -184,7 +186,7 @@ export function AvatarWorkshop({
       {/* Note de réassurance */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[11px] text-muted-foreground max-w-xs">
         <EganyeIcon name="shield" size={14} className="text-[#718A68] shrink-0" />
-        <span>Votre photo est visible uniquement par les membres de vos cercles d’épargne.</span>
+        <span>{t('avw_privacy_note')}</span>
       </div>
     </div>
   );

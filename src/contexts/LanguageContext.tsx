@@ -6834,6 +6834,92 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   },
   // Les documents légaux n'existent qu'en français (version qui fait foi) ;
   // ewe et kabyè retombent sur le libellé français.
+  // Textes auparavant écrits en dur (invite d'installation, atelier avatar).
+  // ee/kbp retombent sur le français en attendant de vraies traductions.
+  install_close: {
+    fr: 'Fermer',
+    en: 'Close'
+  },
+  install_title: {
+    fr: 'Installer Eganyé sur votre téléphone',
+    en: 'Install Eganyé on your phone'
+  },
+  install_ios_hint: {
+    fr: 'Ouvrez le menu Partager de Safari, puis choisissez « Sur l’écran d’accueil ».',
+    en: 'Open Safari’s Share menu, then choose “Add to Home Screen”.'
+  },
+  install_desc: {
+    fr: 'Accédez à vos cercles en un tap, même hors connexion, sans passer par le navigateur.',
+    en: 'Reach your circles in one tap, even offline, without going through the browser.'
+  },
+  install_got_it: {
+    fr: 'J’ai compris',
+    en: 'Got it'
+  },
+  install_later: {
+    fr: 'Plus tard',
+    en: 'Later'
+  },
+  install_cta: {
+    fr: 'Installer',
+    en: 'Install'
+  },
+  avw_invalid_image: {
+    fr: 'Veuillez sélectionner un fichier image valide (JPG, PNG).',
+    en: 'Please choose a valid image file (JPG, PNG).'
+  },
+  avw_image_too_big: {
+    fr: 'La taille de l’image ne doit pas dépasser 5 Mo.',
+    en: 'The image must not exceed 5 MB.'
+  },
+  avw_photo_selected: {
+    fr: 'Photo sélectionnée !',
+    en: 'Photo selected!'
+  },
+  avw_photo_updated: {
+    fr: 'Photo de profil mise à jour avec succès !',
+    en: 'Profile photo updated!'
+  },
+  avw_upload_error: {
+    fr: 'Erreur lors du téléversement de la photo',
+    en: 'Error while uploading the photo'
+  },
+  avw_initials_restored: {
+    fr: 'Vos initiales sont de nouveau affichées.',
+    en: 'Your initials are shown again.'
+  },
+  avw_intro: {
+    fr: 'Importez votre photo, choisissez un emoji, ou gardez vos initiales.',
+    en: 'Upload your photo, pick an emoji, or keep your initials.'
+  },
+  avw_choose_emoji: {
+    fr: 'Choisir un emoji',
+    en: 'Choose an emoji'
+  },
+  avw_choose_emoji_aria: {
+    fr: 'Choisir l’emoji',
+    en: 'Choose emoji'
+  },
+  avw_change_photo: {
+    fr: 'Changer de photo',
+    en: 'Change photo'
+  },
+  avw_import_photo: {
+    fr: 'Importer une photo',
+    en: 'Upload a photo'
+  },
+  avw_back_to_initials: {
+    fr: 'Revenir à mes initiales',
+    en: 'Go back to my initials'
+  },
+  avw_privacy_note: {
+    fr: 'Votre photo est visible uniquement par les membres de vos cercles d’épargne.',
+    en: 'Your photo is only visible to members of your savings circles.'
+  },
+  cgd_participants_label: {
+    fr: 'Participants',
+    en: 'Participants'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'

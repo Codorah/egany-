@@ -694,7 +694,7 @@ export function CreateGroupDialog({
 
                     <div className="space-y-1.5">
                       <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">
-                        Participants
+                        {t('cgd_participants_label')}
                       </Label>
                       <Input
                         id="maxMembers"

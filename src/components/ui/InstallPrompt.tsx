@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * Invitation à installer Eganyé en PWA.
@@ -62,6 +63,7 @@ function remember(key: string, value: string) {
 }
 
 export function InstallPrompt() {
+  const { t } = useLanguage();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [iosHint, setIosHint] = useState(false);
@@ -152,7 +154,7 @@ export function InstallPrompt() {
             <button
               type="button"
               onClick={dismiss}
-              aria-label="Fermer"
+              aria-label={t('install_close')}
               className="absolute right-3.5 top-3.5 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             >
               <EganyeIcon name="close" size={16} />
@@ -167,12 +169,12 @@ export function InstallPrompt() {
                   id="install-prompt-title"
                   className="font-serif text-base font-black leading-tight text-foreground"
                 >
-                  Installer Eganyé sur votre téléphone
+                  {t('install_title')}
                 </h2>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {iosHint
-                    ? 'Ouvrez le menu Partager de Safari, puis choisissez « Sur l’écran d’accueil ».'
-                    : 'Accédez à vos cercles en un tap, même hors connexion, sans passer par le navigateur.'}
+                    ? t('install_ios_hint')
+                    : t('install_desc')}
                 </p>
               </div>
             </div>
@@ -184,7 +186,7 @@ export function InstallPrompt() {
                   onClick={dismiss}
                   className="btn-shine gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer"
                 >
-                  J’ai compris
+                  {t('install_got_it')}
                 </button>
               ) : (
                 <>
@@ -193,7 +195,7 @@ export function InstallPrompt() {
                     onClick={dismiss}
                     className="h-11 rounded-2xl px-4 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
                   >
-                    Plus tard
+                    {t('install_later')}
                   </button>
                   <button
                     type="button"
@@ -201,7 +203,7 @@ export function InstallPrompt() {
                     className="btn-shine gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer inline-flex items-center justify-center gap-2"
                   >
                     <EganyeIcon name="download" size={16} />
-                    <span>Installer</span>
+                    <span>{t('install_cta')}</span>
                   </button>
                 </>
               )}
