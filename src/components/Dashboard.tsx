@@ -437,6 +437,25 @@ export function Dashboard({
         </div>
       </motion.div>
 
+      {/* ── 5 bis. SERVICES ANNEXES (microcrédit, assurance, équipement) ──
+          Le lien avait disparu avec la refonte de septembre : l'écran existait
+          toujours mais plus rien n'y menait. */}
+      <motion.div variants={itemVariants} className="pt-1">
+        <button
+          onClick={() => onNavigate?.('marketplace')}
+          className="w-full bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center gap-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[#FFF2E8] dark:bg-muted flex items-center justify-center text-[#C96F4A] shrink-0">
+            <EganyeIcon name="investment" size={20} strokeWidth={2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground">{t('marketplace')}</p>
+            <p className="text-xs text-muted-foreground truncate">Microcrédit, assurance santé, épargne retraite, kit solaire</p>
+          </div>
+          <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
+        </button>
+      </motion.div>
+
       {/* ── 6. ACTIVITÉ RÉCENTE (3 Derniers Flux) ── */}
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
