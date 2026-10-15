@@ -450,7 +450,23 @@ export function Dashboard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-foreground">{t('marketplace')}</p>
-            <p className="text-xs text-muted-foreground truncate">Microcrédit, assurance santé, épargne retraite, kit solaire</p>
+            <p className="text-xs text-muted-foreground truncate">{t('dash_services_card_subtitle')}</p>
+          </div>
+          <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
+        </button>
+
+        {/* Copilote IA : sur téléphone, plus aucun lien n'y menait depuis la
+            refonte de septembre (seul le menu latéral d'ordinateur en avait). */}
+        <button
+          onClick={() => onNavigate?.('ai-assistant')}
+          className="mt-3 w-full bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center gap-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[#EBF5EA] dark:bg-muted flex items-center justify-center text-[#718A68] shrink-0">
+            <EganyeIcon name="chat" size={20} strokeWidth={2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground">{t('ai_assistant')}</p>
+            <p className="text-xs text-muted-foreground truncate">{t('dash_ai_card_subtitle')}</p>
           </div>
           <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
         </button>

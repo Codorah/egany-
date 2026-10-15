@@ -6920,6 +6920,14 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Participants',
     en: 'Participants'
   },
+  dash_services_card_subtitle: {
+    fr: 'Microcrédit, assurance santé, épargne retraite, kit solaire',
+    en: 'Microcredit, health insurance, retirement savings, solar kit'
+  },
+  dash_ai_card_subtitle: {
+    fr: 'Posez vos questions sur vos cercles et cotisations',
+    en: 'Ask questions about your circles and contributions'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'
