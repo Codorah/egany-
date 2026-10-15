@@ -96,8 +96,10 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       });
       // Même précaution que pour la recharge : une réponse en échec renvoie du
       // HTML, qu'il ne faut jamais tenter de parser en JSON.
-      if (!response.ok) throw new Error(`AI assistant HTTP ${response.status}`);
+      // Quota atteint (429) ou service indisponible (503) : le serveur envoie
+      // un message lisible, à montrer tel quel plutôt qu'une « erreur réseau ».
       const data = await response.json().catch(() => null);
+      if (!response.ok && !data?.reply) throw new Error(`AI assistant HTTP ${response.status}`);
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
