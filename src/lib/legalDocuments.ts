@@ -29,7 +29,7 @@ export interface LegalDocument {
 }
 
 /** Date de la dernière révision de l'ensemble des textes. */
-export const LEGAL_LAST_UPDATED = '7 octobre 2026';
+export const LEGAL_LAST_UPDATED = '15 octobre 2026';
 
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
@@ -196,39 +196,43 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: '1. Qui peut demander',
         paragraphs: [
-          "Certains crédits exigent un score de réputation eganyé minimum, indiqué sur la fiche du service.",
-          "Le montant que vous pouvez demander est plafonné en fonction de votre épargne dans vos cercles. Ce plafond est indicatif : le montant accordé est décidé par notre équipe.",
+          "Certains crédits exigent un score de réputation eganyé minimum, indiqué sur la fiche du service. Une personne ne peut avoir qu'un seul dossier ouvert à la fois (en étude, en offre ou en cours de remboursement).",
+          "Le montant demandé est plafonné en fonction de votre épargne dans vos cercles. Ce plafond est indicatif : le montant accordé est décidé par notre équipe.",
         ],
       },
       {
-        heading: '2. Étude de la demande',
+        heading: '2. Le dossier et ses frais',
         paragraphs: [
-          "En envoyant une demande, vous autorisez notre équipe et le partenaire concerné à consulter votre score de réputation et votre historique de cotisations pour l'étudier. Une demande peut être acceptée pour un montant inférieur, ou refusée.",
+          "Vous présentez votre projet : son nom, à quoi servira l'argent, le montant et la durée souhaités. Vous pouvez y joindre une vidéo, envoyée depuis votre téléphone ou sous forme de lien. Une vidéo envoyée est conservée dans un espace privé, visible seulement par vous et notre équipe.",
+          "Des frais de dossier (1 000 FCFA, ou le montant affiché au moment du dépôt) sont prélevés sur votre portefeuille quand vous déposez le dossier. Ils paient son étude et ne sont pas remboursés, même si le crédit n'est pas accordé ou si vous refusez l'offre.",
+          "En déposant un dossier, vous autorisez notre équipe à consulter votre score de réputation et votre historique de cotisations pour l'étudier.",
         ],
       },
       {
-        heading: '3. Versement',
+        heading: "3. L'offre",
         paragraphs: [
-          "Si la demande est acceptée, le montant accordé est versé sur votre portefeuille eganyé. La date limite de remboursement vous est communiquée à ce moment-là, par notification.",
+          "Notre équipe refuse le dossier en vous expliquant pourquoi, ou vous fait une offre : le montant prêté (il peut être inférieur à votre demande), le taux d'intérêt, la durée en mois et le total à rembourser.",
+          "Les intérêts sont calculés une seule fois sur le montant prêté (intérêt simple) : total à rembourser = montant prêté + montant prêté × taux. Ce total vous est affiché au franc près avant que vous ne décidiez. Aucun autre frais ne peut vous être réclamé.",
+          "Vous êtes libre d'accepter ou de refuser l'offre. Rien ne vous est versé, et vous ne devez rien d'autre que les frais de dossier, tant que vous ne l'avez pas acceptée.",
         ],
       },
       {
-        heading: '4. Remboursement',
+        heading: '4. Versement et mensualités',
         paragraphs: [
-          "Vous remboursez depuis votre portefeuille, en une ou plusieurs fois, avant la date limite. Chaque remboursement est enregistré et visible dans votre historique ; le crédit est soldé lorsque le total remboursé atteint le montant accordé.",
-          "Les conditions de coût (intérêts ou frais) éventuellement appliquées par le partenaire sont indiquées sur la fiche du service avant votre demande. Aucun frais non affiché ne peut vous être réclamé.",
+          "Dès que vous acceptez l'offre, le montant prêté est versé sur votre portefeuille eganyé. Le total à rembourser est divisé en mensualités égales (la dernière corrige l'arrondi), la première étant due un mois après le versement.",
+          "À chaque date d'échéance, la mensualité est prélevée automatiquement sur votre portefeuille si le solde le permet. Vous pouvez aussi rembourser en avance, en une ou plusieurs fois : toute somme versée solde d'abord la mensualité la plus ancienne. Chaque remboursement apparaît dans votre historique.",
         ],
       },
       {
         heading: '5. Si vous ne remboursez pas',
         paragraphs: [
-          "Un retard de remboursement est suivi par notre équipe et peut vous fermer l'accès à de nouveaux crédits. Le montant reste dû. Si vous avez une difficulté, prévenez-nous avant l'échéance : " + contactLine() + '.',
+          "Une mensualité qui n'a pas pu être prélevée passe « en retard » ; vous êtes prévenu·e et elle sera prélevée dès que votre portefeuille le permettra. Les retards sont suivis par notre équipe et peuvent vous fermer l'accès à de nouveaux crédits. Le montant reste dû. Si vous avez une difficulté, prévenez-nous avant l'échéance : " + contactLine() + '.',
         ],
       },
       {
         heading: '6. Empruntez avec prudence',
         paragraphs: [
-          "Un crédit engage. N'empruntez que ce que vous êtes certain·e de pouvoir rembourser dans le délai.",
+          "Un crédit engage. N'empruntez que ce que vous êtes certain·e de pouvoir rembourser chaque mois, et gardez sur votre portefeuille de quoi payer chaque mensualité à sa date.",
         ],
       },
     ],
@@ -244,6 +248,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         paragraphs: [
           "Compte : nom, adresse e-mail, numéro de téléphone, photo ou avatar si vous en choisissez un, langue préférée.",
           "Vérification d'identité : nom complet, numéro et photo de votre pièce d'identité.",
+          "Microcrédit : la description de votre projet et, si vous en joignez une, votre vidéo de présentation ou son lien.",
           "Activité : cercles, cotisations, versements, dépôts, retraits, demandes de crédit, messages dans les discussions de cercle, et journal de sécurité (tentatives de code PIN, opérations sur votre argent).",
           "Votre code PIN et votre mot de passe ne sont jamais conservés en clair : seule une empreinte irréversible est stockée.",
         ],

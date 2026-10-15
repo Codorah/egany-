@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { mapMarketplaceRequestRow, mapMarketplaceServiceRow } from './mappers';
-import { isOffline, OFFLINE_MONEY_MESSAGE } from './ledger';
 import { MarketplaceRequest, MarketplaceService } from '@/types';
 
 export async function fetchActiveServices(): Promise<MarketplaceService[]> {
@@ -56,39 +55,7 @@ export async function fetchPendingMarketplaceRequests(): Promise<(MarketplaceReq
   }));
 }
 
-export async function approveMarketplaceCredit(params: {
-  requestId: string;
-  approvedAmount: number;
-  repaymentDeadline: string;
-  adminNotes?: string;
-}): Promise<{ success: boolean; message: string }> {
-  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
-
-  const { data, error } = await supabase.rpc('approve_marketplace_credit', {
-    p_request_id: params.requestId,
-    p_approved_amount: params.approvedAmount,
-    p_repayment_deadline: params.repaymentDeadline,
-    p_admin_notes: params.adminNotes || null,
-  });
-  if (error) return { success: false, message: error.message };
-  return data as { success: boolean; message: string };
-}
-
-export async function repayMarketplaceCredit(params: {
-  requestId: string;
-  amount: number;
-  idempotencyKey: string;
-}): Promise<{ success: boolean; message: string; remainingBalance?: number }> {
-  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
-
-  const { data, error } = await supabase.rpc('repay_marketplace_credit', {
-    p_request_id: params.requestId,
-    p_amount: params.amount,
-    p_idempotency_key: params.idempotencyKey,
-  });
-  if (error) return { success: false, message: error.message };
-  return data as { success: boolean; message: string; remainingBalance?: number };
-}
+// Le crédit a quitté marketplace_requests : voir lib/credit.ts (migration 0019).
 
 export async function updateMarketplaceRequestStatus(params: {
   requestId: string;
