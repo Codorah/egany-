@@ -12,7 +12,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
 import { format, formatDistanceToNowStrict, isToday } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
 
 interface DashboardProps {
   user: UserProfile;
@@ -55,7 +55,7 @@ export function Dashboard({
   onNavigateToProfileTab,
   onNavigate,
 }: DashboardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showBalance, setShowBalance] = useState(true);
   const { unreadCount } = useNotifications(user.uid);
 
@@ -121,7 +121,9 @@ export function Dashboard({
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return '';
     if (isToday(date)) return format(date, 'HH:mm');
-    return `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
+    return language === 'en'
+      ? `${formatDistanceToNowStrict(date, { locale: enUS })} ago`
+      : `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
   };
 
   /** Icône et teinte selon la nature du mouvement. */
@@ -166,7 +168,7 @@ export function Dashboard({
             <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight truncate flex items-center gap-1.5">
               <span>{t('dashboard_greeting')}</span>
               <span className="text-[#C96F4A]">
-                {user.displayName?.split(' ')[0] || user.displayName || 'Ami'}
+                {user.displayName?.split(' ')[0] || user.displayName || t('dash_friend_fallback')}
               </span>
               <span>👋</span>
             </h1>
@@ -181,7 +183,7 @@ export function Dashboard({
           <button
             onClick={() => onNavigate?.('activity')}
             className="relative w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center justify-center text-foreground hover:text-[#C96F4A] transition-colors cursor-pointer"
-            aria-label="Notifications"
+            aria-label={t('dash_notifications_aria')}
           >
             <EganyeIcon name="bell" size={18} />
             {unreadCount > 0 && (
@@ -208,14 +210,14 @@ export function Dashboard({
                 <button
                   onClick={() => setShowBalance(!showBalance)}
                   className="p-1 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
-                  title={showBalance ? 'Masquer le solde' : 'Afficher le solde'}
+                  title={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
                 >
                   <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={15} />
                 </button>
               </div>
 
               <span className="text-[11px] font-bold text-white/75 uppercase tracking-wider bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20">
-                Portefeuille
+                {t('dash_wallet_badge')}
               </span>
             </div>
 
@@ -264,10 +266,10 @@ export function Dashboard({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#C96F4A] flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#C96F4A] animate-pulse" />
-                  <span>À faire maintenant</span>
+                  <span>{t('dash_todo_now')}</span>
                 </span>
                 <span className="text-[11px] font-bold text-muted-foreground">
-                  Échéance : {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM', { locale: fr })}
+                  {t('dash_due_prefix')} {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM', { locale: fr })}
                 </span>
               </div>
 
@@ -277,7 +279,7 @@ export function Dashboard({
                     {nextGroupToPay.name}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Votre cotisation de cycle est attendue.
+                    {t('dash_contribution_expected')}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -291,7 +293,7 @@ export function Dashboard({
                 onClick={() => onManageContributions(nextGroupToPay.id)}
                 className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
-                <span>Cotiser — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
+                <span>{t('dash_contribute_cta')} — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
               </button>
             </div>
           ) : (
@@ -305,7 +307,7 @@ export function Dashboard({
                     {t('dash_all_caught_up_title') || 'Tout est à jour !'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Aucune cotisation en attente pour le moment.
+                    {t('dash_no_pending_contribution')}
                   </p>
                 </div>
               </div>
@@ -313,7 +315,7 @@ export function Dashboard({
                 onClick={() => onNavigate?.('my-circles')}
                 className="text-xs font-bold text-[#C96F4A] hover:underline shrink-0 cursor-pointer"
               >
-                Découvrir
+                {t('dash_discover')}
               </button>
             </div>
           )}
@@ -369,17 +371,17 @@ export function Dashboard({
                       {group.name}
                     </h4>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                      {group.members.length} membres · {group.contributionAmount.toLocaleString()} FCFA
+                      {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString()} FCFA
                     </p>
                     <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-                      Prochaine : {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
+                      {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25">
-                    Actif
+                    {t('dash_active_badge')}
                   </span>
                   <EganyeIcon
                     name="chevron-right"
@@ -397,13 +399,13 @@ export function Dashboard({
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
-            Mon épargne
+            {t('dash_my_savings')}
           </h2>
           <button
             onClick={() => onNavigate?.('my-bank')}
             className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
-            <span>Voir mon épargne</span>
+            <span>{t('dash_view_my_savings')}</span>
             <EganyeIcon name="chevron-right" size={13} />
           </button>
         </div>
@@ -415,7 +417,7 @@ export function Dashboard({
                 <EganyeIcon name="savings" size={20} strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Épargne totale</p>
+                <p className="text-xs text-muted-foreground font-medium">{t('dash_total_savings')}</p>
                 <p className="text-lg sm:text-xl font-serif font-black text-foreground">
                   {totalSaved.toLocaleString()} FCFA
                 </p>
@@ -430,7 +432,7 @@ export function Dashboard({
           <div className="space-y-1 pt-1">
             <EganyeProgress value={totalSaved} max={savingsGoal} variant="bar" tone="secondary" />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Objectif : {savingsGoal.toLocaleString()} FCFA</span>
+              <span>{t('dash_goal_prefix')} {savingsGoal.toLocaleString()} FCFA</span>
               <span className="font-bold text-[#718A68]">{savingsPercent}%</span>
             </div>
           </div>
@@ -476,13 +478,13 @@ export function Dashboard({
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
-            Activité récente
+            {t('dash_recent_activity')}
           </h2>
           <button
             onClick={() => onNavigate?.('activity')}
             className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
-            <span>Voir toute l'activité</span>
+            <span>{t('dash_view_all_activity')}</span>
             <EganyeIcon name="chevron-right" size={13} />
           </button>
         </div>
@@ -508,16 +510,16 @@ export function Dashboard({
               <div className="w-11 h-11 rounded-2xl bg-[#FFF2E8] text-[#C96F4A] flex items-center justify-center mx-auto">
                 <EganyeIcon name="wallet" size={20} />
               </div>
-              <p className="font-bold text-foreground text-sm pt-1">Aucune opération pour l’instant</p>
+              <p className="font-bold text-foreground text-sm pt-1">{t('dash_no_operation_title')}</p>
               <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[15rem] mx-auto">
-                Rechargez votre portefeuille pour commencer à cotiser.
+                {t('dash_no_operation_desc')}
               </p>
               <button
                 type="button"
                 onClick={() => onNavigate?.('wallet-recharge')}
                 className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity pt-1 cursor-pointer"
               >
-                Recharger mon portefeuille
+                {t('dash_recharge_my_wallet')}
               </button>
             </div>
           ) : (
@@ -538,10 +540,10 @@ export function Dashboard({
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-foreground text-xs sm:text-sm truncate">
-                        {act.description || 'Opération'}
+                        {act.description || t('dash_operation_fallback')}
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {act.status === 'pending' ? 'En attente' : formatRelativeDate(act.date)}
+                        {act.status === 'pending' ? t('status_pending') : formatRelativeDate(act.date)}
                       </p>
                     </div>
                   </div>

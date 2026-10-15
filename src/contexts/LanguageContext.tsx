@@ -6920,6 +6920,103 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Participants',
     en: 'Participants'
   },
+  // Accueil (Dashboard) : textes auparavant écrits en dur.
+  dash_friend_fallback: {
+    fr: 'Ami',
+    en: 'Friend'
+  },
+  dash_notifications_aria: {
+    fr: 'Notifications',
+    en: 'Notifications'
+  },
+  dash_hide_balance: {
+    fr: 'Masquer le solde',
+    en: 'Hide balance'
+  },
+  dash_show_balance: {
+    fr: 'Afficher le solde',
+    en: 'Show balance'
+  },
+  dash_wallet_badge: {
+    fr: 'Portefeuille',
+    en: 'Wallet'
+  },
+  dash_todo_now: {
+    fr: 'À faire maintenant',
+    en: 'To do now'
+  },
+  dash_due_prefix: {
+    fr: 'Échéance :',
+    en: 'Due:'
+  },
+  dash_contribution_expected: {
+    fr: 'Votre cotisation de cycle est attendue.',
+    en: 'Your contribution for this cycle is due.'
+  },
+  dash_contribute_cta: {
+    fr: 'Cotiser',
+    en: 'Contribute'
+  },
+  dash_no_pending_contribution: {
+    fr: 'Aucune cotisation en attente pour le moment.',
+    en: 'No pending contribution right now.'
+  },
+  dash_discover: {
+    fr: 'Découvrir',
+    en: 'Explore'
+  },
+  dash_members_word: {
+    fr: 'membres',
+    en: 'members'
+  },
+  dash_next_prefix: {
+    fr: 'Prochaine :',
+    en: 'Next:'
+  },
+  dash_active_badge: {
+    fr: 'Actif',
+    en: 'Active'
+  },
+  dash_my_savings: {
+    fr: 'Mon épargne',
+    en: 'My savings'
+  },
+  dash_view_my_savings: {
+    fr: 'Voir mon épargne',
+    en: 'See my savings'
+  },
+  dash_total_savings: {
+    fr: 'Épargne totale',
+    en: 'Total savings'
+  },
+  dash_goal_prefix: {
+    fr: 'Objectif :',
+    en: 'Goal:'
+  },
+  dash_recent_activity: {
+    fr: 'Activité récente',
+    en: 'Recent activity'
+  },
+  dash_view_all_activity: {
+    fr: 'Voir toute l’activité',
+    en: 'See all activity'
+  },
+  dash_no_operation_title: {
+    fr: 'Aucune opération pour l’instant',
+    en: 'No transactions yet'
+  },
+  dash_no_operation_desc: {
+    fr: 'Rechargez votre portefeuille pour commencer à cotiser.',
+    en: 'Top up your wallet to start contributing.'
+  },
+  dash_recharge_my_wallet: {
+    fr: 'Recharger mon portefeuille',
+    en: 'Top up my wallet'
+  },
+  dash_operation_fallback: {
+    fr: 'Opération',
+    en: 'Transaction'
+  },
   dash_services_card_subtitle: {
     fr: 'Microcrédit, assurance santé, épargne retraite, kit solaire',
     en: 'Microcredit, health insurance, retirement savings, solar kit'
