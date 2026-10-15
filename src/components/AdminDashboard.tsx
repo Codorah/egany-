@@ -7,6 +7,7 @@ import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWit
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
 import { AdminCreditReview } from './AdminCreditReview';
+import { AdminServerHealth } from './AdminServerHealth';
 import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
@@ -431,6 +432,9 @@ export function AdminDashboard() {
       transition={{ duration: 0.35 }}
       className="max-w-6xl mx-auto space-y-8 pb-12"
     >
+      {/* Alerte si un réglage serveur manque (ex. dépôts PayDunya non crédités) */}
+      <AdminServerHealth />
+
       {/* Header and Branding section */}
       <div className="bg-[#4B2E05] text-white p-6 md:p-8 rounded-3xl border border-border shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
