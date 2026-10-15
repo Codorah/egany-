@@ -116,6 +116,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   };
 
   const handleRoleChange = async (uid: string, role: GroupMemberRole) => {
+    if (uid === group.creatorId) return;
     setBusyUid(uid);
     try {
       const { error } = await supabase.from('group_members').update({ role }).eq('group_id', group.id).eq('user_id', uid);
@@ -178,6 +179,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
               subtitle={isCreatorRow ? <StatusBadge tone="info" label={t('mm_creator_badge')} /> : undefined}
               trailing={
                 <>
+                  {/* La créatrice reste l'organisatrice : pas de rôle à lui changer. */}
+                  {!isCreatorRow && (
                   <Select value={role} onValueChange={(val) => handleRoleChange(uid, val as GroupMemberRole)} disabled={busyUid === uid}>
                     <SelectTrigger className="h-8 w-[130px] text-xs rounded-xl">
                       <SelectValue />
@@ -188,6 +191,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
                       <SelectItem value="secretary">{t('mm_role_secretary')}</SelectItem>
                     </SelectContent>
                   </Select>
+                  )}
                   {!isCreatorRow && (
                     <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title={t('mm_exclude_title')}>
                       <UserMinus className="h-4 w-4" />
