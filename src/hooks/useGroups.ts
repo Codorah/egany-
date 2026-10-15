@@ -2,12 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, createChannel } from '@/lib/supabase';
 import { hydrateGroups } from '@/lib/groups';
 import { Group } from '@/types';
+import { loadSnapshot, saveSnapshot } from '@/lib/offlineCache';
 
 export function useGroups(userId?: string) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchGroups = useCallback(async (uid: string) => {
+    // Sans réseau, on montre la dernière liste connue plutôt qu'un écran vide.
+    const fallBackToSnapshot = () => {
+      const cached = loadSnapshot<Group[]>(uid, 'groups');
+      if (cached) setGroups(cached.data);
+      setLoading(false);
+    };
+
     const { data: memberships, error: membershipError } = await supabase
       .from('group_members')
       .select('group_id')
@@ -16,13 +24,14 @@ export function useGroups(userId?: string) {
 
     if (membershipError) {
       console.error('Error fetching memberships:', membershipError);
-      setLoading(false);
+      fallBackToSnapshot();
       return;
     }
 
     const groupIds = (memberships ?? []).map((m) => m.group_id);
     if (groupIds.length === 0) {
       setGroups([]);
+      saveSnapshot(uid, 'groups', []);
       setLoading(false);
       return;
     }
@@ -30,11 +39,13 @@ export function useGroups(userId?: string) {
     const { data: groupRows, error: groupsError } = await supabase.from('groups').select('*').in('id', groupIds);
     if (groupsError) {
       console.error('Error fetching groups:', groupsError);
-      setLoading(false);
+      fallBackToSnapshot();
       return;
     }
 
-    setGroups(await hydrateGroups(groupRows ?? []));
+    const hydrated = await hydrateGroups(groupRows ?? []);
+    setGroups(hydrated);
+    saveSnapshot(uid, 'groups', hydrated);
     setLoading(false);
   }, []);
 

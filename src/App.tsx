@@ -32,6 +32,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useReminders } from '@/hooks/useReminders';
 import { useWalletDebitor } from '@/hooks/useWalletDebitor';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { oldestSnapshotDate } from '@/lib/offlineCache';
 import { logout } from '@/lib/supabase';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { notifyUser } from '@/lib/notify';
@@ -436,7 +437,17 @@ export default function App() {
       {!isOnline && (
         <div className="bg-warning-soft border-b border-warning/30 text-warning text-xs font-bold text-center py-2 px-4 flex items-center justify-center gap-1.5">
           <WifiOff className="w-3.5 h-3.5 shrink-0" />
-          <span>{t('offline_banner_title')} — {t('offline_banner_desc')}</span>
+          <span>
+            {t('offline_banner_title')} — {t('offline_banner_desc')}
+            {(() => {
+              // Toujours dire de quand datent les chiffres affichés : un
+              // ancien solde ne doit jamais passer pour le solde actuel.
+              const since = oldestSnapshotDate(activeProfile.uid);
+              return since
+                ? ` · ${t('offline_data_from')} ${since.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+                : '';
+            })()}
+          </span>
         </div>
       )}
       <Suspense fallback={<LoadingScreen fullScreen={false} />}>

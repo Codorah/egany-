@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { clearSnapshots } from './offlineCache';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -21,7 +22,12 @@ export const createChannel = (topic: string) => {
   return supabase.channel(topic);
 };
 
-export const logout = () => supabase.auth.signOut();
+export const logout = () => {
+  // Copies hors-ligne effacées : sur un appareil partagé, la personne
+  // suivante ne doit pas lire le solde de la précédente.
+  clearSnapshots();
+  return supabase.auth.signOut();
+};
 
 export const signUpWithEmail = (email: string, password: string, displayName?: string) =>
   supabase.auth.signUp({

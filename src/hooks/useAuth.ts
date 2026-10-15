@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapProfileRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { UserProfile } from '@/types';
+import { clearSnapshots, loadSnapshot, saveSnapshot } from '@/lib/offlineCache';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -18,12 +19,21 @@ export function useAuth() {
         console.error('Profile fetch error:', error);
         return null;
       }
-      return mapProfileRow(data);
+      const mapped = mapProfileRow(data);
+      saveSnapshot(uid, 'profile', mapped);
+      return mapped;
     };
 
     const loadProfile = async (uid: string) => {
       const fresh = await fetchProfile(uid);
-      if (fresh) setProfile(fresh);
+      if (fresh) {
+        setProfile(fresh);
+      } else {
+        // Sans réseau : dernière copie connue, signalée par le bandeau
+        // « Données du … » (voir App.tsx).
+        const cached = loadSnapshot<UserProfile>(uid, 'profile');
+        if (cached) setProfile(cached.data);
+      }
       setLoading(false);
 
       // Real-time updates (equivalent of the previous Firestore onSnapshot),
@@ -49,8 +59,9 @@ export function useAuth() {
         .subscribe();
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') clearSnapshots();
 
       if (profileChannel) {
         supabase.removeChannel(profileChannel);

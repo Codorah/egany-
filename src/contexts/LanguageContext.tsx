@@ -6834,6 +6834,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   },
   // Les documents légaux n'existent qu'en français (version qui fait foi) ;
   // ewe et kabyè retombent sur le libellé français.
+  offline_data_from: {
+    fr: 'Données du',
+    en: 'Data from'
+  },
   mkt_read_credit_terms: {
     fr: 'Lire les conditions du microcrédit',
     en: 'Read the microcredit terms (in French)'
