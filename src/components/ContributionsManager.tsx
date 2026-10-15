@@ -144,6 +144,12 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
     if (busyKeys.has(key)) return;
     setBusy(key, true);
     try {
+      const period = formatPeriod(new Date());
+      const existing = await findPeriodContribution(userId, period);
+      if (existing) {
+        toast.info(`${userName} a déjà une cotisation pour ${period}.`);
+        return;
+      }
       const { error } = await supabase.from('contributions').insert({
         group_id: group.id,
         user_id: userId,
@@ -152,7 +158,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
         amount: group.contributionAmount,
         status: 'pending',
         date: new Date().toISOString(),
-        period: formatPeriod(new Date())
+        period
       });
       if (error) throw error;
       toast.success(`${t('contribution_call_created_for')} ${userName}`);
@@ -169,16 +175,31 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
     if (busyKeys.has(key)) return;
     setBusy(key, true);
     try {
-      const { data: inserted, error } = await supabase.from('contributions').insert({
-        group_id: group.id,
-        user_id: userId,
-        user_name: userName,
-        user_email: userEmail || '',
-        amount: group.contributionAmount,
-        status: 'paid',
-        date: new Date().toISOString(),
-        period: formatPeriod(new Date())
-      }).select().single();
+      const period = formatPeriod(new Date());
+      // Une seule cotisation par membre et par mois (migration 0020) : si
+      // l'appel du mois existe déjà (en attente ou en retard), c'est LUI
+      // qu'on solde — en créer un second affichait le membre « en retard »
+      // alors qu'il venait de payer.
+      const existing = await findPeriodContribution(userId, period);
+      if (existing?.status === 'paid') {
+        toast.info(`La cotisation de ${userName} pour ${period} est déjà payée.`);
+        return;
+      }
+      const { data: inserted, error } = existing
+        ? await supabase.from('contributions')
+            .update({ status: 'paid', date: new Date().toISOString(), payment_method: 'cash' })
+            .eq('id', existing.id)
+            .select().single()
+        : await supabase.from('contributions').insert({
+            group_id: group.id,
+            user_id: userId,
+            user_name: userName,
+            user_email: userEmail || '',
+            amount: group.contributionAmount,
+            status: 'paid',
+            date: new Date().toISOString(),
+            period
+          }).select().single();
       if (error) throw error;
 
       // Paiement déclaré en espèces par le gestionnaire — l'argent ne vient
@@ -191,7 +212,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
         userId,
         amount: group.contributionAmount,
         currency: group.currency || 'FCFA',
-        description: `Cotisation enregistrée manuellement (espèces) - ${group.name} (${formatPeriod(new Date())})`,
+        description: `Cotisation enregistrée manuellement (espèces) - ${group.name} (${period})`,
         actionType: 'contribution_payment',
         debitAccount: `external_cash:${userId}`,
         creditAccount: `tontine_group:${group.id}`,
@@ -207,6 +228,17 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
     } finally {
       setBusy(key, false);
     }
+  };
+
+  const findPeriodContribution = async (userId: string, period: string) => {
+    const { data } = await supabase
+      .from('contributions')
+      .select('id, status')
+      .eq('group_id', group.id)
+      .eq('user_id', userId)
+      .eq('period', period)
+      .maybeSingle();
+    return data as { id: string; status: string } | null;
   };
 
   const formatPeriod = (date: Date) => {
