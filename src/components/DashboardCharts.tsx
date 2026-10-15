@@ -236,9 +236,9 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
           <div className="h-[220px] w-full">
             {balanceData.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center gap-1.5 px-6">
-                <p className="font-bold text-sm text-foreground">Pas encore d’historique</p>
+                <p className="font-bold text-sm text-foreground">{t('chart_no_history_title')}</p>
                 <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[16rem]">
-                  Votre courbe d’épargne se dessinera dès votre première opération.
+                  {t('chart_no_history_desc')}
                 </p>
               </div>
             ) : (

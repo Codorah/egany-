@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
 import { apiUrl } from '@/lib/apiBase';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * Attente de confirmation Mobile Money, sans quitter eganyé.
@@ -52,6 +53,7 @@ export function PaymentPendingCard({
   onDone,
   onRetry,
 }: PaymentPendingCardProps) {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<PollStatus>('pending');
   const [elapsed, setElapsed] = useState(0);
   const startedAt = useRef(Date.now());
@@ -106,16 +108,16 @@ export function PaymentPendingCard({
           <BrandVisual name="success" height={150} alt="" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">Paiement confirmé</h3>
+          <h3 className="text-base font-serif font-black text-foreground">{t('pay_confirmed_title')}</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            {netAmount.toLocaleString()} FCFA arrivent sur votre portefeuille. Le solde se met à jour tout seul.
+            {netAmount.toLocaleString()} FCFA {t('pay_confirmed_desc')}
           </p>
         </div>
         <Button
           onClick={onDone}
           className="btn-shine w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
         >
-          Voir mon portefeuille
+          {t('pay_view_wallet')}
         </Button>
       </motion.div>
     );
@@ -132,10 +134,9 @@ export function PaymentPendingCard({
           <BrandVisual name="failed" height={150} alt="" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">Confirmation non reçue</h3>
+          <h3 className="text-base font-serif font-black text-foreground">{t('pay_not_received_title')}</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            Nous n'avons pas reçu la confirmation de {operatorLabel}. Si vous avez composé votre code,
-            le portefeuille sera crédité dès l'arrivée de la confirmation — inutile de payer une seconde fois.
+            {t('pay_not_received_desc_1')} {operatorLabel}. {t('pay_not_received_desc_2')}
           </p>
         </div>
         <div className="space-y-2">
@@ -143,14 +144,14 @@ export function PaymentPendingCard({
             onClick={onRetry}
             className="btn-shine gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
           >
-            Réessayer
+            {t('pay_retry')}
           </Button>
           <Button
             onClick={onDone}
             variant="ghost"
             className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
           >
-            Retour au portefeuille
+            {t('pay_back_to_wallet')}
           </Button>
         </div>
       </motion.div>
@@ -180,32 +181,32 @@ export function PaymentPendingCard({
 
       <div className="text-center space-y-1.5">
         <h3 className="text-base font-serif font-black text-foreground">
-          Confirmez sur votre téléphone
+          {t('pay_confirm_on_phone')}
         </h3>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
-          {operatorLabel} vient d'envoyer une demande au <strong className="text-foreground">{phone}</strong>.
-          Composez votre code secret pour valider le paiement.
+          {operatorLabel} {t('pay_request_sent_to')} <strong className="text-foreground">{phone}</strong>.
+          {t('pay_enter_pin')}
         </p>
       </div>
 
       <div className="rounded-2xl bg-muted/50 border border-[#EFE2D0] dark:border-border/80 p-3.5 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Montant débité</span>
+          <span className="text-muted-foreground">{t('pay_amount_debited')}</span>
           <span className="font-bold text-foreground tabular-nums">{grossAmount.toLocaleString()} FCFA</span>
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Crédité au portefeuille</span>
+          <span className="text-muted-foreground">{t('pay_credited_to_wallet')}</span>
           <span className="font-bold text-foreground tabular-nums">{netAmount.toLocaleString()} FCFA</span>
         </div>
       </div>
 
       <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
         <span className="w-1.5 h-1.5 rounded-full bg-[#C96F4A] animate-pulse" />
-        <span>En attente de confirmation · {timeLabel}</span>
+        <span>{t('pay_waiting_confirmation')} · {timeLabel}</span>
       </div>
 
       <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
-        Vous pouvez quitter cet écran : le portefeuille sera crédité dès la confirmation de l'opérateur.
+        {t('pay_can_leave')}
       </p>
 
       <Button
@@ -213,7 +214,7 @@ export function PaymentPendingCard({
         variant="ghost"
         className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
       >
-        Fermer
+        {t('pay_close')}
       </Button>
     </motion.div>
   );

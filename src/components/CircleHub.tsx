@@ -77,7 +77,7 @@ export function CircleHub({
               className="btn-shine gradient-sunset text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
             >
               <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
-              <span>Créer un cercle</span>
+              <span>{t('cir_create_circle_cta')}</span>
             </button>
           }
         />
@@ -95,10 +95,10 @@ export function CircleHub({
           </div>
           <div className="min-w-0">
             <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-[#C96F4A] transition-colors truncate">
-              Rechercher
+              {t('cir_search_title')}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">
-              Découvrir des cercles
+              {t('cir_search_desc')}
             </p>
           </div>
         </button>
@@ -115,10 +115,10 @@ export function CircleHub({
           </div>
           <div className="min-w-0">
             <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-[#718A68] transition-colors truncate">
-              Rejoindre
+              {t('cir_join_title')}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">
-              Par code ou QR
+              {t('cir_join_desc')}
             </p>
           </div>
         </button>
@@ -142,7 +142,7 @@ export function CircleHub({
               onClick={() => setShowJoinPanel(false)}
               className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              Fermer
+              {t('cir_close')}
             </button>
           </div>
           <form onSubmit={handleJoinSubmit} className="flex gap-2">
@@ -150,7 +150,7 @@ export function CircleHub({
               type="text"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="Code (ex: A8F9K2)"
+              placeholder={t('cir_code_placeholder')}
               className="flex-1 h-11 px-3.5 rounded-xl border border-border text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C96F4A]/30"
               autoFocus
             />
@@ -158,11 +158,11 @@ export function CircleHub({
               type="submit"
               className="btn-shine gradient-sunset h-11 px-4 rounded-xl text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
             >
-              Valider
+              {t('cir_validate')}
             </button>
           </form>
           <p className="text-[11px] text-muted-foreground">
-            Vous avez reçu un code ou un lien d'invitation ? Entrez-le ici pour accéder au cercle.
+            {t('cir_join_hint')}
           </p>
         </motion.div>
       )}
@@ -213,17 +213,17 @@ export function CircleHub({
                         </h3>
                         {group.isPrivate && (
                           <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            Privé
+                            {t('cir_private_badge')}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                        {group.members.length} membres · {group.contributionAmount.toLocaleString()} FCFA / {group.frequency === 'monthly' ? 'mois' : 'cycle'}
+                        {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString()} FCFA / {group.frequency === 'monthly' ? t('cir_per_month') : t('cir_per_cycle')}
                       </p>
                       <p className="text-[11px] text-muted-foreground/80 mt-0.5 flex items-center gap-1.5">
-                        <span>Échéance : {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}</span>
+                        <span>{t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}</span>
                         {isMyTurnNext && (
-                          <span className="text-[#718A68] font-bold">· C'est votre tour !</span>
+                          <span className="text-[#718A68] font-bold">{t('cir_your_turn')}</span>
                         )}
                       </p>
                     </div>
@@ -231,7 +231,7 @@ export function CircleHub({
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25">
-                      Actif
+                      {t('dash_active_badge')}
                     </span>
                     <EganyeIcon
                       name="chevron-right"

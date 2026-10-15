@@ -7025,6 +7025,191 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Posez vos questions sur vos cercles et cotisations',
     en: 'Ask questions about your circles and contributions'
   },
+  // Cercles (CircleHub), confirmation et attente de paiement, graphique d'épargne.
+  cir_create_circle_cta: {
+    fr: 'Créer un cercle',
+    en: 'Create a circle'
+  },
+  cir_search_title: {
+    fr: 'Rechercher',
+    en: 'Search'
+  },
+  cir_search_desc: {
+    fr: 'Découvrir des cercles',
+    en: 'Discover circles'
+  },
+  cir_join_title: {
+    fr: 'Rejoindre',
+    en: 'Join'
+  },
+  cir_join_desc: {
+    fr: 'Par code ou QR',
+    en: 'With a code or QR'
+  },
+  cir_close: {
+    fr: 'Fermer',
+    en: 'Close'
+  },
+  cir_code_placeholder: {
+    fr: 'Code (ex: A8F9K2)',
+    en: 'Code (e.g. A8F9K2)'
+  },
+  cir_validate: {
+    fr: 'Valider',
+    en: 'Confirm'
+  },
+  cir_join_hint: {
+    fr: 'Vous avez reçu un code ou un lien d\'invitation ? Entrez-le ici pour accéder au cercle.',
+    en: 'Got an invitation code or link? Enter it here to open the circle.'
+  },
+  cir_private_badge: {
+    fr: 'Privé',
+    en: 'Private'
+  },
+  cir_per_month: {
+    fr: 'mois',
+    en: 'month'
+  },
+  cir_per_cycle: {
+    fr: 'cycle',
+    en: 'cycle'
+  },
+  cir_your_turn: {
+    fr: '· C\'est votre tour !',
+    en: '· It’s your turn!'
+  },
+  pay_confirmed_title: {
+    fr: 'Paiement confirmé',
+    en: 'Payment confirmed'
+  },
+  pay_confirmed_desc: {
+    fr: 'arrivent sur votre portefeuille. Le solde se met à jour tout seul.',
+    en: 'are on their way to your wallet. The balance updates by itself.'
+  },
+  pay_view_wallet: {
+    fr: 'Voir mon portefeuille',
+    en: 'See my wallet'
+  },
+  pay_not_received_title: {
+    fr: 'Confirmation non reçue',
+    en: 'Confirmation not received'
+  },
+  pay_not_received_desc_1: {
+    fr: 'Nous n’avons pas reçu la confirmation de',
+    en: 'We have not received the confirmation from'
+  },
+  pay_not_received_desc_2: {
+    fr: 'Si vous avez composé votre code, le portefeuille sera crédité dès l’arrivée de la confirmation — inutile de payer une seconde fois.',
+    en: 'If you entered your code, the wallet will be credited as soon as the confirmation arrives — no need to pay twice.'
+  },
+  pay_retry: {
+    fr: 'Réessayer',
+    en: 'Try again'
+  },
+  pay_back_to_wallet: {
+    fr: 'Retour au portefeuille',
+    en: 'Back to wallet'
+  },
+  pay_confirm_on_phone: {
+    fr: 'Confirmez sur votre téléphone',
+    en: 'Confirm on your phone'
+  },
+  pay_request_sent_to: {
+    fr: 'vient d’envoyer une demande au',
+    en: 'has just sent a request to'
+  },
+  pay_enter_pin: {
+    fr: 'Composez votre code secret pour valider le paiement.',
+    en: 'Enter your secret code to approve the payment.'
+  },
+  pay_amount_debited: {
+    fr: 'Montant débité',
+    en: 'Amount charged'
+  },
+  pay_credited_to_wallet: {
+    fr: 'Crédité au portefeuille',
+    en: 'Credited to wallet'
+  },
+  pay_waiting_confirmation: {
+    fr: 'En attente de confirmation',
+    en: 'Waiting for confirmation'
+  },
+  pay_can_leave: {
+    fr: 'Vous pouvez quitter cet écran : le portefeuille sera crédité dès la confirmation de l\'opérateur.',
+    en: 'You can leave this screen: the wallet will be credited as soon as the operator confirms.'
+  },
+  pay_close: {
+    fr: 'Fermer',
+    en: 'Close'
+  },
+  cbs_type_debit: {
+    fr: 'Débit imminent',
+    en: 'Upcoming debit'
+  },
+  cbs_type_destructive: {
+    fr: 'Action irréversible',
+    en: 'Irreversible action'
+  },
+  cbs_type_recharge: {
+    fr: 'Rechargement',
+    en: 'Top-up'
+  },
+  cbs_type_transfer: {
+    fr: 'Virement/Cotisation',
+    en: 'Transfer/Contribution'
+  },
+  cbs_type_generic: {
+    fr: 'Opération de paiement',
+    en: 'Payment'
+  },
+  cbs_processing_message: {
+    fr: 'Validation de l’opération en cours...',
+    en: 'Processing the transaction...'
+  },
+  cbs_amount_label: {
+    fr: 'Montant de l\'opération',
+    en: 'Transaction amount'
+  },
+  cbs_my_mobile_money: {
+    fr: 'Mon Mobile Money',
+    en: 'My Mobile Money'
+  },
+  cbs_my_wallet: {
+    fr: 'Mon Portefeuille',
+    en: 'My wallet'
+  },
+  cbs_eganye_wallet: {
+    fr: 'Portefeuille eganyé',
+    en: 'eganyé wallet'
+  },
+  cbs_tontine_circle: {
+    fr: 'Cercle de Tontine',
+    en: 'Tontine circle'
+  },
+  cbs_security_note: {
+    fr: 'Cette opération est chiffrée de bout en bout et sécurisée.',
+    en: 'Secure transaction: checked by the server and recorded in the ledger.'
+  },
+  cbs_cancel: {
+    fr: 'Annuler l\'opération',
+    en: 'Cancel'
+  },
+  cbs_processing: {
+    fr: 'Traitement...',
+    en: 'Processing...'
+  },
+  cbs_confirm_default: {
+    fr: 'Oui, je confirme',
+    en: 'Yes, I confirm'
+  },
+  chart_no_history_title: {
+    fr: 'Pas encore d’historique',
+    en: 'No history yet'
+  },
+  chart_no_history_desc: {
+    fr: 'Votre courbe d’épargne se dessinera dès votre première opération.',
+    en: 'Your savings curve will appear after your first transaction.'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'

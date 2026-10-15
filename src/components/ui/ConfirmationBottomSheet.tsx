@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ShieldAlert, ArrowDown, CreditCard, Send, Wallet, X, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
 import { EganyeMascot } from './EganyeMascot';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ConfirmationBottomSheetProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function ConfirmationBottomSheet({
   isLoading = false,
   confirmLabel,
 }: ConfirmationBottomSheetProps) {
+  const { t } = useLanguage();
   // Prevent background scroll when open
   React.useEffect(() => {
     if (isOpen) {
@@ -101,7 +103,7 @@ export function ConfirmationBottomSheet({
                       {title}
                     </h3>
                     <p className="text-[13px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {type === 'debit' ? 'Débit imminent' : type === 'destructive' ? 'Action irréversible' : type === 'recharge' ? 'Rechargement' : type === 'transfer' ? 'Virement/Cotisation' : 'Opération de paiement'}
+                      {type === 'debit' ? t('cbs_type_debit') : type === 'destructive' ? t('cbs_type_destructive') : type === 'recharge' ? t('cbs_type_recharge') : type === 'transfer' ? t('cbs_type_transfer') : t('cbs_type_generic')}
                     </p>
                   </div>
                 </div>
@@ -117,7 +119,7 @@ export function ConfirmationBottomSheet({
               <div className="px-6 py-2 space-y-4">
                 {isLoading ? (
                   <div className="py-4 flex flex-col items-center justify-center space-y-2">
-                    <EganyeMascot variant="payment" size={90} message="Validation de l’opération en cours..." />
+                    <EganyeMascot variant="payment" size={90} message={t('cbs_processing_message')} />
                   </div>
                 ) : (
                   <>
@@ -129,7 +131,7 @@ export function ConfirmationBottomSheet({
                     {amount !== undefined && (
                       <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
                         <span className="text-[13px] uppercase font-black text-muted-foreground tracking-widest">
-                          Montant de l'opération
+                          {t('cbs_amount_label')}
                         </span>
                         <span className={`text-2xl font-black mt-1 ${
                           type === 'debit' ? 'text-danger' : 'text-secondary'
@@ -146,7 +148,7 @@ export function ConfirmationBottomSheet({
                           <div className="p-2 bg-card rounded-full shadow-xs border border-border">
                             {type === 'recharge' ? <CreditCard className="w-4 h-4 text-foreground" /> : <Wallet className="w-4 h-4 text-foreground" />}
                           </div>
-                          <span className="text-[13px]">{type === 'recharge' ? 'Mon Mobile Money' : 'Mon Portefeuille'}</span>
+                          <span className="text-[13px]">{type === 'recharge' ? t('cbs_my_mobile_money') : t('cbs_my_wallet')}</span>
                         </div>
 
                         <div className="flex-1 flex flex-col items-center justify-center relative px-2">
@@ -160,7 +162,7 @@ export function ConfirmationBottomSheet({
                           <div className="p-2 bg-card rounded-full shadow-xs border border-border">
                             {type === 'recharge' ? <Wallet className="w-4 h-4 text-secondary" /> : <Send className="w-4 h-4 text-secondary" />}
                           </div>
-                          <span className="text-[13px]">{type === 'recharge' ? 'Portefeuille eganyé' : 'Cercle de Tontine'}</span>
+                          <span className="text-[13px]">{type === 'recharge' ? t('cbs_eganye_wallet') : t('cbs_tontine_circle')}</span>
                         </div>
                       </div>
                     )}
@@ -169,7 +171,7 @@ export function ConfirmationBottomSheet({
                     {amount !== undefined && (
                       <div className="flex items-center gap-2 text-[13px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
                         <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
-                        <span>Cette opération est chiffrée de bout en bout et sécurisée.</span>
+                        <span>{t('cbs_security_note')}</span>
                       </div>
                     )}
                   </>
@@ -184,7 +186,7 @@ export function ConfirmationBottomSheet({
                   disabled={isLoading}
                   className="w-full sm:order-1 rounded-2xl h-11 border-border text-foreground hover:bg-card font-bold"
                 >
-                  Annuler l'opération
+                  {t('cbs_cancel')}
                 </Button>
                 <Button
                   onClick={onConfirm}
@@ -200,10 +202,10 @@ export function ConfirmationBottomSheet({
                   {isLoading ? (
                     <span className="flex items-center gap-1.5 justify-center">
                       <span className="w-4.5 h-4.5 border-2 border-white/35 border-t-white rounded-full animate-spin" />
-                      Traitement...
+                      {t('cbs_processing')}
                     </span>
                   ) : (
-                    confirmLabel || 'Oui, je confirme'
+                    confirmLabel || t('cbs_confirm_default')
                   )}
                 </Button>
               </div>
