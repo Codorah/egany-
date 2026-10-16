@@ -7231,6 +7231,63 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Fiabilité',
     en: 'Reliability'
   },
+  // Détail d'un cercle (GroupDetails) : en-tête, prochaine cotisation, ma situation.
+  gd_status_finished: {
+    fr: 'Terminé',
+    en: 'Finished'
+  },
+  gd_participating_members: {
+    fr: 'membres participants',
+    en: 'participating members'
+  },
+  gd_participating_member: {
+    fr: 'membre participant',
+    en: 'participating member'
+  },
+  gd_next_contribution: {
+    fr: 'Prochaine cotisation',
+    en: 'Next contribution'
+  },
+  gd_in_prefix: {
+    fr: 'Dans',
+    en: 'In'
+  },
+  gd_days: {
+    fr: 'jours',
+    en: 'days'
+  },
+  gd_day: {
+    fr: 'jour',
+    en: 'day'
+  },
+  gd_kyc_banner_title: {
+    fr: 'Vérification de sécurité',
+    en: 'Security check'
+  },
+  gd_kyc_banner_desc: {
+    fr: 'Recommandée avant le premier tour financier',
+    en: 'Recommended before the first payout round'
+  },
+  gd_kyc_banner_cta: {
+    fr: 'Valider ma CNI',
+    en: 'Verify my ID'
+  },
+  gd_my_total: {
+    fr: 'Mon total cotisé',
+    en: 'My total contributed'
+  },
+  gd_cycle_position: {
+    fr: 'Position dans le cycle',
+    en: 'Position in the cycle'
+  },
+  gd_out_of: {
+    fr: 'sur',
+    en: 'of'
+  },
+  gd_management_space: {
+    fr: 'Espace de gestion',
+    en: 'Management'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'

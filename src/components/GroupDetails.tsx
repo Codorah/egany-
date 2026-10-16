@@ -698,11 +698,11 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
               {group.name}
             </h1>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF5EA] text-[#718A68] shrink-0">
-              {group.status === 'active' ? 'Actif' : 'Terminé'}
+              {group.status === 'active' ? t('dash_active_badge') : t('gd_status_finished')}
             </span>
           </div>
           <p className="text-xs text-muted-foreground font-medium mt-0.5">
-            {group.members.length} {group.members.length > 1 ? 'membres participants' : 'membre participant'}
+            {group.members.length} {group.members.length > 1 ? t('gd_participating_members') : t('gd_participating_member')}
           </p>
           {group.description && (
             <p className="text-xs text-muted-foreground/80 line-clamp-1 mt-0.5">
@@ -717,10 +717,10 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-[#C96F4A] flex items-center gap-1.5">
             <EganyeIcon name="pending" size={14} />
-            <span>Prochaine cotisation</span>
+            <span>{t('gd_next_contribution')}</span>
           </span>
           <span className="text-xs font-bold text-muted-foreground">
-            Dans {daysRemaining} {daysRemaining > 1 ? 'jours' : 'jour'}
+            {t('gd_in_prefix')} {daysRemaining} {daysRemaining > 1 ? t('gd_days') : t('gd_day')}
           </span>
         </div>
 
@@ -728,7 +728,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
           <div>
             <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="lg" />
             <p className="text-xs text-muted-foreground mt-0.5">
-              Échéance : {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+              {t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
             </p>
           </div>
         </div>
@@ -738,7 +738,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
           onClick={() => setSection('cotisations')}
           className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
         >
-          <span>Cotiser — {group.contributionAmount.toLocaleString()} {group.currency}</span>
+          <span>{t('dash_contribute_cta')} — {group.contributionAmount.toLocaleString()} {group.currency}</span>
         </button>
       </div>
 
@@ -750,8 +750,8 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
               <EganyeIcon name="shield" size={16} />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-xs text-foreground truncate">Vérification de sécurité</p>
-              <p className="text-[11px] text-muted-foreground truncate">Recommandée avant le premier tour financier</p>
+              <p className="font-bold text-xs text-foreground truncate">{t('gd_kyc_banner_title')}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{t('gd_kyc_banner_desc')}</p>
             </div>
           </div>
           {onNavigateToVerification && (
@@ -760,7 +760,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
               onClick={onNavigateToVerification}
               className="bg-[#C96F4A] hover:bg-[#B8623E] text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0 cursor-pointer"
             >
-              Valider ma CNI
+              {t('gd_kyc_banner_cta')}
             </Button>
           )}
         </div>
@@ -769,15 +769,15 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {/* 3. Ma Situation */}
       <div className="bg-white dark:bg-card rounded-2xl p-4 shadow-soft border border-[#EFE2D0] dark:border-border/80 grid grid-cols-2 gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">Mon total cotisé</span>
+          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_my_total')}</span>
           <p className="text-base font-serif font-black text-foreground mt-0.5">
             {myContributed !== null ? myContributed.toLocaleString() : '0'} {group.currency}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">Position dans le cycle</span>
+          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_cycle_position')}</span>
           <p className="text-base font-serif font-black text-[#718A68] mt-0.5">
-            {myPositionIdx >= 0 ? `#${myPositionIdx + 1} sur ${group.members.length}` : '-'}
+            {myPositionIdx >= 0 ? `#${myPositionIdx + 1} ${t('gd_out_of')} ${group.members.length}` : '-'}
           </p>
         </div>
       </div>
@@ -785,7 +785,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {/* 4. Sections Secondaires (6 accès nets) */}
       <div className="space-y-2 pt-1">
         <h3 className="font-serif font-black text-sm text-foreground uppercase tracking-wider px-1">
-          Espace de gestion
+          {t('gd_management_space')}
         </h3>
         <div className="bg-white dark:bg-card rounded-2xl shadow-soft border border-[#EFE2D0] dark:border-border/80 overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
           {links.map((link) => (
