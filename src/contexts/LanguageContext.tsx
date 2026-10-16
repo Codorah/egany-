@@ -7210,6 +7210,27 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Votre courbe d’épargne se dessinera dès votre première opération.',
     en: 'Your savings curve will appear after your first transaction.'
   },
+  // CircleMotion : l'animation du cercle (accueil sans cercle).
+  cm_aria: {
+    fr: 'Animation : les membres d’un cercle cotisent par Mobile Money, la cagnotte est reversée à tour de rôle.',
+    en: 'Animation: the members of a circle contribute by Mobile Money, and the pot is paid out in turn.'
+  },
+  cm_cap_contribute: {
+    fr: 'Chacun cotise 5 000 FCFA par Mobile Money',
+    en: 'Everyone contributes 5,000 FCFA by Mobile Money'
+  },
+  cm_cap_full: {
+    fr: 'Cagnotte complète : 30 000 FCFA',
+    en: 'Pot complete: 30,000 FCFA'
+  },
+  cm_cap_receives_suffix: {
+    fr: 'reçoit la cagnotte',
+    en: 'receives the pot'
+  },
+  cm_reliability: {
+    fr: 'Fiabilité',
+    en: 'Reliability'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'

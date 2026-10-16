@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { EganyeIllustration, type EganyeIllustrationName } from './EganyeIllustration';
@@ -7,6 +7,8 @@ import { EganyeMascot, type MascotVariant } from './EganyeMascot';
 interface EmptyStateProps {
   /** Eganyé illustration name (preferred) */
   illustration?: EganyeIllustrationName;
+  /** Visuel animé à la place de l'illustration (ex. CircleMotion). */
+  visual?: ReactNode;
   /** Mascot variant */
   mascotVariant?: MascotVariant;
   /** Legacy: image URL fallback */
@@ -23,6 +25,7 @@ interface EmptyStateProps {
  * EganyeEmptyState — Warm, branded empty state with Eganyé illustrations or Ganyé mascot.
  */
 export function EmptyState({
+  visual,
   illustration,
   mascotVariant,
   illustrationUrl,
@@ -40,7 +43,9 @@ export function EmptyState({
       transition={{ duration: 0.3 }}
       className="glass-card p-6 sm:p-8 rounded-3xl border border-[#EFE2D0] dark:border-border text-center flex flex-col items-center justify-center max-w-md mx-auto my-4 space-y-4"
     >
-      {mascotVariant ? (
+      {visual ? (
+        <div className="w-full max-w-[260px]">{visual}</div>
+      ) : mascotVariant ? (
         <EganyeMascot variant={mascotVariant} size={110} />
       ) : illustration ? (
         <EganyeIllustration name={illustration} width={130} />

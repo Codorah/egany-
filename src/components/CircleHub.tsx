@@ -5,6 +5,7 @@ import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CircleMotion } from './ui/CircleMotion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -181,6 +182,7 @@ export function CircleHub({
             trigger={
               <div>
                 <EmptyState
+                  visual={<CircleMotion />}
                   illustration="no-circles"
                   title={t('no_circle_title') || 'Aucun cercle pour le moment'}
                   description={t('no_circle_desc') || 'Créez votre première tontine pour épargner à plusieurs ou rejoignez un groupe existant.'}

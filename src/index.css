@@ -576,3 +576,17 @@ input:focus, textarea:focus, select:focus {
   width: 2px;
   background: var(--border);
 }
+
+/* ================================================================
+   CircleMotion — orbite lente autour de la cagnotte
+   ================================================================ */
+.cm-orbit {
+  transform-origin: 200px 200px;
+  animation: cm-spin 70s linear infinite;
+}
+@keyframes cm-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-orbit { animation: none; }
+}

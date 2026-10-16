@@ -8,6 +8,7 @@ import { CustomAvatar } from './CustomAvatar';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { EganyeProgress } from './ui/EganyeProgress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CircleMotion } from './ui/CircleMotion';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
@@ -345,6 +346,7 @@ export function Dashboard({
             trigger={
               <div>
                 <EmptyState
+                  visual={<CircleMotion />}
                   illustration="no-circles"
                   title={t('no_circle_title')}
                   description={t('no_circle_desc')}
