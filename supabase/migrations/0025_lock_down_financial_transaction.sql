@@ -60,7 +60,7 @@ declare
   v_transaction_id text;
   v_wallet_account text;
   v_caller uuid := auth.uid();
-  v_jwt_role text := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
+  v_jwt_role text := coalesce(nullif(current_setting('request.jwt.claims', true), '')::json ->> 'role', '');
   v_is_service boolean;
   v_is_direct boolean;
   v_is_admin boolean := false;
@@ -68,6 +68,7 @@ declare
   v_debits_wallet boolean;
   v_cash_by_organizer boolean := false;
   v_contribution record;
+  v_penalty_due numeric;
   v_history_type text;
   v_history_amount numeric;
 begin
@@ -136,8 +137,11 @@ begin
         if not found then
           return jsonb_build_object('success', false, 'message', 'Cotisation introuvable pour cette personne et ce cercle.');
         end if;
-        if p_amount < v_contribution.amount
-             + case when v_contribution.penalty_status = 'pending' then coalesce(v_contribution.penalty_applied, 0) else 0 end then
+        -- Calculé hors du IF : plpgsql coupe la condition au premier THEN, y
+        -- compris celui d'un CASE, ce qui donnait « syntax error at end of input ».
+        v_penalty_due := case when v_contribution.penalty_status = 'pending'
+                              then coalesce(v_contribution.penalty_applied, 0) else 0 end;
+        if p_amount < v_contribution.amount + v_penalty_due then
           return jsonb_build_object('success', false, 'message', 'Le montant ne couvre pas la cotisation.');
         end if;
         -- Prélèvement du portefeuille : jamais sur une cotisation déjà payée.
