@@ -212,6 +212,10 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
         actionType: 'contribution_payment',
         debitAccount: `external_cash:${userId}`,
         creditAccount: `tontine_group:${group.id}`,
+        // Depuis la migration 0025, une écriture en espèces doit désigner la
+        // cotisation qu'elle solde : le serveur vérifie qu'elle est bien de
+        // ce membre, dans ce cercle, et que le montant la couvre.
+        metadata: { contributionId: inserted.id, groupId: group.id },
       });
       if (!ledgerResult.success) {
         console.error('Ledger entry failed for manual payment:', ledgerResult.message);
