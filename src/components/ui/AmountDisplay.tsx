@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCountUp } from '@/hooks/useCountUp';
 
 interface AmountDisplayProps {
   amount: number;
@@ -35,9 +36,11 @@ export function AmountDisplay({
   className = '',
   currencyClassName = 'text-muted-foreground',
 }: AmountDisplayProps) {
+  // Le montant « compte » vers sa nouvelle valeur quand il change.
+  const shown = useCountUp(amount);
   return (
     <span className={`font-serif font-black tracking-tight ${SIZE_CLASSES[size]} ${className}`}>
-      {hidden ? '••••••' : amount.toLocaleString()}{' '}
+      {hidden ? '••••••' : shown.toLocaleString()}{' '}
       <span className={`font-sans font-bold ${CURRENCY_SIZE_CLASSES[size]} ${currencyClassName}`}>
         {currency}
       </span>
