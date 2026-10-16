@@ -165,7 +165,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       setVaults(freshVaults);
       setCreatedVault(freshVaults.find((v) => v.id === result.vaultId) || null);
       setJustCreated(true);
-      toast.success("Votre épargne a été créée avec succès !");
+      toast.success(t('mb_toast_created'));
     } catch (err: any) {
       toast.error(err.message || t('bank_create_error'));
     } finally {
@@ -176,7 +176,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const handleCreateNextStep = () => {
     if (createStep === 1) {
       if (createProject === 'autre' && !createProjectCustom.trim()) {
-        toast.error("Veuillez préciser le nom de votre projet.");
+        toast.error(t('mb_toast_name_required'));
         return;
       }
       setCreateStep(2);
@@ -190,7 +190,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       }
       const initial = parseFloat(createInitialDeposit) || 0;
       if (initial > user.walletBalance) {
-        toast.error("Le montant de départ dépasse votre solde disponible.");
+        toast.error(t('mb_toast_start_too_high'));
         return;
       }
       setCreateStep(3);
@@ -243,7 +243,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       return;
     }
     if (value > activeVault.balance) {
-      toast.error("Le montant demandé dépasse le solde du coffre.");
+      toast.error(t('mb_toast_over_vault'));
       return;
     }
 
@@ -285,7 +285,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
   const handleDelete = async (vault: PersonalVault) => {
     if (vault.balance > 0) {
-      toast.error("Veuillez retirer les fonds avant de supprimer ce coffre.");
+      toast.error(t('mb_toast_withdraw_first'));
       return;
     }
     setActionBusy(true);
@@ -495,7 +495,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       className="rounded-xl h-11 font-medium"
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      Tu peux commencer avec 0 FCFA et alimenter ton coffre plus tard.
+                      {t('mb_start_hint')}
                     </p>
                   </div>
                 </div>
@@ -523,10 +523,10 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     {/* Quick shortcuts */}
                     <div className="grid grid-cols-4 gap-1.5 pt-1">
                       {[
-                        { label: '1 mois', months: 1 },
-                        { label: '3 mois', months: 3 },
-                        { label: '6 mois', months: 6 },
-                        { label: '1 an', months: 12 },
+                        { label: t('mb_dur_1m'), months: 1 },
+                        { label: t('mb_dur_3m'), months: 3 },
+                        { label: t('mb_dur_6m'), months: 6 },
+                        { label: t('mb_dur_1y'), months: 12 },
                       ].map((dur) => (
                         <button
                           key={dur.label}
@@ -550,9 +550,9 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       <EganyeIcon name="shield" size={16} />
                     </div>
                     <div className="text-xs space-y-1">
-                      <p className="font-bold text-[#C96F4A]">Argent réservé (discipline d'épargne)</p>
+                      <p className="font-bold text-[#C96F4A]">{t('mb_reserved_title')}</p>
                       <p className="text-muted-foreground leading-relaxed">
-                        Pour vous aider à ne pas dépenser vos économies sur un coup de tête, les fonds restent verrouillés jusqu'à la date de déblocage. En cas d'urgence absolue, un déblocage anticipé reste possible avec confirmation.
+                        {t('mb_reserved_desc')}
                       </p>
                     </div>
                   </div>
@@ -597,9 +597,9 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-medium">Statut</span>
+                      <span className="text-xs text-muted-foreground font-medium">{t('mb_status_label')}</span>
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FFF4E5] text-[#C96F4A] border border-[#C96F4A]/25">
-                        🔒 Réservé jusqu'à terme
+                        {t('mb_locked_badge')}
                       </span>
                     </div>
                   </div>
@@ -615,7 +615,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     disabled={creating}
                     className="flex-1 h-12 rounded-xl font-bold cursor-pointer"
                   >
-                    Retour
+                    {t('mb_back')}
                   </Button>
                 )}
                 {createStep < CREATE_TOTAL_STEPS ? (
@@ -623,7 +623,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     onClick={handleCreateNextStep}
                     className="btn-shine gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
                   >
-                    Continuer
+                    {t('mb_continue')}
                   </Button>
                 ) : (
                   <Button
@@ -799,8 +799,8 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       </p>
                       <p className="text-[11px] text-muted-foreground/80 mt-0.5">
                         {unlocked
-                          ? 'Disponible pour retrait'
-                          : `Déblocage : ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                          ? t('mb_available_for_withdrawal')
+                          : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                       </p>
                     </div>
                   </div>
@@ -813,7 +813,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                           : 'bg-[#FFF4E5] text-[#C96F4A] border border-[#C96F4A]/25'
                       }`}
                     >
-                      {unlocked ? 'Débloqué' : 'En cours'}
+                      {unlocked ? t('mb_unlocked') : t('mb_in_progress')}
                     </span>
                     <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors" />
                   </div>
@@ -937,12 +937,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 }`}>
                   <p className="font-bold flex items-center gap-1.5">
                     <EganyeIcon name={unlocked ? "check" : "shield"} size={14} />
-                    {unlocked ? "Fonds disponibles" : `Réservé encore ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`}
+                    {unlocked ? t('mb_funds_available') : `${t('mb_reserved_for')} ${daysLeft} ${daysLeft > 1 ? t('gd_days') : t('gd_day')}`}
                   </p>
                   <p className="text-muted-foreground">
                     {unlocked
-                      ? "La période de blocage est terminée. Vous pouvez récupérer vos fonds ou prolonger le coffre."
-                      : `Date prévue : ${new Date(activeVault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                      ? t('mb_lock_over_desc')
+                      : `${t('mb_planned_date_prefix')} ${new Date(activeVault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
                   </p>
                 </div>
 
@@ -990,7 +990,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         onClick={() => setActionAmount(activeVault.balance.toString())}
                         className="py-1 px-2 text-[11px] font-bold rounded-lg border border-[#718A68] text-[#718A68] bg-[#718A68]/10 cursor-pointer ml-auto"
                       >
-                        Tout retirer
+                        {t('mb_withdraw_all')}
                       </button>
                     )}
                   </div>
@@ -1035,7 +1035,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         disabled={actionBusy}
                         className="text-xs font-bold text-destructive hover:underline cursor-pointer"
                       >
-                        Supprimer ce coffre
+                        {t('mb_delete_vault')}
                       </button>
                     )}
                   </div>
@@ -1052,9 +1052,9 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning mx-auto flex items-center justify-center">
             <EganyeIcon name="shield" size={24} />
           </div>
-          <DialogTitle className="font-serif text-lg font-black">Déblocage anticipé</DialogTitle>
+          <DialogTitle className="font-serif text-lg font-black">{t('mb_early_unlock_title')}</DialogTitle>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Cet argent est réservé pour votre objectif. Le débloquer avant terme interrompt votre discipline d'épargne. Confirmez-vous le retrait vers votre solde disponible ?
+            {t('mb_early_unlock_desc')}
           </p>
           <div className="flex gap-2 pt-2">
             <Button
@@ -1062,13 +1062,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               onClick={() => setShowEarlyUnlockConfirm(false)}
               className="flex-1 rounded-xl h-11 font-bold"
             >
-              Conserver
+              {t('mb_keep')}
             </Button>
             <Button
               onClick={() => handleWithdraw(true)}
               className="flex-1 rounded-xl h-11 font-bold bg-[#C96F4A] hover:bg-[#B8623E] text-white"
             >
-              Confirmer
+              {t('mb_confirm')}
             </Button>
           </div>
         </DialogContent>

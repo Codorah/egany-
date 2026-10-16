@@ -7288,6 +7288,127 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Espace de gestion',
     en: 'Management'
   },
+  // Ma Banque (MyBank) : textes restés en dur.
+  mb_toast_created: {
+    fr: 'Votre épargne a été créée avec succès !',
+    en: 'Your savings have been created!'
+  },
+  mb_toast_name_required: {
+    fr: 'Veuillez préciser le nom de votre projet.',
+    en: 'Please give your project a name.'
+  },
+  mb_toast_start_too_high: {
+    fr: 'Le montant de départ dépasse votre solde disponible.',
+    en: 'The starting amount is higher than your available balance.'
+  },
+  mb_toast_over_vault: {
+    fr: 'Le montant demandé dépasse le solde du coffre.',
+    en: 'The requested amount is higher than the vault balance.'
+  },
+  mb_toast_withdraw_first: {
+    fr: 'Veuillez retirer les fonds avant de supprimer ce coffre.',
+    en: 'Please withdraw the funds before deleting this vault.'
+  },
+  mb_start_hint: {
+    fr: 'Tu peux commencer avec 0 FCFA et alimenter ton coffre plus tard.',
+    en: 'You can start with 0 FCFA and add money to your vault later.'
+  },
+  mb_dur_1m: {
+    fr: '1 mois',
+    en: '1 month'
+  },
+  mb_dur_3m: {
+    fr: '3 mois',
+    en: '3 months'
+  },
+  mb_dur_6m: {
+    fr: '6 mois',
+    en: '6 months'
+  },
+  mb_dur_1y: {
+    fr: '1 an',
+    en: '1 year'
+  },
+  mb_reserved_title: {
+    fr: 'Argent réservé (discipline d\'épargne)',
+    en: 'Reserved money (savings discipline)'
+  },
+  mb_reserved_desc: {
+    fr: 'Pour vous aider à ne pas dépenser vos économies sur un coup de tête, les fonds restent verrouillés jusqu\'à la date de déblocage. En cas d\'urgence absolue, un déblocage anticipé reste possible avec confirmation.',
+    en: 'To help you avoid spending your savings on impulse, the funds stay locked until the unlock date. In an absolute emergency, an early unlock is still possible with confirmation.'
+  },
+  mb_status_label: {
+    fr: 'Statut',
+    en: 'Status'
+  },
+  mb_locked_badge: {
+    fr: '🔒 Réservé jusqu\'à terme',
+    en: '🔒 Locked until maturity'
+  },
+  mb_back: {
+    fr: 'Retour',
+    en: 'Back'
+  },
+  mb_continue: {
+    fr: 'Continuer',
+    en: 'Continue'
+  },
+  mb_available_for_withdrawal: {
+    fr: 'Disponible pour retrait',
+    en: 'Available for withdrawal'
+  },
+  mb_unlock_prefix: {
+    fr: 'Déblocage :',
+    en: 'Unlocks:'
+  },
+  mb_unlocked: {
+    fr: 'Débloqué',
+    en: 'Unlocked'
+  },
+  mb_in_progress: {
+    fr: 'En cours',
+    en: 'In progress'
+  },
+  mb_funds_available: {
+    fr: 'Fonds disponibles',
+    en: 'Funds available'
+  },
+  mb_reserved_for: {
+    fr: 'Réservé encore',
+    en: 'Locked for another'
+  },
+  mb_lock_over_desc: {
+    fr: 'La période de blocage est terminée. Vous pouvez récupérer vos fonds ou prolonger le coffre.',
+    en: 'The lock period is over. You can take your funds back or extend the vault.'
+  },
+  mb_planned_date_prefix: {
+    fr: 'Date prévue :',
+    en: 'Planned date:'
+  },
+  mb_withdraw_all: {
+    fr: 'Tout retirer',
+    en: 'Withdraw all'
+  },
+  mb_delete_vault: {
+    fr: 'Supprimer ce coffre',
+    en: 'Delete this vault'
+  },
+  mb_early_unlock_title: {
+    fr: 'Déblocage anticipé',
+    en: 'Early unlock'
+  },
+  mb_early_unlock_desc: {
+    fr: 'Cet argent est réservé pour votre objectif. Le débloquer avant terme interrompt votre discipline d\'épargne. Confirmez-vous le retrait vers votre solde disponible ?',
+    en: 'This money is set aside for your goal. Unlocking it early breaks your savings discipline. Do you confirm the withdrawal to your available balance?'
+  },
+  mb_keep: {
+    fr: 'Conserver',
+    en: 'Keep it'
+  },
+  mb_confirm: {
+    fr: 'Confirmer',
+    en: 'Confirm'
+  },
   offline_data_from: {
     fr: 'Données du',
     en: 'Data from'
