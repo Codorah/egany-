@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
+import { Celebration } from './Celebration';
 import { apiUrl } from '@/lib/apiBase';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -104,8 +105,9 @@ export function PaymentPendingCard({
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white dark:bg-card rounded-3xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
       >
-        <div className="flex justify-center">
+        <div className="relative flex justify-center">
           <BrandVisual name="success" height={150} alt="" />
+          <Celebration />
         </div>
         <div className="space-y-1.5">
           <h3 className="text-base font-serif font-black text-foreground">{t('pay_confirmed_title')}</h3>
