@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, createChannel } from '@/lib/supabase';
-import { mapContributionRow, mapPayoutRow, mapProfileRow, MEMBER_PROFILE_COLUMNS } from '@/lib/mappers';
+import { fetchMemberProfiles } from '@/lib/members';
+import { mapContributionRow, mapPayoutRow } from '@/lib/mappers';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { Group, UserProfile, Contribution, Payout } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,12 +51,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
   useEffect(() => {
     const fetchMembers = async () => {
       if (!isManager || group.members.length === 0) return;
-      const { data, error } = await supabase.from('member_profiles').select(MEMBER_PROFILE_COLUMNS).in('id', group.members);
-      if (error) {
-        console.error("Error fetching members:", error);
-        return;
-      }
-      setMembers((data ?? []).map(mapProfileRow));
+      setMembers(await fetchMemberProfiles(group.members));
     };
 
     fetchMembers();

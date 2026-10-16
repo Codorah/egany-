@@ -19,7 +19,7 @@ import { ContributionsManager } from './ContributionsManager';
 import { CalendarView } from './CalendarView';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { supabase } from '@/lib/supabase';
-import { mapProfileRow, MEMBER_PROFILE_COLUMNS } from '@/lib/mappers';
+import { fetchMemberProfiles } from '@/lib/members';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
@@ -78,15 +78,9 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         setMembers({});
         return;
       }
-      const { data, error } = await supabase.from('member_profiles').select(MEMBER_PROFILE_COLUMNS).in('id', group.members);
-      if (error) {
-        console.error('Error fetching members:', error);
-        return;
-      }
+      const list = await fetchMemberProfiles(group.members);
       const entries: Record<string, UserProfile> = {};
-      for (const row of data ?? []) {
-        entries[row.id] = mapProfileRow(row);
-      }
+      for (const member of list) entries[member.uid] = member;
       setMembers(entries);
     };
     fetchMembers();
