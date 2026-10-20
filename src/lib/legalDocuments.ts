@@ -29,7 +29,7 @@ export interface LegalDocument {
 }
 
 /** Date de la dernière révision de l'ensemble des textes. */
-export const LEGAL_LAST_UPDATED = '15 octobre 2026';
+export const LEGAL_LAST_UPDATED = '20 octobre 2026';
 
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
@@ -290,15 +290,16 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         paragraphs: [
           "Compte : nom, adresse e-mail, numéro de téléphone, photo ou avatar si vous en choisissez un, langue préférée.",
           "Vérification d'identité : nom complet, numéro et photo de votre pièce d'identité.",
-          "Microcrédit : la description de votre projet et, si vous en joignez une, votre vidéo de présentation ou son lien.",
-          "Activité : cercles, cotisations, versements, dépôts, retraits, demandes de crédit, messages dans les discussions de cercle, et journal de sécurité (tentatives de code PIN, opérations sur votre argent).",
+          "Microcrédit : la description de votre projet, le montant et la durée demandés.",
+          "Coup de pouce : la description de votre activité, le montant demandé et votre vidéo de présentation (ou son lien). Une vidéo envoyée est conservée dans un espace privé, visible seulement par vous et notre équipe.",
+          "Activité : cercles, cotisations, versements, dépôts, retraits, demandes de crédit et d'aide, messages dans les discussions de cercle, et journal de sécurité (tentatives de code PIN, opérations sur votre argent).",
           "Votre code PIN et votre mot de passe ne sont jamais conservés en clair : seule une empreinte irréversible est stockée.",
         ],
       },
       {
         heading: '2. Pourquoi',
         paragraphs: [
-          "Faire fonctionner vos cercles et votre portefeuille, vérifier votre identité (obligation de lutte contre la fraude et le blanchiment), calculer votre score de réputation, étudier vos demandes de crédit, vous envoyer les notifications que vous avez choisies, et répondre à vos demandes d'aide.",
+          "Faire fonctionner vos cercles et votre portefeuille, vérifier votre identité (obligation de lutte contre la fraude et le blanchiment), calculer votre score de réputation, étudier vos demandes de crédit et de Coup de pouce, vous envoyer les notifications que vous avez choisies, et répondre à vos demandes d'aide.",
           "Nous ne vendons pas vos données et ne les utilisons pas pour de la publicité.",
         ],
       },
@@ -306,7 +307,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: '3. Qui y a accès',
         paragraphs: [
           "Les membres de vos cercles voient votre nom, votre avatar et l'état de vos cotisations dans ces cercles. Vos coordonnées (téléphone, e-mail) ne leur sont pas montrées.",
-          "Notre équipe y accède pour la vérification d'identité, le support et l'étude des crédits.",
+          "Notre équipe y accède pour la vérification d'identité, le support et l'étude des demandes de crédit et de Coup de pouce.",
           "Nos prestataires techniques, uniquement pour le service rendu : Supabase (base de données et stockage), Vercel (hébergement), PayDunya (paiements Mobile Money), Twilio (SMS et WhatsApp), Resend (e-mails), Anthropic (assistant intelligent : seules les questions que vous lui posez lui sont transmises).",
         ],
       },

@@ -19,7 +19,8 @@ import { requireUserOr401 } from './_requireUser';
  * Garde-fous
  * ----------
  * Deux conditions cumulatives, vérifiées à chaque appel :
- *   1. on n'est pas en production (VERCEL_ENV) ;
+ *   1. on est en local (VERCEL_ENV absent ou « development ») : ni la
+ *      production ni les déploiements preview, qui partagent la même base ;
  *   2. aucun identifiant Paydunya n'est configuré — dès qu'un vrai paiement
  *      est possible, la simulation n'a plus aucune raison d'exister.
  *
@@ -31,7 +32,10 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const isProduction = process.env.VERCEL_ENV === 'production';
+  // Seul le poste de développement est accepté : un déploiement « preview »
+  // de Vercel partage la base de production, il ne doit jamais créditer.
+  const vercelEnv = process.env.VERCEL_ENV;
+  const isProduction = Boolean(vercelEnv) && vercelEnv !== 'development';
   const hasPaydunyaCredentials = Boolean(
     process.env.PAYDUNYA_MASTER_KEY && process.env.PAYDUNYA_PRIVATE_KEY && process.env.PAYDUNYA_TOKEN
   );

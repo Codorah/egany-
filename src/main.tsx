@@ -4,16 +4,25 @@ import App from './App.tsx';
 import { LanguageProvider } from './contexts/LanguageContext.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { PublicLegalPage, publicLegalPageFor } from './components/PublicLegalPage.tsx';
 import './index.css';
+
+// Les documents légaux ont une adresse publique, lisible sans compte
+// (exigence de la console Google Play) : pas d'authentification à charger.
+const publicLegalDoc = publicLegalPageFor(window.location.pathname);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <LanguageProvider>
-          <App />
-        </LanguageProvider>
-      </AuthProvider>
+      {publicLegalDoc ? (
+        <PublicLegalPage docId={publicLegalDoc} />
+      ) : (
+        <AuthProvider>
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
+        </AuthProvider>
+      )}
     </ErrorBoundary>
   </StrictMode>,
 );

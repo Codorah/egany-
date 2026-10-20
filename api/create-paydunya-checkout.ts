@@ -1,3 +1,5 @@
+import { requireUserOr401 } from './_requireUser';
+
 /**
  * Ouverture d'une session de paiement Paydunya.
  *
@@ -143,7 +145,15 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // La facture crédite le compte indiqué : on exige la session de ce
+    // compte, pour qu'une recharge ne puisse pas être ouverte au nom d'autrui.
+    const caller = await requireUserOr401(req, res);
+    if (!caller) return;
+
     const { amount, userId, userName, userEmail, phone, paymentMethod } = req.body;
+    if (userId !== caller.id) {
+      return res.status(403).json({ error: 'Vous ne pouvez recharger que votre propre portefeuille.' });
+    }
 
     const parsedAmount = Number(amount);
     // Paydunya refuse toute facture sous 200 FCFA (vérifié en direct contre

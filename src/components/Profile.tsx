@@ -35,7 +35,7 @@ import {
   type PlatformSettings,
 } from '@/lib/platformSettings';
 import { PAYDUNYA_COUNTRIES, getOperatorsForCountry, findOperatorLabel } from '@/lib/paydunyaMethods';
-import { apiUrl } from '@/lib/apiBase';
+import { apiUrl, apiFetch } from '@/lib/apiBase';
 import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface ProfileProps {
@@ -379,9 +379,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       // `amount` est le montant NET voulu sur le portefeuille. Le serveur
       // recalcule lui-même les frais et facture le brut : le montant facturé
       // ne se décide jamais d'après une valeur envoyée par le navigateur.
-      const response = await fetch(apiUrl('/api/create-paydunya-checkout'), {
+      const response = await apiFetch('/api/create-paydunya-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: amt,
           userId: user.uid,
