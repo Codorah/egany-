@@ -5,7 +5,8 @@
 --   * MICROCRÉDIT : plus de vidéo ni de frais de dossier. La personne décrit
 --     son projet, le montant et la durée ; l'équipe fait une offre ou refuse.
 --     Durée minimum 3 mois (Google Play interdit les prêts personnels à
---     rembourser en 60 jours ou moins) et taux plafonné à 24 %.
+--     rembourser en 60 jours ou moins). Taux total plafonné à 24 % ET taux
+--     annuel (intérêt simple) plafonné à 36 % : taux <= min(24, 3 × mois).
 --   * COUP DE POUCE : nouvelle aide gratuite. La personne indique le montant
 --     voulu, explique son activité en vidéo (obligatoire) et paie les frais
 --     d'étude (1 000 FCFA, non remboursables). L'équipe étudie le dossier et
@@ -30,7 +31,7 @@ ALTER TABLE public.credit_applications ADD CONSTRAINT credit_applications_durati
   CHECK (duration_months BETWEEN 3 AND 24);
 ALTER TABLE public.credit_applications DROP CONSTRAINT IF EXISTS credit_applications_interest_rate_check;
 ALTER TABLE public.credit_applications ADD CONSTRAINT credit_applications_interest_rate_check
-  CHECK (interest_rate >= 0 AND interest_rate <= 24);
+  CHECK (interest_rate >= 0 AND interest_rate <= 24 AND (duration_months IS NULL OR interest_rate <= 3 * duration_months));
 
 DROP FUNCTION IF EXISTS public.submit_credit_application(uuid, text, text, numeric, integer, text, text, text);
 
@@ -136,11 +137,13 @@ BEGIN
   IF p_offered_amount IS NULL OR p_offered_amount <= 0 THEN
     RETURN jsonb_build_object('success', false, 'message', 'Le montant offert doit être supérieur à zéro.');
   END IF;
-  IF p_interest_rate IS NULL OR p_interest_rate < 0 OR p_interest_rate > 24 THEN
-    RETURN jsonb_build_object('success', false, 'message', 'Le taux doit être compris entre 0 et 24 %.');
-  END IF;
   IF p_duration_months IS NULL OR p_duration_months < 3 OR p_duration_months > 24 THEN
     RETURN jsonb_build_object('success', false, 'message', 'La durée doit être comprise entre 3 et 24 mois.');
+  END IF;
+  IF p_interest_rate IS NULL OR p_interest_rate < 0 OR p_interest_rate > least(24, 3 * p_duration_months) THEN
+    RETURN jsonb_build_object('success', false, 'message',
+      'Pour ' || p_duration_months || ' mois, le taux doit être compris entre 0 et ' || least(24, 3 * p_duration_months)
+        || ' % (taux annuel maximum 36 %).');
   END IF;
 
   SELECT * INTO v_app FROM public.credit_applications WHERE id = p_application_id FOR UPDATE;

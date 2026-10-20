@@ -6,7 +6,7 @@ import LegalDocumentDialog from './LegalDocumentDialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest } from '@/lib/marketplace';
-import { CreditApplication, fetchCreditApplicationFee, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
+import { CreditApplication, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
 import { CreditApplicationPanel } from './CreditApplicationPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -40,22 +40,19 @@ export function Marketplace({ user }: MarketplaceProps) {
   // Le crédit vit dans credit_applications (dossier + offre + échéancier),
   // les autres services restent de simples demandes marketplace_requests.
   const [creditApps, setCreditApps] = useState<CreditApplication[]>([]);
-  const [applicationFee, setApplicationFee] = useState(1000);
 
   const loadData = async () => {
     setLoading(true);
     setLoadError(false);
     try {
-      const [svc, reqs, apps, fee] = await Promise.all([
+      const [svc, reqs, apps] = await Promise.all([
         fetchActiveServices(),
         fetchMyMarketplaceRequests(user.uid),
         fetchMyCreditApplications(user.uid),
-        fetchCreditApplicationFee(),
       ]);
       setServices(svc);
       setMyRequests(reqs);
       setCreditApps(apps);
-      setApplicationFee(fee);
     } catch (err) {
       console.error('Marketplace loadData error:', err);
       setLoadError(true);
@@ -93,7 +90,7 @@ export function Marketplace({ user }: MarketplaceProps) {
   const creditCardStatus = (): { label: string; className: string } | null => {
     const open = creditApps.find(isOpenApplication);
     if (!open) return null;
-    if (open.status === 'submitted') return { label: 'Dossier en cours d’étude', className: 'bg-warning-soft text-warning' };
+    if (open.status === 'submitted') return { label: 'Demande en cours d’étude', className: 'bg-warning-soft text-warning' };
     if (open.status === 'offered') return { label: 'Une offre vous attend', className: 'bg-success-soft text-secondary' };
     return { label: `Reste à rembourser : ${remainingDue(open).toLocaleString('fr-FR')} FCFA`, className: 'bg-primary/10 text-primary' };
   };
@@ -226,7 +223,6 @@ export function Marketplace({ user }: MarketplaceProps) {
                     user={user}
                     service={selectedService}
                     applications={creditApps}
-                    applicationFee={applicationFee}
                     onChanged={loadData}
                     onShowTerms={() => setShowCreditTerms(true)}
                   />

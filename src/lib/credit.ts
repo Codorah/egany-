@@ -1,7 +1,8 @@
 /**
  * Microcrédit sur dossier de projet (migration 0019).
  *
- * Parcours : dépôt du dossier + frais (submit) → offre ou refus de l'équipe
+ * Parcours : dépôt de la demande, sans frais ni vidéo depuis la migration 0026
+ * (submit) → offre ou refus de l'équipe
  * (makeOffer / reject) → l'emprunteur accepte ou décline (accept / decline)
  * → mensualités (repay, et prélèvement automatique côté serveur).
  * Toute écriture passe par une fonction serveur : les tables sont en lecture
@@ -29,9 +30,6 @@ export interface CreditApplication {
   projectDescription: string;
   requestedAmount: number;
   requestedMonths: number;
-  videoPath?: string;
-  videoUrl?: string;
-  applicationFee: number;
   status: CreditStatus;
   offeredAmount?: number;
   interestRate?: number;
@@ -70,9 +68,6 @@ function mapApplication(row: Record<string, any>): CreditApplication {
     projectDescription: row.project_description,
     requestedAmount: Number(row.requested_amount),
     requestedMonths: row.requested_months,
-    videoPath: row.video_path ?? undefined,
-    videoUrl: row.video_url ?? undefined,
-    applicationFee: Number(row.application_fee),
     status: row.status,
     offeredAmount: num(row.offered_amount),
     interestRate: num(row.interest_rate),
@@ -104,13 +99,19 @@ export const nextInstallment = (a: CreditApplication) => a.installments.find((i)
 export const CREDIT_FLOOR = 5000;
 export const creditCap = (totalSaved: number) => Math.max(CREDIT_FLOOR, Math.round(totalSaved * 2));
 
+/** Google Play interdit les prêts à rembourser en 60 jours ou moins : 3 mois minimum. */
+export const CREDIT_MIN_MONTHS = 3;
 export const CREDIT_MAX_MONTHS = 24;
-export const CREDIT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+/** Taux maximum sur toute la durée, fixé côté serveur (0026). */
+export const CREDIT_MAX_RATE = 24;
+/** Taux annuel maximum (intérêt simple), référence de Google Play. */
+export const CREDIT_MAX_ANNUAL_RATE = 36;
+/** Taux total permis pour une durée : min(24 %, 36 % par an). */
+export const maxRateFor = (months: number) => Math.min(CREDIT_MAX_RATE, (CREDIT_MAX_ANNUAL_RATE * months) / 12);
 
-export async function fetchCreditApplicationFee(): Promise<number> {
-  const { data } = await supabase.from('platform_settings').select('credit_application_fee').eq('id', 1).maybeSingle();
-  return data?.credit_application_fee != null ? Number(data.credit_application_fee) : 1000;
-}
+/** Taux annualisé d'une offre (intérêt simple), pour l'afficher à l'emprunteur. */
+export const annualRate = (ratePercent: number, months: number) =>
+  months > 0 ? Math.round(((ratePercent * 12) / months) * 10) / 10 : 0;
 
 export async function fetchMyCreditApplications(userId: string): Promise<CreditApplication[]> {
   const { data, error } = await supabase
@@ -122,30 +123,7 @@ export async function fetchMyCreditApplications(userId: string): Promise<CreditA
   return (data ?? []).map(mapApplication);
 }
 
-/**
- * Envoie la vidéo dans l'espace privé de la personne et renvoie son chemin.
- * L'envoi a lieu AVANT le dépôt (et donc avant les frais) : si le réseau
- * coupe, la personne n'a rien payé.
- */
-export async function uploadCreditVideo(userId: string, file: File): Promise<{ path?: string; error?: string }> {
-  if (!file.type.startsWith('video/')) return { error: 'Ce fichier n’est pas une vidéo.' };
-  if (file.size > CREDIT_VIDEO_MAX_BYTES) {
-    return { error: 'La vidéo dépasse 50 Mo. Filmez plus court (environ 1 minute) ou envoyez plutôt un lien.' };
-  }
-  const ext = (file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('credit-videos').upload(path, file, { contentType: file.type });
-  if (error) return { error: `Échec de l'envoi de la vidéo : ${error.message}` };
-  return { path };
-}
-
-/** Lien temporaire (5 min) pour regarder une vidéo privée. */
-export async function getCreditVideoUrl(path: string): Promise<string | null> {
-  const { data } = await supabase.storage.from('credit-videos').createSignedUrl(path, 300);
-  return data?.signedUrl ?? null;
-}
-
-async function rpc(fn: string, args: Record<string, unknown>): Promise<Result> {
+export async function rpc(fn: string, args: Record<string, unknown>): Promise<Result> {
   if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
   const { data, error } = await supabase.rpc(fn, args);
   if (error) return { success: false, message: error.message };
@@ -158,8 +136,6 @@ export function submitCreditApplication(params: {
   projectDescription: string;
   requestedAmount: number;
   requestedMonths: number;
-  videoPath?: string;
-  videoUrl?: string;
   idempotencyKey: string;
 }): Promise<Result> {
   return rpc('submit_credit_application', {
@@ -168,8 +144,6 @@ export function submitCreditApplication(params: {
     p_project_description: params.projectDescription,
     p_requested_amount: params.requestedAmount,
     p_requested_months: params.requestedMonths,
-    p_video_path: params.videoPath ?? null,
-    p_video_url: params.videoUrl ?? null,
     p_idempotency_key: params.idempotencyKey,
   });
 }

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { AlertCircle, CalendarClock, CheckCircle2, Clock, Link2, Loader2, Upload, Video, Wallet, XCircle } from 'lucide-react';
+import { AlertCircle, CalendarClock, CheckCircle2, Clock, Loader2, Wallet, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { MarketplaceService, UserProfile } from '@/types';
 import {
+  CREDIT_MAX_ANNUAL_RATE,
   CREDIT_MAX_MONTHS,
+  CREDIT_MAX_RATE,
+  CREDIT_MIN_MONTHS,
   CreditApplication,
   acceptCreditOffer,
+  annualRate,
   creditCap,
   declineCreditOffer,
   isOpenApplication,
@@ -18,7 +22,6 @@ import {
   remainingDue,
   repayCredit,
   submitCreditApplication,
-  uploadCreditVideo,
 } from '@/lib/credit';
 
 interface CreditApplicationPanelProps {
@@ -26,7 +29,6 @@ interface CreditApplicationPanelProps {
   service: MarketplaceService;
   /** Dossiers de la personne, du plus récent au plus ancien. */
   applications: CreditApplication[];
-  applicationFee: number;
   onChanged: () => Promise<void> | void;
   onShowTerms: () => void;
 }
@@ -38,7 +40,7 @@ const dateFr = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day:
  * Tout le parcours de l'emprunteur dans la fiche d'un service de crédit :
  * déposer un dossier, suivre son étude, répondre à l'offre, rembourser.
  */
-export function CreditApplicationPanel({ user, service, applications, applicationFee, onChanged, onShowTerms }: CreditApplicationPanelProps) {
+export function CreditApplicationPanel({ user, service, applications, onChanged, onShowTerms }: CreditApplicationPanelProps) {
   const open = applications.find(isOpenApplication);
   const last = applications[0];
 
@@ -77,7 +79,7 @@ export function CreditApplicationPanel({ user, service, applications, applicatio
           Votre crédit « {last.projectTitle} » est entièrement remboursé. Bravo !
         </Notice>
       )}
-      <ApplicationForm user={user} service={service} applicationFee={applicationFee} onChanged={onChanged} onShowTerms={onShowTerms} />
+      <ApplicationForm user={user} service={service} onChanged={onChanged} onShowTerms={onShowTerms} />
     </div>
   );
 }
@@ -102,24 +104,17 @@ function Row({ label, value, strong }: { label: string; value: React.ReactNode; 
 
 // ------------------------------------------------------------- Dépôt ------
 
-function ApplicationForm({ user, service, applicationFee, onChanged, onShowTerms }: Omit<CreditApplicationPanelProps, 'applications'>) {
+function ApplicationForm({ user, service, onChanged, onShowTerms }: Omit<CreditApplicationPanelProps, 'applications'>) {
   const cap = creditCap(user.totalSaved);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [months, setMonths] = useState('6');
-  const [videoMode, setVideoMode] = useState<'upload' | 'link'>('upload');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoLink, setVideoLink] = useState('');
   const [accepted, setAccepted] = useState(false);
-  const [step, setStep] = useState<'idle' | 'uploading' | 'submitting'>('idle');
+  const [submitting, setSubmitting] = useState(false);
   // Même clé tant que la personne réessaie le même envoi : un double appui ou
-  // un rejeu réseau ne prélève jamais deux fois les frais.
+  // un rejeu réseau ne crée jamais deux demandes.
   const idempotencyKey = useRef<string>(crypto.randomUUID());
-  const uploadedPath = useRef<{ file: File; path: string } | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  const notEnoughForFee = user.walletBalance < applicationFee;
 
   const submit = async () => {
     const value = Number(amount);
@@ -128,41 +123,21 @@ function ApplicationForm({ user, service, applicationFee, onChanged, onShowTerms
     if (description.trim().length < 20) return toast.error('Expliquez votre projet en quelques phrases.');
     if (!value || value <= 0) return toast.error('Indiquez le montant dont vous avez besoin.');
     if (value > cap) return toast.error(`Le montant ne peut pas dépasser ${fcfa(cap)} pour le moment.`);
-    if (!duration || duration < 1 || duration > CREDIT_MAX_MONTHS) return toast.error(`Choisissez une durée entre 1 et ${CREDIT_MAX_MONTHS} mois.`);
-    if (videoMode === 'link' && videoLink.trim() && !/^https:\/\/\S+$/i.test(videoLink.trim())) {
-      return toast.error('Le lien de la vidéo doit commencer par https://');
+    if (!duration || duration < CREDIT_MIN_MONTHS || duration > CREDIT_MAX_MONTHS) {
+      return toast.error(`Choisissez une durée entre ${CREDIT_MIN_MONTHS} et ${CREDIT_MAX_MONTHS} mois.`);
     }
     if (!accepted) return toast.error('Cochez la case pour accepter les conditions.');
-    if (notEnoughForFee) return toast.error(`Il faut ${fcfa(applicationFee)} sur votre portefeuille pour les frais de dossier.`);
 
-    let videoPath: string | undefined;
-    if (videoMode === 'upload' && videoFile) {
-      if (uploadedPath.current?.file === videoFile) {
-        videoPath = uploadedPath.current.path;
-      } else {
-        setStep('uploading');
-        const res = await uploadCreditVideo(user.uid, videoFile);
-        if (res.error || !res.path) {
-          setStep('idle');
-          return toast.error(res.error || 'Échec de l’envoi de la vidéo.');
-        }
-        uploadedPath.current = { file: videoFile, path: res.path };
-        videoPath = res.path;
-      }
-    }
-
-    setStep('submitting');
+    setSubmitting(true);
     const result = await submitCreditApplication({
       serviceId: service.id,
       projectTitle: title.trim(),
       projectDescription: description.trim(),
       requestedAmount: Math.round(value),
       requestedMonths: duration,
-      videoPath,
-      videoUrl: videoMode === 'link' && videoLink.trim() ? videoLink.trim() : undefined,
       idempotencyKey: idempotencyKey.current,
     });
-    setStep('idle');
+    setSubmitting(false);
     if (!result.success) return toast.error(result.message);
     toast.success(result.message);
     await onChanged();
@@ -195,77 +170,58 @@ function ApplicationForm({ user, service, applicationFee, onChanged, onShowTerms
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="credit-months" className="text-xs font-bold">Rembourser en (mois)</Label>
-          <Input id="credit-months" type="number" inputMode="numeric" min={1} max={CREDIT_MAX_MONTHS} value={months} onChange={(e) => setMonths(e.target.value)} className="rounded-xl h-11" />
+          <Input id="credit-months" type="number" inputMode="numeric" min={CREDIT_MIN_MONTHS} max={CREDIT_MAX_MONTHS} value={months} onChange={(e) => setMonths(e.target.value)} className="rounded-xl h-11" />
         </div>
       </div>
       <p className="text-[12px] text-muted-foreground -mt-2">
         Plafond indicatif d'après votre épargne dans vos cercles : {fcfa(cap)}. L'équipe fixe le montant final, le taux et la durée dans son offre.
       </p>
 
-      <div className="space-y-2">
-        <Label className="text-xs font-bold flex items-center gap-1.5"><Video className="w-4 h-4" /> Vidéo de présentation (facultative, conseillée)</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {(['upload', 'link'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setVideoMode(mode)}
-              className={`h-10 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${videoMode === mode ? 'border-brand bg-brand/10 text-brand' : 'border-border text-muted-foreground'}`}
-            >
-              {mode === 'upload' ? <><Upload className="w-4 h-4" /> Filmer / envoyer</> : <><Link2 className="w-4 h-4" /> Coller un lien</>}
-            </button>
-          ))}
-        </div>
-        {videoMode === 'upload' ? (
-          <>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="video/*"
-              capture="user"
-              className="hidden"
-              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-            />
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              className="w-full rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground text-left cursor-pointer hover:bg-muted/40"
-            >
-              {videoFile ? `${videoFile.name} — ${(videoFile.size / 1024 / 1024).toFixed(1)} Mo` : 'Présentez-vous et votre projet en 1 minute environ (50 Mo maximum).'}
-            </button>
-          </>
-        ) : (
-          <Input type="url" placeholder="https://youtube.com/… ou lien TikTok, Facebook, Drive" value={videoLink} onChange={(e) => setVideoLink(e.target.value)} className="rounded-xl h-11" />
-        )}
-      </div>
+      <CreditCostDisclosure />
 
       <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl space-y-3">
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
           <p className="text-xs text-brand-deep leading-relaxed">
-            <strong>Frais de dossier : {fcfa(applicationFee)}</strong>, prélevés sur votre portefeuille au dépôt. Ils paient l'étude de votre dossier et <strong>ne sont pas remboursés</strong>, même si le crédit n'est pas accordé.
+            La demande est <strong>gratuite</strong>. Vous ne vous engagez à rien tant que vous n'avez pas accepté l'offre de l'équipe.
           </p>
         </div>
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border text-[#C96F4A] cursor-pointer" />
           <span className="text-xs text-foreground leading-relaxed">
-            J'accepte les frais de dossier et{' '}
+            J'ai lu{' '}
             <button type="button" onClick={onShowTerms} className="font-bold underline cursor-pointer">les conditions du microcrédit</button>.
           </span>
         </label>
       </div>
 
-      {notEnoughForFee && (
-        <p className="text-xs text-danger font-medium">
-          Votre portefeuille contient {fcfa(user.walletBalance)} : rechargez-le d'au moins {fcfa(applicationFee - user.walletBalance)} pour déposer votre dossier.
-        </p>
-      )}
-
-      <Button className="btn-shine w-full h-12 text-base font-bold rounded-xl" onClick={submit} disabled={step !== 'idle'}>
-        {step === 'uploading' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la vidéo…</>
-          : step === 'submitting' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dépôt du dossier…</>
-          : `Déposer mon dossier (${fcfa(applicationFee)})`}
+      <Button className="btn-shine w-full h-12 text-base font-bold rounded-xl" onClick={submit} disabled={submitting}>
+        {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la demande…</> : 'Envoyer ma demande'}
       </Button>
+    </div>
+  );
+}
+
+/**
+ * Ce que Google Play exige d'afficher pour un prêt personnel : durées
+ * minimum et maximum, taux annuel maximum et un exemple de coût total.
+ */
+export function CreditCostDisclosure() {
+  const exampleAmount = 50000;
+  const exampleMonths = 6;
+  const exampleRate = 10;
+  const exampleTotal = exampleAmount + Math.round((exampleAmount * exampleRate) / 100);
+  return (
+    <div className="rounded-xl border border-border p-3 space-y-1.5 text-[12px] text-muted-foreground leading-relaxed">
+      <p className="font-bold text-foreground">Coût du crédit</p>
+      <p>
+        Durée de remboursement : de {CREDIT_MIN_MONTHS} à {CREDIT_MAX_MONTHS} mois. Intérêt simple, sans autres frais : taux annuel maximum {CREDIT_MAX_ANNUAL_RATE} %, et
+        jamais plus de {CREDIT_MAX_RATE} % du montant prêté sur toute la durée.
+      </p>
+      <p>
+        Exemple : {fcfa(exampleAmount)} sur {exampleMonths} mois à {exampleRate} % (taux annuel {annualRate(exampleRate, exampleMonths)} %), soit {fcfa(exampleTotal)} à
+        rembourser en tout, environ {fcfa(Math.floor(exampleTotal / exampleMonths))} par mois.
+      </p>
     </div>
   );
 }
@@ -276,13 +232,12 @@ function UnderReview({ app }: { app: CreditApplication }) {
   return (
     <div className="space-y-3">
       <Notice icon={<Clock className="w-5 h-5 text-warning shrink-0" />}>
-        Votre dossier « {app.projectTitle} » est en cours d'étude par notre équipe. Vous recevrez une notification dès qu'une décision sera prise.
+        Votre demande « {app.projectTitle} » est en cours d'étude par notre équipe. Vous recevrez une notification dès qu'une décision sera prise.
       </Notice>
       <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5">
         <Row label="Montant demandé" value={fcfa(app.requestedAmount)} />
         <Row label="Durée souhaitée" value={`${app.requestedMonths} mois`} />
-        <Row label="Déposé le" value={dateFr(app.createdAt)} />
-        <Row label="Frais de dossier réglés" value={fcfa(app.applicationFee)} />
+        <Row label="Envoyée le" value={dateFr(app.createdAt)} />
       </div>
     </div>
   );
@@ -317,7 +272,7 @@ function OfferAnswer({ app, onChanged, onShowTerms }: { app: CreditApplication; 
 
       <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5">
         <Row label="Vous recevez" value={fcfa(app.offeredAmount ?? 0)} />
-        <Row label={`Intérêts (${app.interestRate ?? 0} %)`} value={fcfa(interest)} />
+        <Row label={`Intérêts (${app.interestRate ?? 0} %, soit ${annualRate(app.interestRate ?? 0, months)} % par an)`} value={fcfa(interest)} />
         <Row label="Durée" value={`${months} mois`} />
         <Row label="Mensualité" value={months > 1 ? `${fcfa(monthly)} environ` : fcfa(total)} />
         <Row label="Total à rembourser" value={fcfa(total)} strong />

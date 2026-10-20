@@ -196,24 +196,24 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: '1. Qui peut demander',
         paragraphs: [
-          "Certains crédits exigent un score de réputation eganyé minimum, indiqué sur la fiche du service. Une personne ne peut avoir qu'un seul dossier ouvert à la fois (en étude, en offre ou en cours de remboursement).",
+          "Certains crédits exigent un score de réputation eganyé minimum, indiqué sur la fiche du service. Une personne ne peut avoir qu'une seule demande ouverte à la fois (en étude, en offre ou en cours de remboursement).",
           "Le montant demandé est plafonné en fonction de votre épargne dans vos cercles. Ce plafond est indicatif : le montant accordé est décidé par notre équipe.",
         ],
       },
       {
-        heading: '2. Le dossier et ses frais',
+        heading: '2. La demande',
         paragraphs: [
-          "Vous présentez votre projet : son nom, à quoi servira l'argent, le montant et la durée souhaités. Vous pouvez y joindre une vidéo, envoyée depuis votre téléphone ou sous forme de lien. Une vidéo envoyée est conservée dans un espace privé, visible seulement par vous et notre équipe.",
-          "Des frais de dossier (1 000 FCFA, ou le montant affiché au moment du dépôt) sont prélevés sur votre portefeuille quand vous déposez le dossier. Ils paient son étude et ne sont pas remboursés, même si le crédit n'est pas accordé ou si vous refusez l'offre.",
-          "En déposant un dossier, vous autorisez notre équipe à consulter votre score de réputation et votre historique de cotisations pour l'étudier.",
+          "Vous présentez votre projet : son nom, à quoi servira l'argent, le montant et la durée souhaités. La demande est gratuite : aucun frais n'est prélevé pour l'envoyer ni pour l'étudier.",
+          "En envoyant une demande, vous autorisez notre équipe à consulter votre score de réputation et votre historique de cotisations pour l'étudier.",
         ],
       },
       {
         heading: "3. L'offre",
         paragraphs: [
-          "Notre équipe refuse le dossier en vous expliquant pourquoi, ou vous fait une offre : le montant prêté (il peut être inférieur à votre demande), le taux d'intérêt, la durée en mois et le total à rembourser.",
-          "Les intérêts sont calculés une seule fois sur le montant prêté (intérêt simple) : total à rembourser = montant prêté + montant prêté × taux. Ce total vous est affiché au franc près avant que vous ne décidiez. Aucun autre frais ne peut vous être réclamé.",
-          "Vous êtes libre d'accepter ou de refuser l'offre. Rien ne vous est versé, et vous ne devez rien d'autre que les frais de dossier, tant que vous ne l'avez pas acceptée.",
+          "Notre équipe refuse la demande en vous expliquant pourquoi, ou vous fait une offre : le montant prêté (il peut être inférieur à votre demande), le taux d'intérêt, la durée en mois et le total à rembourser.",
+          "Durée de remboursement : de 3 à 24 mois. Les intérêts sont calculés une seule fois sur le montant prêté (intérêt simple) : total à rembourser = montant prêté + montant prêté × taux. Le taux annuel (intérêt simple) ne dépasse jamais 36 %, et le taux sur toute la durée ne dépasse jamais 24 % du montant prêté (par exemple : 9 % au plus sur 3 mois, 18 % au plus sur 6 mois). Le total et le taux annuel vous sont affichés au franc près avant que vous ne décidiez. Aucun autre frais ne peut vous être réclamé.",
+          "Exemple : pour 50 000 FCFA prêtés sur 6 mois à 10 % (taux annuel 20 %), vous remboursez 55 000 FCFA en tout, soit environ 9 166 FCFA par mois.",
+          "Vous êtes libre d'accepter ou de refuser l'offre. Rien ne vous est versé, et vous ne devez rien, tant que vous ne l'avez pas acceptée.",
         ],
       },
       {

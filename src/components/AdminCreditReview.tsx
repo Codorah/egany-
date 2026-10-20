@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, ExternalLink, Loader2, PlayCircle, RefreshCw, X } from 'lucide-react';
+import { Check, Loader2, RefreshCw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   CREDIT_MAX_MONTHS,
+  CREDIT_MIN_MONTHS,
   CreditApplicationForReview,
+  annualRate,
+  maxRateFor,
   fetchCreditApplicationsForReview,
-  getCreditVideoUrl,
   makeCreditOffer,
   offerTotal,
   rejectCreditApplication,
@@ -26,8 +28,7 @@ interface AdminCreditReviewProps {
 }
 
 /**
- * Étude des dossiers de microcrédit : lire le projet, regarder la vidéo,
- * puis faire une offre (montant, taux, durée) ou refuser avec un motif.
+ * Étude des demandes de microcrédit : lire le projet, puis faire une offre (montant, taux, durée) ou refuser avec un motif.
  * Suit aussi les offres en attente de réponse et les crédits en cours.
  */
 export function AdminCreditReview({ onPendingCountChange }: AdminCreditReviewProps) {
@@ -59,7 +60,7 @@ export function AdminCreditReview({ onPendingCountChange }: AdminCreditReviewPro
         <div>
           <CardTitle className="text-lg font-serif font-bold text-foreground">Dossiers de microcrédit</CardTitle>
           <CardDescription className="text-xs text-muted-foreground mt-0.5">
-            Frais de dossier déjà encaissés. L'argent n'est versé que lorsque la personne accepte votre offre.
+            Demandes gratuites. L'argent n'est versé que lorsque la personne accepte votre offre.
           </CardDescription>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading} className="h-9 rounded-xl shrink-0" title="Actualiser">
@@ -102,19 +103,11 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
   const total = offerTotal(Number(amount) || 0, Number(rate) || 0);
   const lateCount = app.installments.filter((i) => i.status === 'late').length;
 
-  const openVideo = async () => {
-    if (app.videoUrl) return window.open(app.videoUrl, '_blank', 'noopener');
-    if (!app.videoPath) return;
-    const url = await getCreditVideoUrl(app.videoPath);
-    if (!url) return toast.error('Impossible d’ouvrir la vidéo.');
-    window.open(url, '_blank', 'noopener');
-  };
-
   const sendOffer = async () => {
     const a = Number(amount), r = Number(rate), m = Number(months);
     if (!a || a <= 0) return toast.error('Indiquez le montant offert.');
-    if (!(r >= 0 && r <= 100)) return toast.error('Le taux doit être entre 0 et 100 %.');
-    if (!m || m < 1 || m > CREDIT_MAX_MONTHS) return toast.error(`La durée doit être entre 1 et ${CREDIT_MAX_MONTHS} mois.`);
+    if (!m || m < CREDIT_MIN_MONTHS || m > CREDIT_MAX_MONTHS) return toast.error(`La durée doit être entre ${CREDIT_MIN_MONTHS} et ${CREDIT_MAX_MONTHS} mois.`);
+    if (!(r >= 0 && r <= maxRateFor(m))) return toast.error(`Pour ${m} mois, le taux doit être entre 0 et ${maxRateFor(m)} % (36 % par an au plus).`);
     setBusy(true);
     const res = await makeCreditOffer({ applicationId: app.id, offeredAmount: a, interestRate: r, durationMonths: m, adminNotes: notes.trim() });
     setBusy(false);
@@ -143,12 +136,6 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
             Épargne : {fcfa(app.userTotalSaved)} • Réputation : {app.userReputation} • Déposé le {dateFr(app.createdAt)}
           </p>
         </div>
-        {(app.videoPath || app.videoUrl) && (
-          <Button variant="outline" size="sm" onClick={openVideo} className="h-9 rounded-xl text-xs font-bold shrink-0">
-            {app.videoUrl ? <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> : <PlayCircle className="w-3.5 h-3.5 mr-1.5" />}
-            Voir la vidéo
-          </Button>
-        )}
       </div>
 
       <p className="text-xs text-foreground leading-relaxed whitespace-pre-line bg-muted/30 rounded-2xl p-3">{app.projectDescription}</p>
@@ -176,16 +163,16 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[12px] font-bold text-muted-foreground">Taux (%)</Label>
-                  <Input type="number" min={0} max={100} step="0.5" value={rate} onChange={(e) => setRate(e.target.value)} className="h-10 rounded-xl bg-card" />
+                  <Input type="number" min={0} max={maxRateFor(Number(months) || CREDIT_MIN_MONTHS)} step="0.5" value={rate} onChange={(e) => setRate(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[12px] font-bold text-muted-foreground">Durée (mois)</Label>
-                  <Input type="number" min={1} max={CREDIT_MAX_MONTHS} value={months} onChange={(e) => setMonths(e.target.value)} className="h-10 rounded-xl bg-card" />
+                  <Input type="number" min={CREDIT_MIN_MONTHS} max={CREDIT_MAX_MONTHS} value={months} onChange={(e) => setMonths(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
               </div>
               <p className="text-xs text-foreground">
                 La personne remboursera <strong>{fcfa(total)}</strong>
-                {Number(months) > 0 && <> , soit environ <strong>{fcfa(Math.floor(total / Number(months)))}</strong> par mois</>}.
+                {Number(months) > 0 && <> , soit environ <strong>{fcfa(Math.floor(total / Number(months)))}</strong> par mois (taux annuel {annualRate(Number(rate) || 0, Number(months))} %)</>}.
               </p>
               <Textarea rows={2} placeholder="Message pour la personne (facultatif)" value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl bg-card text-xs" />
               <Button onClick={sendOffer} disabled={busy} className="btn-shine w-full h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white">
