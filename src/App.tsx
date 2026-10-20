@@ -2,7 +2,7 @@ import React, { useState, Suspense, lazy } from 'react';
 import { Layout } from '@/components/Layout';
 import { Dashboard } from '@/components/Dashboard';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
-import { Onboarding } from '@/components/Onboarding';
+import { Onboarding, type OnboardingIntent } from '@/components/Onboarding';
 import { Toaster } from '@/components/ui/sonner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -116,6 +116,8 @@ export default function App() {
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
+  // Service à ouvrir à l'arrivée sur Services annexes (choix fait à l'inscription).
+  const [marketplaceIntent, setMarketplaceIntent] = useState<'aid' | 'credit' | undefined>(undefined);
   const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; netAmount: number; userId: string; userName: string; userEmail: string; phone: string; operator: string } | null>(null);
 
   // Handle URL parameters for joining and Paydunya recharges
@@ -201,11 +203,17 @@ export default function App() {
     setView('join');
   };
 
-  const handleOnboardingComplete = (intent?: 'create' | 'join') => {
+  const handleOnboardingComplete = (intent?: OnboardingIntent) => {
     // Account creation (Firebase Auth + Firestore profile) already happened inside <Onboarding>.
     // useAuth() picks up the new session automatically; we just reset the view.
     // L'intention choisie sur "Que veux-tu faire ?" évite un accueil vide :
-    // on amène directement sur l'onglet Cercle, qui a le + et le champ code.
+    // un cercle mène à l'onglet Cercle (le + et le champ code), un besoin
+    // d'argent ouvre directement le Coup de pouce ou le crédit.
+    if (intent === 'aid' || intent === 'credit') {
+      setMarketplaceIntent(intent);
+      setView('marketplace');
+      return;
+    }
     setView(intent ? 'my-circles' : 'dashboard');
   };
 
@@ -302,7 +310,7 @@ export default function App() {
       case 'support':
         return <Support user={activeProfile} onBack={() => setView('dashboard')} />;
       case 'marketplace':
-        return <Marketplace user={activeProfile} />;
+        return <Marketplace user={activeProfile} initialOpen={marketplaceIntent} />;
       case 'ai-assistant':
         return <AIAssistant user={activeProfile} groups={groups} />;
       case 'my-bank':

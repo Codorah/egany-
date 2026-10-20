@@ -19,7 +19,9 @@ import {
   LockKeyhole,
   Check,
   Users,
-  Link2
+  Link2,
+  Gift,
+  HandCoins
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -33,11 +35,14 @@ import { notifyUser } from '@/lib/notify';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+/** Ce que la personne veut faire en arrivant : un cercle, ou de l'argent pour son activité. */
+export type OnboardingIntent = 'create' | 'join' | 'aid' | 'credit';
+
 interface OnboardingProps {
   /** L'intention choisie sur l'écran "Que veux-tu faire ?" est renvoyée à
    * la fin, pour que l'app puisse ouvrir directement l'onglet Cercle
    * (création ou adhésion) plutôt qu'un accueil vide après l'inscription. */
-  onComplete: (intent?: 'create' | 'join') => void;
+  onComplete: (intent?: OnboardingIntent) => void;
   isLoading?: boolean;
 }
 
@@ -219,7 +224,7 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
 
   const [screen, setScreen] = useState<Screen>('welcome');
   const [slideIndex, setSlideIndex] = useState(0);
-  const [intent, setIntent] = useState<'create' | 'join' | null>(null);
+  const [intent, setIntent] = useState<OnboardingIntent | null>(null);
 
   // Champs partagés par les différents écrans
   const [displayName, setDisplayName] = useState('');
@@ -260,7 +265,9 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
   // sur un produit d'épargne communautaire, le premier écran est celui qui
   // installe la confiance. Cadrées en portrait et encodées en WebP : 0,4 Mo
   // au total contre 2,7 Mo, ce qui compte sur une connexion mobile.
-  const slides = [
+  // Les deux derniers écrans présentent le Coup de pouce et le crédit avec
+  // les illustrations de la marque, sur le dégradé terre cuite.
+  const slides: { title: string; description: string; image?: string; illustration?: string }[] = [
     {
       title: t('banner_mamas_title'),
       description: t('onb_slide1_desc'),
@@ -275,6 +282,16 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
       title: t('onb_slide3_title'),
       description: t('onb_slide3_desc'),
       image: '/onboarding/vendor.webp',
+    },
+    {
+      title: t('onb_slide4_title'),
+      description: t('onb_slide4_desc'),
+      illustration: '/illustrations/money-received.svg',
+    },
+    {
+      title: t('onb_slide5_title'),
+      description: t('onb_slide5_desc'),
+      illustration: '/illustrations/savings-created.svg',
     }
   ];
 
@@ -847,12 +864,26 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="absolute inset-0"
           >
-            <img
-              src={slides[slideIndex].image}
-              alt={slides[slideIndex].title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+            {slides[slideIndex].image ? (
+              <>
+                <img
+                  src={slides[slideIndex].image}
+                  alt={slides[slideIndex].title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+              </>
+            ) : (
+              <div className="w-full h-full gradient-sunset flex items-start justify-center pt-[calc(env(safe-area-inset-top)+6rem)]">
+                <img
+                  src={slides[slideIndex].illustration}
+                  alt=""
+                  className="w-60 h-60 sm:w-72 sm:h-72 drop-shadow-2xl"
+                  draggable={false}
+                />
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -1052,6 +1083,40 @@ export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-serif font-bold text-foreground">{t('onb_intent_join_title')}</h3>
                     <p className="text-[13px] text-muted-foreground">{t('onb_intent_join_desc')}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">{t('onb_intent_money_heading')}</p>
+
+                <button
+                  type="button"
+                  onClick={() => { setIntent('aid'); goTo('register'); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl gradient-sunset flex items-center justify-center text-white shrink-0">
+                    <Gift className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_aid_title')}</h3>
+                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_aid_desc')}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIntent('credit'); goTo('register'); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
+                    <HandCoins className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_credit_title')}</h3>
+                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_credit_desc')}</p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
                 </button>

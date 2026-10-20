@@ -4507,6 +4507,60 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: 'Rejoindre une tontine',
     kbp: 'Rejoindre une tontine'
   },
+  onb_slide4_title: {
+    fr: "Un coup de pouce pour votre activité",
+    en: "A boost for your business",
+    ee: "Un coup de pouce pour votre activité",
+    kbp: "Un coup de pouce pour votre activité"
+  },
+  onb_slide4_desc: {
+    fr: "Besoin d'argent pour lancer ou faire grandir votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous l'offrir, sans rien à rembourser.",
+    en: "Need money to start or grow your business? Say how much and explain your project in a video: our team reviews your application and can give it to you, with nothing to pay back.",
+    ee: "Besoin d'argent pour lancer ou faire grandir votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous l'offrir, sans rien à rembourser.",
+    kbp: "Besoin d'argent pour lancer ou faire grandir votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous l'offrir, sans rien à rembourser."
+  },
+  onb_slide5_title: {
+    fr: "Un microcrédit simple et transparent",
+    en: "Simple, transparent microcredit",
+    ee: "Un microcrédit simple et transparent",
+    kbp: "Un microcrédit simple et transparent"
+  },
+  onb_slide5_desc: {
+    fr: "Demandez un crédit gratuitement, remboursez de 3 à 24 mois. Le coût total vous est affiché au franc près avant que vous n'acceptiez.",
+    en: "Apply for credit for free and repay over 3 to 24 months. The total cost is shown to the franc before you accept.",
+    ee: "Demandez un crédit gratuitement, remboursez de 3 à 24 mois. Le coût total vous est affiché au franc près avant que vous n'acceptiez.",
+    kbp: "Demandez un crédit gratuitement, remboursez de 3 à 24 mois. Le coût total vous est affiché au franc près avant que vous n'acceptiez."
+  },
+  onb_intent_money_heading: {
+    fr: "Besoin d'argent pour ton activité ?",
+    en: "Need money for your business?",
+    ee: "Besoin d'argent pour ton activité ?",
+    kbp: "Besoin d'argent pour ton activité ?"
+  },
+  onb_intent_aid_title: {
+    fr: "Demander un coup de pouce",
+    en: "Ask for a boost",
+    ee: "Demander un coup de pouce",
+    kbp: "Demander un coup de pouce"
+  },
+  onb_intent_aid_desc: {
+    fr: "Une aide gratuite, rien à rembourser.",
+    en: "Free help, nothing to pay back.",
+    ee: "Une aide gratuite, rien à rembourser.",
+    kbp: "Une aide gratuite, rien à rembourser."
+  },
+  onb_intent_credit_title: {
+    fr: "Faire un crédit",
+    en: "Get a microcredit",
+    ee: "Faire un crédit",
+    kbp: "Faire un crédit"
+  },
+  onb_intent_credit_desc: {
+    fr: "Remboursable de 3 à 24 mois.",
+    en: "Repay over 3 to 24 months.",
+    ee: "Remboursable de 3 à 24 mois.",
+    kbp: "Remboursable de 3 à 24 mois."
+  },
   onb_intent_join_desc: {
     fr: "Avec un code ou un lien d'invitation.",
     en: 'With a code or an invite link.',
