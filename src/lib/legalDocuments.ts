@@ -13,7 +13,7 @@
  * par les stores.
  */
 
-export type LegalDocId = 'cgu' | 'reglement' | 'credit' | 'confidentialite' | 'mentions';
+export type LegalDocId = 'cgu' | 'reglement' | 'credit' | 'aide' | 'confidentialite' | 'mentions';
 
 export interface LegalSection {
   heading: string;
@@ -238,6 +238,48 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     ],
   },
 
+  aide: {
+    id: 'aide',
+    title: 'Conditions du Coup de pouce',
+    audience: 'Pour les personnes qui demandent une aide',
+    sections: [
+      {
+        heading: '1. Ce qu’est le Coup de pouce',
+        paragraphs: [
+          "Le Coup de pouce est une aide en argent, offerte par eganyé pour soutenir une activité. Ce n'est pas un prêt : une aide accordée n'est jamais à rembourser, et aucun intérêt n'est dû.",
+          "Une personne ne peut avoir qu'un seul dossier à l'étude à la fois.",
+        ],
+      },
+      {
+        heading: '2. Le dossier',
+        paragraphs: [
+          "Vous indiquez votre activité, ce que vous ferez de l'argent et le montant dont vous avez besoin. Une vidéo de présentation est obligatoire : envoyée depuis votre téléphone ou sous forme de lien. Une vidéo envoyée est conservée dans un espace privé, visible seulement par vous et notre équipe.",
+          "En déposant un dossier, vous autorisez notre équipe à consulter votre score de réputation et votre historique de cotisations pour l'étudier.",
+        ],
+      },
+      {
+        heading: "3. Les frais d'étude",
+        paragraphs: [
+          "Des frais d'étude (1 000 FCFA, ou le montant affiché au moment du dépôt) sont prélevés sur votre portefeuille quand vous déposez le dossier. Ils paient le temps que notre équipe passe à regarder votre vidéo et à étudier votre demande. Ils ne sont pas remboursés, même si l'aide n'est pas accordée.",
+          "Ces frais n'achètent pas une chance de gagner : il n'y a ni tirage au sort ni hasard. Chaque dossier est étudié par une personne de notre équipe, qui décide d'après son contenu.",
+        ],
+      },
+      {
+        heading: '4. La décision',
+        paragraphs: [
+          "Notre équipe refuse le dossier en vous expliquant pourquoi, ou accorde une aide. Le montant accordé peut être inférieur à votre demande. Une aide accordée est versée tout de suite sur votre portefeuille eganyé et vous en êtes prévenu·e par notification.",
+          "eganyé n'est jamais obligé d'accorder une aide, et le nombre d'aides accordées dépend des moyens disponibles.",
+        ],
+      },
+      {
+        heading: '5. Bonne foi',
+        paragraphs: [
+          "Les informations et la vidéo doivent être vraies et vous concerner. Un dossier mensonger peut être refusé et entraîner la fermeture de l'accès au Coup de pouce. Pour toute question : " + contactLine() + '.',
+        ],
+      },
+    ],
+  },
+
   confidentialite: {
     id: 'confidentialite',
     title: 'Politique de confidentialité',
@@ -317,4 +359,4 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
 };
 
 /** Ordre d'affichage dans la liste « Conditions & Légal » du Profil. */
-export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'reglement', 'credit', 'confidentialite', 'mentions'];
+export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'reglement', 'credit', 'aide', 'confidentialite', 'mentions'];

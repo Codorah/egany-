@@ -7,6 +7,7 @@ import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWit
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
 import { AdminCreditReview } from './AdminCreditReview';
+import { AdminAidReview } from './AdminAidReview';
 import { AdminServerHealth } from './AdminServerHealth';
 import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
@@ -127,6 +128,7 @@ export function AdminDashboard() {
   useBackHandler(handleAdminBack, true);
   // Dossiers de microcrédit à étudier (pastille de l'onglet Marketplace).
   const [pendingCreditCount, setPendingCreditCount] = useState(0);
+  const [pendingAidCount, setPendingAidCount] = useState(0);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
 
   const fetchData = async () => {
@@ -656,7 +658,7 @@ export function AdminDashboard() {
           { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: 0 },
           { id: 'groups', label: t('admin_tab_groups'), icon: GroupsIcon, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'kyc', label: 'KYC', icon: BadgeCheck, color: 'bg-eganye-gold/10 text-eganye-gold', count: kycSubmissions.length },
-          { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length + pendingCreditCount },
+          { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length + pendingCreditCount + pendingAidCount },
           { id: 'ledger', label: t('admin_tab_ledger'), icon: BookOpen, color: 'bg-secondary/10 text-secondary', count: pendingWithdrawals.length },
           { id: 'settings', label: t('settings'), icon: Settings, color: 'bg-muted-foreground/10 text-muted-foreground', count: 0 },
         ];
@@ -1245,6 +1247,7 @@ export function AdminDashboard() {
 
         {/* TAB: MARKETPLACE REQUEST QUEUE */}
         <TabsContent value="marketplace" className="mt-6">
+          <AdminAidReview onPendingCountChange={setPendingAidCount} />
           <AdminCreditReview onPendingCountChange={setPendingCreditCount} />
           <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
