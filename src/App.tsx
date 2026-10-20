@@ -3,6 +3,8 @@ import { Layout } from '@/components/Layout';
 import { Dashboard } from '@/components/Dashboard';
 import { PaydunyaSimulator } from '@/components/PaydunyaSimulator';
 import { Onboarding, type OnboardingIntent } from '@/components/Onboarding';
+import { Landing } from '@/components/Landing';
+import { useShowLanding } from '@/hooks/useShowLanding';
 import { Toaster } from '@/components/ui/sonner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -118,6 +120,9 @@ export default function App() {
   const [joinCode, setJoinCode] = useState<string | null>(null);
   // Service à ouvrir à l'arrivée sur Services annexes (choix fait à l'inscription).
   const [marketplaceIntent, setMarketplaceIntent] = useState<'aid' | 'credit' | undefined>(undefined);
+  // Page d'accueil marketing : navigateur d'ordinateur, visiteur non connecté.
+  const showLanding = useShowLanding();
+  const [authEntry, setAuthEntry] = useState<'intent' | 'login' | null>(null);
   const [paydunyaSim, setPaydunyaSim] = useState<{ amount: number; netAmount: number; userId: string; userName: string; userEmail: string; phone: string; operator: string } | null>(null);
 
   // Handle URL parameters for joining and Paydunya recharges
@@ -421,9 +426,17 @@ export default function App() {
   }
 
   if (!activeProfile) {
+    if (showLanding && authEntry === null) {
+      return (
+        <Landing
+          onStart={() => setAuthEntry('intent')}
+          onLogin={() => setAuthEntry('login')}
+        />
+      );
+    }
     return (
       <>
-        <Onboarding onComplete={handleOnboardingComplete} />
+        <Onboarding onComplete={handleOnboardingComplete} initialScreen={authEntry ?? 'welcome'} />
         <Toaster />
       </>
     );

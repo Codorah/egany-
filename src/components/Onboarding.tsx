@@ -44,6 +44,9 @@ interface OnboardingProps {
    * (création ou adhésion) plutôt qu'un accueil vide après l'inscription. */
   onComplete: (intent?: OnboardingIntent) => void;
   isLoading?: boolean;
+  /** Écran d'ouverture : depuis la page d'accueil web, « Commencer » mène au
+   * choix « Que veux-tu faire ? » et « Se connecter » à la connexion. */
+  initialScreen?: 'welcome' | 'intent' | 'login';
 }
 
 /**
@@ -94,8 +97,11 @@ function AuthLayout({
   compact?: boolean;
   visual?: BrandVisualName;
 }) {
+  // Sur ordinateur, l'écran devient une carte centrée de la largeur d'un
+  // téléphone : étiré sur 1 440 px, le formulaire n'avait plus de forme.
   return (
-    <div className="relative w-full min-h-screen md:min-h-[860px] bg-background overflow-hidden flex flex-col">
+    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-10 md:bg-muted/50">
+    <div className="relative w-full min-h-screen md:min-h-[780px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
 
       {/* Bandeau coloré + courbe */}
       <div
@@ -153,6 +159,7 @@ function AuthLayout({
 
         {footer && <div className="mt-auto pt-6">{footer}</div>}
       </div>
+    </div>
     </div>
   );
 }
@@ -219,10 +226,10 @@ function OtpBoxes({
   );
 }
 
-export function Onboarding({ onComplete, isLoading = false }: OnboardingProps) {
+export function Onboarding({ onComplete, isLoading = false, initialScreen = 'welcome' }: OnboardingProps) {
   const { language, setLanguage, t } = useLanguage();
 
-  const [screen, setScreen] = useState<Screen>('welcome');
+  const [screen, setScreen] = useState<Screen>(initialScreen);
   const [slideIndex, setSlideIndex] = useState(0);
   const [intent, setIntent] = useState<OnboardingIntent | null>(null);
 
