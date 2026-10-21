@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   MessagesSquare,
   PiggyBank,
+  Play,
   ShieldCheck,
   Smartphone,
   Trophy,
@@ -107,6 +108,12 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               >
                 Commencer <ArrowRight className="w-5 h-5" />
               </button>
+              <a
+                href="#video"
+                className="h-14 px-7 rounded-full text-base font-bold border-2 border-border bg-card hover:bg-muted transition flex items-center gap-2"
+              >
+                <Play className="w-5 h-5 fill-current" /> Voir la vidéo
+              </a>
               {PLAY_STORE_PUBLISHED && (
                 <a
                   href={PLAY_STORE_URL}
@@ -143,6 +150,28 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               />
             </div>
           </motion.div>
+        </section>
+
+        {/* ------------------------------------------------------ Vidéo */}
+        {/* Composition et rendu : video/promo.html, video/render.mjs. */}
+        <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-10">
+          <Reveal>
+            <h2 className="text-4xl font-heading font-black tracking-tight leading-tight text-center">
+              eganyé en moins de deux minutes.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <video
+              className="w-full aspect-video rounded-[2rem] bg-foreground shadow-[0_40px_80px_-30px_rgba(169,86,54,0.45)]"
+              src="/video/eganye-presentation.mp4"
+              poster="/video/eganye-presentation.jpg"
+              controls
+              playsInline
+              preload="none"
+            >
+              Votre navigateur ne lit pas cette vidéo.
+            </video>
+          </Reveal>
         </section>
 
         {/* ---------------------------------------------- Comment ça marche */}
