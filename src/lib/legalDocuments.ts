@@ -113,13 +113,21 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         ],
       },
       {
-        heading: '7. Fermeture du compte',
+        heading: '7. Réclamations',
+        paragraphs: [
+          "Pour un retrait non reçu, un dépôt absent de votre solde, une cotisation contestée ou tout autre problème, " + contactLine() + ". Indiquez la date, le montant et, si vous l'avez, la référence de l'opération : chaque mouvement est tracé, ce qui nous permet de vérifier.",
+          "Si vous pensez que quelqu'un utilise votre compte, changez votre mot de passe et votre code PIN, puis prévenez-nous tout de suite : nous pouvons suspendre le compte le temps de vérifier.",
+          "Nous répondons dans les meilleurs délais, et au plus tard sous 30 jours. Pour un désaccord entre membres d'un cercle, voir le Règlement des cercles.",
+        ],
+      },
+      {
+        heading: '8. Fermeture du compte',
         paragraphs: [
           "Vous pouvez fermer votre compte depuis Profil, une fois votre solde retiré et vos cercles en cours quittés : fermer le compte plus tôt reviendrait à abandonner votre argent ou à léser les membres de vos cercles. Nous pouvons suspendre un compte qui enfreint ces conditions.",
         ],
       },
       {
-        heading: '8. Modifications',
+        heading: '9. Modifications',
         paragraphs: [
           "Ces conditions peuvent évoluer. La date de dernière mise à jour est indiquée en haut du document ; en cas de changement important, vous serez prévenu·e dans l'application.",
         ],
@@ -287,33 +295,55 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
     audience: 'Pour toute personne qui utilise eganyé',
     sections: [
       {
-        heading: '1. Les données que nous collectons',
+        heading: '1. Qui est responsable de vos données',
         paragraphs: [
-          "Compte : nom, adresse e-mail, numéro de téléphone, photo ou avatar si vous en choisissez un, langue préférée.",
+          `Le responsable du traitement est ${LEGAL_ENTITY.name}${LEGAL_ENTITY.legalForm ? `, ${LEGAL_ENTITY.legalForm}` : ''}${LEGAL_ENTITY.registration ? ` (${LEGAL_ENTITY.registration})` : ''}${LEGAL_ENTITY.address ? `, ${LEGAL_ENTITY.address}, ${LEGAL_ENTITY.country}` : ''}, qui édite l'application eganyé.`,
+          "Pour toute question ou demande sur vos données, " + contactLine() + '.',
+        ],
+      },
+      {
+        heading: '2. Les données que nous collectons',
+        paragraphs: [
+          "Compte : nom, prénom, adresse e-mail, numéro de téléphone, date de naissance, photo ou avatar si vous en choisissez un, langue et préférences de notification, et la personne de confiance (nom et téléphone) si vous en désignez une.",
           "Vérification d'identité : nom complet, numéro et photo de votre pièce d'identité.",
-          "Microcrédit : la description de votre projet, le montant et la durée demandés.",
+          "Cercles : les cercles que vous créez ou rejoignez, votre rôle, les invitations, l'ordre de passage, les échéances, l'état de vos cotisations, les retards et pénalités, et les messages échangés dans les discussions de cercle.",
+          "Argent : dépôts, retraits, cotisations, versements, épargne bloquée, avec pour chaque opération le montant, la date, le statut et la référence du paiement (voir la section 5).",
+          "Microcrédit : la description de votre projet, le montant et la durée demandés, l'offre et les remboursements.",
           "Coup de pouce : la description de votre activité, le montant demandé et votre vidéo de présentation (ou son lien). Une vidéo envoyée est conservée dans un espace privé, visible seulement par vous et notre équipe.",
-          "Activité : cercles, cotisations, versements, dépôts, retraits, demandes de crédit et d'aide, messages dans les discussions de cercle, et journal de sécurité (tentatives de code PIN, opérations sur votre argent).",
-          "Votre code PIN et votre mot de passe ne sont jamais conservés en clair : seule une empreinte irréversible est stockée.",
+          "Assistance : vos demandes au Centre d'aide et nos réponses, et les questions que vous posez à l'assistant intelligent.",
+          "Données techniques : type d'appareil et adresse IP, enregistrés avec les opérations sensibles (code PIN, mouvements d'argent) dans un journal de sécurité. Pour connaître votre adresse IP, l'application interroge le service ipify.",
+          "Votre code PIN et votre mot de passe ne sont jamais conservés en clair : seule une empreinte irréversible est stockée. Nous ne voyons jamais votre code secret Mobile Money.",
         ],
       },
       {
-        heading: '2. Pourquoi',
+        heading: '3. Pourquoi, et sur quelle base',
         paragraphs: [
-          "Faire fonctionner vos cercles et votre portefeuille, vérifier votre identité (obligation de lutte contre la fraude et le blanchiment), calculer votre score de réputation, étudier vos demandes de crédit et de Coup de pouce, vous envoyer les notifications que vous avez choisies, et répondre à vos demandes d'aide.",
-          "Nous ne vendons pas vos données et ne les utilisons pas pour de la publicité.",
+          "Pour vous fournir le service que vous avez demandé en créant votre compte (exécution du contrat) : faire fonctionner votre compte, vos cercles, votre portefeuille et votre épargne, envoyer les rappels d'échéance, étudier vos demandes de crédit et de Coup de pouce, et répondre à vos demandes d'aide.",
+          "Pour respecter nos obligations légales : vérifier votre identité et conserver les traces des opérations d'argent (comptabilité, lutte contre la fraude et le blanchiment).",
+          "Pour notre intérêt légitime à protéger les membres et le service : journal de sécurité, détection des fraudes et des abus, calcul du score de réputation à partir de votre régularité de cotisation.",
+          "Avec votre accord : les notifications par SMS ou WhatsApp que vous choisissez d'activer, que vous pouvez couper à tout moment dans Profil.",
+          "Nous ne vendons pas vos données et ne les utilisons pas pour de la publicité. L'application n'utilise ni cookie publicitaire, ni outil de mesure d'audience.",
         ],
       },
       {
-        heading: '3. Qui y a accès',
+        heading: '4. Qui y a accès',
         paragraphs: [
           "Les membres de vos cercles voient votre nom, votre avatar et l'état de vos cotisations dans ces cercles. Vos coordonnées (téléphone, e-mail) ne leur sont pas montrées.",
-          "Notre équipe y accède pour la vérification d'identité, le support et l'étude des demandes de crédit et de Coup de pouce.",
-          "Nos prestataires techniques, uniquement pour le service rendu : Supabase (base de données et stockage), Vercel (hébergement), PayDunya (paiements Mobile Money), Twilio (SMS et WhatsApp), Resend (e-mails), Anthropic (assistant intelligent : seules les questions que vous lui posez lui sont transmises).",
+          "Notre équipe y accède pour la vérification d'identité, le support, les retraits et l'étude des demandes de crédit et de Coup de pouce.",
+          "Nos prestataires, chacun uniquement pour sa tâche :",
+          "• Supabase : base de données, comptes et stockage des fichiers (toutes les données ci-dessus).",
+          "• Vercel : hébergement de l'application et de nos serveurs (les données traversent ses serveurs sans y être conservées).",
+          "• PayDunya : encaissement des dépôts Mobile Money (nom, e-mail, téléphone, montant, opérateur).",
+          "• Twilio : envoi des SMS et messages WhatsApp (numéro de téléphone et texte du message).",
+          "• Resend : envoi des e-mails (adresse e-mail et texte du message).",
+          "• Anthropic : assistant intelligent (seules les questions que vous lui posez, sans vos coordonnées).",
+          "• ipify : détection de l'adresse IP (votre adresse IP uniquement).",
+          "Ces prestataires sont situés hors du Togo, notamment aux États-Unis : vos données sont donc transférées hors du Togo et de l'UEMOA, uniquement pour ces tâches.",
+          "Nous pouvons aussi transmettre des données aux autorités lorsque la loi nous y oblige.",
         ],
       },
       {
-        heading: '4. Paiements, solde et retraits',
+        heading: '5. Paiements, solde et retraits',
         paragraphs: [
           "Dépôts : quand vous rechargez votre portefeuille, le paiement est encaissé par PayDunya. Pour le traiter, nous lui transmettons votre nom, votre adresse e-mail, votre numéro de téléphone, le montant et l'opérateur choisi. PayDunya traite ces informations selon ses propres conditions et sa propre politique de confidentialité.",
           "Vous validez le paiement sur votre téléphone, auprès de votre opérateur : eganyé ne voit ni ne conserve jamais votre code secret Mobile Money.",
@@ -323,21 +353,27 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         ],
       },
       {
-        heading: '5. Sécurité',
+        heading: '6. Sécurité',
         paragraphs: [
-          "Les échanges entre l'application et nos serveurs sont chiffrés (HTTPS). L'accès aux données est cloisonné : chaque compte ne peut lire que ce qui le concerne, et les opérations d'argent ne passent que par des fonctions contrôlées côté serveur. Vos pièces d'identité sont dans un espace de stockage privé, lisible seulement par vous et l'équipe de vérification.",
+          "Les échanges entre l'application et nos serveurs sont chiffrés (HTTPS). L'accès aux données est cloisonné : chaque compte ne peut lire que ce qui le concerne, et les opérations d'argent ne passent que par des fonctions contrôlées côté serveur. Les retraits sont protégés par un code PIN, bloqué 15 minutes après 5 erreurs. Vos pièces d'identité sont dans un espace de stockage privé, lisible seulement par vous et l'équipe de vérification.",
+          "Si une fuite de données risquait de vous porter préjudice, nous vous préviendrions, ainsi que l'autorité de protection des données.",
         ],
       },
       {
-        heading: '6. Combien de temps',
+        heading: '7. Combien de temps',
         paragraphs: [
-          "Vos données sont conservées tant que votre compte est ouvert. À la fermeture, votre profil est anonymisé immédiatement puis votre compte supprimé ; les traces des opérations financières sont conservées le temps exigé par les obligations comptables et de lutte contre le blanchiment.",
+          "Compte, cercles, messages et préférences : tant que votre compte est ouvert.",
+          "Vérification d'identité : tant que votre compte est ouvert ; votre dossier de vérification est effacé à la fermeture du compte.",
+          "Traces des opérations d'argent (montants, dates, références, journal comptable) : 10 ans, comme l'exigent les règles comptables (OHADA) et de lutte contre le blanchiment. Après la fermeture du compte, elles ne sont plus rattachées à votre nom.",
+          "Journal de sécurité : conservé avec les traces des opérations d'argent qu'il protège.",
         ],
       },
       {
-        heading: '7. Vos droits',
+        heading: '8. Vos droits et la suppression du compte',
         paragraphs: [
-          "Vous pouvez consulter et corriger vos informations dans Profil, et fermer votre compte depuis Profil. Pour toute autre demande (copie de vos données, opposition, réclamation), " + contactLine() + '.',
+          "Vous pouvez consulter et corriger vos informations dans Profil. Vous pouvez aussi demander une copie de vos données, leur correction ou leur effacement, ou vous opposer à un traitement : " + contactLine() + '. Nous répondons sous 30 jours.',
+          "Suppression du compte : depuis l'application (Profil), ou sans l'application, depuis la page eganye.codorah.com/suppression-compte. Votre profil est anonymisé immédiatement : nom, coordonnées, date de naissance, photo, dossier de vérification d'identité et notifications sont effacés, puis le compte est supprimé. Seules les traces des opérations d'argent sont gardées, sans votre nom, pendant la durée indiquée à la section 7.",
+          "La suppression est refusée tant que votre portefeuille n'est pas vide, que vous participez à un cercle actif ou qu'un crédit est en cours : retirez d'abord votre solde et terminez vos engagements, pour ne léser personne.",
           "Vous pouvez aussi saisir l'autorité de protection des données personnelles de votre pays (au Togo : l'Instance de Protection des Données à Caractère Personnel, IPDCP).",
         ],
       },
