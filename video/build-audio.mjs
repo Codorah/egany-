@@ -8,7 +8,7 @@
 // pile sur la scène « Bienvenue » (15 s), où entre la batterie.
 // Bruitages calés sur promo.html : volets de transition, pièce qui se pose,
 // cotisations qui tombent dans le pot, « Cercle créé ».
-import { writeFileSync, renameSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, renameSync, mkdtempSync, existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -207,8 +207,22 @@ writeFileSync(wav, buf);
 // ------------------------------------------------- collage sur la vidéo
 const mp4 = fileURLToPath(new URL('../public/video/eganye-presentation.mp4', import.meta.url));
 const out = path.join(tmp, 'avec-son.mp4');
-const r = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', mp4, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
-  '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' });
+// Voix off (video/voix, voir build-voice.mjs) : chaque réplique est posée à
+// son instant, et la musique s'efface sous la voix (compression en sidechain).
+const voixDir = fileURLToPath(new URL('./voix/', import.meta.url));
+const lines = existsSync(path.join(voixDir, 'repliques.json')) ? JSON.parse(readFileSync(path.join(voixDir, 'repliques.json'), 'utf8')) : [];
+const inputs = ['-i', mp4, '-i', wav, ...lines.flatMap((l) => ['-i', path.join(voixDir, l.file)])];
+let graph = '[1:a]volume=0.7[mus]';
+if (lines.length) {
+  graph += ';' + lines.map((l, i) => `[${i + 2}:a]aresample=${SR},aformat=channel_layouts=stereo,adelay=${Math.round(l.t * 1000)}:all=1[v${i}]`).join(';');
+  graph += `;${lines.map((_, i) => `[v${i}]`).join('')}amix=inputs=${lines.length}:normalize=0,volume=2.2,apad=whole_dur=${DUR}[voix]`;
+  graph += ';[voix]asplit[vo][sc];[mus][sc]sidechaincompress=threshold=0.02:ratio=5:attack=30:release=500[fond]';
+  graph += ';[fond][vo]amix=inputs=2:normalize=0,alimiter=limit=0.94[a]';
+} else {
+  graph += ';[mus]anull[a]';
+}
+const r = spawnSync('ffmpeg', ['-y', '-v', 'error', ...inputs, '-filter_complex', graph, '-map', '0:v', '-map', '[a]', '-c:v', 'copy',
+  '-c:a', 'aac', '-b:a', '160k', '-t', String(DUR), '-movflags', '+faststart', out], { stdio: 'inherit' });
 if (r.status) process.exit(r.status);
 renameSync(out, mp4);
 console.log('bande-son ajoutée :', mp4, '(wav :', wav + ')');
