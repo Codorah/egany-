@@ -1782,6 +1782,17 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     toast.error(result.message);
                     return;
                   }
+                  // Les fichiers (pièce d'identité, avatar, vidéos) ne
+                  // s'effacent que par l'API Storage, une fois la suppression
+                  // acceptée ci-dessus. Un échec ne bloque pas la fermeture
+                  // (le profil est déjà anonymisé) : relancer la suppression
+                  // est accepté à nouveau par la base et retente l'effacement.
+                  try {
+                    const purge = await apiFetch('/api/purge-account-files', { method: 'POST' });
+                    if (!purge.ok) console.error('Account files purge failed:', purge.status);
+                  } catch (purgeErr) {
+                    console.error('Account files purge error:', purgeErr);
+                  }
                   toast.success(result.message);
                   setShowDeleteConfirm(false);
                   onLogout?.();

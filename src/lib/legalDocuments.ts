@@ -363,7 +363,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: '7. Combien de temps',
         paragraphs: [
           "Compte, cercles, messages et préférences : tant que votre compte est ouvert.",
-          "Vérification d'identité : tant que votre compte est ouvert ; votre dossier de vérification est effacé à la fermeture du compte.",
+          "Pièce d'identité, avatar et vidéos Coup de pouce : tant que votre compte est ouvert ; ces fichiers sont effacés à la fermeture du compte.",
           "Traces des opérations d'argent (montants, dates, références, journal comptable) : 10 ans, comme l'exigent les règles comptables (OHADA) et de lutte contre le blanchiment. Après la fermeture du compte, elles ne sont plus rattachées à votre nom.",
           "Journal de sécurité : conservé avec les traces des opérations d'argent qu'il protège.",
         ],
@@ -372,7 +372,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: '8. Vos droits et la suppression du compte',
         paragraphs: [
           "Vous pouvez consulter et corriger vos informations dans Profil. Vous pouvez aussi demander une copie de vos données, leur correction ou leur effacement, ou vous opposer à un traitement : " + contactLine() + '. Nous répondons sous 30 jours.',
-          "Suppression du compte : depuis l'application (Profil), ou sans l'application, depuis la page eganye.codorah.com/suppression-compte. Votre profil est anonymisé immédiatement : nom, coordonnées, date de naissance, photo, dossier de vérification d'identité et notifications sont effacés, puis le compte est supprimé. Seules les traces des opérations d'argent sont gardées, sans votre nom, pendant la durée indiquée à la section 7.",
+          "Suppression du compte : depuis l'application (Profil), ou sans l'application, depuis la page eganye.codorah.com/suppression-compte. Votre profil est anonymisé immédiatement : nom, coordonnées, date de naissance, photo, pièce d'identité, vidéos et notifications sont effacés, puis le compte est supprimé. Seules les traces des opérations d'argent sont gardées, sans votre nom, pendant la durée indiquée à la section 7.",
           "La suppression est refusée tant que votre portefeuille n'est pas vide, que vous participez à un cercle actif ou qu'un crédit est en cours : retirez d'abord votre solde et terminez vos engagements, pour ne léser personne.",
           "Vous pouvez aussi saisir l'autorité de protection des données personnelles de votre pays (au Togo : l'Instance de Protection des Données à Caractère Personnel, IPDCP).",
         ],
