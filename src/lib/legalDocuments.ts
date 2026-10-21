@@ -34,22 +34,22 @@ export const LEGAL_LAST_UPDATED = '21 octobre 2026';
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
  * confidentialité. Un champ laissé vide n'est simplement pas affiché.
- * À COMPLÉTER par le propriétaire avant la mise en production publique.
+ * Source : carte unique de création d'entreprise (CFE Togo, 15-04-2026).
  */
 export const LEGAL_ENTITY = {
-  name: 'eganyé',
-  legalForm: '',
-  registration: '',
-  address: '',
+  name: 'CODORAH',
+  legalForm: 'entreprise individuelle',
+  registration: 'RCCM TG-LFW-01-2026-A10-02627',
+  address: 'Kégué, Lomé',
   country: 'Togo',
-  publicationDirector: '',
-  contactEmail: '',
+  publicationDirector: 'ATANA Essodom Elodie H.',
+  contactEmail: 'codorah@hotmail.com',
 };
 
 const entityLines = (): string[] => {
   const e = LEGAL_ENTITY;
   return [
-    `Éditeur : ${e.name}${e.legalForm ? `, ${e.legalForm}` : ''}.`,
+    `Éditeur de l'application eganyé : ${e.name}${e.legalForm ? `, ${e.legalForm}` : ''}.`,
     e.registration && `Immatriculation : ${e.registration}.`,
     e.address && `Siège : ${e.address}${e.country ? `, ${e.country}` : ''}.`,
     e.publicationDirector && `Directeur·rice de la publication : ${e.publicationDirector}.`,
