@@ -114,6 +114,9 @@ export function AdminDashboard() {
   // effacer les fichiers et le compte de connexion (clé de service, côté api/).
   const [pendingDeletions, setPendingDeletions] = useState<{ id: string; userId: string; requestedAt: string }[]>([]);
   const [finalizingDeletionId, setFinalizingDeletionId] = useState<string | null>(null);
+  // Demande reçue par e-mail (page web de suppression exigée par Google Play).
+  const [deletionEmail, setDeletionEmail] = useState('');
+  const [startingDeletion, setStartingDeletion] = useState(false);
 
   // KYC review queue
   const [kycSubmissions, setKycSubmissions] = useState<(KycSubmission & { userName: string; userEmail: string })[]>([]);
@@ -307,6 +310,30 @@ export function AdminDashboard() {
       toast.error(error.message || "Erreur lors de l'annulation du retrait.");
     } finally {
       setProcessingWithdrawalId(null);
+    }
+  };
+
+  const handleStartDeletionByEmail = async () => {
+    const email = deletionEmail.trim().toLowerCase();
+    const target = users.find(u => (u.email || '').toLowerCase() === email);
+    if (!target) {
+      toast.error('Aucun compte avec cette adresse e-mail.');
+      return;
+    }
+    if (!window.confirm(`Supprimer le compte de ${target.displayName || email} ? Vérifiez que la demande vient bien de l'adresse e-mail du compte.`)) return;
+    setStartingDeletion(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_request_account_deletion', { p_user: target.uid });
+      if (error) throw error;
+      const result = data as { success: boolean; message: string };
+      if (!result.success) throw new Error(result.message);
+      toast.success(result.message);
+      setDeletionEmail('');
+      await fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Suppression impossible.');
+    } finally {
+      setStartingDeletion(false);
     }
   };
 
@@ -756,18 +783,41 @@ export function AdminDashboard() {
 
         {/* TAB 1: USER MANAGEMENT */}
         <TabsContent value="users" className="mt-6 space-y-4">
-          {pendingDeletions.length > 0 && (
-            <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
               <CardHeader className="pb-4 bg-muted/30 border-b border-border">
                 <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                   <Trash2 className="w-5 h-5 text-danger" />
-                  Suppressions de compte à finaliser
+                  Suppressions de compte
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                  Ces personnes ont fermé leur compte : leur profil est déjà anonymisé. Finaliser efface leurs fichiers restants (pièce d'identité, avatar, vidéos) et leur accès à l'application. L'historique financier est conservé, sans leur nom.
+                  Demande reçue par e-mail : vérifiez qu'elle vient de l'adresse du compte, puis lancez-la ici (mêmes refus que dans l'app : solde, cercle actif, crédit en cours). Ensuite, « Finaliser » efface les fichiers restants (pièce d'identité, avatar, vidéos) et l'accès à l'application. L'historique financier est conservé, sans le nom.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="p-5 flex flex-col sm:flex-row gap-2 border-b border-border">
+                  <Input
+                    type="email"
+                    placeholder="E-mail du compte à supprimer"
+                    value={deletionEmail}
+                    onChange={(e) => setDeletionEmail(e.target.value)}
+                    className="h-9 bg-card border-border text-xs rounded-xl"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleStartDeletionByEmail}
+                    disabled={startingDeletion || !deletionEmail.trim()}
+                    className="h-9 rounded-xl text-xs font-bold border-danger/30 text-danger hover:bg-danger-soft shrink-0"
+                  >
+                    {startingDeletion && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                    Lancer la suppression
+                  </Button>
+                </div>
+                {pendingDeletions.length === 0 && (
+                  <p className="text-center py-6 text-muted-foreground text-xs font-medium">
+                    Aucune suppression à finaliser.
+                  </p>
+                )}
                 <div className="divide-y divide-border">
                   {pendingDeletions.map((d) => (
                     <div key={d.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -796,7 +846,7 @@ export function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          )}
+
 
           <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
