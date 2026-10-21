@@ -16,7 +16,7 @@ L'application cible particulièrement les mamans commerçantes et la jeunesse, o
   - Suivi en temps réel de l'état de la caisse
 
 - **💳 Intégration Mobile Money**
-  - Simulation de paiements via les agrégateurs locaux (Tmoney, Moov, Wave, etc.)
+  - Simulation de paiements via les agrégateurs locaux (Mixx, Moov, Wave, etc.)
   - Versement en espèces avec validation par le trésorier
 
 - **🛡️ Score de Fiabilité**

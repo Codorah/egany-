@@ -98,7 +98,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               Vos tontines, enfin dans votre poche.
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-[46ch]">
-              Créez votre cercle d'épargne, cotisez par Flooz ou T-Money et suivez chaque franc, en toute transparence.
+              Créez votre cercle d'épargne, cotisez par Flooz ou Mixx et suivez chaque franc, en toute transparence.
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -191,7 +191,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               <ol className="space-y-10">
                 {[
                   { icon: Users, title: 'Créez ou rejoignez un cercle', body: 'Fixez le montant, la fréquence et l’ordre des tours. Invitez vos proches par lien, code ou QR code.' },
-                  { icon: Smartphone, title: 'Cotisez depuis votre téléphone', body: 'Flooz ou T-Money, en quelques secondes. Chaque versement est enregistré et visible par tout le cercle.' },
+                  { icon: Smartphone, title: 'Cotisez depuis votre téléphone', body: 'Flooz ou Mixx, en quelques secondes. Chaque versement est enregistré et visible par tout le cercle.' },
                   { icon: HandCoins, title: 'Recevez le pot à votre tour', body: 'L’argent arrive sur votre portefeuille eganyé, et vous le retirez vers votre Mobile Money quand vous voulez.' },
                 ].map((step, i) => (
                   <Reveal key={step.title} delay={i * 0.08}>
@@ -320,7 +320,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 { icon: LockKeyhole, title: 'Code PIN et empreinte', body: 'Chaque opération sur votre argent est confirmée par vous, et seulement vous.' },
                 { icon: ShieldCheck, title: 'Contrôlé côté serveur', body: 'Aucun solde ne peut être modifié depuis l’application : tout passe par des opérations vérifiées et enregistrées.' },
                 { icon: Users, title: 'Transparent pour le cercle', body: 'Chaque membre voit qui a cotisé et qui a reçu. Vos coordonnées restent privées.' },
-                { icon: Smartphone, title: 'Paiements Mobile Money', body: 'Les dépôts passent par PayDunya, avec Flooz et T-Money. Vos codes ne transitent jamais par eganyé.' },
+                { icon: Smartphone, title: 'Paiements Mobile Money', body: 'Les dépôts passent par PayDunya, avec Flooz et Mixx. Vos codes ne transitent jamais par eganyé.' },
               ].map((item, i) => (
                 <Reveal key={item.title} delay={(i % 2) * 0.08}>
                   <div className="flex gap-5">

@@ -88,7 +88,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: '3. Votre portefeuille',
         paragraphs: [
-          "Les dépôts et retraits passent par Mobile Money (T-Money, Moov Flooz, Orange Money, MTN MoMo selon les pays) via notre prestataire de paiement PayDunya. Les frais éventuels sont affichés avant que vous ne confirmiez.",
+          "Les dépôts et retraits passent par Mobile Money (Mixx, Moov Flooz, Orange Money, MTN MoMo selon les pays) via notre prestataire de paiement PayDunya. Les frais éventuels sont affichés avant que vous ne confirmiez.",
           "Chaque mouvement est inscrit dans un registre comptable à double entrée et apparaît dans votre historique. Un retrait n'est définitif qu'une fois confirmé par l'opérateur Mobile Money.",
         ],
       },

@@ -35,7 +35,7 @@ export const PAYDUNYA_COUNTRIES: PaydunyaCountry[] = [
     flag: '🇹🇬',
     dialCode: '+228',
     operators: [
-      { value: 'tmoney_tg', label: 'T-Money (Togocom)', direct: true },
+      { value: 'tmoney_tg', label: 'Mixx (Yas)', direct: true },
       { value: 'moov_tg', label: 'Flooz (Moov)', direct: true },
     ],
   },

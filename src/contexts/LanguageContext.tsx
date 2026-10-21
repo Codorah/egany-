@@ -362,10 +362,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Pɩ-wɛ ɖeu! N-kɛ ñɩm mʋyʋ (Tier A). Se ŋ-tasɩ Tier S taa, sɔnzɩ liidiye n-kpou taa ɖooo kɩyakʋ ŋga ka-kaŋ yɔ, kɩ-yɔɔ.'
   },
   reputation_tip_b: {
-    fr: "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Flooz ou T-Money.",
-    en: 'Your reputation is correct (B-Tier) but could be improved. Tip: To avoid forgetting, recharge regularly via Flooz or T-Money.',
-    ee: 'Wò ŋkɔ nyuie le eme (Tier B) gake wòate ŋu anyo wu. Aɖaŋuɖoɖo: Be maŋlɔ nu be o la, trɔ ga de wò akɔnta me edziedzi to Flooz alo T-Money dzi.',
-    kbp: 'Ño-hɩɖɛ wɛ ɖeu (Tier B) piye pɩpɔzʋʋ se pɩ-cɛzɩɣ. Ñɩnɩ: Se n-ta pɩ-yɔɔ, sɔnzɩ liidiye tam-tam Flooz yaa T-Money yɔɔ.'
+    fr: "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Flooz ou Mixx.",
+    en: 'Your reputation is correct (B-Tier) but could be improved. Tip: To avoid forgetting, recharge regularly via Flooz or Mixx.',
+    ee: 'Wò ŋkɔ nyuie le eme (Tier B) gake wòate ŋu anyo wu. Aɖaŋuɖoɖo: Be maŋlɔ nu be o la, trɔ ga de wò akɔnta me edziedzi to Flooz alo Mixx dzi.',
+    kbp: 'Ño-hɩɖɛ wɛ ɖeu (Tier B) piye pɩpɔzʋʋ se pɩ-cɛzɩɣ. Ñɩnɩ: Se n-ta pɩ-yɔɔ, sɔnzɩ liidiye tam-tam Flooz yaa Mixx yɔɔ.'
   },
   reputation_tip_c: {
     fr: "Attention ! Votre score est critique (Tier C) à cause de retards répétés. Pour restaurer votre réputation, alimentez immédiatement votre solde de portefeuille et réglez vos cotisations en attente.",
@@ -400,10 +400,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Sɔnzɩ liidiye man-kpou taa'
   },
   recharge_wallet_desc: {
-    fr: 'Ajouter des fonds par Paydunya (Flooz, T-Money...)',
-    en: 'Add funds via Paydunya (Flooz, T-Money...)',
-    ee: 'Tsɔ ga kpe ɖe eŋu to Paydunya dzi (Flooz, T-Money...)',
-    kbp: 'Kpɛndɩ liidiye Paydunya yɔɔ (Flooz, T-Money...)'
+    fr: 'Ajouter des fonds par Paydunya (Flooz, Mixx...)',
+    en: 'Add funds via Paydunya (Flooz, Mixx...)',
+    ee: 'Tsɔ ga kpe ɖe eŋu to Paydunya dzi (Flooz, Mixx...)',
+    kbp: 'Kpɛndɩ liidiye Paydunya yɔɔ (Flooz, Mixx...)'
   },
   create_new_circle: {
     fr: 'Créer un nouveau cercle',
@@ -854,10 +854,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Liidiye ɖʋʋ tʋmɩyɛ'
   },
   enter_reference_error: {
-    fr: 'Veuillez saisir une référence (ex: ID Flooz, T-Money...)',
-    en: 'Please enter a reference (e.g. Flooz ID, T-Money...)',
-    ee: 'Taflatse ŋlɔ dzesi aɖe (kpɔɖeŋu: Flooz ID, T-Money...)',
-    kbp: 'Taa kalɩ tʋmɩyɛ nakʋyʋ (ɛzɩ: Flooz ID, T-Money...)'
+    fr: 'Veuillez saisir une référence (ex: ID Flooz, Mixx...)',
+    en: 'Please enter a reference (e.g. Flooz ID, Mixx...)',
+    ee: 'Taflatse ŋlɔ dzesi aɖe (kpɔɖeŋu: Flooz ID, Mixx...)',
+    kbp: 'Taa kalɩ tʋmɩyɛ nakʋyʋ (ɛzɩ: Flooz ID, Mixx...)'
   },
   send_proof: {
     fr: 'Envoyer le justificatif',
@@ -1950,10 +1950,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Sɔnzɩ liidiye Paydunya yɔɔ'
   },
   prof_recharge_dialog_desc: {
-    fr: 'Alimentez votre portefeuille virtuel via Paydunya (Flooz, T-Money, Carte Bancaire) pour automatiser vos cotisations quotidiennes de tontine.',
-    en: 'Fund your virtual wallet via Paydunya (Flooz, T-Money, Bank Card) to automate your daily tontine contributions.',
-    ee: 'Trɔ ga de wò komputa gaxɔ me to Paydunya dzi (Flooz, T-Money, Gakaɖi) be wò tontine gaxexlẽ gbesiagbe nàwɔ eɖokui.',
-    kbp: 'Sɔnzɩ ño-kpou taa Paydunya yɔɔ (Flooz, T-Money, Banki kaatɩ) se ño-tontine liidiye haʋ kɩyakʋ kʋɖʋmaɣ ɩ-la ɩ-maɣmaɣ.'
+    fr: 'Alimentez votre portefeuille virtuel via Paydunya (Flooz, Mixx, Carte Bancaire) pour automatiser vos cotisations quotidiennes de tontine.',
+    en: 'Fund your virtual wallet via Paydunya (Flooz, Mixx, Bank Card) to automate your daily tontine contributions.',
+    ee: 'Trɔ ga de wò komputa gaxɔ me to Paydunya dzi (Flooz, Mixx, Gakaɖi) be wò tontine gaxexlẽ gbesiagbe nàwɔ eɖokui.',
+    kbp: 'Sɔnzɩ ño-kpou taa Paydunya yɔɔ (Flooz, Mixx, Banki kaatɩ) se ño-tontine liidiye haʋ kɩyakʋ kʋɖʋmaɣ ɩ-la ɩ-maɣmaɣ.'
   },
   prof_recharge_amount: {
     fr: 'Montant de la recharge (FCFA)',
@@ -2080,10 +2080,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Flooz (Moov)'
   },
   prof_operator_tmoney: {
-    fr: 'T-Money (Togocom)',
-    en: 'T-Money (Togocom)',
-    ee: 'T-Money (Togocom)',
-    kbp: 'T-Money (Togocom)'
+    fr: 'Mixx (Yas)',
+    en: 'Mixx (Yas)',
+    ee: 'Mixx (Yas)',
+    kbp: 'Mixx (Yas)'
   },
   // NOTE: ee/kbp not yet translated for this group — duplicated from fr, comme
   // pour prof_withdraw_operator_label ci-dessus.
@@ -4376,10 +4376,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Kalɩyaa, pɩyaɣ maralɩyaa nɛ tʋmɩyaa: mɩ-ma marali tontinaa nɛ pɩ-bɔbɔ, mɩ-cɔnɩ mɩ-liidiye haʋ nɛ mɩ-la mɩ-lɩmaɣza.'
   },
   onb_slide3_title: {
-    fr: 'Encaissez par Mobile Money (Flooz, T-Money)',
-    en: 'Get Paid via Mobile Money (Flooz, T-Money)',
-    ee: 'Xɔ Ga To Mobile Money Dzi (Flooz, T-Money)',
-    kbp: 'Mʋ liidiye Mobile Money taa (Flooz, T-Money)'
+    fr: 'Encaissez par Mobile Money (Flooz, Mixx)',
+    en: 'Get Paid via Mobile Money (Flooz, Mixx)',
+    ee: 'Xɔ Ga To Mobile Money Dzi (Flooz, Mixx)',
+    kbp: 'Mʋ liidiye Mobile Money taa (Flooz, Mixx)'
   },
   onb_slide3_desc: {
     fr: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
@@ -4466,10 +4466,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Pɩ-fɛyɩ ɖeu se pa-tasɩ tiyu kɩlɩzɩ :'
   },
   onb_welcome_desc: {
-    fr: "Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Flooz, T-Money, et augmentez votre score financier.",
-    en: 'Manage your African savings circles with ease, automate your contributions via Flooz, T-Money, and boost your financial score.',
-    ee: 'Kpɔ wò Afrika gadzraɖo habɔbɔwo dzi bɔbɔe, wɔ wò gaxexlẽwo automatique to Flooz, T-Money dzi, eye nàdo wò ga xexlẽme ɖe edzi.',
-    kbp: 'Ñɩɩ ño-Afrika marali tontinaa pɩ-bɔbɔ, la ño-liidiye haʋ ɖɔɖɔyɔ Flooz, T-Money yɔɔ, nɛ tasɩ ño-liidiye kɩlaʋ yɔɔ.'
+    fr: "Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Flooz, Mixx, et augmentez votre score financier.",
+    en: 'Manage your African savings circles with ease, automate your contributions via Flooz, Mixx, and boost your financial score.',
+    ee: 'Kpɔ wò Afrika gadzraɖo habɔbɔwo dzi bɔbɔe, wɔ wò gaxexlẽwo automatique to Flooz, Mixx dzi, eye nàdo wò ga xexlẽme ɖe edzi.',
+    kbp: 'Ñɩɩ ño-Afrika marali tontinaa pɩ-bɔbɔ, la ño-liidiye haʋ ɖɔɖɔyɔ Flooz, Mixx yɔɔ, nɛ tasɩ ño-liidiye kɩlaʋ yɔɔ.'
   },
   onb_discover_eganye: {
     fr: 'Découvrir eganyé',
@@ -6537,10 +6537,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ɛzɩma mansɔnzɩ liidiye man-eganyé kpou taa?'
   },
   sup_faq_4_a: {
-    fr: 'Depuis votre Profil > Portefeuille, choisissez « Recharger » et suivez les instructions de paiement (Mobile Money : Flooz, T-Money...).',
-    en: 'From your Profile > Wallet, choose "Recharge" and follow the payment instructions (Mobile Money: Flooz, T-Money...).',
-    ee: 'Tso wò Profil > Gaxɔ me la, tia « Trɔ De Ga » eye nàdze fexexlẽ ƒe mɔfiafiawo yome (Mobile Money : Flooz, T-Money...).',
-    kbp: 'Ño-Profil > Kpou taa, lɩzɩ « Sɔnzɩ liidiye » nɛ ŋtɩŋɩɣnɩ liidiye fɛlɩyɛ wɩlɩtʋ yɔɔ (Mobile Money : Flooz, T-Money...).'
+    fr: 'Depuis votre Profil > Portefeuille, choisissez « Recharger » et suivez les instructions de paiement (Mobile Money : Flooz, Mixx...).',
+    en: 'From your Profile > Wallet, choose "Recharge" and follow the payment instructions (Mobile Money: Flooz, Mixx...).',
+    ee: 'Tso wò Profil > Gaxɔ me la, tia « Trɔ De Ga » eye nàdze fexexlẽ ƒe mɔfiafiawo yome (Mobile Money : Flooz, Mixx...).',
+    kbp: 'Ño-Profil > Kpou taa, lɩzɩ « Sɔnzɩ liidiye » nɛ ŋtɩŋɩɣnɩ liidiye fɛlɩyɛ wɩlɩtʋ yɔɔ (Mobile Money : Flooz, Mixx...).'
   },
   sup_faq_5_q: {
     fr: "Qu'est-ce que le Score de Réputation ?",

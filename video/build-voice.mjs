@@ -19,7 +19,7 @@ export const LINES = [
   [3.3, 'eganyé. La tontine et l’épargne, réinventées.'],
   [7.4, 'Le cahier qui se perd. Les cotisations oubliées. Qui a payé, qui manque ?'],
   [12.6, 'Et si tout tenait dans votre poche ?'],
-  [15.6, 'Bienvenue sur eganyé : vos tontines, enfin dans votre poche. Avec Flooz ou T-Money, entre proches.'],
+  [15.6, 'Bienvenue sur eganyé : vos tontines, enfin dans votre poche. Avec Flooz ou Mixx, entre proches.'],
   [24.5, 'Créez votre cercle en trente secondes, avec vos propres règles.'],
   [29.0, 'Invitez vos proches, par lien, par code ou par QR code.'],
   [33.5, 'Et voilà vos proches, réunis dans un seul cercle.'],

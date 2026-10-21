@@ -762,7 +762,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       Portefeuille Mobile Money
                     </span>
                     <span className="text-[11px] text-muted-foreground truncate block">
-                      Recharges T-Money, Moov Flooz & Retraits
+                      Recharges Mixx, Moov Flooz & Retraits
                     </span>
                   </div>
                   <span className="text-xs font-bold text-[#C96F4A] mr-1">

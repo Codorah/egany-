@@ -29,7 +29,7 @@ L'application est développée avec une approche **Mobile First** (Tailwind CSS,
 
 ## 5. Paiements
 - **Moyens de paiement** (Mobile Money, Carte, etc.) : ⚠️ Partiellement implémentée (L'intégration Mobile Money est simulée via `PaydunyaSimulator.tsx`, les fonds vont dans un "Wallet" virtuel).
-- **Intégration Mobile Money locale (Flooz, TMoney, Orange Money, etc.)** : ✅ Prévue/Simulée via l'intégration type Paydunya.
+- **Intégration Mobile Money locale (Flooz, Mixx, Orange Money, etc.)** : ✅ Prévue/Simulée via l'intégration type Paydunya.
 
 ## 6. Historique des cotisations
 - **Toutes les cotisations, dates, montants, statuts** : ✅ Implémentée (Suivi dans `ContributionsManager.tsx` et historique Wallet).
