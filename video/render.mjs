@@ -1,6 +1,6 @@
 // Rend video/promo.html en MP4, image par image.
 //
-//   node video/render.mjs                    → public/video/eganye-presentation.mp4 + affiche .jpg
+//   node video/render.mjs                    → public/video/eganye-presentation.mp4 (avec bande-son) + affiche .jpg
 //   node video/render.mjs --stills 3,16,40   → captures PNG de contrôle dans video/stills/
 //
 // Chaque image est obtenue en plaçant l'horloge de la composition à t
@@ -62,5 +62,7 @@ if (stillsArg) {
   await new Promise((r, j) => ff.on('close', (c) => (c ? j(new Error('ffmpeg ' + c)) : r())));
   await shot(POSTER_T, { path: poster, type: 'jpeg', quality: 82 });
   console.log('vidéo :', out);
+  // l'image vient d'être recodée sans son : on remet la bande-son
+  spawn(process.execPath, [path.join(here, 'build-audio.mjs')], { stdio: 'inherit' });
 }
 await browser.close();
