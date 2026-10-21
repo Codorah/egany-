@@ -12,6 +12,7 @@ import { AdminServerHealth } from './AdminServerHealth';
 import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
+import { apiFetch } from '@/lib/apiBase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -109,6 +110,11 @@ export function AdminDashboard() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
   const [processingWithdrawalId, setProcessingWithdrawalId] = useState<string | null>(null);
 
+  // Comptes fermés depuis Profil : le profil est déjà anonymisé, il reste à
+  // effacer les fichiers et le compte de connexion (clé de service, côté api/).
+  const [pendingDeletions, setPendingDeletions] = useState<{ id: string; userId: string; requestedAt: string }[]>([]);
+  const [finalizingDeletionId, setFinalizingDeletionId] = useState<string | null>(null);
+
   // KYC review queue
   const [kycSubmissions, setKycSubmissions] = useState<(KycSubmission & { userName: string; userEmail: string })[]>([]);
   const [reviewingKycId, setReviewingKycId] = useState<string | null>(null);
@@ -158,6 +164,14 @@ export function AdminDashboard() {
       setKycSubmissions(await fetchPendingKycSubmissions());
       setMarketplaceRequests(await fetchPendingMarketplaceRequests());
       setPendingWithdrawals(await fetchPendingWithdrawals());
+
+      const { data: deletionRows, error: deletionError } = await supabase
+        .from('account_deletion_requests')
+        .select('id, user_id, requested_at')
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: true });
+      if (deletionError) console.warn('Deletion requests fetch failed:', deletionError);
+      else setPendingDeletions((deletionRows ?? []).map((r: any) => ({ id: r.id, userId: r.user_id, requestedAt: r.requested_at })));
 
       const settings = await fetchPlatformSettings();
       setMaintenanceMode(settings.maintenanceMode);
@@ -293,6 +307,26 @@ export function AdminDashboard() {
       toast.error(error.message || "Erreur lors de l'annulation du retrait.");
     } finally {
       setProcessingWithdrawalId(null);
+    }
+  };
+
+  const handleFinalizeDeletion = async (d: { id: string; userId: string }) => {
+    if (!window.confirm("Effacer définitivement les fichiers de ce compte et supprimer son accès ? L'historique financier est conservé.")) return;
+    setFinalizingDeletionId(d.id);
+    try {
+      const res = await apiFetch('/api/purge-account-files', {
+        method: 'POST',
+        body: JSON.stringify({ userId: d.userId }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Suppression impossible.');
+      const files = Object.values((body.removed ?? {}) as Record<string, number>).reduce((a, b) => a + b, 0);
+      toast.success(`Compte supprimé (${files} fichier${files > 1 ? 's' : ''} effacé${files > 1 ? 's' : ''}).`);
+      setPendingDeletions(prev => prev.filter(p => p.id !== d.id));
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de la suppression du compte.');
+    } finally {
+      setFinalizingDeletionId(null);
     }
   };
 
@@ -655,7 +689,7 @@ export function AdminDashboard() {
       {/* --- DETAILED MANAGEMENT SECTIONS --- */}
       {(() => {
         const adminSections = [
-          { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: 0 },
+          { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: pendingDeletions.length },
           { id: 'groups', label: t('admin_tab_groups'), icon: GroupsIcon, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'kyc', label: 'KYC', icon: BadgeCheck, color: 'bg-eganye-gold/10 text-eganye-gold', count: kycSubmissions.length },
           { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length + pendingCreditCount + pendingAidCount },
@@ -722,6 +756,48 @@ export function AdminDashboard() {
 
         {/* TAB 1: USER MANAGEMENT */}
         <TabsContent value="users" className="mt-6 space-y-4">
+          {pendingDeletions.length > 0 && (
+            <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+              <CardHeader className="pb-4 bg-muted/30 border-b border-border">
+                <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-danger" />
+                  Suppressions de compte à finaliser
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  Ces personnes ont fermé leur compte : leur profil est déjà anonymisé. Finaliser efface leurs fichiers restants (pièce d'identité, avatar, vidéos) et leur accès à l'application. L'historique financier est conservé, sans leur nom.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {pendingDeletions.map((d) => (
+                    <div key={d.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="text-sm font-bold text-foreground">Compte supprimé</p>
+                        <p className="text-[13px] text-muted-foreground font-mono truncate">{d.userId}</p>
+                        <p className="text-[13px] text-muted-foreground">
+                          Demandé le {new Date(d.requestedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleFinalizeDeletion(d)}
+                        disabled={finalizingDeletionId === d.id}
+                        className="h-9 rounded-xl text-xs font-bold bg-danger hover:bg-danger/90 text-white shrink-0"
+                      >
+                        {finalizingDeletionId === d.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        Finaliser
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
