@@ -78,6 +78,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // La vidéo de présentation (plusieurs Mo, lue par plages d'octets) va
+  // directement au réseau : la garder en cache remplirait le stockage du
+  // téléphone pour une page qu'on ne voit que sur ordinateur.
+  if (url.pathname.startsWith('/video/')) {
+    return;
+  }
+
   // Navigation requests (the HTML document) must always come from the
   // network first: it's what names the hashed JS/CSS files for the current
   // deploy, so serving a stale cached copy after a new deploy points the
