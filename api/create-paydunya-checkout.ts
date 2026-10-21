@@ -99,17 +99,21 @@ const SOFTPAY_ROUTES: Record<string, SoftpayRoute> = {
 /**
  * Frais du prestataire, recalculés côté serveur à partir des réglages en base.
  *
- * Le navigateur envoie le montant NET voulu ; c'est ici, et seulement ici, que
- * l'on décide du montant facturé. Faire confiance à un « montant brut » envoyé
- * par le client permettrait de payer 200 F pour s'en faire créditer 100 000.
+ * Le navigateur envoie le montant saisi et le choix « frais en plus » ; c'est
+ * ici, et seulement ici, que l'on décide du montant facturé et du montant
+ * crédité. Faire confiance à un « montant brut » ou « net » envoyé par le
+ * client permettrait de payer 200 F pour s'en faire créditer 100 000.
+ *
+ * feeOnTop : les frais s'ajoutent (1000 saisis → 1025 payés, 1000 crédités).
+ * Sinon ils sont retenus (1000 saisis → 1000 payés, 975 crédités).
  *
  * Doit rester aligné sur computeDepositFee (src/lib/platformSettings.ts), qui
  * affiche le même calcul à l'écran avant paiement.
  */
-async function computeGrossAmount(net: number): Promise<{ net: number; fee: number; gross: number }> {
+async function computeGrossAmount(amount: number, feeOnTop: boolean): Promise<{ net: number; fee: number; gross: number }> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const none = { net, fee: 0, gross: net };
+  const none = { net: amount, fee: 0, gross: amount };
 
   if (!supabaseUrl || !serviceKey) return none;
 
@@ -125,12 +129,14 @@ async function computeGrossAmount(net: number): Promise<{ net: number; fee: numb
     const settings = rows?.[0];
     if (!settings?.deposit_fee_enabled) return none;
 
-    const proportional = (net * Number(settings.deposit_fee_percent ?? 0)) / 100;
+    const proportional = (amount * Number(settings.deposit_fee_percent ?? 0)) / 100;
     const fee = Math.max(
       Math.ceil(proportional + Number(settings.deposit_fee_fixed ?? 0)),
       Number(settings.deposit_fee_min ?? 0)
     );
-    return { net, fee, gross: net + fee };
+    return feeOnTop
+      ? { net: amount, fee, gross: amount + fee }
+      : { net: amount - fee, fee, gross: amount };
   } catch (error) {
     // Frais indisponibles : on facture le montant net plutôt que d'empêcher
     // la recharge. La plateforme absorbe la commission sur ce dépôt-là.
@@ -151,6 +157,8 @@ export default async function handler(req: any, res: any) {
     if (!caller) return;
 
     const { amount, userId, userName, userEmail, phone, paymentMethod } = req.body;
+    // Absent (ancienne version de l'app) = frais en plus, le comportement d'avant.
+    const feeOnTop = req.body.feeOnTop !== false;
     if (userId !== caller.id) {
       return res.status(403).json({ error: 'Vous ne pouvez recharger que votre propre portefeuille.' });
     }
@@ -162,8 +170,11 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Requête invalide (utilisateur ou montant).' });
     }
 
-    // `parsedAmount` est le net voulu ; `gross` est ce que paie l'utilisatrice.
-    const { net: netAmount, fee, gross } = await computeGrossAmount(Math.round(parsedAmount));
+    // `gross` est ce que paie l'utilisatrice, `netAmount` ce qui sera crédité.
+    const { net: netAmount, fee, gross } = await computeGrossAmount(Math.round(parsedAmount), feeOnTop);
+    if (netAmount <= 0) {
+      return res.status(400).json({ error: 'Montant trop faible une fois les frais retenus.' });
+    }
 
     const masterKey = process.env.PAYDUNYA_MASTER_KEY;
     const privateKey = process.env.PAYDUNYA_PRIVATE_KEY;
@@ -209,10 +220,10 @@ export default async function handler(req: any, res: any) {
       headers: authHeaders,
       body: JSON.stringify({
         invoice: {
-          // Le brut : net voulu + frais du prestataire, ajoutés par-dessus.
+          // Le brut : ce qui est débité, frais compris.
           total_amount: gross,
           description: fee > 0
-            ? `Recharge de portefeuille eganyé (${netAmount} FCFA + ${fee} FCFA de frais)`
+            ? `Recharge de portefeuille eganyé (${netAmount} FCFA crédités, ${fee} FCFA de frais)`
             : 'Recharge de portefeuille eganyé',
           name: 'Recharge eganyé',
           // Préremplit nom/email/téléphone sur la page Paydunya hébergée.
@@ -240,7 +251,8 @@ export default async function handler(req: any, res: any) {
         // sait quel portefeuille créditer, sans faire confiance au client.
         // `netAmount` est ce que le
         // webhook créditera : surtout PAS invoice.total_amount, qui contient
-        // les frais du prestataire et créditerait 1025 pour 1000 voulus.
+        // les frais du prestataire et créditerait 1025 pour 1000 voulus (ou
+        // 1000 pour 975 quand les frais sont retenus sur le montant).
         custom_data: {
           userId,
           userName,

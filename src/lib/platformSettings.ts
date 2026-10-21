@@ -38,31 +38,41 @@ const DEFAULT_SETTINGS: PlatformSettings = {
 };
 
 export interface DepositFeeBreakdown {
-  /** Ce que l'utilisatrice veut voir arriver sur son portefeuille. */
+  /** Ce qui arrive sur le portefeuille. */
   net: number;
-  /** Les frais du prestataire, ajoutés par-dessus. */
+  /** Les frais du prestataire. */
   fee: number;
-  /** Ce qui est réellement débité sur le Mobile Money : net + fee. */
+  /** Ce qui est réellement débité sur le Mobile Money. */
   gross: number;
 }
 
 /**
- * Les frais du prestataire s'AJOUTENT au montant voulu au lieu d'être retenus
- * dessus : qui demande 1000 F est débité de 1025 F et reçoit bien 1000 F sur
- * son portefeuille. L'alternative (retenir les frais sur le montant) crédite
- * 975 F pour 1000 F payés, ce qui est bien plus déroutant sur un produit
- * d'épargne où les montants sont des objectifs ronds.
+ * Deux façons de régler les frais du prestataire sur un montant saisi :
  *
- * Arrondi à l'entier supérieur : le FCFA n'a pas de subdivision, et arrondir
- * vers le bas ferait payer la différence à la plateforme à chaque dépôt.
+ * - feeOnTop (par défaut, case « frais en plus » cochée) : les frais
+ *   s'AJOUTENT. Qui saisit 1000 F est débité de 1025 F et reçoit bien 1000 F
+ *   — le plus clair sur un produit d'épargne où les montants sont des
+ *   objectifs ronds.
+ * - case décochée : les frais sont RETENUS sur le montant. Qui saisit 1000 F
+ *   est débité de 1000 F et reçoit 975 F.
+ *
+ * Dans les deux cas les frais se calculent sur le montant saisi. Arrondi à
+ * l'entier supérieur : le FCFA n'a pas de subdivision, et arrondir vers le
+ * bas ferait payer la différence à la plateforme à chaque dépôt.
+ *
+ * Doit rester aligné sur computeGrossAmount (api/create-paydunya-checkout.ts),
+ * qui refait ce calcul côté serveur au moment de facturer.
  */
-export function computeDepositFee(net: number, settings: PlatformSettings): DepositFeeBreakdown {
-  if (!settings.depositFeeEnabled || !Number.isFinite(net) || net <= 0) {
-    return { net: Math.max(0, Math.round(net) || 0), fee: 0, gross: Math.max(0, Math.round(net) || 0) };
+export function computeDepositFee(amount: number, settings: PlatformSettings, feeOnTop = true): DepositFeeBreakdown {
+  const rounded = Math.max(0, Math.round(amount) || 0);
+  if (!settings.depositFeeEnabled || !Number.isFinite(amount) || amount <= 0) {
+    return { net: rounded, fee: 0, gross: rounded };
   }
-  const proportional = (net * settings.depositFeePercent) / 100;
+  const proportional = (rounded * settings.depositFeePercent) / 100;
   const fee = Math.max(Math.ceil(proportional + settings.depositFeeFixed), settings.depositFeeMin);
-  return { net: Math.round(net), fee, gross: Math.round(net) + fee };
+  return feeOnTop
+    ? { net: rounded, fee, gross: rounded + fee }
+    : { net: Math.max(0, rounded - fee), fee, gross: rounded };
 }
 
 export async function fetchPlatformSettings(): Promise<PlatformSettings> {

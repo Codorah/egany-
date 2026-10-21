@@ -111,6 +111,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [showBalance, setShowBalance] = useState(true);
   const [walletAction, setWalletAction] = useState<'recharge' | 'withdraw'>(focusCard || 'recharge');
   const [rechargeAmount, setRechargeAmount] = useState('');
+  // Cochée : les frais s'ajoutent et le montant saisi arrive entier sur le
+  // portefeuille. Décochée : on paie le montant saisi, frais retenus dessus.
+  const [rechargeFeeOnTop, setRechargeFeeOnTop] = useState(true);
   const [rechargeCountry, setRechargeCountry] = useState('tg');
   const [rechargeMethod, setRechargeMethod] = useState('tmoney_tg');
   const [rechargePhone, setRechargePhone] = useState(user.phone || '');
@@ -138,13 +141,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     phone: string;
   } | null>(null);
 
-  // Ce que l'utilisatrice veut recevoir (net), ce que Paydunya prélève (fee),
+  // Ce qui arrivera sur le portefeuille (net), ce que Paydunya prélève (fee),
   // et ce qui sera réellement débité de son Mobile Money (gross).
   const depositBreakdown: DepositFeeBreakdown | null = React.useMemo(() => {
-    const net = parseFloat(rechargeAmount);
-    if (!platformSettings || !Number.isFinite(net) || net <= 0) return null;
-    return computeDepositFee(net, platformSettings);
-  }, [rechargeAmount, platformSettings]);
+    const amount = parseFloat(rechargeAmount);
+    if (!platformSettings || !Number.isFinite(amount) || amount <= 0) return null;
+    return computeDepositFee(amount, platformSettings, rechargeFeeOnTop);
+  }, [rechargeAmount, platformSettings, rechargeFeeOnTop]);
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const withdrawIdempotencyKeyRef = React.useRef<string | null>(null);
@@ -376,13 +379,15 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       // confirmé (App.tsx gère le retour ?paydunya_success=true) — on ne
       // crédite jamais directement ici.
       //
-      // `amount` est le montant NET voulu sur le portefeuille. Le serveur
-      // recalcule lui-même les frais et facture le brut : le montant facturé
-      // ne se décide jamais d'après une valeur envoyée par le navigateur.
+      // `amount` est le montant saisi, `feeOnTop` dit si les frais s'y
+      // ajoutent ou y sont retenus. Le serveur recalcule lui-même les frais,
+      // le montant facturé et le montant crédité : rien de cela ne se décide
+      // d'après une valeur calculée par le navigateur.
       const response = await apiFetch('/api/create-paydunya-checkout', {
         method: 'POST',
         body: JSON.stringify({
           amount: amt,
+          feeOnTop: rechargeFeeOnTop,
           userId: user.uid,
           userName: user.displayName,
           userEmail: user.email,
@@ -1354,32 +1359,55 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     className="rounded-xl h-11 text-base font-bold"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Le montant que vous recevrez sur votre portefeuille.
+                    {rechargeFeeOnTop
+                      ? 'Le montant que vous recevrez sur votre portefeuille.'
+                      : 'Le montant débité sur votre Mobile Money.'}
                   </p>
                 </div>
+
+                {platformSettings?.depositFeeEnabled && (
+                  <label className="flex items-start gap-3 rounded-2xl border border-[#EFE2D0] dark:border-border/80 p-3.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rechargeFeeOnTop}
+                      onChange={(e) => setRechargeFeeOnTop(e.target.checked)}
+                      className="mt-0.5 w-5 h-5 shrink-0 accent-[#C96F4A] cursor-pointer"
+                    />
+                    <span className="space-y-0.5">
+                      <span className="block text-xs font-bold text-foreground">Payer les frais en plus</span>
+                      <span className="block text-[11px] text-muted-foreground leading-snug">
+                        {rechargeFeeOnTop
+                          ? 'Les frais de l’opérateur s’ajoutent : vous recevez le montant entier.'
+                          : 'Les frais de l’opérateur sont retirés du montant que vous recevez.'}
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 {/* Récapitulatif des frais — affiché avant de payer, jamais
                     après : personne ne doit découvrir le montant réellement
                     débité sur l'écran de son opérateur. */}
                 {depositBreakdown && depositBreakdown.fee > 0 && (
                   <div className="rounded-2xl border border-[#EFE2D0] dark:border-border/80 bg-muted/50 p-3.5 space-y-2">
+                    {/* Frais en plus : reçu + frais = payé. Frais retenus :
+                        payé − frais = reçu. On lit toujours de haut en bas. */}
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Vous recevez</span>
+                      <span className="text-muted-foreground">{rechargeFeeOnTop ? 'Vous recevez' : 'Vous payez'}</span>
                       <span className="font-bold text-foreground tabular-nums">
-                        {depositBreakdown.net.toLocaleString()} FCFA
+                        {(rechargeFeeOnTop ? depositBreakdown.net : depositBreakdown.gross).toLocaleString()} FCFA
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">Frais opérateur</span>
                       <span className="font-bold text-foreground tabular-nums">
-                        + {depositBreakdown.fee.toLocaleString()} FCFA
+                        {rechargeFeeOnTop ? '+' : '−'} {depositBreakdown.fee.toLocaleString()} FCFA
                       </span>
                     </div>
                     <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">Total à payer</span>
+                      <span className="text-xs font-bold text-foreground">{rechargeFeeOnTop ? 'Total à payer' : 'Vous recevez'}</span>
                       <span className="text-sm font-serif font-black text-[#C96F4A] tabular-nums">
-                        {depositBreakdown.gross.toLocaleString()} FCFA
+                        {(rechargeFeeOnTop ? depositBreakdown.gross : depositBreakdown.net).toLocaleString()} FCFA
                       </span>
                     </div>
                   </div>
