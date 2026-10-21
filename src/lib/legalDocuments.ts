@@ -29,7 +29,7 @@ export interface LegalDocument {
 }
 
 /** Date de la dernière révision de l'ensemble des textes. */
-export const LEGAL_LAST_UPDATED = '20 octobre 2026';
+export const LEGAL_LAST_UPDATED = '21 octobre 2026';
 
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
@@ -88,8 +88,9 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: '3. Votre portefeuille',
         paragraphs: [
-          "Les dépôts et retraits passent par Mobile Money (Mixx, Moov Flooz, Orange Money, MTN MoMo selon les pays) via notre prestataire de paiement PayDunya. Les frais éventuels sont affichés avant que vous ne confirmiez.",
-          "Chaque mouvement est inscrit dans un registre comptable à double entrée et apparaît dans votre historique. Un retrait n'est définitif qu'une fois confirmé par l'opérateur Mobile Money.",
+          "Les dépôts se font par Mobile Money (Mixx, Moov Flooz, Orange Money, MTN MoMo selon les pays) et sont encaissés par notre prestataire de paiement PayDunya. Votre solde n'est crédité qu'une fois le paiement confirmé par PayDunya. Les frais éventuels sont affichés avant que vous ne confirmiez.",
+          "Quand vous demandez un retrait, le montant est réservé sur votre solde, puis notre équipe vous l'envoie sur le numéro Mobile Money que vous avez indiqué. Le retrait est marqué effectué une fois l'envoi fait. Si l'envoi échoue, le montant est rendu à votre portefeuille.",
+          "Chaque mouvement est inscrit dans un registre comptable à double entrée et apparaît dans votre historique.",
         ],
       },
       {
@@ -312,19 +313,29 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         ],
       },
       {
-        heading: '4. Sécurité',
+        heading: '4. Paiements, solde et retraits',
+        paragraphs: [
+          "Dépôts : quand vous rechargez votre portefeuille, le paiement est encaissé par PayDunya. Pour le traiter, nous lui transmettons votre nom, votre adresse e-mail, votre numéro de téléphone, le montant et l'opérateur choisi. PayDunya traite ces informations selon ses propres conditions et sa propre politique de confidentialité.",
+          "Vous validez le paiement sur votre téléphone, auprès de votre opérateur : eganyé ne voit ni ne conserve jamais votre code secret Mobile Money.",
+          "Votre solde et votre historique sont tenus dans la base de données d'eganyé. Un dépôt n'est ajouté à votre solde qu'après que nos serveurs ont vérifié directement auprès de PayDunya que le paiement a abouti. Nous gardons la référence PayDunya de chaque paiement pour pouvoir le retrouver en cas de réclamation.",
+          "Retraits : nous enregistrons le montant, l'opérateur et le numéro Mobile Money qui doit recevoir l'argent. Notre équipe utilise ces informations pour vous envoyer l'argent, puis marque le retrait comme effectué ou, si l'envoi échoue, comme échoué (le montant vous est alors rendu).",
+          "Pour chaque opération sur votre argent, nous enregistrons aussi la date, le statut et l'adresse IP de l'appareil, afin de détecter les fraudes et de traiter les réclamations.",
+        ],
+      },
+      {
+        heading: '5. Sécurité',
         paragraphs: [
           "Les échanges entre l'application et nos serveurs sont chiffrés (HTTPS). L'accès aux données est cloisonné : chaque compte ne peut lire que ce qui le concerne, et les opérations d'argent ne passent que par des fonctions contrôlées côté serveur. Vos pièces d'identité sont dans un espace de stockage privé, lisible seulement par vous et l'équipe de vérification.",
         ],
       },
       {
-        heading: '5. Combien de temps',
+        heading: '6. Combien de temps',
         paragraphs: [
           "Vos données sont conservées tant que votre compte est ouvert. À la fermeture, votre profil est anonymisé immédiatement puis votre compte supprimé ; les traces des opérations financières sont conservées le temps exigé par les obligations comptables et de lutte contre le blanchiment.",
         ],
       },
       {
-        heading: '6. Vos droits',
+        heading: '7. Vos droits',
         paragraphs: [
           "Vous pouvez consulter et corriger vos informations dans Profil, et fermer votre compte depuis Profil. Pour toute autre demande (copie de vos données, opposition, réclamation), " + contactLine() + '.',
           "Vous pouvez aussi saisir l'autorité de protection des données personnelles de votre pays (au Togo : l'Instance de Protection des Données à Caractère Personnel, IPDCP).",
