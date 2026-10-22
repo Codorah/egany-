@@ -6,3 +6,5 @@ Photographies des écrans d’accueil, sous [licence Unsplash](https://unsplash.
 - **mamas.webp** — Ifeoluwa A. — Unsplash · https://unsplash.com/photos/cnVn4Gg4b00
 - **young-savers.webp** — Sandisk — Unsplash · https://unsplash.com/photos/_t15AWPJNmg
 - **vendor.webp** — Francis Odeyemi — Unsplash · https://unsplash.com/photos/5dFuO02OHh0
+- **aid-shopkeeper.webp** — Ali Mkumbwa — Unsplash · https://unsplash.com/photos/EOkN2pRjFsg
+- **credit-merchant.webp** — Ali Mkumbwa — Unsplash · https://unsplash.com/photos/WUG0QcXVh0k

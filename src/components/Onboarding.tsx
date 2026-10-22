@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AvatarWorkshop } from './AvatarWorkshop';
 import { LanguageSwitcher } from './ui/LanguageSwitcher';
 import { EganyeLogo } from './ui/EganyeLogo';
-import { BrandVisual, type BrandVisualName } from './ui/BrandVisual';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LegalDocumentDialog from './LegalDocumentDialog';
@@ -80,13 +79,16 @@ const OTP_LENGTH = 8;
 /* -------------------------------------------------------------------- */
 
 /**
- * Coque des écrans d'authentification : bandeau terre cuite en haut, coupé par
- * une courbe organique, puis la zone de saisie sur fond ivoire. La courbe est
- * un SVG étiré (preserveAspectRatio="none") pour épouser n'importe quelle
- * largeur d'écran sans se déformer verticalement.
+ * Coque des écrans d'authentification : bandeau terre cuite compact en haut
+ * habillé d'un discret filigrane photographique réel, coupé par une courbe
+ * organique, puis la zone de saisie sur fond ivoire.
+ *
+ * Les personnages 3D/cartoon (BrandVisual) et l'alignement forcé à droite
+ * (text-right) ont été retirés : le titre et le sous-titre sont désormais
+ * alignés à gauche sur tous les écrans et toutes les largeurs de téléphone.
  */
 function AuthLayout({
-  onBack, backLabel, title, desc, children, footer, compact = false, visual,
+  onBack, backLabel, title, desc, children, footer, compact = false,
 }: {
   onBack?: () => void;
   backLabel: string;
@@ -95,76 +97,83 @@ function AuthLayout({
   children: React.ReactNode;
   footer?: React.ReactNode;
   compact?: boolean;
-  visual?: BrandVisualName;
 }) {
   // Sur ordinateur, l'écran devient une carte centrée de la largeur d'un
   // téléphone : étiré sur 1 440 px, le formulaire n'avait plus de forme.
   return (
-    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-10 md:bg-muted/50">
-    <div className="relative w-full min-h-screen md:min-h-[780px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
+    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+      <div className="relative w-full min-h-screen md:min-h-[720px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
 
-      {/* Bandeau coloré + courbe */}
-      <div
-        className={`relative shrink-0 gradient-sunset ${compact ? 'h-[248px]' : 'h-[300px]'}`}
-      >
-        <svg
-          viewBox="0 0 390 96"
-          preserveAspectRatio="none"
-          className="absolute -bottom-px left-0 w-full h-[96px]"
-          aria-hidden="true"
+        {/* Bandeau coloré + filigrane photo réelle + courbe */}
+        <div
+          className={`relative shrink-0 gradient-sunset overflow-hidden ${compact ? 'h-[168px]' : 'h-[192px]'}`}
         >
-          <path d="M0,34 C118,96 250,4 390,52 L390,96 L0,96 Z" fill="var(--background)" />
-        </svg>
+          <img
+            src="/onboarding/vendor.webp"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-15 mix-blend-luminosity pointer-events-none select-none"
+          />
+          <svg
+            viewBox="0 0 390 56"
+            preserveAspectRatio="none"
+            className="absolute -bottom-px left-0 w-full h-[56px]"
+            aria-hidden="true"
+          >
+            <path d="M0,20 C130,56 260,0 390,32 L390,56 L0,56 Z" fill="var(--background)" />
+          </svg>
 
-        <div className="relative z-10 flex items-center px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label={backLabel}
-              className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 cursor-pointer"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+          <div className="relative z-10 flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
+            {onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label={backLabel}
+                className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 cursor-pointer"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="w-11 h-11" />
+            )}
 
-        <div className="relative z-10 flex flex-col items-center gap-3 pt-2">
-          <div className="w-[86px] h-[86px] rounded-full bg-white/95 shadow-elevated flex items-center justify-center p-1.5 overflow-hidden">
-            <img src="/brand-visuals/logo-coin.webp" alt="Eganyé" className="w-full h-full object-contain" />
+            <div className="flex items-center gap-2.5 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-soft">
+              <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
+                <EganyeLogo size={24} />
+              </div>
+              <span className="text-lg font-serif font-bold text-white lowercase tracking-tight pr-1">
+                eganyé
+              </span>
+            </div>
+
+            <div className="w-11 h-11" />
           </div>
-          <span className="text-2xl font-serif font-bold text-white lowercase tracking-tight drop-shadow-sm">
-            eganyé
-          </span>
         </div>
-      </div>
 
-      {/* Zone de saisie */}
-      <div className="relative z-10 flex-1 flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] -mt-4">
-        <div className="flex items-end gap-3">
-          {/* Masqué sous 380 px : le personnage volerait de la place au
-              formulaire sur les petits écrans, qui priment ici. */}
-          {visual && (
-            <BrandVisual name={visual} height={120} className="hidden min-[380px]:block shrink-0" alt="" />
-          )}
-          <div className="flex-1 space-y-2 text-right">
-            <h1 className="text-[30px] leading-tight font-serif font-bold text-foreground tracking-tight text-balance">
+        {/* Zone de saisie */}
+        <div className="relative z-10 flex-1 flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-2">
+          <div className="space-y-1.5 text-left">
+            <h1 className="text-[26px] sm:text-[28px] leading-tight font-serif font-bold text-foreground tracking-tight text-balance">
               {title}
             </h1>
-            <p className="text-[15px] leading-relaxed text-muted-foreground font-medium">{desc}</p>
+            <p className="text-[14px] sm:text-[15px] leading-relaxed text-muted-foreground font-medium">
+              {desc}
+            </p>
           </div>
+
+          <div className="mt-6 space-y-4">{children}</div>
+
+          {footer && <div className="mt-auto pt-6">{footer}</div>}
         </div>
-
-        <div className="mt-6 space-y-5">{children}</div>
-
-        {footer && <div className="mt-auto pt-6">{footer}</div>}
       </div>
-    </div>
     </div>
   );
 }
 
-/** Champ en pilule avec capsule d'icône, façon maquette de référence. */
+/**
+ * Champ de saisie épuré : icône sobre sur fond teinté doux au lieu d'une
+ * pastille dégradée saturée, pour un rendu fintech lisible et professionnel.
+ */
 function PillField({
   id, type = 'text', icon: Icon, placeholder, value, onChange, trailing,
 }: {
@@ -178,7 +187,7 @@ function PillField({
 }) {
   return (
     <div className="relative">
-      <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full gradient-sunset flex items-center justify-center text-white shadow-soft pointer-events-none z-10">
+      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-primary/12 text-primary flex items-center justify-center pointer-events-none z-10">
         <Icon className="w-5 h-5" />
       </div>
       <Input
@@ -187,13 +196,17 @@ function PillField({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`h-15 rounded-full border-transparent bg-card shadow-soft pl-16 ${trailing ? 'pr-14' : 'pr-6'}`}
+        className={`h-14 rounded-2xl border border-border bg-card shadow-soft pl-14 text-[15px] ${trailing ? 'pr-12' : 'pr-4'}`}
       />
       {trailing}
     </div>
   );
 }
 
+/**
+ * Grille de saisie du code OTP à 8 chiffres sur une seule ligne adaptative
+ * (au lieu de 2 lignes de 4 boîtes qui coupaient la lecture du code en deux).
+ */
 function OtpBoxes({
   digits, inputRefs, onDigitChange, onKeyDown, onPaste, digitLabel,
 }: {
@@ -205,7 +218,7 @@ function OtpBoxes({
   digitLabel: string;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-3 max-w-[320px] mx-auto">
+    <div className="grid grid-cols-8 gap-1.5 sm:gap-2 w-full max-w-[380px] mx-auto">
       {digits.map((digit, index) => (
         <Input
           key={index}
@@ -219,7 +232,7 @@ function OtpBoxes({
           onChange={(e) => onDigitChange(index, e.target.value)}
           onKeyDown={(e) => onKeyDown(index, e)}
           onPaste={onPaste}
-          className="h-16 px-0 text-center text-2xl font-serif font-bold"
+          className="h-12 sm:h-14 px-0 text-center text-lg sm:text-xl font-serif font-bold rounded-xl bg-card border-border shadow-soft"
         />
       ))}
     </div>
@@ -266,40 +279,42 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
     setScreen(next);
   };
 
-  // Photographies réelles sous licence Unsplash (voir public/PHOTO-CREDITS.md
-  // et scripts/fetch-onboarding-photos.mjs). Elles remplacent des images
-  // générées dont les visages et les mains ne tenaient pas le plein écran —
-  // sur un produit d'épargne communautaire, le premier écran est celui qui
-  // installe la confiance. Cadrées en portrait et encodées en WebP : 0,4 Mo
-  // au total contre 2,7 Mo, ce qui compte sur une connexion mobile.
-  // Les deux derniers écrans présentent le Coup de pouce et le crédit avec
-  // les illustrations de la marque, sur le dégradé terre cuite.
-  const slides: { title: string; description: string; image?: string; illustration?: string }[] = [
+  // Photographies 100 % réelles sous licence Unsplash (voir public/PHOTO-CREDITS.md
+  // et scripts/fetch-onboarding-photos.mjs). Aucune illustration dessinée ni
+  // personnage cartoon : les cinq écrans montrent de vraies commerçantes,
+  // jeunes épargnants et entrepreneurs, y compris pour le Coup de pouce
+  // (diapo 4) et le Microcrédit (diapo 5).
+  const slides: { title: string; description: string; image: string; badge: string }[] = [
     {
       title: t('banner_mamas_title'),
       description: t('onb_slide1_desc'),
       image: '/onboarding/mamas.webp',
+      badge: 'Tontine & Solidarité',
     },
     {
       title: t('onb_slide2_title'),
       description: t('onb_slide2_desc'),
       image: '/onboarding/young-savers.webp',
+      badge: 'Épargne Flexible',
     },
     {
       title: t('onb_slide3_title'),
       description: t('onb_slide3_desc'),
       image: '/onboarding/vendor.webp',
+      badge: 'Flooz & Mixx',
     },
     {
       title: t('onb_slide4_title'),
       description: t('onb_slide4_desc'),
-      illustration: '/illustrations/money-received.svg',
+      image: '/onboarding/aid-shopkeeper.webp',
+      badge: 'Coup de pouce · 0 % à rembourser',
     },
     {
       title: t('onb_slide5_title'),
       description: t('onb_slide5_desc'),
-      illustration: '/illustrations/savings-created.svg',
-    }
+      image: '/onboarding/credit-merchant.webp',
+      badge: 'Microcrédit · 3 à 24 mois',
+    },
   ];
 
   /* ------------------------------------------------------------------ */
@@ -350,10 +365,34 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   };
 
   const finalizeAccountSetup = async (userId: string) => {
+    let finalAvatarUrl: string | null = avatar || null;
+
+    // Si l'utilisatrice a sélectionné une vraie photo depuis son appareil
+    // pendant l'inscription (aperçu local en data: URL avant l'existence du
+    // userId), on l'envoie vers le bucket Supabase `avatars` maintenant que
+    // la session est active.
+    if (finalAvatarUrl && finalAvatarUrl.startsWith('data:image/')) {
+      try {
+        const res = await fetch(finalAvatarUrl);
+        const blob = await res.blob();
+        const ext = (blob.type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '');
+        const storagePath = `${userId}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('avatars')
+          .upload(storagePath, blob, { upsert: true, contentType: blob.type });
+        if (!uploadErr) {
+          const { data: pubData } = supabase.storage.from('avatars').getPublicUrl(storagePath);
+          if (pubData?.publicUrl) finalAvatarUrl = pubData.publicUrl;
+        }
+      } catch (uploadEx) {
+        console.warn('Avatar storage upload fallback:', uploadEx);
+      }
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({
-        avatar_url: avatar || null,
+        avatar_url: finalAvatarUrl,
         language,
         theme: (localStorage.getItem('eganye_theme') as 'light' | 'dark') || 'light',
       })
@@ -441,7 +480,10 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   const handleResendOtp = async () => {
     setIsResendingOtp(true);
     try {
-      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      const { error } =
+        screen === 'otp-recovery'
+          ? await sendPasswordResetCode(email)
+          : await supabase.auth.resend({ type: 'signup', email });
       if (error) throw error;
       toast.success(t('onb_new_code_sent'));
     } catch (err: any) {
@@ -610,11 +652,10 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
         backLabel={t('a11y_back')}
         title={t('onb_login_title')}
         desc={t('onb_login_desc')}
-        visual="welcome"
         footer={
           <button
             type="button"
-            onClick={() => goTo('register')}
+            onClick={() => goTo(intent ? 'register' : 'intent')}
             className="w-full text-center text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
           >
             {t('onb_no_account_yet')}
@@ -643,7 +684,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           <button
             type="button"
             onClick={() => goTo('forgot')}
-            className="text-[15px] font-bold text-brand hover:underline cursor-pointer py-1"
+            className="text-[14px] font-bold text-brand hover:underline cursor-pointer py-1"
           >
             {t('onb_forgot_title')}
           </button>
@@ -666,11 +707,10 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
     return (
       <AuthLayout
         compact
-        onBack={() => goTo('welcome')}
+        onBack={() => goTo(intent ? 'intent' : 'welcome')}
         backLabel={t('a11y_back')}
         title={t('onb_signup_title')}
         desc={t('onb_signup_desc')}
-        visual="signup"
         footer={
           <button
             type="button"
@@ -707,7 +747,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
         />
 
         {password.length > 0 && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-2">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-1 py-1">
             {([
               ['length', 'onb_pw_req_length'],
               ['uppercase', 'onb_pw_req_uppercase'],
@@ -788,16 +828,14 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
         title={t('onb_verify_email_title')}
         desc={`${t('onb_enter_code_prefix')} ${OTP_LENGTH} ${t('onb_enter_code_suffix')} ${email}`}
         footer={
-          !isRecovery ? (
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={isResendingOtp}
-              className="w-full text-center text-[15px] font-bold text-brand hover:underline disabled:opacity-50 cursor-pointer py-2"
-            >
-              {isResendingOtp ? t('onb_sending_in_progress') : t('onb_resend_code')}
-            </button>
-          ) : undefined
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={isResendingOtp}
+            className="w-full text-center text-[15px] font-bold text-brand hover:underline disabled:opacity-50 cursor-pointer py-2"
+          >
+            {isResendingOtp ? t('onb_sending_in_progress') : t('onb_resend_code')}
+          </button>
         }
       >
         {otpBoxes}
@@ -857,305 +895,370 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
     );
   }
 
-  /* ---------------- Slides plein écran -------------------------------- */
+  /* ---------------- Slides plein écran (mobile) & cadre téléphone (bureau) */
 
   if (screen === 'slides') {
+    const currentSlide = slides[slideIndex];
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={slideIndex}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="absolute inset-0"
-          >
-            {slides[slideIndex].image ? (
-              <>
-                <img
-                  src={slides[slideIndex].image}
-                  alt={slides[slideIndex].title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-              </>
-            ) : (
-              <div className="w-full h-full gradient-sunset flex items-start justify-center pt-[calc(env(safe-area-inset-top)+6rem)]">
-                <img
-                  src={slides[slideIndex].illustration}
-                  alt=""
-                  className="w-60 h-60 sm:w-72 sm:h-72 drop-shadow-2xl"
-                  draggable={false}
-                />
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="relative z-10 flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
-          <button
-            type="button"
-            onClick={() => goTo('welcome')}
-            aria-label={t('a11y_back')}
-            className="w-12 h-12 rounded-2xl text-white hover:bg-white/15 backdrop-blur-sm flex items-center justify-center cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <div className="flex gap-2">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setSlideIndex(idx)}
-                aria-label={`${idx + 1}`}
-                className={`h-2.5 rounded-full transition-all ${
-                  slideIndex === idx ? 'w-8 bg-white' : 'w-2.5 bg-white/45'
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="w-12" />
-        </div>
-
-        <div className="relative z-10 mt-auto px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] space-y-5">
+      <div className="fixed inset-0 z-50 bg-background md:bg-muted/60 md:flex md:items-center md:justify-center md:p-6">
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.12}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -50) {
+              if (slideIndex < slides.length - 1) setSlideIndex((prev) => prev + 1);
+              else goTo('intent');
+            } else if (info.offset.x > 50 && slideIndex > 0) {
+              setSlideIndex((prev) => prev - 1);
+            }
+          }}
+          className="relative w-full h-full md:max-w-[440px] md:h-[820px] md:max-h-[92dvh] md:rounded-[2.25rem] md:shadow-elevated overflow-hidden flex flex-col bg-black touch-pan-y select-none"
+        >
           <AnimatePresence mode="wait">
             <motion.div
-              key={`text-${slideIndex}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ delay: 0.15, duration: 0.35 }}
-              className="space-y-3"
+              key={slideIndex}
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="absolute inset-0"
             >
-              <h2 className="text-3xl font-serif font-bold text-white leading-tight drop-shadow-lg text-balance">
-                {slides[slideIndex].title}
-              </h2>
-              <p className="text-white/85 text-base leading-relaxed max-w-sm font-medium drop-shadow-md">
-                {slides[slideIndex].description}
-              </p>
+              <img
+                src={currentSlide.image}
+                alt={currentSlide.title}
+                className="w-full h-full object-cover object-center"
+                draggable={false}
+              />
+              {/* Double dégradé : léger assombrissement en haut pour les boutons,
+                  et dégradé profond en bas pour une lisibilité parfaite du texte */}
+              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={() => goTo('intent')}
-              className="text-white/85 hover:text-white hover:bg-white/10 rounded-full"
+          <div className="relative z-10 flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
+            <button
+              type="button"
+              onClick={() => (slideIndex > 0 ? setSlideIndex((prev) => prev - 1) : goTo('welcome'))}
+              aria-label={t('a11y_back')}
+              className="w-11 h-11 rounded-2xl text-white bg-black/25 hover:bg-black/40 border border-white/15 backdrop-blur-md flex items-center justify-center cursor-pointer"
             >
-              {t('onb_skip')}
-            </Button>
-            <Button
-              size="lg"
-              onClick={() => {
-                if (slideIndex < slides.length - 1) setSlideIndex(prev => prev + 1);
-                else goTo('intent');
-              }}
-              className="btn-shine flex-1 bg-white hover:bg-white/90 text-brand-deep rounded-full gap-2"
-            >
-              {slideIndex === slides.length - 1 ? t('onb_got_it') : t('onb_next')}
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+
+            <div className="flex gap-1.5 items-center bg-black/25 backdrop-blur-md px-3 py-2 rounded-full border border-white/10">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSlideIndex(idx)}
+                  aria-label={`${idx + 1}`}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    slideIndex === idx ? 'w-7 bg-white' : 'w-2 bg-white/45 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <span className="text-xs font-serif font-bold text-white/90 bg-black/25 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10">
+              {slideIndex + 1}/{slides.length}
+            </span>
           </div>
-        </div>
+
+          <div className="relative z-10 mt-auto px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] space-y-5">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`text-${slideIndex}`}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+                className="space-y-3"
+              >
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-serif font-bold uppercase tracking-wider bg-[#C96F4A]/90 text-white shadow-soft backdrop-blur-sm">
+                  {currentSlide.badge}
+                </span>
+                <h2 className="text-[28px] sm:text-3xl font-serif font-bold text-white leading-tight drop-shadow-lg text-balance">
+                  {currentSlide.title}
+                </h2>
+                <p className="text-white/90 text-[15px] leading-relaxed font-medium drop-shadow-md">
+                  {currentSlide.description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex items-center gap-3 pt-1">
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={() => goTo('intent')}
+                className="text-white/85 hover:text-white hover:bg-white/15 rounded-full px-5"
+              >
+                {t('onb_skip')}
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => {
+                  if (slideIndex < slides.length - 1) setSlideIndex((prev) => prev + 1);
+                  else goTo('intent');
+                }}
+                className="btn-shine flex-1 bg-white hover:bg-white/90 text-brand-deep font-bold rounded-full gap-2 shadow-elevated"
+              >
+                {slideIndex === slides.length - 1 ? t('onb_got_it') : t('onb_next')}
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
-  /* ---------------- Bienvenue & avatar -------------------------------- */
+  /* ---------------- Bienvenue, intention & avatar --------------------- */
 
   return (
-    <div
-      className={`w-full min-h-screen md:min-h-0 md:my-10 md:mx-auto flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-10 md:pt-10 md:pb-10 relative overflow-hidden md:rounded-3xl md:shadow-elevated transition-all duration-500 ${
-        screen === 'avatar' ? 'md:max-w-4xl' : 'md:max-w-xl'
-      }`}
-    >
-      <div className="z-10 flex items-center justify-between gap-3">
-        {screen === 'welcome' ? (
-          <>
-            <div />
-            <LanguageSwitcher value={language} onChange={setLanguage} variant="pill" />
-          </>
-        ) : screen === 'intent' ? (
-          backButton('welcome')
-        ) : (
-          backButton('register')
-        )}
-      </div>
-
-      <div className="flex-1 flex flex-col justify-center my-4 z-10">
-        <AnimatePresence mode="wait">
-
-          {screen === 'welcome' && (
-            <motion.div key="welcome" {...fade} className="text-center space-y-8 py-4">
-              {/* La pièce photographiée sur textile porte l'accueil mieux
-                  qu'un logo posé sur un disque : c'est la première image de
-                  la marque que voit l'utilisatrice. */}
-              <motion.div
-                className="relative mx-auto w-44 h-44"
-                initial={{ scale: 0.86, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 16, delay: 0.15 }}
-              >
-                <img
-                  src="/brand-visuals/coin-textile.webp"
-                  alt="Eganyé"
-                  className="w-full h-full rounded-full object-cover shadow-elevated"
-                  draggable={false}
-                />
-              </motion.div>
-
-              <div className="space-y-3">
-                <h1 className="text-5xl font-serif font-black text-foreground tracking-tight lowercase">eganyé</h1>
-                <p className="text-base leading-relaxed text-muted-foreground font-medium max-w-sm mx-auto">
-                  {t('onb_welcome_desc')}
-                </p>
+    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+      <div
+        className={`w-full min-h-screen md:min-h-[740px] flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:py-8 relative overflow-hidden md:rounded-[2rem] md:shadow-elevated transition-all duration-500 ${
+          screen === 'avatar' ? 'md:max-w-lg' : 'md:max-w-[440px]'
+        }`}
+      >
+        <div className="z-10 flex items-center justify-between gap-3">
+          {screen === 'welcome' ? (
+            <>
+              <div className="flex items-center gap-2">
+                <EganyeLogo size={34} />
+                <span className="text-xl font-serif font-black text-foreground lowercase tracking-tight">
+                  eganyé
+                </span>
               </div>
+              <LanguageSwitcher value={language} onChange={setLanguage} variant="pill" />
+            </>
+          ) : screen === 'intent' ? (
+            <>
+              {backButton('welcome')}
+              <span className="text-xs font-serif font-bold uppercase tracking-wider text-muted-foreground">
+                eganyé
+              </span>
+              <div className="w-12" />
+            </>
+          ) : (
+            <>
+              {backButton('register')}
+              <span className="text-xs font-serif font-bold uppercase tracking-wider text-muted-foreground">
+                Profil
+              </span>
+              <div className="w-12" />
+            </>
+          )}
+        </div>
 
-              <div className="space-y-3 pt-2">
+        <div className="flex-1 flex flex-col justify-center my-4 z-10">
+          <AnimatePresence mode="wait">
+
+            {screen === 'welcome' && (
+              <motion.div key="welcome" {...fade} className="space-y-6 py-2">
+                {/* Mosaïque de vraies photographies au lieu d'un rendu 3D isolé :
+                    l'utilisatrice voit immédiatement de vraies commerçantes et
+                    épargnantes dès l'ouverture de l'application. */}
+                <motion.div
+                  className="relative mx-auto w-full aspect-[4/3.6] rounded-[1.75rem] overflow-hidden shadow-elevated border border-border"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                >
+                  <img
+                    src="/onboarding/vendor.webp"
+                    alt="Commerçante utilisant Eganyé sur son téléphone"
+                    className="w-full h-full object-cover object-center"
+                    draggable={false}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                  {/* Vignettes réelles superposées incarnant le cercle */}
+                  <div className="absolute bottom-3.5 left-4 right-4 flex items-center justify-between gap-3">
+                    <div className="flex -space-x-2.5 overflow-hidden">
+                      <img
+                        src="/onboarding/aid-shopkeeper.webp"
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
+                      />
+                      <img
+                        src="/onboarding/young-savers.webp"
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
+                      />
+                      <img
+                        src="/onboarding/credit-merchant.webp"
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
+                      />
+                    </div>
+                    <span className="text-xs font-serif font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/25">
+                      Tontine · Coup de pouce · Crédit
+                    </span>
+                  </div>
+                </motion.div>
+
+                <div className="space-y-2.5 text-center px-1">
+                  <h1 className="text-3xl sm:text-[34px] font-serif font-black text-foreground tracking-tight leading-tight text-balance">
+                    Vos tontines et projets, en toute confiance.
+                  </h1>
+                  <p className="text-[15px] leading-relaxed text-muted-foreground font-medium max-w-sm mx-auto">
+                    {t('onb_welcome_desc')}
+                  </p>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <Button
+                    onClick={() => goTo('slides')}
+                    size="lg"
+                    className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
+                  >
+                    {t('onb_discover_eganye')}
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => goTo('login')}
+                    variant="outline"
+                    size="lg"
+                    className="w-full rounded-full border-border bg-card text-foreground hover:bg-muted"
+                  >
+                    {t('onb_already_have_account')}
+                  </Button>
+
+                  {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
+                  <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setLegalModal('cgu')}
+                      className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                    >
+                      Conditions d'utilisation
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => setLegalModal('confidentialite')}
+                      className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                    >
+                      Confidentialité
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {screen === 'intent' && (
+              <motion.div key="intent" {...fade} className="w-full space-y-5 py-2">
+                <div className="text-left space-y-1.5">
+                  <h1 className="text-2xl sm:text-[26px] font-serif font-black text-foreground tracking-tight">
+                    {t('onb_intent_title')}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">{t('onb_intent_desc')}</p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => { setIntent('create'); goTo('register'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-soft hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-2xl gradient-sunset flex items-center justify-center text-white shrink-0">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif font-bold text-foreground">{t('onb_intent_create_title')}</h3>
+                      <p className="text-[13px] text-muted-foreground">{t('onb_intent_create_desc')}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setIntent('join'); goTo('register'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-soft hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
+                      <Link2 className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif font-bold text-foreground">{t('onb_intent_join_title')}</h3>
+                      <p className="text-[13px] text-muted-foreground">{t('onb_intent_join_desc')}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5 pt-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-left px-1">
+                    {t('onb_intent_money_heading')}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => { setIntent('aid'); goTo('register'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-soft hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                  >
+                    <img
+                      src="/onboarding/aid-shopkeeper.webp"
+                      alt=""
+                      className="w-12 h-12 rounded-2xl object-cover shrink-0 border border-border"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif font-bold text-foreground">{t('onb_intent_aid_title')}</h3>
+                      <p className="text-[13px] text-muted-foreground">{t('onb_intent_aid_desc')}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setIntent('credit'); goTo('register'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-soft hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
+                  >
+                    <img
+                      src="/onboarding/credit-merchant.webp"
+                      alt=""
+                      className="w-12 h-12 rounded-2xl object-cover shrink-0 border border-border"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif font-bold text-foreground">{t('onb_intent_credit_title')}</h3>
+                      <p className="text-[13px] text-muted-foreground">{t('onb_intent_credit_desc')}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {screen === 'avatar' && (
+              <motion.div key="avatar" {...fade} className="w-full space-y-6">
+                <AvatarWorkshop
+                  value={avatar}
+                  onChange={setAvatar}
+                  name={displayName}
+                  allowPhotoUpload={true}
+                />
                 <Button
-                  onClick={() => goTo('slides')}
+                  onClick={handleFinishOnboarding}
+                  disabled={isCreatingAccount || isLoading}
                   size="lg"
                   className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
                 >
-                  {t('onb_discover_eganye')}
-                  <ArrowRight className="w-5 h-5" />
+                  {isCreatingAccount || isLoading ? t('onb_creating_account') : t('onb_create_account_cta')}
+                  {!(isCreatingAccount || isLoading) && <ArrowRight className="w-5 h-5" />}
                 </Button>
-                <Button
-                  onClick={() => goTo('login')}
-                  variant="outline"
-                  size="lg"
-                  className="w-full rounded-full border-border bg-card text-foreground hover:bg-muted"
-                >
-                  {t('onb_already_have_account')}
-                </Button>
+              </motion.div>
+            )}
 
-                {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
-                <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setLegalModal('cgu')}
-                    className="hover:text-[#C96F4A] hover:underline cursor-pointer"
-                  >
-                    Conditions d'utilisation
-                  </button>
-                  <span>•</span>
-                  <button
-                    type="button"
-                    onClick={() => setLegalModal('confidentialite')}
-                    className="hover:text-[#C96F4A] hover:underline cursor-pointer"
-                  >
-                    Confidentialité
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          </AnimatePresence>
+        </div>
 
-          {screen === 'intent' && (
-            <motion.div key="intent" {...fade} className="w-full space-y-6 py-4">
-              <div className="text-center space-y-2">
-                <h1 className="text-2xl font-serif font-black text-foreground tracking-tight">{t('onb_intent_title')}</h1>
-                <p className="text-sm text-muted-foreground">{t('onb_intent_desc')}</p>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => { setIntent('create'); goTo('register'); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-2xl gradient-sunset flex items-center justify-center text-white shrink-0">
-                    <Users className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_create_title')}</h3>
-                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_create_desc')}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setIntent('join'); goTo('register'); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
-                    <Link2 className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_join_title')}</h3>
-                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_join_desc')}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">{t('onb_intent_money_heading')}</p>
-
-                <button
-                  type="button"
-                  onClick={() => { setIntent('aid'); goTo('register'); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-2xl gradient-sunset flex items-center justify-center text-white shrink-0">
-                    <Gift className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_aid_title')}</h3>
-                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_aid_desc')}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setIntent('credit'); goTo('register'); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-3xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
-                    <HandCoins className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif font-bold text-foreground">{t('onb_intent_credit_title')}</h3>
-                    <p className="text-[13px] text-muted-foreground">{t('onb_intent_credit_desc')}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {screen === 'avatar' && (
-            <motion.div key="avatar" {...fade} className="w-full space-y-7">
-              <AvatarWorkshop
-                value={avatar}
-                onChange={setAvatar}
-                name={displayName}
-                allowPhotoUpload={false}
-              />
-              <Button
-                onClick={handleFinishOnboarding}
-                disabled={isCreatingAccount || isLoading}
-                size="lg"
-                className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
-              >
-                {isCreatingAccount || isLoading ? t('onb_creating_account') : t('onb_create_account_cta')}
-                {!(isCreatingAccount || isLoading) && <ArrowRight className="w-5 h-5" />}
-              </Button>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
+        {/* ── DOCUMENTS LÉGAUX (ACCESSIBLES AVANT INSCRIPTION, EXIGÉ PAR LES STORES) ── */}
+        <LegalDocumentDialog docId={legalModal} onClose={() => setLegalModal(null)} />
       </div>
-
-      {/* ── DOCUMENTS LÉGAUX (ACCESSIBLES AVANT INSCRIPTION, EXIGÉ PAR LES STORES) ── */}
-      <LegalDocumentDialog docId={legalModal} onClose={() => setLegalModal(null)} />
     </div>
   );
 }

@@ -92,11 +92,22 @@ export function AvatarWorkshop({
 
   return (
     <div className="flex flex-col items-center text-center space-y-5 py-3">
-      {/* Aperçu en direct */}
+      {/* Aperçu en direct — cliquable pour importer directement une vraie photo */}
       <div className="relative">
-        <div className="ring-4 ring-[#C96F4A]/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft">
-          <CustomAvatar photoURL={value} name={name} size={104} />
-        </div>
+        <button
+          type="button"
+          onClick={() => allowPhotoUpload && fileInputRef.current?.click()}
+          disabled={!allowPhotoUpload || isUploading}
+          className="relative ring-4 ring-[#C96F4A]/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft cursor-pointer group"
+          aria-label={hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}
+        >
+          <CustomAvatar photoURL={value} name={name} size={108} />
+          {allowPhotoUpload && (
+            <span className="absolute bottom-1 right-1 w-9 h-9 rounded-full gradient-sunset text-white flex items-center justify-center shadow-elevated ring-2 ring-background group-hover:scale-105 transition-transform">
+              <EganyeIcon name="camera" size={16} />
+            </span>
+          )}
+        </button>
         {isUploading && (
           <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
             <EganyeIcon name="loading" size={28} className="text-white animate-spin" />
@@ -113,43 +124,9 @@ export function AvatarWorkshop({
         </p>
       </div>
 
-      {/* Sélection d'un emoji */}
-      <div className="w-full max-w-xs space-y-2">
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
-          {t('avw_choose_emoji')}
-        </p>
-        <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
-          {EGANYE_EMOJIS.map((emoji) => {
-            const selected = selectedEmoji === emoji;
-            return (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => handleSelectEmoji(emoji)}
-                aria-label={`${t('avw_choose_emoji_aria')} ${emoji}`}
-                aria-pressed={selected}
-                className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
-                  selected
-                    ? 'bg-[#C96F4A]/15 ring-2 ring-[#C96F4A]'
-                    : 'bg-muted/60 hover:bg-muted ring-1 ring-transparent'
-                }`}
-              >
-                <span>{emoji}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 w-full max-w-xs text-muted-foreground/60">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-[10px] font-bold uppercase tracking-wide">ou</span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* Boutons d'action */}
+      {/* Bouton principal : importer une vraie photo de profil */}
       {allowPhotoUpload && (
-        <div className="w-full max-w-xs space-y-2 pt-1">
+        <div className="w-full max-w-xs space-y-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -182,6 +159,40 @@ export function AvatarWorkshop({
           )}
         </div>
       )}
+
+      <div className="flex items-center gap-2 w-full max-w-xs text-muted-foreground/60">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] font-bold uppercase tracking-wide">ou</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Sélection optionnelle d'un symbole */}
+      <div className="w-full max-w-xs space-y-2">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
+          {t('avw_choose_emoji')}
+        </p>
+        <div className="grid grid-cols-8 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
+          {EGANYE_EMOJIS.map((emoji) => {
+            const selected = selectedEmoji === emoji;
+            return (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => handleSelectEmoji(emoji)}
+                aria-label={`${t('avw_choose_emoji_aria')} ${emoji}`}
+                aria-pressed={selected}
+                className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
+                  selected
+                    ? 'bg-[#C96F4A]/15 ring-2 ring-[#C96F4A]'
+                    : 'bg-muted/60 hover:bg-muted ring-1 ring-transparent'
+                }`}
+              >
+                <span>{emoji}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Note de réassurance */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[11px] text-muted-foreground max-w-xs">

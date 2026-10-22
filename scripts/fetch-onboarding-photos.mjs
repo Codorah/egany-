@@ -57,6 +57,24 @@ const PHOTOS = {
     alt: 'Commerçante souriante tenant un téléphone dans sa boutique',
     position: 'centre',
   },
+  // Diapo 4 — « Coup de pouce pour votre activité ». Une commerçante au
+  // comptoir de sa boutique bien achalandée, téléphone posé devant elle :
+  // remplace l'illustration vectorielle money-received.svg par une vraie photo.
+  'aid-shopkeeper': {
+    id: 'EOkN2pRjFsg',
+    credit: 'Ali Mkumbwa — Unsplash',
+    alt: 'Commerçante souriante au comptoir de sa boutique avec son téléphone',
+    position: 'centre',
+  },
+  // Diapo 5 — « Un microcrédit simple et transparent ». Un vendeur de fruits
+  // souriant devant son étal garni, téléphone en main : remplace l'illustration
+  // vectorielle savings-created.svg par une vraie photo.
+  'credit-merchant': {
+    id: 'WUG0QcXVh0k',
+    credit: 'Ali Mkumbwa — Unsplash',
+    alt: 'Commerçant souriant devant son étal de fruits avec son téléphone',
+    position: 'centre',
+  },
 };
 
 async function download(id) {

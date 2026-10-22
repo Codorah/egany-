@@ -221,12 +221,17 @@ export function Landing({ onStart, onLogin }: LandingProps) {
           <div className="grid grid-cols-6 auto-rows-[220px] gap-5">
             <Reveal className="col-span-4 row-span-2">
               <div className="h-full rounded-[2rem] gradient-sunset text-white p-10 flex flex-col justify-between overflow-hidden relative">
-                <Trophy className="w-10 h-10 opacity-90" />
+                <img
+                  src="/onboarding/mamas.webp"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity pointer-events-none"
+                  loading="lazy"
+                />
+                <Trophy className="w-10 h-10 opacity-90 relative z-10" />
                 <div className="space-y-3 relative z-10">
                   <h3 className="text-3xl font-heading font-black leading-tight max-w-[20ch]">Trois façons de choisir qui reçoit le pot</h3>
-                  <p className="text-white/85 leading-relaxed max-w-[50ch]">Tour par tour dans l'ordre convenu, tirage au sort équitable, ou enchères pour celles qui en ont besoin plus tôt.</p>
+                  <p className="text-white/90 leading-relaxed max-w-[50ch]">Tour par tour dans l'ordre convenu, tirage au sort équitable, ou enchères pour celles qui en ont besoin plus tôt.</p>
                 </div>
-                <img src="/illustrations/money-received.svg" alt="" className="absolute -right-10 -top-6 w-72 h-72 opacity-25" />
               </div>
             </Reveal>
             <Reveal className="col-span-2" delay={0.06}>
@@ -280,27 +285,53 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             </Reveal>
             <div className="grid grid-cols-2 gap-6">
               <Reveal>
-                <article className="h-full rounded-[2rem] bg-card border border-border p-9 space-y-4">
-                  <div className="w-14 h-14 rounded-2xl gradient-sunset text-white flex items-center justify-center">
-                    <Gift className="w-7 h-7" />
+                <article className="h-full rounded-[2rem] bg-card border border-border overflow-hidden flex flex-col">
+                  <div className="h-56 w-full relative overflow-hidden">
+                    <img
+                      src="/onboarding/aid-shopkeeper.webp"
+                      alt="Commerçante au comptoir de sa boutique"
+                      className="w-full h-full object-cover object-center"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-4 left-6 w-12 h-12 rounded-2xl gradient-sunset text-white flex items-center justify-center shadow-elevated">
+                      <Gift className="w-6 h-6" />
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-heading font-black">Coup de pouce</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Dites combien il vous faut et présentez votre activité en vidéo. Notre équipe étudie votre dossier et peut vous offrir le montant : une aide, rien à rembourser.
-                  </p>
-                  <p className="text-sm text-muted-foreground">Frais d'étude du dossier : 1 000 FCFA.</p>
+                  <div className="p-8 space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-heading font-black">Coup de pouce</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Dites combien il vous faut et présentez votre activité en vidéo. Notre équipe étudie votre dossier et peut vous offrir le montant : une aide, rien à rembourser.
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-muted-foreground pt-2">Frais d'étude du dossier : 1 000 FCFA.</p>
+                  </div>
                 </article>
               </Reveal>
               <Reveal delay={0.08}>
-                <article className="h-full rounded-[2rem] bg-card border border-border p-9 space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center">
-                    <HandCoins className="w-7 h-7" />
+                <article className="h-full rounded-[2rem] bg-card border border-border overflow-hidden flex flex-col">
+                  <div className="h-56 w-full relative overflow-hidden">
+                    <img
+                      src="/onboarding/credit-merchant.webp"
+                      alt="Commerçant devant son étal de fruits"
+                      className="w-full h-full object-cover object-center"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-4 left-6 w-12 h-12 rounded-2xl bg-secondary text-white flex items-center justify-center shadow-elevated">
+                      <HandCoins className="w-6 h-6" />
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-heading font-black">Microcrédit</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Une demande gratuite, une offre claire. Vous remboursez de 3 à 24 mois et voyez le coût total, au franc près, avant d'accepter.
-                  </p>
-                  <p className="text-sm text-muted-foreground">Taux annuel de 36 % au maximum, sans autres frais.</p>
+                  <div className="p-8 space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-heading font-black">Microcrédit</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Une demande gratuite, une offre claire. Vous remboursez de 3 à 24 mois et voyez le coût total, au franc près, avant d'accepter.
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-muted-foreground pt-2">Taux annuel de 36 % au maximum, sans autres frais.</p>
+                  </div>
                 </article>
               </Reveal>
             </div>
