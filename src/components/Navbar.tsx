@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages, Check, ShieldCheck } from 'lucide-react';
+import { UserCircle, Settings, LogOut, LifeBuoy, Sun, Moon, Sparkles, Languages, Check, ShieldCheck, CalendarDays, Store, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from './NotificationBell';
 import { CustomAvatar } from './CustomAvatar';
@@ -193,6 +193,20 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                     <span className="font-bold">{t('admin_panel')}</span>
                   </DropdownMenuItem>
                 )}
+                {/* Sur mobile la barre latérale est masquée : ses entrées secondaires passent ici. */}
+                <DropdownMenuItem onClick={() => onNavigate?.('calendar')} className="md:hidden rounded-xl cursor-pointer">
+                  <CalendarDays className="mr-2 h-4 w-4 text-primary" />
+                  <span className="font-medium">{t('calendar')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate?.('marketplace')} className="md:hidden rounded-xl cursor-pointer">
+                  <Store className="mr-2 h-4 w-4 text-primary" />
+                  <span className="font-medium">{t('marketplace')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onNavigate?.('ai-assistant')} className="md:hidden rounded-xl cursor-pointer">
+                  <Bot className="mr-2 h-4 w-4 text-primary" />
+                  <span className="font-medium">{t('ai_assistant')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 md:hidden" />
                 <DropdownMenuItem onClick={() => onNavigate?.('profile')} className="rounded-xl cursor-pointer">
                   <UserCircle className="mr-2 h-4 w-4 text-primary" />
                   <span className="font-medium">{t('profile')}</span>
