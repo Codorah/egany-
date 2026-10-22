@@ -9,6 +9,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiUrl } from '@/lib/apiBase';
 import { AdminGate } from '@/components/AdminGate';
@@ -44,6 +46,9 @@ import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { runBackHandlers } from '@/hooks/useBackHandler';
+
+// Écrans qui affichent déjà leur propre bouton Retour (pas de doublon).
+const VIEWS_WITH_OWN_BACK = new Set<string>(['search-groups', 'cotiser', 'contributions', 'join', 'group-details', 'support']);
 
 type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'wallet-recharge' | 'wallet-withdraw' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank' | 'cotiser' | 'activity';
 
@@ -96,25 +101,46 @@ export default function App() {
     fetchPlatformSettings().then((s) => setMaintenanceMode(s.maintenanceMode));
   }, []);
   
-  const [view, setView] = useState<View>('dashboard');
+  const [view, setViewState] = useState<View>('dashboard');
+
+  // Historique des écrans visités, pour que « Retour » ramène à l'écran
+  // précédent plutôt qu'à un écran fixe. Revenir sur un écran déjà dans
+  // l'historique le tronque (pas de boucle A → B → A → B) ; l'accueil le vide.
+  const viewRef = React.useRef<View>('dashboard');
+  const viewHistory = React.useRef<View[]>([]);
+  const setView = React.useCallback((next: View) => {
+    const current = viewRef.current;
+    if (next === current) return;
+    if (next === 'dashboard') {
+      viewHistory.current = [];
+    } else {
+      const seen = viewHistory.current.indexOf(next);
+      if (seen !== -1) viewHistory.current = viewHistory.current.slice(0, seen);
+      else viewHistory.current = [...viewHistory.current, current].slice(-30);
+    }
+    viewRef.current = next;
+    setViewState(next);
+  }, []);
+  const goBack = React.useCallback(() => {
+    const previous = viewHistory.current.pop() ?? 'dashboard';
+    viewRef.current = previous;
+    setViewState(previous);
+  }, []);
 
   // Android hardware back button (Play Store review expects it to navigate
   // within the app, not just exit): a nested screen (e.g. the admin
   // drill-down menu) gets first refusal via useBackHandler; otherwise this
-  // falls back to "go to dashboard", then "exit the app" once already home.
+  // falls back to the previous screen, then "exit the app" once already home.
   // No-op on web — the browser's own back button/history already works there.
   React.useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const listenerPromise = CapacitorApp.addListener('backButton', () => {
       if (runBackHandlers()) return;
-      setView((current) => {
-        if (current !== 'dashboard') return 'dashboard';
-        CapacitorApp.exitApp();
-        return current;
-      });
+      if (viewRef.current !== 'dashboard') goBack();
+      else CapacitorApp.exitApp();
     });
     return () => { listenerPromise.then((l) => l.remove()); };
-  }, []);
+  }, [goBack]);
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
@@ -265,7 +291,7 @@ export default function App() {
           />
         );
       case 'search-groups':
-        return <SearchGroups user={activeProfile} onBack={() => setView('my-circles')} />;
+        return <SearchGroups user={activeProfile} onBack={goBack} />;
       case 'cotiser': {
         // L'onglet central mène droit au paiement. S'il n'y a qu'un cercle
         // actif, on ouvre directement ses cotisations ; sinon on laisse
@@ -276,7 +302,7 @@ export default function App() {
             <ContributionsManager
               group={payable[0]}
               user={activeProfile}
-              onBack={() => setView('dashboard')}
+              onBack={goBack}
               onNavigateToVerification={() => {
                 setProfileTab('kyc');
                 setView('profile');
@@ -288,7 +314,7 @@ export default function App() {
           <ChooseCircleToPay
             groups={payable}
             onSelect={handleManageContributions}
-            onBack={() => setView('dashboard')}
+            onBack={goBack}
           />
         );
       }
@@ -313,7 +339,7 @@ export default function App() {
       case 'calendar':
         return <CalendarView groups={groups} onSelectGroup={handleSelectGroup} />;
       case 'support':
-        return <Support user={activeProfile} onBack={() => setView('dashboard')} />;
+        return <Support user={activeProfile} onBack={goBack} />;
       case 'marketplace':
         return <Marketplace user={activeProfile} initialOpen={marketplaceIntent} />;
       case 'ai-assistant':
@@ -326,7 +352,7 @@ export default function App() {
         // Le rôle décide de l'accès ; la ré-authentification protège la
         // session laissée ouverte (voir AdminGate).
         return activeProfile.role === 'admin' ? (
-          <AdminGate user={activeProfile} onCancel={() => setView('dashboard')}>
+          <AdminGate user={activeProfile} onCancel={goBack}>
             <AdminDashboard />
           </AdminGate>
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
@@ -335,7 +361,7 @@ export default function App() {
           <ContributionsManager
             group={selectedGroup}
             user={activeProfile}
-            onBack={() => setView('dashboard')}
+            onBack={goBack}
             onNavigateToVerification={() => {
               setProfileTab('kyc');
               setView('profile');
@@ -351,14 +377,14 @@ export default function App() {
               setSelectedGroupId(id);
               setView('group-details');
             }}
-            onCancel={() => setView('my-circles')}
+            onCancel={goBack}
           />
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'group-details':
         return selectedGroup ? (
           <GroupDetails
             group={selectedGroup}
-            onBack={() => setView('dashboard')}
+            onBack={goBack}
             onNavigateToVerification={() => {
               setProfileTab('kyc');
               setView('profile');
@@ -469,6 +495,14 @@ export default function App() {
                 : '';
             })()}
           </span>
+        </div>
+      )}
+      {view !== 'dashboard' && !VIEWS_WITH_OWN_BACK.has(view) && (
+        <div className="flex items-center mb-2">
+          <Button variant="ghost" onClick={goBack} className="rounded-xl shrink-0 cursor-pointer -ml-2 text-xs font-bold">
+            <EganyeIcon name="chevron-left" size={16} className="mr-1" />
+            <span>{t('gd_back') || 'Retour'}</span>
+          </Button>
         </div>
       )}
       <Suspense fallback={<LoadingScreen fullScreen={false} />}>
