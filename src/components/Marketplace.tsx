@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Store, ShieldPlus, Tractor, Zap, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2, Clock, XCircle, RefreshCw, PackageSearch, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FlowNotice, FlowScreen } from '@/components/ui/FlowScreen';
 import LegalDocumentDialog from './LegalDocumentDialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
 import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest } from '@/lib/marketplace';
 import { CreditApplication, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
-import { CreditApplicationPanel } from './CreditApplicationPanel';
-import { AidApplicationPanel } from './AidApplicationPanel';
+import { CreditFlow } from './CreditApplicationPanel';
+import { AidFlow } from './AidApplicationPanel';
 import { AidApplication, fetchAidApplicationFee, fetchMyAidApplications } from '@/lib/aid';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -26,6 +26,8 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Store,
 };
 
+type OpenFlow = { kind: 'aid' } | { kind: 'credit' | 'service'; service: MarketplaceService };
+
 export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   const { t } = useLanguage();
   const statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }> = {
@@ -38,7 +40,10 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   const [myRequests, setMyRequests] = useState<MarketplaceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
+  // Parcours ouvert en plein écran, à la manière d'une app mobile : chaque
+  // service a ses propres écrans au lieu d'une fenêtre modale.
+  const [openFlow, setOpenFlow] = useState<OpenFlow | null>(null);
+  const closeFlow = useCallback(() => setOpenFlow(null), []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCreditTerms, setShowCreditTerms] = useState(false);
   // Le crédit vit dans credit_applications (dossier + offre + échéancier),
@@ -48,12 +53,16 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   // sa propre carte, toujours en tête.
   const [aidApps, setAidApps] = useState<AidApplication[]>([]);
   const [aidFee, setAidFee] = useState(1000);
-  const [aidOpen, setAidOpen] = useState(false);
   const [showAidTerms, setShowAidTerms] = useState(false);
   const [initialHandled, setInitialHandled] = useState(false);
 
+  // Après le premier chargement, les rechargements (après un dépôt, un
+  // remboursement…) se font sans écran d'attente : l'écran ouvert reste en
+  // place, avec sa confirmation.
+  const loadedOnce = React.useRef(false);
   const loadData = async () => {
-    setLoading(true);
+    const silent = loadedOnce.current;
+    if (!silent) setLoading(true);
     setLoadError(false);
     try {
       const [svc, reqs, apps, aids, fee] = await Promise.all([
@@ -68,9 +77,11 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
       setCreditApps(apps);
       setAidApps(aids);
       setAidFee(fee);
+      loadedOnce.current = true;
     } catch (err) {
       console.error('Marketplace loadData error:', err);
-      setLoadError(true);
+      if (silent) toast.error(t('mkt_load_error_title'));
+      else setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -85,10 +96,10 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   useEffect(() => {
     if (loading || initialHandled || !initialOpen) return;
     setInitialHandled(true);
-    if (initialOpen === 'aid') setAidOpen(true);
+    if (initialOpen === 'aid') setOpenFlow({ kind: 'aid' });
     else {
       const credit = services.find((s) => s.category === 'credit');
-      if (credit) setSelectedService(credit);
+      if (credit) setOpenFlow({ kind: 'credit', service: credit });
     }
   }, [loading, initialHandled, initialOpen, services]);
 
@@ -102,13 +113,13 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
     service.minReputationScore === undefined || user.reputationScore >= service.minReputationScore;
 
   const handleAction = async () => {
-    if (!selectedService) return;
+    if (openFlow?.kind !== 'service') return;
     setIsSubmitting(true);
     try {
-      const result = await submitMarketplaceRequest({ userId: user.uid, serviceId: selectedService.id });
+      const result = await submitMarketplaceRequest({ userId: user.uid, serviceId: openFlow.service.id });
       if (!result.success) throw new Error(result.message);
       toast.success(result.message);
-      setSelectedService(null);
+      setOpenFlow(null);
       await loadData();
     } catch (err: any) {
       toast.error(err.message || t('mkt_send_request_error_toast'));
@@ -125,6 +136,49 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
     if (open.status === 'offered') return { label: 'Une offre vous attend', className: 'bg-success-soft text-secondary' };
     return { label: `Reste à rembourser : ${remainingDue(open).toLocaleString('fr-FR')} FCFA`, className: 'bg-primary/10 text-primary' };
   };
+
+  const openService = (service: MarketplaceService) =>
+    setOpenFlow(service.category === 'credit' ? { kind: 'credit', service } : { kind: 'service', service });
+
+  const flows = (
+    <>
+      {openFlow?.kind === 'aid' && (
+        <AidFlow
+          user={user}
+          applications={aidApps}
+          applicationFee={aidFee}
+          onChanged={loadData}
+          onShowTerms={() => setShowAidTerms(true)}
+          onClose={closeFlow}
+        />
+      )}
+      {openFlow?.kind === 'credit' && (
+        <CreditFlow
+          user={user}
+          service={openFlow.service}
+          icon={ICONS[openFlow.service.iconName] || Store}
+          applications={creditApps}
+          onChanged={loadData}
+          onShowTerms={() => setShowCreditTerms(true)}
+          onClose={closeFlow}
+        />
+      )}
+      {openFlow?.kind === 'service' && (
+        <ServiceScreen
+          service={openFlow.service}
+          icon={ICONS[openFlow.service.iconName] || Store}
+          existingRequest={requestForService(openFlow.service.id)}
+          eligible={isEligible(openFlow.service)}
+          reputationScore={user.reputationScore}
+          statusLabels={statusLabels}
+          isSubmitting={isSubmitting}
+          onSubmit={handleAction}
+          onClose={closeFlow}
+        />
+      )}
+      <LegalDocumentDialog docId={showCreditTerms ? 'credit' : showAidTerms ? 'aide' : null} onClose={() => { setShowCreditTerms(false); setShowAidTerms(false); }} />
+    </>
+  );
 
   if (loading) {
     return (
@@ -147,224 +201,149 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
     );
   }
 
+  const aidStatus = aidCardStatus();
+
   return (
-    <div className="space-y-6 pb-20">
-      <div className="glass-card p-6 rounded-3xl shadow-soft">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-brand/10 rounded-xl">
-            <Store className="w-6 h-6 text-brand" />
-          </div>
-          <h1 className="text-2xl font-serif font-black text-foreground">{t('marketplace')}</h1>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          {t('mkt_header_subtitle')}
-        </p>
+    <div className="space-y-5 pb-20">
+      <div>
+        <h1 className="text-[26px] leading-tight font-serif font-black text-foreground tracking-tight">{t('marketplace')}</h1>
+        <p className="text-[14px] text-muted-foreground font-medium mt-1">{t('mkt_header_subtitle')}</p>
       </div>
 
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setAidOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setAidOpen(true);
-          }
-        }}
-        className="press-row glass-card rounded-2xl p-5 shadow-soft hover:shadow-elevated transition-shadow cursor-pointer border-2 border-brand/30"
+      <button
+        type="button"
+        onClick={() => setOpenFlow({ kind: 'aid' })}
+        className="press-row w-full text-left rounded-3xl gradient-sunset text-white p-5 shadow-elevated cursor-pointer"
       >
-        <div className="flex items-start gap-4 mb-3">
-          <div className="p-3 rounded-2xl gradient-sunset shadow-xs shrink-0">
-            <Gift className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <Gift className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h3 className="font-bold text-foreground text-lg leading-tight">Coup de pouce eganyé</h3>
-            <p className="text-xs text-brand font-semibold mt-1">Aide gratuite, rien à rembourser</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[18px] font-serif font-bold leading-tight">Coup de pouce eganyé</p>
+            <p className="text-[13px] opacity-90 font-medium">Aide gratuite, rien à rembourser</p>
           </div>
+          <ChevronRight className="w-5 h-5 shrink-0 opacity-90" />
         </div>
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-          Besoin d'argent pour votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous offrir le montant.
+        <p className="mt-3 text-[13px] leading-relaxed opacity-95">
+          Besoin d'argent pour votre activité ? Dites combien, présentez-vous en vidéo : notre équipe peut vous offrir le montant.
         </p>
-        {(() => {
-          const status = aidCardStatus();
-          return status ? (
-            <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${status.className}`}>{status.label}</div>
-          ) : (
-            <span className="w-full flex items-center justify-center gap-1 font-bold border border-brand/30 text-brand rounded-xl h-11 text-sm">
-              Demander un coup de pouce <ChevronRight className="w-4 h-4" />
-            </span>
-          );
-        })()}
-      </div>
+        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-[#C96F4A] px-4 h-9 text-[13px] font-black">
+          {aidStatus ? aidStatus.label : 'Demander un coup de pouce'}
+        </span>
+      </button>
 
       {services.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6 glass-card rounded-3xl shadow-soft">
+        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6 rounded-3xl border border-border">
           <PackageSearch className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm font-bold text-foreground">{t('mkt_no_service_title')}</p>
           <p className="text-xs text-muted-foreground max-w-xs">{t('mkt_no_service_desc')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {services.map((service) => {
-            const Icon = ICONS[service.iconName] || Store;
-            const existingRequest = service.category === 'credit' ? undefined : requestForService(service.id);
-            const creditStatus = service.category === 'credit' ? creditCardStatus() : null;
-            return (
-              <div
-                key={service.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedService(service)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedService(service);
-                  }
-                }}
-                className="press-row glass-card rounded-2xl p-5 shadow-soft hover:shadow-elevated transition-shadow flex flex-col justify-between cursor-pointer"
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-3 rounded-2xl ${service.colorClass} shadow-xs shrink-0`}>
-                    <Icon className="w-8 h-8 text-white" />
+        <div className="space-y-2.5">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground px-1">Services partenaires</p>
+          <div className="rounded-3xl border border-border bg-card divide-y divide-border overflow-hidden">
+            {services.map((service) => {
+              const Icon = ICONS[service.iconName] || Store;
+              const existingRequest = service.category === 'credit' ? undefined : requestForService(service.id);
+              const status = service.category === 'credit'
+                ? creditCardStatus()
+                : existingRequest
+                  ? { label: `${t('mkt_request_prefix')} ${statusLabels[existingRequest.status].label}`, className: statusLabels[existingRequest.status].className }
+                  : null;
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => openService(service)}
+                  className="press-row w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-muted/40 transition-colors"
+                >
+                  <div className={`w-12 h-12 rounded-2xl ${service.colorClass} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-foreground text-lg leading-tight">{service.title}</h3>
-                    <p className="text-xs text-brand font-semibold mt-1">{service.provider}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-foreground leading-tight truncate">{service.title}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">{service.provider}</p>
+                    {status && (
+                      <span className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${status.className}`}>{status.label}</span>
+                    )}
                   </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-2">
-                  {service.description}
-                </p>
-                {creditStatus ? (
-                  <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${creditStatus.className}`}>
-                    {creditStatus.label}
-                  </div>
-                ) : existingRequest ? (
-                  <div className={`w-full text-center py-2 rounded-xl text-xs font-bold ${statusLabels[existingRequest.status].className}`}>
-                    {`${t('mkt_request_prefix')} ${statusLabels[existingRequest.status].label}`}
-                  </div>
-                ) : (
-                  <span className="w-full flex items-center justify-center gap-1 font-bold border border-brand/30 text-brand rounded-xl h-11 text-sm">
-                    {t('view_details')} <ChevronRight className="w-4 h-4" />
-                  </span>
-                )}
-              </div>
-            );
-          })}
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <Dialog open={!!selectedService} onOpenChange={(open) => !open && setSelectedService(null)}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 [&_[data-slot=dialog-close]]:text-white [&_[data-slot=dialog-close]]:hover:bg-white/20">
-          {selectedService && (
-            <>
-              <div className={`${selectedService.colorClass} p-6 pt-2 text-white`}>
-                <DialogHeader>
-                  {React.createElement(ICONS[selectedService.iconName] || Store, { className: 'w-8 h-8 text-white' })}
-                  <DialogTitle className="text-2xl font-black mt-4 text-white">{selectedService.title}</DialogTitle>
-                </DialogHeader>
-                <p className="opacity-90 text-sm mt-1">{selectedService.provider}</p>
-              </div>
-
-              <div className="p-6 overflow-y-auto">
-                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  {selectedService.description}
-                </p>
-
-                {selectedService.requirements && selectedService.requirements.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-xs font-bold uppercase text-foreground mb-3 tracking-wider">{t('mkt_requirements_title')}</h4>
-                    <ul className="space-y-2">
-                      {selectedService.requirements.map((req, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                          {req}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {selectedService.category === 'credit' ? (
-                  <CreditApplicationPanel
-                    user={user}
-                    service={selectedService}
-                    applications={creditApps}
-                    onChanged={loadData}
-                    onShowTerms={() => setShowCreditTerms(true)}
-                  />
-                ) : (() => {
-                  const existingRequest = requestForService(selectedService.id);
-
-                  if (existingRequest) {
-                    return (
-                      <div className="bg-muted p-4 rounded-xl flex items-center gap-3 mb-2 text-sm">
-                        <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
-                        {`${t('mkt_already_has_request_prefix')} ${statusLabels[existingRequest.status].label.toLowerCase()} ${t('mkt_already_has_request_suffix')}`}
-                      </div>
-                    );
-                  }
-
-                  if (!isEligible(selectedService)) {
-                    return (
-                      <div className="bg-danger-soft border border-danger/20 p-4 rounded-xl flex items-start gap-3 mb-2">
-                        <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
-                        <p className="text-xs text-danger leading-relaxed">
-                          {t('mkt_requires_score_prefix')} {selectedService.minReputationScore}. {t('mkt_your_score_is_suffix')} {user.reputationScore}.
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <>
-                      <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-start gap-3 mb-6">
-                        <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-                        <p className="text-xs text-brand-deep leading-relaxed">
-                          {t('mkt_consent_disclaimer')}
-                        </p>
-                      </div>
-                      <Button
-                        className="btn-shine w-full h-12 text-base font-bold rounded-xl"
-                        onClick={handleAction}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? t('sending_label') : selectedService.actionLabel}
-                      </Button>
-                    </>
-                  );
-                })()}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-      <Dialog open={aidOpen} onOpenChange={setAidOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 [&_[data-slot=dialog-close]]:text-white [&_[data-slot=dialog-close]]:hover:bg-white/20">
-          <div className="gradient-sunset p-6 pt-2 text-white">
-            <DialogHeader>
-              <Gift className="w-8 h-8 text-white" />
-              <DialogTitle className="text-2xl font-black mt-4 text-white">Coup de pouce eganyé</DialogTitle>
-            </DialogHeader>
-            <p className="opacity-90 text-sm mt-1">Une aide pour votre activité, sans remboursement.</p>
-          </div>
-          <div className="p-6 overflow-y-auto">
-            <ol className="mb-6 space-y-2 text-sm text-muted-foreground">
-              <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" /> Indiquez le montant dont vous avez besoin.</li>
-              <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" /> Présentez-vous et votre activité en vidéo.</li>
-              <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" /> Notre équipe étudie le dossier et vous verse l'aide si elle est accordée.</li>
-            </ol>
-            <AidApplicationPanel
-              user={user}
-              applications={aidApps}
-              applicationFee={aidFee}
-              onChanged={loadData}
-              onShowTerms={() => setShowAidTerms(true)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-      <LegalDocumentDialog docId={showCreditTerms ? 'credit' : showAidTerms ? 'aide' : null} onClose={() => { setShowCreditTerms(false); setShowAidTerms(false); }} />
+      {flows}
     </div>
+  );
+}
+
+/** Fiche plein écran d'un service partenaire (assurance, équipement…). */
+function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputationScore, statusLabels, isSubmitting, onSubmit, onClose }: {
+  service: MarketplaceService;
+  icon: React.ComponentType<{ className?: string }>;
+  existingRequest?: MarketplaceRequest;
+  eligible: boolean;
+  reputationScore: number;
+  statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }>;
+  isSubmitting: boolean;
+  onSubmit: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <FlowScreen
+      onBack={onClose}
+      title={service.title}
+      hero={
+        <div className={`${service.colorClass} px-5 py-7 text-white`}>
+          <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+            <Icon className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-[26px] leading-tight font-serif font-bold">{service.title}</h1>
+          <p className="mt-1.5 text-[14px] opacity-90 font-medium">{service.provider}</p>
+        </div>
+      }
+      footer={
+        existingRequest || !eligible ? (
+          <Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>
+        ) : (
+          <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending_label')}</> : service.actionLabel}
+          </Button>
+        )
+      }
+    >
+      <p className="text-[15px] text-foreground leading-relaxed">{service.description}</p>
+
+      {service.requirements && service.requirements.length > 0 && (
+        <div className="space-y-2.5">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{t('mkt_requirements_title')}</p>
+          {service.requirements.map((req, idx) => (
+            <div key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
+              <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+              {req}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {existingRequest ? (
+        <FlowNotice icon={<Clock className="w-5 h-5 text-muted-foreground" />}>
+          {`${t('mkt_already_has_request_prefix')} ${statusLabels[existingRequest.status].label.toLowerCase()} ${t('mkt_already_has_request_suffix')}`}
+        </FlowNotice>
+      ) : !eligible ? (
+        <FlowNotice tone="danger" icon={<XCircle className="w-5 h-5 text-danger" />}>
+          {t('mkt_requires_score_prefix')} {service.minReputationScore}. {t('mkt_your_score_is_suffix')} {reputationScore}.
+        </FlowNotice>
+      ) : (
+        <FlowNotice tone="brand" icon={<AlertCircle className="w-5 h-5 text-brand" />}>
+          {t('mkt_consent_disclaimer')}
+        </FlowNotice>
+      )}
+    </FlowScreen>
   );
 }

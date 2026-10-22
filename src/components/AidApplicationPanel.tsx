@@ -1,85 +1,41 @@
-import React, { useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, Clock, Gift, Link2, Loader2, Upload, Video, XCircle } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
+import { CheckCircle2, Clock, Gift, Link2, Loader2, Upload, Video, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { AmountField, FlowCheckbox, FlowNotice, FlowRow, FlowScreen } from '@/components/ui/FlowScreen';
 import { UserProfile } from '@/types';
 import { AID_MAX_AMOUNT, AidApplication, submitAidApplication, uploadAidVideo } from '@/lib/aid';
 
-interface AidApplicationPanelProps {
+interface AidFlowProps {
   user: UserProfile;
   /** Dossiers de la personne, du plus récent au plus ancien. */
   applications: AidApplication[];
   applicationFee: number;
   onChanged: () => Promise<void> | void;
   onShowTerms: () => void;
+  onClose: () => void;
 }
 
+const TITLE = 'Coup de pouce';
 const fcfa = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
 const dateFr = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
+const STEPS = ['amount', 'project', 'video', 'review'] as const;
+type Step = 'intro' | (typeof STEPS)[number] | 'done';
+
 /**
- * Le parcours « Coup de pouce » : déposer un dossier (montant + vidéo + frais
- * d'étude), suivre son étude, voir l'aide reçue ou le motif du refus.
+ * Le parcours « Coup de pouce », écran par écran : présentation, montant,
+ * activité, vidéo, récapitulatif avec les frais d'étude, puis confirmation.
+ * Un dossier déjà déposé affiche son suivi à la place.
  */
-export function AidApplicationPanel({ user, applications, applicationFee, onChanged, onShowTerms }: AidApplicationPanelProps) {
+export function AidFlow({ user, applications, applicationFee, onChanged, onShowTerms, onClose }: AidFlowProps) {
   const pending = applications.find((a) => a.status === 'submitted');
   const last = applications[0];
 
-  if (pending) {
-    return (
-      <div className="space-y-3">
-        <Notice icon={<Clock className="w-5 h-5 text-warning shrink-0" />}>
-          Votre dossier « {pending.projectTitle} » est en cours d'étude par notre équipe. Vous recevrez une notification dès qu'une décision sera prise.
-        </Notice>
-        <div className="bg-brand/5 border border-brand/20 rounded-2xl p-4 space-y-2.5 text-xs">
-          <Row label="Montant demandé" value={fcfa(pending.requestedAmount)} />
-          <Row label="Déposé le" value={dateFr(pending.createdAt)} />
-          <Row label="Frais d'étude réglés" value={fcfa(pending.applicationFee)} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {last?.status === 'granted' && (
-        <Notice icon={<Gift className="w-5 h-5 text-success shrink-0" />}>
-          Vous avez reçu {fcfa(last.grantedAmount ?? 0)} pour « {last.projectTitle} ». C'est une aide : rien à rembourser.
-          {last.adminNotes ? ` Message de l'équipe : ${last.adminNotes}` : ''}
-        </Notice>
-      )}
-      {last?.status === 'rejected' && (
-        <Notice icon={<XCircle className="w-5 h-5 text-danger shrink-0" />}>
-          Votre dossier « {last.projectTitle} » n'a pas été retenu{last.rejectionReason ? ` : ${last.rejectionReason}` : '.'} Vous pouvez en déposer un nouveau.
-        </Notice>
-      )}
-      <AidForm user={user} applicationFee={applicationFee} onChanged={onChanged} onShowTerms={onShowTerms} />
-    </div>
-  );
-}
-
-function Notice({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="bg-muted p-4 rounded-xl flex items-start gap-3 text-sm">
-      {icon}
-      <p className="leading-relaxed">{children}</p>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex justify-between items-center gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-bold text-foreground text-right">{value}</span>
-    </div>
-  );
-}
-
-function AidForm({ user, applicationFee, onChanged, onShowTerms }: Omit<AidApplicationPanelProps, 'applications'>) {
+  const [step, setStep] = useState<Step>('intro');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -87,37 +43,48 @@ function AidForm({ user, applicationFee, onChanged, onShowTerms }: Omit<AidAppli
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoLink, setVideoLink] = useState('');
   const [accepted, setAccepted] = useState(false);
-  const [step, setStep] = useState<'idle' | 'uploading' | 'submitting'>('idle');
+  const [sending, setSending] = useState<'idle' | 'uploading' | 'submitting'>('idle');
   // Même clé tant que la personne réessaie le même envoi : un double appui ou
   // un rejeu réseau ne prélève jamais deux fois les frais.
   const idempotencyKey = useRef<string>(crypto.randomUUID());
   const uploadedPath = useRef<{ file: File; path: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
+  const value = Number(amount);
   const notEnoughForFee = user.walletBalance < applicationFee;
-  const hasVideo = videoMode === 'upload' ? !!videoFile : videoLink.trim().length > 0;
+  const linkOk = /^https:\/\/\S+$/i.test(videoLink.trim());
+  const valid = {
+    amount: value > 0 && value <= AID_MAX_AMOUNT,
+    project: title.trim().length >= 3 && description.trim().length >= 20,
+    video: videoMode === 'upload' ? !!videoFile : linkOk,
+    review: accepted && !notEnoughForFee,
+  };
+
+  const goBack = useCallback(() => {
+    if (sending !== 'idle') return;
+    if (step === 'intro' || step === 'done') return onClose();
+    const i = STEPS.indexOf(step);
+    setStep(i <= 0 ? 'intro' : STEPS[i - 1]);
+  }, [step, sending, onClose]);
+
+  const next = () => {
+    if (step === 'intro') return setStep('amount');
+    const i = STEPS.indexOf(step as (typeof STEPS)[number]);
+    if (i >= 0 && i < STEPS.length - 1) setStep(STEPS[i + 1]);
+  };
 
   const submit = async () => {
-    const value = Number(amount);
-    if (title.trim().length < 3) return toast.error('Donnez un nom à votre activité.');
-    if (description.trim().length < 20) return toast.error('Expliquez en quelques phrases ce que vous ferez de l’aide.');
-    if (!value || value <= 0 || value > AID_MAX_AMOUNT) return toast.error('Indiquez le montant dont vous avez besoin.');
-    if (!hasVideo) return toast.error('La vidéo est obligatoire : filmez-vous ou collez un lien.');
-    if (videoMode === 'link' && !/^https:\/\/\S+$/i.test(videoLink.trim())) {
-      return toast.error('Le lien de la vidéo doit commencer par https://');
-    }
-    if (!accepted) return toast.error('Cochez la case pour accepter les frais d’étude.');
-    if (notEnoughForFee) return toast.error(`Il faut ${fcfa(applicationFee)} sur votre portefeuille pour les frais d’étude.`);
+    if (!valid.amount || !valid.project || !valid.video || !valid.review) return;
 
     let videoPath: string | undefined;
     if (videoMode === 'upload' && videoFile) {
       if (uploadedPath.current?.file === videoFile) {
         videoPath = uploadedPath.current.path;
       } else {
-        setStep('uploading');
+        setSending('uploading');
         const res = await uploadAidVideo(user.uid, videoFile);
         if (res.error || !res.path) {
-          setStep('idle');
+          setSending('idle');
           return toast.error(res.error || 'Échec de l’envoi de la vidéo.');
         }
         uploadedPath.current = { file: videoFile, path: res.path };
@@ -125,7 +92,7 @@ function AidForm({ user, applicationFee, onChanged, onShowTerms }: Omit<AidAppli
       }
     }
 
-    setStep('submitting');
+    setSending('submitting');
     const result = await submitAidApplication({
       projectTitle: title.trim(),
       projectDescription: description.trim(),
@@ -134,53 +101,186 @@ function AidForm({ user, applicationFee, onChanged, onShowTerms }: Omit<AidAppli
       videoUrl: videoMode === 'link' ? videoLink.trim() : undefined,
       idempotencyKey: idempotencyKey.current,
     });
-    setStep('idle');
+    setSending('idle');
     if (!result.success) return toast.error(result.message);
-    toast.success(result.message);
+    setStep('done');
     await onChanged();
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="aid-title" className="text-xs font-bold">Votre activité</Label>
-        <Input id="aid-title" maxLength={120} placeholder="Ex. : mon atelier de couture" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" />
-      </div>
+  const stepNumber = STEPS.indexOf(step as (typeof STEPS)[number]) + 1;
+  const common = { onBack: goBack, title: TITLE, ...(stepNumber > 0 ? { step: stepNumber, totalSteps: STEPS.length } : {}) };
+  const nextButton = (enabled: boolean, label = 'Suivant') => (
+    <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>
+      {label}
+    </Button>
+  );
 
-      <div className="space-y-1.5">
-        <Label htmlFor="aid-desc" className="text-xs font-bold">Que ferez-vous de l'argent ?</Label>
-        <Textarea
-          id="aid-desc"
-          maxLength={4000}
-          rows={4}
-          placeholder="Ce que vous allez acheter et ce que ça va changer pour votre activité…"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="rounded-xl"
-        />
-      </div>
+  // ---------------------------------------------------------- Confirmation
+  if (step === 'done') {
+    return (
+      <FlowScreen
+        {...common}
+        footer={<Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Terminé</Button>}
+      >
+        <div className="flex flex-col items-center text-center pt-8 space-y-4">
+          <div className="w-20 h-20 rounded-full bg-success-soft flex items-center justify-center">
+            <CheckCircle2 className="w-10 h-10 text-success" />
+          </div>
+          <h1 className="text-[24px] font-serif font-bold text-foreground">Dossier déposé</h1>
+          <p className="text-[14px] text-muted-foreground leading-relaxed max-w-xs">
+            Notre équipe va regarder votre vidéo et étudier votre demande de {fcfa(value)}. Vous recevrez une notification dès qu'une décision sera prise.
+          </p>
+        </div>
+      </FlowScreen>
+    );
+  }
 
-      <div className="space-y-1.5">
-        <Label htmlFor="aid-amount" className="text-xs font-bold">Montant dont vous avez besoin (FCFA)</Label>
-        <Input id="aid-amount" type="number" inputMode="numeric" min={1} placeholder="Ex. : 75 000" value={amount} onChange={(e) => setAmount(e.target.value)} className="rounded-xl h-11" />
-        <p className="text-[12px] text-muted-foreground">Demandez ce dont vous avez vraiment besoin : l'équipe peut accorder tout ou partie du montant.</p>
-      </div>
+  // ------------------------------------------------------ Dossier en cours
+  if (pending) {
+    return (
+      <FlowScreen
+        {...common}
+        heading="Dossier en cours d'étude"
+        desc="Vous recevrez une notification dès qu'une décision sera prise."
+        footer={<Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>}
+      >
+        <FlowNotice tone="warning" icon={<Clock className="w-5 h-5 text-warning" />}>
+          « {pending.projectTitle} » est entre les mains de notre équipe.
+        </FlowNotice>
+        <div className="rounded-2xl border border-border px-4 divide-y divide-border">
+          <FlowRow label="Montant demandé" value={fcfa(pending.requestedAmount)} />
+          <FlowRow label="Déposé le" value={dateFr(pending.createdAt)} />
+          <FlowRow label="Frais d'étude réglés" value={fcfa(pending.applicationFee)} />
+        </div>
+      </FlowScreen>
+    );
+  }
 
-      <div className="space-y-2">
-        <Label className="text-xs font-bold flex items-center gap-1.5"><Video className="w-4 h-4" /> Votre vidéo (obligatoire)</Label>
-        <p className="text-[12px] text-muted-foreground -mt-1">Présentez-vous, montrez votre activité et dites ce que vous ferez de l'aide, en 1 minute environ.</p>
-        <div className="grid grid-cols-2 gap-2">
+  // ---------------------------------------------------------- Présentation
+  if (step === 'intro') {
+    return (
+      <FlowScreen
+        {...common}
+        hero={
+          <div className="gradient-sunset px-5 py-7 text-white">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+              <Gift className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-[26px] leading-tight font-serif font-bold">Une aide pour votre activité</h1>
+            <p className="mt-1.5 text-[14px] opacity-90 font-medium">Gratuite, rien à rembourser.</p>
+          </div>
+        }
+        footer={nextButton(true, 'Commencer')}
+      >
+        {last?.status === 'granted' && (
+          <FlowNotice tone="success" icon={<Gift className="w-5 h-5 text-success" />}>
+            Vous avez reçu {fcfa(last.grantedAmount ?? 0)} pour « {last.projectTitle} ». C'est une aide : rien à rembourser.
+            {last.adminNotes ? ` Message de l'équipe : ${last.adminNotes}` : ''}
+          </FlowNotice>
+        )}
+        {last?.status === 'rejected' && (
+          <FlowNotice tone="danger" icon={<XCircle className="w-5 h-5 text-danger" />}>
+            Votre dossier « {last.projectTitle} » n'a pas été retenu{last.rejectionReason ? ` : ${last.rejectionReason}` : '.'} Vous pouvez en déposer un nouveau.
+          </FlowNotice>
+        )}
+
+        <div className="space-y-3">
+          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">Comment ça marche</p>
+          {[
+            ['Le montant', 'Dites combien il vous faut.'],
+            ['Votre activité', 'Expliquez ce que vous ferez de l’argent.'],
+            ['Une vidéo', 'Présentez-vous en 1 minute environ.'],
+            ['L’étude', 'Notre équipe décide et vous verse l’aide si elle est accordée.'],
+          ].map(([label, text], i) => (
+            <div key={label} className="flex items-start gap-3">
+              <span className="w-8 h-8 rounded-full bg-brand/10 text-brand text-sm font-black flex items-center justify-center shrink-0">{i + 1}</span>
+              <div>
+                <p className="text-sm font-bold text-foreground">{label}</p>
+                <p className="text-[13px] text-muted-foreground">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <FlowNotice tone="brand">
+          Des frais d'étude de <strong>{fcfa(applicationFee)}</strong> sont prélevés sur votre portefeuille au dépôt du dossier. Ils ne sont pas remboursés si l'aide n'est pas accordée.
+        </FlowNotice>
+      </FlowScreen>
+    );
+  }
+
+  // ---------------------------------------------------------------- Montant
+  if (step === 'amount') {
+    return (
+      <FlowScreen
+        {...common}
+        heading="De combien avez-vous besoin ?"
+        desc="Demandez ce dont vous avez vraiment besoin : l'équipe peut accorder tout ou partie du montant."
+        footer={nextButton(valid.amount)}
+      >
+        <AmountField value={amount} onChange={setAmount} suggestions={[25000, 50000, 100000, 250000]} max={AID_MAX_AMOUNT} autoFocus />
+      </FlowScreen>
+    );
+  }
+
+  // --------------------------------------------------------------- Activité
+  if (step === 'project') {
+    const missing = 20 - description.trim().length;
+    return (
+      <FlowScreen
+        {...common}
+        heading="Parlez-nous de votre activité"
+        desc="Quelques phrases suffisent. Soyez concret."
+        footer={nextButton(valid.project)}
+      >
+        <div className="space-y-2">
+          <Label htmlFor="aid-title" className="text-sm font-bold">Votre activité</Label>
+          <Input id="aid-title" maxLength={120} placeholder="Ex. : mon atelier de couture" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-2xl h-13 text-base" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="aid-desc" className="text-sm font-bold">Que ferez-vous de l'argent ?</Label>
+          <Textarea
+            id="aid-desc"
+            maxLength={4000}
+            rows={6}
+            placeholder="Ce que vous allez acheter et ce que ça va changer pour votre activité…"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="rounded-2xl text-base"
+          />
+          <p className="text-[12px] text-muted-foreground">
+            {missing > 0 ? `Encore ${missing} caractère${missing > 1 ? 's' : ''} au minimum.` : 'C’est bon.'}
+          </p>
+        </div>
+      </FlowScreen>
+    );
+  }
+
+  // ------------------------------------------------------------------ Vidéo
+  if (step === 'video') {
+    return (
+      <FlowScreen
+        {...common}
+        heading="Présentez-vous en vidéo"
+        desc="Environ 1 minute : qui vous êtes, votre activité, et ce que vous ferez de l'aide. La vidéo est obligatoire."
+        footer={nextButton(valid.video)}
+      >
+        <div className="grid grid-cols-2 gap-3">
           {(['upload', 'link'] as const).map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => setVideoMode(mode)}
-              className={`h-10 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${videoMode === mode ? 'border-brand bg-brand/10 text-brand' : 'border-border text-muted-foreground'}`}
+              className={`p-4 rounded-2xl border-2 text-sm font-bold flex flex-col items-center gap-2 cursor-pointer transition-colors ${
+                videoMode === mode ? 'border-brand bg-brand/5 text-brand' : 'border-border text-muted-foreground'
+              }`}
             >
-              {mode === 'upload' ? <><Upload className="w-4 h-4" /> Filmer / envoyer</> : <><Link2 className="w-4 h-4" /> Coller un lien</>}
+              {mode === 'upload' ? <Upload className="w-6 h-6" /> : <Link2 className="w-6 h-6" />}
+              {mode === 'upload' ? 'Filmer ou envoyer' : 'Coller un lien'}
             </button>
           ))}
         </div>
+
         {videoMode === 'upload' ? (
           <>
             <input
@@ -194,43 +294,79 @@ function AidForm({ user, applicationFee, onChanged, onShowTerms }: Omit<AidAppli
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="w-full rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground text-left cursor-pointer hover:bg-muted/40"
+              className={`w-full rounded-2xl border-2 border-dashed p-6 flex flex-col items-center gap-2 text-center cursor-pointer ${
+                videoFile ? 'border-success/50 bg-success-soft' : 'border-border hover:bg-muted/40'
+              }`}
             >
-              {videoFile ? `${videoFile.name} — ${(videoFile.size / 1024 / 1024).toFixed(1)} Mo` : 'Choisir ou filmer une vidéo (50 Mo maximum).'}
+              {videoFile ? <CheckCircle2 className="w-8 h-8 text-success" /> : <Video className="w-8 h-8 text-muted-foreground" />}
+              <span className="text-sm font-bold text-foreground break-all">
+                {videoFile ? videoFile.name : 'Appuyez pour filmer ou choisir une vidéo'}
+              </span>
+              <span className="text-[12px] text-muted-foreground">
+                {videoFile ? `${(videoFile.size / 1024 / 1024).toFixed(1)} Mo · appuyez pour changer` : '50 Mo maximum'}
+              </span>
             </button>
           </>
         ) : (
-          <Input type="url" placeholder="https://youtube.com/… ou lien TikTok, Facebook, Drive" value={videoLink} onChange={(e) => setVideoLink(e.target.value)} className="rounded-xl h-11" />
+          <div className="space-y-2">
+            <Input
+              type="url"
+              inputMode="url"
+              placeholder="https://…"
+              value={videoLink}
+              onChange={(e) => setVideoLink(e.target.value)}
+              className="rounded-2xl h-13 text-base"
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {videoLink.trim() && !linkOk ? 'Le lien doit commencer par https://' : 'YouTube, TikTok, Facebook ou Google Drive.'}
+            </p>
+          </div>
         )}
+      </FlowScreen>
+    );
+  }
+
+  // --------------------------------------------------------- Récapitulatif
+  return (
+    <FlowScreen
+      {...common}
+      heading="Vérifiez votre dossier"
+      desc="Touchez « Modifier » pour corriger une réponse."
+      footer={
+        <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || sending !== 'idle'}>
+          {sending === 'uploading' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la vidéo…</>
+            : sending === 'submitting' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dépôt du dossier…</>
+            : `Déposer et payer ${fcfa(applicationFee)}`}
+        </Button>
+      }
+    >
+      <div className="rounded-2xl border border-border px-4 divide-y divide-border">
+        <FlowRow label="Montant demandé" value={fcfa(value)} onEdit={() => setStep('amount')} />
+        <FlowRow label="Activité" value={title.trim()} onEdit={() => setStep('project')} />
+        <FlowRow
+          label="Vidéo"
+          value={videoMode === 'upload' ? 'Fichier joint' : 'Lien'}
+          onEdit={() => setStep('video')}
+        />
+        <FlowRow label="Frais d'étude" value={fcfa(applicationFee)} strong />
       </div>
 
-      <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl space-y-3">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
-          <p className="text-xs text-brand-deep leading-relaxed">
-            <strong>Frais d'étude : {fcfa(applicationFee)}</strong>, prélevés sur votre portefeuille au dépôt. Ils paient l'étude de votre dossier par notre équipe et <strong>ne sont pas remboursés</strong>, même si l'aide n'est pas accordée. La décision dépend uniquement de votre dossier, jamais du hasard.
-          </p>
-        </div>
-        <label className="flex items-start gap-2.5 cursor-pointer">
-          <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-border text-[#C96F4A] cursor-pointer" />
-          <span className="text-xs text-foreground leading-relaxed">
-            J'accepte les frais d'étude et{' '}
-            <button type="button" onClick={onShowTerms} className="font-bold underline cursor-pointer">les conditions du Coup de pouce</button>.
-          </span>
-        </label>
-      </div>
+      <FlowNotice tone="brand">
+        Les frais d'étude paient l'examen de votre dossier par notre équipe. Ils <strong>ne sont pas remboursés</strong>, même si l'aide n'est pas accordée. La décision dépend uniquement de votre dossier, jamais du hasard.
+      </FlowNotice>
+
+      <FlowCheckbox checked={accepted} onChange={setAccepted}>
+        J'accepte les frais d'étude et{' '}
+        <button type="button" onClick={(e) => { e.preventDefault(); onShowTerms(); }} className="font-bold underline cursor-pointer">
+          les conditions du Coup de pouce
+        </button>.
+      </FlowCheckbox>
 
       {notEnoughForFee && (
-        <p className="text-xs text-danger font-medium">
+        <FlowNotice tone="danger" icon={<XCircle className="w-5 h-5 text-danger" />}>
           Votre portefeuille contient {fcfa(user.walletBalance)} : rechargez-le d'au moins {fcfa(applicationFee - user.walletBalance)} pour déposer votre dossier.
-        </p>
+        </FlowNotice>
       )}
-
-      <Button className="btn-shine w-full h-12 text-base font-bold rounded-xl" onClick={submit} disabled={step !== 'idle'}>
-        {step === 'uploading' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la vidéo…</>
-          : step === 'submitting' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dépôt du dossier…</>
-          : <><CheckCircle2 className="w-4 h-4 mr-2" /> Déposer mon dossier ({fcfa(applicationFee)})</>}
-      </Button>
-    </div>
+    </FlowScreen>
   );
 }
