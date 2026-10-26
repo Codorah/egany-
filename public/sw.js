@@ -85,6 +85,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // L'APK (~20 Mo) non plus : en cache, il occuperait le stockage et
+  // resservirait une ancienne version après chaque mise à jour.
+  if (url.pathname.startsWith('/downloads/')) {
+    return;
+  }
+
   // Navigation requests (the HTML document) must always come from the
   // network first: it's what names the hashed JS/CSS files for the current
   // deploy, so serving a stale cached copy after a new deploy points the

@@ -8,3 +8,11 @@
  */
 export const PLAY_STORE_PUBLISHED = false;
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.codorah.eganye';
+
+/**
+ * APK Android servi par le site en attendant le Play Store. Signé avec la clé
+ * release (la même que celle prévue pour le Play Store), pour que le passage
+ * au store se fasse sans désinstaller. À regénérer à chaque version :
+ * android/app/build/outputs/apk/release/app-release.apk → public/downloads/.
+ */
+export const APK_DOWNLOAD_URL = '/downloads/eganye.apk';

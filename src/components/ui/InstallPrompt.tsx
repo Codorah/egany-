@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED } from '@/lib/links';
 
 /**
  * Invitation à installer Eganyé en PWA.
@@ -208,6 +209,19 @@ export function InstallPrompt() {
                 </>
               )}
             </div>
+
+            {/* Android hors Play Store : l'APK signé du site, pour qui préfère
+                une vraie app à l'installation par le navigateur. */}
+            {!iosHint && !PLAY_STORE_PUBLISHED && (
+              <a
+                href={APK_DOWNLOAD_URL}
+                download="eganye.apk"
+                onClick={dismiss}
+                className="mt-3 block text-center text-xs font-bold text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                {t('install_apk_link')}
+              </a>
+            )}
           </motion.div>
         </>
       )}

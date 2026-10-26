@@ -6918,6 +6918,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Installer',
     en: 'Install'
   },
+  install_apk_link: {
+    fr: "Ou télécharger l'app Android (APK)",
+    en: 'Or download the Android app (APK)'
+  },
   avw_invalid_image: {
     fr: 'Veuillez sélectionner un fichier image valide (JPG, PNG).',
     en: 'Please choose a valid image file (JPG, PNG).'
