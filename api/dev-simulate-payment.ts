@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { requireUserOr401 } from './_requireUser';
+import { requireUserOr401 } from './_requireUser.js';
 
 /**
  * Crédit d'un portefeuille pour le parcours de paiement SIMULÉ, hors production.

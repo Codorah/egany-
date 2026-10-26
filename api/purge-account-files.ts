@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { requireUserOr401 } from './_requireUser';
+import { requireUserOr401 } from './_requireUser.js';
 
 /**
  * Efface les fichiers d'un compte fermé, et permet à un admin de finaliser

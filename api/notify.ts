@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { requireUserOr401 } from './_requireUser';
+import { requireUserOr401 } from './_requireUser.js';
 
 /**
  * Enregistre une notification et la relaie sur les canaux choisis par la

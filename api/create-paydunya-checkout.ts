@@ -1,4 +1,4 @@
-import { requireUserOr401 } from './_requireUser';
+import { requireUserOr401 } from './_requireUser.js';
 
 /**
  * Ouverture d'une session de paiement Paydunya.
