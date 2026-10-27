@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:full": "vercel dev",
     "build": "vite build",
+    "build:android": "vite build && node -e \"require('fs').rmSync('dist/downloads',{recursive:true,force:true})\" && cap sync android",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
