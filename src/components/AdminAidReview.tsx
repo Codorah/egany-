@@ -88,6 +88,13 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
     window.open(url, '_blank', 'noopener');
   };
 
+  // Plusieurs admins voient la même file : si un autre a décidé entre-temps,
+  // on retire le dossier de la liste au lieu de laisser un bouton mort.
+  const failed = (message?: string) => {
+    toast.error(message || 'Action impossible.');
+    if (message?.includes('déjà été traité')) onDone();
+  };
+
   const grant = async () => {
     const a = Math.round(Number(amount));
     if (!a || a <= 0) return toast.error('Indiquez le montant de l’aide.');
@@ -95,7 +102,7 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
     setBusy(true);
     const res = await grantAidApplication(app.id, a, notes.trim());
     setBusy(false);
-    if (!res.success) return toast.error(res.message);
+    if (!res.success) return failed(res.message);
     toast.success(`${fcfa(a)} versés à ${app.userName}.`);
     onDone();
   };
@@ -105,7 +112,7 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
     setBusy(true);
     const res = await rejectAidApplication(app.id, reason.trim());
     setBusy(false);
-    if (!res.success) return toast.error(res.message);
+    if (!res.success) return failed(res.message);
     toast.success('Dossier refusé, la personne est prévenue.');
     onDone();
   };
