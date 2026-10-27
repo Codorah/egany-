@@ -43,9 +43,12 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  showHandle = true,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
+  /** Poignée de la feuille mobile ; à masquer pour un écran plein. */
+  showHandle?: boolean
 }) {
   return (
     <DialogPortal>
@@ -65,8 +68,8 @@ function DialogContent({
         {...props}
       >
         {/* Mobile Bottom Sheet drag handle */}
-        <div className="w-12 h-1 bg-border rounded-full mx-auto mb-1.5 sm:hidden shrink-0" />
-        
+        {showHandle && <div className="w-12 h-1 bg-border rounded-full mx-auto mb-1.5 sm:hidden shrink-0" />}
+
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close

@@ -2,22 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, ArrowRight, Check, Minus, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -127,6 +121,71 @@ const PRESET_THEMES = [
 const PRESET_AMOUNTS = [5000, 10000, 25000, 50000, 100000];
 const PRESET_MEMBERS = [5, 10, 12, 15];
 
+const FREQUENCY_OPTIONS = [
+  { value: 'monthly', label: 'Chaque mois', hint: 'Le rythme le plus courant' },
+  { value: 'bi-weekly', label: 'Tous les 15 jours', hint: 'Deux cotisations par mois' },
+  { value: 'weekly', label: 'Chaque semaine', hint: 'Pour les petites cotisations' },
+  { value: 'daily', label: 'Chaque jour', hint: 'Idéal pour le commerce au marché' },
+] as const;
+
+/**
+ * Un écran par question, comme une app mobile : le cercle se remplit pas à
+ * pas au lieu d'un long formulaire dans une fenêtre. Chaque étape ne valide
+ * que ses propres champs avant de passer à la suivante.
+ */
+const STEPS = [
+  { title: 'Comment s’appelle ton cercle ?', subtitle: 'Choisis une idée ou écris ton propre nom.', fields: ['name'] },
+  { title: 'Combien cotise chaque membre ?', subtitle: 'Le montant que chacun verse à chaque tour.', fields: ['contributionAmount'] },
+  { title: 'Combien de participants ?', subtitle: 'Toi compris. Chacun recevra la cagnotte à son tour.', fields: ['maxMembers'] },
+  { title: 'À quel rythme ?', subtitle: 'La fréquence des cotisations et la date du 1er tour.', fields: ['frequency', 'startDate'] },
+  { title: 'Les règles du cercle', subtitle: 'Qui reçoit la cagnotte, et comment on s’organise.', fields: ['distributionMethod'] },
+  { title: 'Ton engagement', subtitle: 'Vérifie le récapitulatif, puis signe pour créer le cercle.', fields: ['termsAccepted', 'signature'] },
+] as const satisfies readonly { title: string; subtitle: string; fields: readonly (keyof FormValues)[] }[];
+
+const slide = {
+  enter: (dir: number) => ({ x: dir > 0 ? 64 : -64, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -64 : 64, opacity: 0 }),
+};
+
+function OptionCard({
+  selected, onClick, title, hint, icon,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  hint: string;
+  icon?: React.ComponentProps<typeof EganyeIcon>['name'];
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl border-2 text-left transition-colors cursor-pointer ${
+        selected ? 'border-[#C96F4A] bg-[#C96F4A]/5' : 'border-border bg-card hover:bg-muted/60'
+      }`}
+    >
+      {icon && (
+        <span className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+          selected ? 'bg-[#C96F4A] text-white' : 'bg-muted text-muted-foreground'
+        }`}>
+          <EganyeIcon name={icon} size={20} />
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className={`block text-[15px] font-bold ${selected ? 'text-[#C96F4A]' : 'text-foreground'}`}>{title}</span>
+        <span className="block text-[13px] text-muted-foreground leading-snug">{hint}</span>
+      </span>
+      <span className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
+        selected ? 'border-[#C96F4A] bg-[#C96F4A] text-white' : 'border-border'
+      }`}>
+        {selected && <Check className="w-3 h-3" strokeWidth={3} />}
+      </span>
+    </button>
+  );
+}
+
 export function CreateGroupDialog({
   trigger,
   triggerIsNativeButton = false,
@@ -141,7 +200,9 @@ export function CreateGroupDialog({
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 3;
+  // Sens de l'animation : +1 on avance (l'écran part à gauche), -1 on recule.
+  const [direction, setDirection] = useState(1);
+  const TOTAL_STEPS = STEPS.length;
 
   // Le niveau KYC est contrôlé dès l'ouverture, pas à la soumission : sinon on
   // laisse remplir le formulaire et signer, pour refuser à la toute fin.
@@ -228,6 +289,8 @@ export function CreateGroupDialog({
   const isPrivate = watch('isPrivate');
   const penaltiesEnabled = watch('penaltiesEnabled');
   const groupName = watch('name');
+  const distributionMethod = watch('distributionMethod');
+  const startDateValue = watch('startDate');
 
   // Calcul dynamique de la cagnotte reçue par tour
   const totalPot = contributionAmount * maxMembers;
@@ -243,27 +306,27 @@ export function CreateGroupDialog({
   };
 
   const handleNextStep = async () => {
-    if (step === 1) {
-      const valid = await triggerValidation(['name']);
-      if (!valid) return;
-      setStep(2);
-      return;
-    }
-    if (step === 2) {
-      const valid = await triggerValidation(['contributionAmount', 'maxMembers', 'startDate']);
-      if (!valid) return;
-      setStep(3);
-    }
+    const valid = await triggerValidation([...STEPS[step - 1].fields]);
+    if (!valid) return;
+    setDirection(1);
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
 
-  const handlePrevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const handlePrevStep = () => {
+    setDirection(-1);
+    setStep((s) => Math.max(s - 1, 1));
+  };
 
   const resetForm = () => {
     reset();
     setStep(1);
+    setDirection(1);
     setCreatedGroup(null);
     setCopiedCode(false);
   };
+
+  const setMembers = (n: number) =>
+    setValue('maxMembers', Math.min(100, Math.max(2, n)), { shouldValidate: true });
 
   const onSubmit = async (values: FormValues) => {
     if (!navigator.onLine) {
@@ -358,6 +421,16 @@ export function CreateGroupDialog({
     }
   };
 
+  // Entrée au clavier : avance d'un écran au lieu de soumettre tout le cercle.
+  const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (step < TOTAL_STEPS) {
+      e.preventDefault();
+      handleNextStep();
+      return;
+    }
+    handleSubmit(onSubmit)(e);
+  };
+
   const handleCopyCode = () => {
     if (!createdGroup) return;
     navigator.clipboard.writeText(createdGroup.joinCode);
@@ -377,6 +450,21 @@ export function CreateGroupDialog({
       `👉 Clique ici pour rejoindre : ${shareUrl}`
     );
   };
+
+  const closeButton = (
+    <button
+      type="button"
+      onClick={() => setOpen(false)}
+      aria-label="Fermer"
+      className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer shrink-0"
+    >
+      <EganyeIcon name="close" size={18} />
+    </button>
+  );
+
+  const startDateLabel = startDateValue
+    ? new Date(startDateValue).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '—';
 
   return (
     <>
@@ -399,114 +487,125 @@ export function CreateGroupDialog({
         }
       />
 
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-3xl bg-card border border-border p-5 sm:p-6">
+      {/* Plein écran sur téléphone ; sur ordinateur, un cadre au format
+          téléphone pour garder la même expérience écran par écran. */}
+      <DialogContent
+        showCloseButton={false}
+        showHandle={false}
+        className="top-0 h-[100dvh] flex flex-col gap-0 p-0 pb-0 rounded-none bg-background overflow-hidden sm:h-[min(860px,92vh)] sm:max-w-md sm:rounded-[2rem] sm:pb-0"
+      >
         {/* ── CAS 1 : ÉCRAN DE SUCCÈS & INVITATION WHATSAPP ── */}
         {createdGroup ? (
-          <div className="space-y-5 text-center py-2">
-            <div className="w-16 h-16 rounded-3xl bg-[#EBF5EA] text-[#718A68] mx-auto flex items-center justify-center shadow-soft">
-              <EganyeIcon name="check" size={32} strokeWidth={2.5} />
-            </div>
-
-            <div className="space-y-1">
-              <h2 className="font-serif font-black text-2xl text-foreground tracking-tight">
-                Cercle créé avec succès ! 🎉
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Ton cercle <span className="font-bold text-foreground">{createdGroup.name}</span> est prêt. Il ne te reste plus qu'à inviter les participants !
-              </p>
-            </div>
-
-            {/* Carte récapitulative du cercle */}
-            <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-[#C96F4A]/25 text-left space-y-3">
-              <div className="flex items-center justify-between border-b border-[#C96F4A]/15 pb-2.5">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cagnotte distribuée</span>
-                <span className="font-serif font-black text-xl text-[#C96F4A]">
-                  {createdGroup.potAmount.toLocaleString()} FCFA
-                </span>
+          <div className="flex-1 overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <div className="space-y-5 text-center py-6 max-w-sm mx-auto">
+              <DialogTitle className="sr-only">Cercle créé</DialogTitle>
+              <div className="w-20 h-20 rounded-[28px] bg-[#EBF5EA] text-[#718A68] mx-auto flex items-center justify-center shadow-soft">
+                <EganyeIcon name="check" size={38} strokeWidth={2.5} />
               </div>
 
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Places prévues</span>
-                <span className="font-bold text-foreground">{createdGroup.membersCount} participants</span>
+              <div className="space-y-1.5">
+                <h2 className="font-serif font-black text-2xl text-foreground tracking-tight">
+                  Cercle créé avec succès ! 🎉
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Ton cercle <span className="font-bold text-foreground">{createdGroup.name}</span> est prêt. Il ne te reste plus qu'à inviter les participants !
+                </p>
               </div>
 
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Code d'invitation</span>
-                <div className="flex items-center gap-1.5 font-mono font-black text-base text-[#3E2F24] dark:text-foreground">
-                  <span>{createdGroup.joinCode}</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="p-1 rounded-md hover:bg-white/60 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                    title="Copier le code"
-                  >
-                    <EganyeIcon name={copiedCode ? "check" : "copy"} size={15} />
-                  </button>
+              {/* Carte récapitulative du cercle */}
+              <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-[#C96F4A]/25 text-left space-y-3">
+                <div className="flex items-center justify-between border-b border-[#C96F4A]/15 pb-2.5">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cagnotte distribuée</span>
+                  <span className="font-serif font-black text-xl text-[#C96F4A]">
+                    {createdGroup.potAmount.toLocaleString()} FCFA
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Places prévues</span>
+                  <span className="font-bold text-foreground">{createdGroup.membersCount} participants</span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Code d'invitation</span>
+                  <div className="flex items-center gap-1.5 font-mono font-black text-lg text-[#3E2F24] dark:text-foreground">
+                    <span>{createdGroup.joinCode}</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyCode}
+                      className="p-1.5 rounded-md hover:bg-white/60 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                      title="Copier le code"
+                    >
+                      <EganyeIcon name={copiedCode ? "check" : "copy"} size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Gros bouton d'invitation WhatsApp */}
-            <div className="space-y-2.5 pt-1">
-              <a
-                href={`https://wa.me/?text=${getWhatsAppMessage()}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full h-12 rounded-2xl bg-[#25D366] hover:bg-[#20BE5B] text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
-              >
-                <EganyeIcon name="send" size={17} />
-                <span>Inviter mes proches sur WhatsApp</span>
-              </a>
+              {/* Gros bouton d'invitation WhatsApp */}
+              <div className="space-y-2.5 pt-1">
+                <a
+                  href={`https://wa.me/?text=${getWhatsAppMessage()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-13 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BE5B] text-white font-bold text-[15px] shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
+                >
+                  <EganyeIcon name="send" size={18} />
+                  <span>Inviter mes proches sur WhatsApp</span>
+                </a>
 
-              <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-                className="w-full h-11 rounded-2xl font-bold cursor-pointer"
-              >
-                Accéder au cercle
-              </Button>
-            </div>
-
-            {/* Badge de réassurance sur la vérification */}
-            <div className="p-3 rounded-xl bg-[#EBF5EA]/80 dark:bg-muted/60 border border-[#718A68]/20 flex items-center gap-2.5 text-left">
-              <div className="w-6 h-6 rounded-full bg-[#718A68]/15 text-[#718A68] flex items-center justify-center shrink-0">
-                <EganyeIcon name="shield" size={13} />
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setOpen(false)}
+                  className="w-full rounded-full font-bold cursor-pointer"
+                >
+                  Accéder au cercle
+                </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                <strong className="text-foreground">Sécurité :</strong> Les membres et vous pourrez valider votre pièce d'identité avant le lancement officiel des paiements.
-              </p>
+
+              {/* Badge de réassurance sur la vérification */}
+              <div className="p-3 rounded-xl bg-[#EBF5EA]/80 dark:bg-muted/60 border border-[#718A68]/20 flex items-center gap-2.5 text-left">
+                <div className="w-6 h-6 rounded-full bg-[#718A68]/15 text-[#718A68] flex items-center justify-center shrink-0">
+                  <EganyeIcon name="shield" size={13} />
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">
+                  <strong className="text-foreground">Sécurité :</strong> Les membres et vous pourrez valider votre pièce d'identité avant le lancement officiel des paiements.
+                </p>
+              </div>
             </div>
           </div>
         ) : kycState === 'checking' ? (
           /* Évite de montrer un formulaire de plusieurs étapes pendant la
              fraction de seconde qui précède le verdict KYC. */
-          <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <div className="flex-1 flex flex-col items-center justify-center gap-4">
+            <DialogTitle className="sr-only">Chargement</DialogTitle>
             <div className="w-10 h-10 rounded-full border-[3px] border-border border-t-primary animate-spin" />
-            <span className="sr-only">Chargement</span>
           </div>
         ) : kycState === 'required' ? (
-          <div className="flex flex-col items-center text-center gap-5 py-4">
-            <div className="w-20 h-20 rounded-[28px] bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center">
-              <EganyeIcon name="shield" size={36} />
-            </div>
+          <div className="flex-1 flex flex-col">
+            <div className="flex justify-end px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">{closeButton}</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6 pb-10">
+              <div className="w-20 h-20 rounded-[28px] bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center">
+                <EganyeIcon name="shield" size={36} />
+              </div>
 
-            <div className="space-y-2">
-              <DialogTitle className="font-serif text-2xl font-bold text-foreground">
-                Vérification d'identité requise
-              </DialogTitle>
-              <p className="text-[15px] leading-relaxed text-muted-foreground max-w-sm">
-                Pour créer un cercle et gérer de l'argent réel, ton identité doit d'abord être vérifiée.
-              </p>
-            </div>
+              <div className="space-y-2">
+                <DialogTitle className="font-serif text-2xl font-bold text-foreground">
+                  Vérification d'identité requise
+                </DialogTitle>
+                <p className="text-[15px] leading-relaxed text-muted-foreground max-w-sm">
+                  Pour créer un cercle et gérer de l'argent réel, ton identité doit d'abord être vérifiée.
+                </p>
+              </div>
 
-            <div className="w-full space-y-3 pt-1">
               <Button
                 size="lg"
                 onClick={() => {
                   setOpen(false);
                   onNavigateToVerification?.();
                 }}
-                className="btn-shine w-full rounded-2xl gradient-sunset text-white gap-2"
+                className="btn-shine w-full max-w-sm rounded-full gradient-sunset text-white gap-2"
               >
                 Vérifier mon identité
                 <EganyeIcon name="chevron-right" size={18} />
@@ -514,21 +613,30 @@ export function CreateGroupDialog({
             </div>
           </div>
         ) : (
-          /* ── CAS 2 : LE WIZARD DE CRÉATION FLUIDE ── */
-          <>
-            <DialogHeader className="space-y-1">
-              <DialogTitle className="font-serif text-xl sm:text-2xl font-black text-foreground">
-                Créer un cercle d'épargne
-              </DialogTitle>
-              <p className="text-xs text-muted-foreground">
-                Configure ta tontine en 3 étapes simples et invite tes proches.
-              </p>
-            </DialogHeader>
-
-            {/* Stepper visuel épuré */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex gap-1.5">
-                {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          /* ── CAS 2 : UN ÉCRAN PAR QUESTION ── */
+          <form onSubmit={onFormSubmit} className="flex-1 min-h-0 flex flex-col">
+            {/* En-tête : retour, progression, fermer */}
+            <div className="shrink-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 space-y-3">
+              <div className="flex items-center gap-2">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    aria-label="Étape précédente"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted cursor-pointer shrink-0"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <span className="w-10 h-10 shrink-0" />
+                )}
+                <p className="flex-1 text-center text-[13px] font-bold text-muted-foreground">
+                  Étape {step} sur {TOTAL_STEPS}
+                </p>
+                {closeButton}
+              </div>
+              <div className="flex gap-1.5 px-2">
+                {STEPS.map((_, i) => (
                   <div
                     key={i}
                     className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
@@ -537,349 +645,362 @@ export function CreateGroupDialog({
                   />
                 ))}
               </div>
-              <p className="text-[11px] font-bold text-muted-foreground">
-                Étape {step} sur {TOTAL_STEPS} · {
-                  step === 1 ? 'Identité du cercle' : step === 2 ? 'Règles financières' : 'Solidarité & Signature'
-                }
-              </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-              {/* ── ÉTAPE 1 : Identité & Objectif ── */}
-              {step === 1 && (
-                <div className="space-y-4">
-                  {/* Suggestions de thèmes rapides */}
+            {/* Contenu de l'écran courant, qui glisse latéralement */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+              <AnimatePresence mode="wait" initial={false} custom={direction}>
+                <motion.div
+                  key={step}
+                  custom={direction}
+                  variants={slide}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="px-5 pt-4 pb-6 space-y-6"
+                >
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-muted-foreground">Idées de cercles fréquents</Label>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {PRESET_THEMES.map((theme) => (
-                        <button
-                          key={theme.label}
-                          type="button"
-                          onClick={() => {
-                            setValue('name', theme.label);
-                            setValue('description', theme.desc);
-                          }}
-                          className={`py-1 px-2.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
-                            groupName === theme.label
-                              ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
-                              : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                          }`}
-                        >
-                          {theme.label}
-                        </button>
-                      ))}
-                    </div>
+                    <DialogTitle className="font-serif text-[26px] leading-tight font-black text-foreground tracking-tight">
+                      {STEPS[step - 1].title}
+                    </DialogTitle>
+                    <p className="text-[15px] text-muted-foreground">{STEPS[step - 1].subtitle}</p>
                   </div>
 
-                  {/* Nom du cercle */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="name" className="text-xs font-bold text-foreground">
-                      Nom du cercle <span className="text-[#C96F4A]">*</span>
-                    </Label>
-                    <Input
-                      id="name"
-                      placeholder="Ex: Tontine Famille 2026, Épargne Moto..."
-                      {...register('name')}
-                      className="rounded-xl h-12 text-sm font-semibold"
-                      autoFocus
-                    />
-                    {errors.name && <p className="text-[11px] text-danger font-medium">{errors.name.message}</p>}
-                  </div>
+                  {/* ── 1. Nom ── */}
+                  {step === 1 && (
+                    <div className="space-y-5">
+                      <div className="space-y-1.5">
+                        <Input
+                          id="name"
+                          placeholder="Ex : Tontine Famille 2026"
+                          {...register('name')}
+                          className="rounded-2xl h-14 text-base font-semibold bg-card"
+                          autoFocus
+                        />
+                        {errors.name && <p className="text-[13px] text-danger font-medium">{errors.name.message}</p>}
+                      </div>
 
-                  {/* Description courte */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="description" className="text-xs font-bold text-foreground">
-                      Objectif du cercle (optionnel)
-                    </Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Décris l'esprit du groupe ou l'objectif commun..."
-                      className="resize-none rounded-xl h-20 text-xs"
-                      {...register('description')}
-                    />
-                  </div>
-
-                  {/* Switch Cercle Privé */}
-                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-muted/50 border border-border">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="isPrivate" className="text-xs font-bold text-foreground cursor-pointer">
-                        Cercle privé (recommandé)
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Accessible uniquement via ton code d'invitation ou QR code.
-                      </p>
-                    </div>
-                    <Switch
-                      id="isPrivate"
-                      checked={isPrivate}
-                      onCheckedChange={(checked) => setValue('isPrivate', checked)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ── ÉTAPE 2 : Règles financières & Cagnotte magique ── */}
-              {step === 2 && (
-                <div className="space-y-4">
-                  {/* Encadré dynamique de la Cagnotte (Effet Waouh) */}
-                  <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-2xl p-4 border border-[#C96F4A]/30 space-y-1 text-center">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#C96F4A]">
-                      Cagnotte par tour
-                    </span>
-                    <p className="text-2xl sm:text-3xl font-serif font-black text-foreground">
-                      {totalPot.toLocaleString()} FCFA
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Chaque tour, un participant reçoit l'intégralité de cette cagnotte !
-                    </p>
-                  </div>
-
-                  {/* Montant de la cotisation */}
-                  <div className="space-y-2">
-                    <Label htmlFor="contributionAmount" className="text-xs font-bold text-foreground">
-                      Cotisation par participant (FCFA)
-                    </Label>
-                    <Input
-                      id="contributionAmount"
-                      type="number"
-                      min={500}
-                      step={500}
-                      {...register('contributionAmount', { valueAsNumber: true })}
-                      className="rounded-xl h-12 text-lg font-serif font-black"
-                    />
-                    <div className="flex gap-1.5 flex-wrap">
-                      {PRESET_AMOUNTS.map((amt) => (
-                        <button
-                          key={amt}
-                          type="button"
-                          onClick={() => setValue('contributionAmount', amt)}
-                          className={`py-1 px-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                            contributionAmount === amt
-                              ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
-                              : 'border-border text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {amt.toLocaleString()}
-                        </button>
-                      ))}
-                    </div>
-                    {errors.contributionAmount && (
-                      <p className="text-[11px] text-danger font-medium">{errors.contributionAmount.message}</p>
-                    )}
-                  </div>
-
-                  {/* Fréquence & Nombre de membres */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="frequency" className="text-xs font-bold text-foreground">
-                        Fréquence
-                      </Label>
-                      <Select
-                        defaultValue="monthly"
-                        value={frequency}
-                        onValueChange={(val: any) => setValue('frequency', val)}
-                      >
-                        <SelectTrigger id="frequency" className="rounded-xl h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="monthly">Mensuelle</SelectItem>
-                          <SelectItem value="bi-weekly">Tous les 15 jours</SelectItem>
-                          <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                          <SelectItem value="daily">Quotidienne</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="maxMembers" className="text-xs font-bold text-foreground">
-                        {t('cgd_participants_label')}
-                      </Label>
-                      <Input
-                        id="maxMembers"
-                        type="number"
-                        min={2}
-                        max={100}
-                        {...register('maxMembers', { valueAsNumber: true })}
-                        className="rounded-xl h-11 font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Suggestions pour nombre de membres */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-muted-foreground mr-1">Taille fréquente :</span>
-                    {PRESET_MEMBERS.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setValue('maxMembers', n)}
-                        className={`py-0.5 px-2 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
-                          maxMembers === n
-                            ? 'border-[#718A68] bg-[#EBF5EA] text-[#718A68]'
-                            : 'border-border text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {n} pers.
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Date de début du premier tour */}
-                  <div className="space-y-1.5 pt-1">
-                    <Label htmlFor="startDate" className="text-xs font-bold text-foreground">
-                      Date de lancement du 1er tour
-                    </Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      min={new Date().toISOString().slice(0, 10)}
-                      {...register('startDate')}
-                      className="rounded-xl h-11 text-xs font-medium"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ── ÉTAPE 3 : Distribution & Charte de solidarité ── */}
-              {step === 3 && (
-                <div className="space-y-4">
-                  {/* Méthode de distribution */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-foreground">Mode d'attribution de la cagnotte</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setValue('distributionMethod', 'draw')}
-                        className={`p-3 rounded-2xl border-2 text-left space-y-1 cursor-pointer transition-colors ${
-                          watch('distributionMethod') === 'draw'
-                            ? 'border-[#C96F4A] bg-[#C96F4A]/5 text-[#C96F4A]'
-                            : 'border-border text-foreground hover:bg-muted/60'
-                        }`}
-                      >
-                        <div className="font-bold text-xs flex items-center gap-1.5">
-                          <EganyeIcon name="shuffle" size={14} />
-                          <span>Tirage au sort</span>
+                      <div className="space-y-2">
+                        <Label className="text-[13px] font-bold text-muted-foreground">Ou choisis une idée</Label>
+                        <div className="space-y-2">
+                          {PRESET_THEMES.map((theme) => (
+                            <OptionCard
+                              key={theme.label}
+                              selected={groupName === theme.label}
+                              onClick={() => {
+                                setValue('name', theme.label, { shouldValidate: true });
+                                setValue('description', theme.desc);
+                              }}
+                              title={theme.label}
+                              hint={theme.desc}
+                              icon={theme.icon}
+                            />
+                          ))}
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-snug">
-                          Le hasard désigne équitablement le gagnant à chaque tour.
-                        </p>
-                      </button>
+                      </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setValue('distributionMethod', 'sequential')}
-                        className={`p-3 rounded-2xl border-2 text-left space-y-1 cursor-pointer transition-colors ${
-                          watch('distributionMethod') === 'sequential'
-                            ? 'border-[#C96F4A] bg-[#C96F4A]/5 text-[#C96F4A]'
-                            : 'border-border text-foreground hover:bg-muted/60'
-                        }`}
-                      >
-                        <div className="font-bold text-xs flex items-center gap-1.5">
-                          <EganyeIcon name="list" size={14} />
-                          <span>Ordre convenu</span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground leading-snug">
-                          Selon l'ordre d'inscription ou accord entre membres.
-                        </p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Pénalité de retard symbolique */}
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border">
-                    <div>
-                      <Label htmlFor="penaltiesEnabled" className="text-xs font-bold text-foreground cursor-pointer">
-                        Pénalité de retard symbolique (1 000 FCFA)
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Encourage la discipline financière et le respect des échéances.
-                      </p>
-                    </div>
-                    <Switch
-                      id="penaltiesEnabled"
-                      checked={penaltiesEnabled}
-                      onCheckedChange={(checked) => setValue('penaltiesEnabled', checked)}
-                    />
-                  </div>
-
-                  {/* Charte d'engagement solidaire */}
-                  <div className="bg-[#FDFBF7] dark:bg-card p-4 rounded-2xl border border-[#EFE2D0] dark:border-border/80 space-y-3">
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="checkbox"
-                        id="terms"
-                        {...register('termsAccepted')}
-                        className="mt-0.5 w-4 h-4 rounded border-border text-[#C96F4A] focus:ring-[#C96F4A]/50 cursor-pointer"
-                      />
-                      <div className="space-y-0.5">
-                        <Label htmlFor="terms" className="text-xs font-bold text-foreground cursor-pointer">
-                          Engagement de solidarité Eganyé
+                      <div className="space-y-1.5">
+                        <Label htmlFor="description" className="text-[13px] font-bold text-muted-foreground">
+                          Objectif du cercle (facultatif)
                         </Label>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Je m'engage sur l'honneur à honorer mes versements et à respecter la confiance accordée par les membres de ce cercle.{' '}
+                        <Textarea
+                          id="description"
+                          placeholder="L'esprit du groupe ou l'objectif commun…"
+                          className="resize-none rounded-2xl h-24 text-sm bg-card"
+                          {...register('description')}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 2. Cotisation ── */}
+                  {step === 2 && (
+                    <div className="space-y-5">
+                      <div className="rounded-3xl bg-card border border-border p-5 text-center space-y-1">
+                        <div className="flex items-baseline justify-center gap-2">
+                          <Input
+                            id="contributionAmount"
+                            type="number"
+                            inputMode="numeric"
+                            min={500}
+                            step={500}
+                            aria-label="Cotisation par participant en FCFA"
+                            {...register('contributionAmount', { valueAsNumber: true })}
+                            className="h-auto w-full max-w-[220px] border-0 bg-transparent p-0 text-center text-4xl font-serif font-black shadow-none focus-visible:ring-0"
+                          />
+                          <span className="text-lg font-bold text-muted-foreground">FCFA</span>
+                        </div>
+                        <p className="text-[13px] text-muted-foreground">par membre et par tour</p>
+                      </div>
+                      {errors.contributionAmount && (
+                        <p className="text-[13px] text-danger font-medium">{errors.contributionAmount.message}</p>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {PRESET_AMOUNTS.map((amt) => (
                           <button
+                            key={amt}
                             type="button"
-                            onClick={() => setShowReglement(true)}
-                            className="font-bold text-[#C96F4A] hover:underline cursor-pointer"
+                            onClick={() => setValue('contributionAmount', amt, { shouldValidate: true })}
+                            className={`h-12 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
+                              contributionAmount === amt
+                                ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
+                                : 'border-border bg-card text-foreground hover:bg-muted/60'
+                            }`}
                           >
-                            Lire le règlement des cercles
+                            {amt.toLocaleString()}
                           </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 3. Participants ── */}
+                  {step === 3 && (
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between gap-4 rounded-3xl bg-card border border-border p-4">
+                        <button
+                          type="button"
+                          onClick={() => setMembers(maxMembers - 1)}
+                          aria-label="Un participant de moins"
+                          className="w-14 h-14 rounded-2xl bg-muted text-foreground flex items-center justify-center hover:bg-muted/70 cursor-pointer shrink-0"
+                        >
+                          <Minus className="w-6 h-6" />
+                        </button>
+                        <div className="text-center">
+                          <Input
+                            id="maxMembers"
+                            type="number"
+                            inputMode="numeric"
+                            min={2}
+                            max={100}
+                            aria-label={t('cgd_participants_label')}
+                            {...register('maxMembers', { valueAsNumber: true })}
+                            className="h-auto w-24 border-0 bg-transparent p-0 text-center text-5xl font-serif font-black shadow-none focus-visible:ring-0"
+                          />
+                          <p className="text-[13px] text-muted-foreground">participants</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMembers(maxMembers + 1)}
+                          aria-label="Un participant de plus"
+                          className="w-14 h-14 rounded-2xl bg-muted text-foreground flex items-center justify-center hover:bg-muted/70 cursor-pointer shrink-0"
+                        >
+                          <Plus className="w-6 h-6" />
+                        </button>
+                      </div>
+                      {errors.maxMembers && (
+                        <p className="text-[13px] text-danger font-medium">{errors.maxMembers.message}</p>
+                      )}
+
+                      <div className="grid grid-cols-4 gap-2">
+                        {PRESET_MEMBERS.map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setMembers(n)}
+                            className={`h-11 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
+                              maxMembers === n
+                                ? 'border-[#718A68] bg-[#EBF5EA] text-[#718A68]'
+                                : 'border-border bg-card text-foreground hover:bg-muted/60'
+                            }`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* La cagnotte se calcule sous les yeux : l'intérêt du cercle */}
+                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-3xl p-5 border border-[#C96F4A]/30 space-y-1 text-center">
+                        <span className="text-[12px] font-bold uppercase tracking-wider text-[#C96F4A]">
+                          Cagnotte par tour
+                        </span>
+                        <p className="text-3xl font-serif font-black text-foreground">
+                          {totalPot.toLocaleString()} FCFA
                         </p>
-                        {errors.termsAccepted && (
-                          <span className="text-[11px] text-danger font-medium block">{errors.termsAccepted.message}</span>
+                        <p className="text-[13px] text-muted-foreground">
+                          {contributionAmount.toLocaleString()} FCFA × {maxMembers} participants. À chaque tour, un membre reçoit tout.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 4. Rythme ── */}
+                  {step === 4 && (
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        {FREQUENCY_OPTIONS.map((opt) => (
+                          <OptionCard
+                            key={opt.value}
+                            selected={frequency === opt.value}
+                            onClick={() => setValue('frequency', opt.value, { shouldValidate: true })}
+                            title={opt.label}
+                            hint={opt.hint}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="startDate" className="text-[13px] font-bold text-muted-foreground">
+                          Date du 1er tour
+                        </Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          min={new Date().toISOString().slice(0, 10)}
+                          {...register('startDate')}
+                          className="rounded-2xl h-14 text-base font-semibold bg-card"
+                        />
+                        {errors.startDate && (
+                          <p className="text-[13px] text-danger font-medium">{errors.startDate.message}</p>
                         )}
                       </div>
                     </div>
+                  )}
 
-                    <div className="space-y-1 pt-1 border-t border-border/60">
-                      <Label className="text-xs font-bold text-foreground">Signature tactile du créateur</Label>
-                      <SignaturePad
-                        onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })}
-                      />
-                      {errors.signature && (
-                        <span className="text-[11px] text-danger font-medium block">{errors.signature.message}</span>
-                      )}
+                  {/* ── 5. Règles ── */}
+                  {step === 5 && (
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-[13px] font-bold text-muted-foreground">Qui reçoit la cagnotte ?</Label>
+                        <OptionCard
+                          selected={distributionMethod === 'draw'}
+                          onClick={() => setValue('distributionMethod', 'draw')}
+                          title="Tirage au sort"
+                          hint="Le hasard désigne équitablement le bénéficiaire à chaque tour."
+                          icon="shuffle"
+                        />
+                        <OptionCard
+                          selected={distributionMethod === 'sequential'}
+                          onClick={() => setValue('distributionMethod', 'sequential')}
+                          title="Ordre convenu"
+                          hint="Selon l'ordre d'inscription ou un accord entre membres."
+                          icon="list"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-border">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="isPrivate" className="text-[15px] font-bold text-foreground cursor-pointer">
+                              Cercle privé (recommandé)
+                            </Label>
+                            <p className="text-[13px] text-muted-foreground leading-snug">
+                              On ne rejoint qu'avec ton code d'invitation.
+                            </p>
+                          </div>
+                          <Switch
+                            id="isPrivate"
+                            checked={isPrivate}
+                            onCheckedChange={(checked) => setValue('isPrivate', checked)}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-border">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="penaltiesEnabled" className="text-[15px] font-bold text-foreground cursor-pointer">
+                              Pénalité de retard (1 000 FCFA)
+                            </Label>
+                            <p className="text-[13px] text-muted-foreground leading-snug">
+                              Encourage chacun à respecter les échéances.
+                            </p>
+                          </div>
+                          <Switch
+                            id="penaltiesEnabled"
+                            checked={penaltiesEnabled}
+                            onCheckedChange={(checked) => setValue('penaltiesEnabled', checked)}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+
+                  {/* ── 6. Récapitulatif, engagement et signature ── */}
+                  {step === 6 && (
+                    <div className="space-y-5">
+                      <div className="rounded-3xl bg-card border border-border divide-y divide-border">
+                        {[
+                          ['Cercle', groupName],
+                          ['Cotisation', `${contributionAmount.toLocaleString()} FCFA ${frequencyLabel(frequency)}`],
+                          ['Participants', `${maxMembers}`],
+                          ['Cagnotte par tour', `${totalPot.toLocaleString()} FCFA`],
+                          ['1er tour', startDateLabel],
+                          ['Attribution', distributionMethod === 'draw' ? 'Tirage au sort' : 'Ordre convenu'],
+                        ].map(([label, value]) => (
+                          <div key={label} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className="font-bold text-foreground text-right truncate">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-start gap-3 p-4 rounded-2xl bg-card border border-border">
+                        <input
+                          type="checkbox"
+                          id="terms"
+                          {...register('termsAccepted')}
+                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-[#C96F4A] focus:ring-[#C96F4A]/50 cursor-pointer"
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="terms" className="text-[15px] font-bold text-foreground cursor-pointer">
+                            Engagement de solidarité Eganyé
+                          </Label>
+                          <p className="text-[13px] text-muted-foreground leading-relaxed">
+                            Je m'engage sur l'honneur à honorer mes versements et à respecter la confiance accordée par les membres de ce cercle.{' '}
+                            <button
+                              type="button"
+                              onClick={() => setShowReglement(true)}
+                              className="font-bold text-[#C96F4A] hover:underline cursor-pointer"
+                            >
+                              Lire le règlement des cercles
+                            </button>
+                          </p>
+                          {errors.termsAccepted && (
+                            <span className="text-[13px] text-danger font-medium block">{errors.termsAccepted.message}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-[13px] font-bold text-muted-foreground">Ta signature</Label>
+                        <SignaturePad
+                          onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })}
+                        />
+                        {errors.signature && (
+                          <span className="text-[13px] text-danger font-medium block">{errors.signature.message}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Bouton principal toujours au même endroit, sous le pouce */}
+            <div className="shrink-0 border-t border-border bg-background px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {step < TOTAL_STEPS ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleNextStep}
+                  className="btn-shine w-full rounded-full gradient-sunset text-white font-bold gap-2 cursor-pointer"
+                >
+                  Continuer
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={isSubmitting}
+                  className="btn-shine w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
+                >
+                  {isSubmitting ? 'Création en cours…' : 'Créer mon cercle'}
+                </Button>
               )}
-
-              {/* Barre d'action de bas de formulaire */}
-              <div className="flex gap-2 pt-2">
-                {step > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handlePrevStep}
-                    disabled={isSubmitting}
-                    className="flex-1 rounded-2xl h-11 font-bold cursor-pointer"
-                  >
-                    Retour
-                  </Button>
-                )}
-
-                {step < TOTAL_STEPS ? (
-                  <Button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="btn-shine gradient-sunset flex-1 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
-                  >
-                    Continuer
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    className="btn-shine gradient-sunset flex-1 text-white font-bold rounded-2xl h-11 shadow-sm cursor-pointer"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Création en cours...' : 'Créer mon cercle'}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </>
+            </div>
+          </form>
         )}
       </DialogContent>
     </Dialog>
