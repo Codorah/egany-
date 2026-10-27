@@ -431,6 +431,18 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
       });
       if (error) throw error;
 
+      // Adresse déjà inscrite et confirmée : Supabase ne renvoie pas d'erreur
+      // (pour ne pas révéler quels e-mails ont un compte), mais un utilisateur
+      // factice sans identité, et n'envoie AUCUN code. Sans ce contrôle, la
+      // personne attendait sur l'écran du code et « Renvoyer » ne faisait rien.
+      if (data.user && (data.user.identities ?? []).length === 0) {
+        toast.error(t('onb_email_already_registered'), {
+          action: { label: t('nav_login'), onClick: () => goTo('login') }
+        });
+        goTo('login');
+        return;
+      }
+
       if (!data.session) {
         // Confirmation email active : Supabase a envoyé un code, pas de session.
         toast.success(`${t('onb_otp_sent_prefix')} ${OTP_LENGTH} ${t('onb_otp_sent_mid')} ${email}.`);
