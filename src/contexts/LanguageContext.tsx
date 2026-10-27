@@ -7537,7 +7537,32 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   retry: {
     fr: 'Réessayer',
     en: 'Try again'
-  }
+  },
+  // Fiche d'un cercle, version allégée (listes groupées façon réglages).
+  gd_soft_cash_title: { fr: 'La caisse', en: 'The fund' },
+  gd_soft_in_cash: { fr: 'Dans la caisse', en: 'In the fund' },
+  gd_soft_in_cash_hint: { fr: 'Cotisations reçues moins les versements', en: 'Contributions received minus payouts' },
+  gd_soft_per_member: { fr: 'Cotisation par membre', en: 'Contribution per member' },
+  gd_soft_members: { fr: 'Membres', en: 'Members' },
+  gd_soft_pot: { fr: 'Cagnotte par tour', en: 'Pot per round' },
+  gd_soft_pot_hint: { fr: 'Ce que reçoit le bénéficiaire du tour', en: 'What the round’s recipient gets' },
+  gd_soft_who_receives: { fr: 'Qui reçoit quand ?', en: 'Who receives when?' },
+  gd_soft_rules_title: { fr: 'Les règles', en: 'The rules' },
+  gd_soft_places: { fr: 'Places', en: 'Seats' },
+  gd_soft_access: { fr: 'Accès', en: 'Access' },
+  gd_soft_manage_title: { fr: 'Gérer le cercle', en: 'Manage the circle' },
+  gd_soft_closing: { fr: 'Clôture…', en: 'Closing…' },
+  gd_edit_circle: { fr: 'Modifier le cercle', en: 'Edit the circle' },
+  gd_edit_hint_free: { fr: 'Nom, cotisation, places, rythme, règles', en: 'Name, contribution, seats, schedule, rules' },
+  gd_edit_hint_locked: { fr: 'Nom et objectif (des cotisations ont été versées)', en: 'Name and goal (contributions were paid)' },
+  gd_close_hint: { fr: 'Le cercle est terminé, plus de cotisations', en: 'The circle is over, no more contributions' },
+  gd_delete_circle: { fr: 'Supprimer le cercle', en: 'Delete the circle' },
+  gd_delete_hint: { fr: 'Possible tant qu’aucune cotisation n’est versée', en: 'Possible while no contribution has been paid' },
+  gd_delete_locked_hint: { fr: 'Impossible : des cotisations ont été versées. Clôturez-le plutôt.', en: 'Not possible: contributions were paid. Close it instead.' },
+  gd_delete_confirm_title: { fr: 'Supprimer ce cercle ?', en: 'Delete this circle?' },
+  gd_delete_confirm_desc: { fr: 'sera supprimé pour tout le monde, avec ses messages et documents. Les membres seront prévenus.', en: 'will be deleted for everyone, with its messages and documents. Members will be notified.' },
+  gd_delete_refused: { fr: 'Suppression refusée.', en: 'Deletion refused.' },
+  gd_delete_done: { fr: 'Cercle supprimé.', en: 'Circle deleted.' }
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

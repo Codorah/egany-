@@ -30,6 +30,8 @@ import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import QRCode from 'qrcode';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBackHandler } from '@/hooks/useBackHandler';
+import { SettingsGroup, SettingsRow } from './ui/SettingsList';
+import { EditGroupDialog } from './EditGroupDialog';
 
 interface GroupDetailsProps {
   group: Group;
@@ -67,6 +69,12 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   const [treasuryBalance, setTreasuryBalance] = React.useState<number | null>(null);
   const [myContributed, setMyContributed] = React.useState<number | null>(null);
   const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
+  // De l'argent a-t-il déjà circulé ? Décide si le cercle se modifie en entier
+  // et se supprime, ou seulement son nom (même règle que la migration 0029).
+  const [moneyMoved, setMoneyMoved] = React.useState(true);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const isCreator = profile?.uid === group.creatorId;
   const isAdmin = profile?.role === 'admin';
@@ -100,6 +108,9 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         .reduce((sum, c) => sum + Number(c.amount), 0);
       const distributed = (payoutRows ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
       setTreasuryBalance(collected - distributed);
+      setMoneyMoved(
+        (contribRows ?? []).some((c) => c.status === 'paid') || (payoutRows ?? []).length > 0
+      );
     };
     fetchTreasury();
   }, [group.id]);
@@ -205,6 +216,24 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (!isCreator && !isAdmin) return;
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.from('groups').delete().eq('id', group.id).select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error(t('gd_delete_refused'));
+      toast.success(t('gd_delete_done'));
+      setIsDeleteOpen(false);
+      onBack();
+    } catch (error: any) {
+      console.error('Error deleting group:', error);
+      toast.error(error?.message || t('gd_delete_refused'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   /* -------------------------------------------------------------------- */
   /* Sous-écrans — un lien secondaire = un composant existant, pas de      */
   /* nouvelle logique métier. */
@@ -224,65 +253,49 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       <div className="space-y-5">
         {sectionHeader(t('gd_nav_cotisations'))}
 
-        {/* Carnet de Tontine Numérique & Transparence de Caisse */}
-        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
-          <CardHeader className="pb-3 bg-muted/20">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base font-serif font-bold flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-primary" />
-                {t('gd_ledger_card_title')}
-              </CardTitle>
-              <Badge className="bg-success-soft text-secondary border-secondary/20 text-[13px]">
-                {t('gd_full_transparency_badge')}
-              </Badge>
-            </div>
-            <CardDescription className="text-xs">{t('gd_ledger_card_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-muted/30 p-3 rounded-xl">
-                <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_current_treasury_label')}</span>
-                <p className="text-lg font-serif font-black text-primary mt-0.5">
-                  {treasuryBalance !== null ? treasuryBalance.toLocaleString() : '...'} {group.currency}
-                </p>
-              </div>
-              <div className="bg-muted/30 p-3 rounded-xl">
-                <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('contribution_label')} / {t('member')}</span>
-                <p className="text-lg font-serif font-black text-foreground mt-0.5">
-                  {group.contributionAmount.toLocaleString()} {group.currency}
-                </p>
-              </div>
-              <div className="bg-muted/30 p-3 rounded-xl">
-                <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_active_members_label')}</span>
-                <p className="text-lg font-serif font-black text-foreground mt-0.5">
-                  {group.members.length} {t('participants')}
-                </p>
-              </div>
-              <div className="bg-card p-3.5 rounded-2xl border border-border/60">
-                <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_pot_per_cycle_label')}</span>
-                <p className="text-lg font-serif font-black text-secondary mt-0.5">
-                  {totalPot.toLocaleString()} {group.currency}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* La caisse en quatre lignes lisibles, au lieu d'une grille de chiffres */}
+        <SettingsGroup title={t('gd_soft_cash_title')}>
+          <SettingsRow
+            icon="vault"
+            tone="brand"
+            label={t('gd_soft_in_cash')}
+            hint={t('gd_soft_in_cash_hint')}
+            value={`${treasuryBalance !== null ? treasuryBalance.toLocaleString() : '…'} ${group.currency}`}
+          />
+          <SettingsRow
+            icon="cotisation"
+            tone="sage"
+            label={t('gd_soft_per_member')}
+            value={`${group.contributionAmount.toLocaleString()} ${group.currency}`}
+          />
+          <SettingsRow
+            icon="members"
+            tone="sand"
+            label={t('gd_soft_members')}
+            value={group.members.length}
+          />
+          <SettingsRow
+            icon="gift"
+            tone="gold"
+            label={t('gd_soft_pot')}
+            hint={t('gd_soft_pot_hint')}
+            value={`${totalPot.toLocaleString()} ${group.currency}`}
+          />
+        </SettingsGroup>
 
-        {/* Visual Rotation Timeline: "Qui reçoit quand ?" */}
+        {/* Qui reçoit quand ? */}
         <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 shadow-soft">
           <CardHeader className="pb-3">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base font-serif font-bold flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-secondary" />
-                {t('gd_distribution_tour_title')}
+            <div className="flex justify-between items-center gap-3">
+              <CardTitle className="text-base font-serif font-bold">
+                {t('gd_soft_who_receives')}
               </CardTitle>
-              <Badge className="bg-primary text-primary-foreground font-black text-xs px-3 py-1 rounded-xl">
+              <span className="text-[13px] font-bold text-muted-foreground shrink-0">
                 {t('gd_tour_word')} {group.currentPayoutIndex + 1} / {group.members.length}
-              </Badge>
+              </span>
             </div>
-            <CardDescription className="text-xs">{t('gd_distribution_tour_desc')}</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-5 pt-0 space-y-4">
             {beneficiaryToDistribute ? (
               <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="space-y-0.5">
@@ -614,49 +627,81 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       <div className="space-y-5">
         {sectionHeader(t('gd_nav_parametres'))}
 
-        <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
-          <CardContent className="p-5 grid grid-cols-2 gap-3">
-            <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('frequency')}</span>
-              <p className="text-sm font-serif font-bold text-foreground mt-0.5 capitalize">{t(`freq_${group.frequency}`)}</p>
-            </div>
-            <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('cgd_distribution_method_label')}</span>
-              <p className="text-sm font-serif font-bold text-foreground mt-0.5">{t(`cgd_dist_${group.distributionMethod || 'sequential'}`)}</p>
-            </div>
-            <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('cgd_max_members_label')}</span>
-              <p className="text-sm font-serif font-bold text-foreground mt-0.5">{group.maxMembers ?? group.members.length}</p>
-            </div>
-            <div className="bg-muted/30 p-3 rounded-xl">
-              <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_public')} / {t('gd_private')}</span>
-              <p className="text-sm font-serif font-bold text-foreground mt-0.5">{group.isPrivate === false ? t('gd_public') : t('gd_private')}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <SettingsGroup title={t('gd_soft_rules_title')}>
+          <SettingsRow
+            icon="cotisation"
+            tone="sage"
+            label={t('gd_soft_per_member')}
+            value={`${group.contributionAmount.toLocaleString()} ${group.currency}`}
+          />
+          <SettingsRow icon="calendar-finance" tone="gold" label={t('frequency')} value={t(`freq_${group.frequency}`)} />
+          <SettingsRow
+            icon="distribution"
+            tone="brand"
+            label={t('gd_soft_who_receives')}
+            value={t(`cgd_dist_${group.distributionMethod || 'sequential'}`)}
+          />
+          <SettingsRow icon="members" tone="sand" label={t('gd_soft_places')} value={group.maxMembers ?? group.members.length} />
+          <SettingsRow
+            icon="lock"
+            tone="info"
+            label={t('gd_soft_access')}
+            value={group.isPrivate === false ? t('gd_public') : t('gd_private')}
+          />
+        </SettingsGroup>
 
         {group.rules && (
-          <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-serif">{t('gd_circle_rules_title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{group.rules}</p>
-            </CardContent>
-          </Card>
+          <SettingsGroup title={t('gd_circle_rules_title')}>
+            <p className="px-4 py-3.5 text-sm text-muted-foreground whitespace-pre-line">{group.rules}</p>
+          </SettingsGroup>
         )}
 
-        {canManage && group.status === 'active' && (
-          <Button
-            variant="outline"
-            className="w-full border-secondary text-secondary hover:bg-success-soft rounded-xl h-11 cursor-pointer"
-            onClick={handleCompleteGroup}
-            disabled={isCompleting}
-          >
-            {isCompleting ? <Clock className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-            {t('gd_mark_completed')}
-          </Button>
+        {canManage && (
+          <SettingsGroup title={t('gd_soft_manage_title')}>
+            {group.status === 'active' && (
+              <SettingsRow
+                icon="settings"
+                tone="brand"
+                label={t('gd_edit_circle')}
+                hint={moneyMoved ? t('gd_edit_hint_locked') : t('gd_edit_hint_free')}
+                onClick={() => setIsEditOpen(true)}
+              />
+            )}
+            {group.status === 'active' && (
+              <SettingsRow
+                icon="completed"
+                tone="sage"
+                label={isCompleting ? t('gd_soft_closing') : t('gd_mark_completed')}
+                hint={t('gd_close_hint')}
+                onClick={isCompleting ? undefined : handleCompleteGroup}
+              />
+            )}
+            {!moneyMoved ? (
+              <SettingsRow
+                icon="close"
+                danger
+                label={t('gd_delete_circle')}
+                hint={t('gd_delete_hint')}
+                onClick={() => setIsDeleteOpen(true)}
+              />
+            ) : (
+              <SettingsRow icon="info" tone="muted" label={t('gd_delete_circle')} hint={t('gd_delete_locked_hint')} />
+            )}
+          </SettingsGroup>
         )}
+
+        <EditGroupDialog group={group} moneyMoved={moneyMoved} open={isEditOpen} onOpenChange={setIsEditOpen} />
+
+        <ConfirmationBottomSheet
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteGroup}
+          title={t('gd_delete_confirm_title')}
+          description={`« ${group.name} » ${t('gd_delete_confirm_desc')}`}
+          type="destructive"
+          confirmLabel={t('gd_delete_circle')}
+          isLoading={isDeleting}
+        />
       </div>
     );
   }
