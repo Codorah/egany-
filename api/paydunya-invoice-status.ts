@@ -1,3 +1,4 @@
+import { handleCors } from './_cors.js';
 /**
  * Vérifie l'état d'une facture Paydunya, pour la carte Recharger qui attend
  * une confirmation SoftPay (USSD/PIN sur le téléphone) sans quitter eganyé.
@@ -14,6 +15,7 @@ const PAYDUNYA_CONFIRM_URL: Record<string, string> = {
 };
 
 export default async function handler(req: any, res: any) {
+  if (handleCors(req, res)) return;
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

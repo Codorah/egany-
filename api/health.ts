@@ -1,3 +1,4 @@
+import { handleCors } from './_cors.js';
 /**
  * Bilan de santé de la configuration serveur, lu par le panneau admin.
  *
@@ -10,6 +11,7 @@
  * Ne renvoie que des booléens : jamais une valeur, jamais un début de clé.
  */
 export default function handler(req: any, res: any) {
+  if (handleCors(req, res)) return;
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

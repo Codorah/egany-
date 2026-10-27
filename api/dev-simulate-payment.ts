@@ -1,3 +1,4 @@
+import { handleCors } from './_cors.js';
 import { createClient } from '@supabase/supabase-js';
 import { requireUserOr401 } from './_requireUser.js';
 
@@ -28,6 +29,7 @@ import { requireUserOr401 } from './_requireUser.js';
  * distributeur d'argent gratuit sur l'environnement déployé.
  */
 export default async function handler(req: any, res: any) {
+  if (handleCors(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

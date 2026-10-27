@@ -1,3 +1,4 @@
+import { handleCors } from './_cors.js';
 import { createClient } from '@supabase/supabase-js';
 import { requireUserOr401 } from './_requireUser.js';
 
@@ -11,6 +12,7 @@ const MAX_MESSAGE_CHARS = 1000;
 const MAX_CONTEXT_CHARS = 12000;
 
 export default async function handler(req: any, res: any) {
+  if (handleCors(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
