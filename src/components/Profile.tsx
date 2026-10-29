@@ -674,7 +674,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 tone="gold"
                 label="Formule Ma Banque"
                 hint="Coffres d'épargne"
-                value={user.bankTier && user.bankTier !== 'none' ? user.bankTier : 'Gratuite'}
+                value={user.bankTier && user.bankTier !== 'none' ? t(`bank_tier_${user.bankTier}`) : 'Gratuite'}
                 onClick={() => setActiveSection('subscription')}
               />
             </SettingsGroup>

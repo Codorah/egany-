@@ -196,7 +196,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Fenaɣ ñɔɔzʋʋ kɩgbɛdɩŋ naɖɩyɛ fɛyɩ ñɛ-tontinaa wena awɛ ñʋʋ taa yɔ, a-taa.'
   },
   no_alert_desc_payout: {
-    fr: "Aucun encaissement ou payout n'a encore été enregistré.",
+    fr: "Aucun encaissement ou versement n'a encore été enregistré.",
     en: 'No cash-outs or payouts have been recorded yet.',
     ee: 'Ga xɔxɔ alo mavomavo aɖeke woŋlɔ da ɖi haɖe o.',
     kbp: 'Liidiye mʋʋ yaa nɩɩnʋʋ naɖɩyɛ pataɣ ñɔɔzɩ fɛyɩ nɛ paɣzɩ.'
@@ -350,25 +350,25 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
 
   // Score Reputation Details
   reputation_tip_s: {
-    fr: 'Félicitations ! Votre score exemplaire (Tier S) vous confère la priorité absolue pour être désigné premier bénéficiaire des fonds des tontines auxquelles vous postulez.',
+    fr: 'Félicitations ! Votre score exemplaire vous confère la priorité absolue pour être désigné premier bénéficiaire des fonds des tontines auxquelles vous postulez.',
     en: 'Congratulations! Your exemplary score (S-Tier) gives you absolute priority to be designated as the first beneficiary of funds in tontines you apply to.',
     ee: 'Míedo dzidzɔ na wò! Wò xexlẽme nyui la (Tier S) na wòxɔa gbɔgblɔ gbãtɔ le tontine siwo nàle me la ƒe gaxɔxɔ me.',
     kbp: 'Ðɩsam-ŋ! Ño-kɩlaʋ kɩbaŋʋ (Tier S) haɣ-ŋ waɖɛ se ŋgbaŋ ŋ-ñɩnɩ liidiye kajalaɣ tontine ŋgʋ ŋ-ñɩnɩɣ pɩ-taa yɔ.'
   },
   reputation_tip_a: {
-    fr: "Excellent ! Vous êtes un membre de confiance (Tier A). Pour passer au Tier S, assurez-vous d'anticiper le rechargement de votre portefeuille virtuel 24h avant chaque échéance.",
+    fr: "Excellent ! Vous êtes un membre de confiance. Pour passer au meilleur niveau, assurez-vous d'anticiper le rechargement de votre portefeuille virtuel 24h avant chaque échéance.",
     en: 'Excellent! You are a trusted member (A-Tier). To reach S-Tier, make sure to recharge your virtual wallet 24h before each deadline.',
     ee: 'Enyo ŋutɔ! Wòe nye ame si dzi woka ɖo (Tier A). Be nàɖo Tier S gbɔ la, trɔ ga de wò gaxɔ me gbã hafi ŋkeke wo nade.',
     kbp: 'Pɩ-wɛ ɖeu! N-kɛ ñɩm mʋyʋ (Tier A). Se ŋ-tasɩ Tier S taa, sɔnzɩ liidiye n-kpou taa ɖooo kɩyakʋ ŋga ka-kaŋ yɔ, kɩ-yɔɔ.'
   },
   reputation_tip_b: {
-    fr: "Votre réputation est correcte (Tier B) mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Flooz ou Mixx.",
+    fr: "Votre réputation est correcte mais perfectible. Astuce : Pour éviter les oublis, effectuez des recharges régulières de votre compte via Flooz ou Mixx.",
     en: 'Your reputation is correct (B-Tier) but could be improved. Tip: To avoid forgetting, recharge regularly via Flooz or Mixx.',
     ee: 'Wò ŋkɔ nyuie le eme (Tier B) gake wòate ŋu anyo wu. Aɖaŋuɖoɖo: Be maŋlɔ nu be o la, trɔ ga de wò akɔnta me edziedzi to Flooz alo Mixx dzi.',
     kbp: 'Ño-hɩɖɛ wɛ ɖeu (Tier B) piye pɩpɔzʋʋ se pɩ-cɛzɩɣ. Ñɩnɩ: Se n-ta pɩ-yɔɔ, sɔnzɩ liidiye tam-tam Flooz yaa Mixx yɔɔ.'
   },
   reputation_tip_c: {
-    fr: "Attention ! Votre score est critique (Tier C) à cause de retards répétés. Pour restaurer votre réputation, alimentez immédiatement votre solde de portefeuille et réglez vos cotisations en attente.",
+    fr: "Attention ! Votre score est critique à cause de retards répétés. Pour restaurer votre réputation, alimentez immédiatement votre solde de portefeuille et réglez vos cotisations en attente.",
     en: 'Warning! Your score is critical (C-Tier) due to repeated late payments. To restore your reputation, immediately fund your wallet and settle pending contributions.',
     ee: 'Kpɔ nyuie! Wò xexlẽme le xaxa me (Tier C) le tsitsi gbe gbe ta. Be nàgbugbɔ wò ŋkɔ nyui aɖo la, trɔ ga de wò gaxɔ me enumake eye nàxe wò gaxexlẽ siwo susɔ.',
     kbp: 'Kpaɣ ño-lɩmaɣzɩyɛ! Ño-kɩlaʋ wɛ kaɖɛ (Tier C) mbʋ pʋyɔɔ yɔ ŋ-gbɛdɩɣ tam-tam. Se ño-hɩɖɛ ɖɔ pɩ-taa, sɔnzɩ liidiye ñɛ-kpou taa lɛɛlɛɛyɔ nɛ ŋ-fɛ liidiye haʋ ŋgʋ kɩ-caɣ yɔ.'
@@ -442,7 +442,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'liidiye lɩnzɩ'
   },
   active_groups: {
-    fr: 'Groupes Actifs',
+    fr: 'Cercles actifs',
     en: 'Active Groups',
     ee: 'Habɔbɔ siwo le dɔwɔm',
     kbp: 'Tontinaa wena awɛ ñʋʋ taa'
@@ -626,7 +626,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Man fenaɣ ñɔɔzʋʋ'
   },
   contributions_list_desc: {
-    fr: 'Liste de toutes les cotisations enregistrées pour ce groupe.',
+    fr: 'Liste de toutes les cotisations enregistrées pour ce cercle.',
     en: 'List of all contributions recorded for this group.',
     ee: 'Gaxexlẽ siwo katã woŋlɔ ɖi na habɔbɔ sia ƒe list.',
     kbp: 'Tontine ŋgʋ kɩ-liidiye haʋ kɩ-tɩŋa kalɩyɛ.'
@@ -1894,7 +1894,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ma-ɖɔkɔtɔ ɖɔɖɔ'
   },
   prof_tier_b_desc: {
-    fr: 'Membre correct. Essayez de régler vos cotisations un peu plus tôt pour remonter de Tier.',
+    fr: 'Membre correct. Essayez de régler vos cotisations un peu plus tôt pour monter de niveau.',
     en: 'Fair member. Try to pay your contributions a bit earlier to move up a Tier.',
     ee: 'Xɔ́ nyuitɔ. Dze agbagba nàxe wò gaxexlẽwo kaba vie be nàyi tier bubu me.',
     kbp: 'Mʋyʋ kɩbaŋʋ. Ñɩnɩ se ŋ-fɛ ño-liidiye haʋ lɛɛ joona se ŋ-kpaɖɩ tier.'
@@ -4382,7 +4382,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Mʋ liidiye Mobile Money taa (Flooz, Mixx)'
   },
   onb_slide3_desc: {
-    fr: "Recevez directement l'intégralité du pot de tontine sur votre compte dès votre tour venu sans tracas.",
+    fr: "Recevez directement l'intégralité de la cagnotte sur votre compte dès votre tour venu sans tracas.",
     en: 'Receive the full tontine pot directly to your account as soon as your turn comes, hassle-free.',
     ee: 'Xɔ tontine ga blibo la tẽe ɖe wò akɔnta dzi ne wò turn ɖo la, dzɔdzɔe.',
     kbp: 'Mʋ tontine liidiye kɩ-tɩŋa tɔntɔ ño-kalɩyɛ taa ño-kɩyakʋ ŋga kɩ-tala yɔ, fɛyɩ kaɖɛ.'
@@ -5185,7 +5185,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Mʋyaa Mba Pa-Lakɩ Tʋmɩyɛ'
   },
   gd_pot_per_cycle_label: {
-    fr: 'Pot par Cycle',
+    fr: 'Cagnotte par tour',
     en: 'Pot per Cycle',
     ee: 'Ga Home Le Dzɔgbenya Ɖeka Me',
     kbp: 'Liidiye Kɩyakʋ Kʋɖʋmaɣ Taa'
@@ -5233,7 +5233,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Pɩ-Wɛɛ Se Pa-Lɩzɩ Weyi'
   },
   gd_no_beneficiary_desc: {
-    fr: 'Aucun bénéficiaire désigné pour ce cycle.',
+    fr: 'Aucun bénéficiaire désigné pour ce tour.',
     en: 'No beneficiary designated for this cycle.',
     ee: 'Womtia ame aɖeke haɖe be wòaxɔ ga le dzɔgbenya sia me o.',
     kbp: 'Pa-tɩ-lɩzɩ nɔɔyʋ kɩyakʋ ɛnɛ taa.'
@@ -5257,7 +5257,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Liidiye Ñɩma Ŋgʋ Pa-Ñaɣ Asitsatsa Taa (Pɩ-Fɛyɩ Kɩ-Cɛyɩm)'
   },
   gd_auction_discount_desc: {
-    fr: 'Ce montant sera déduit du pot puis redistribué équitablement entre les autres membres actifs.',
+    fr: 'Ce montant sera déduit de la cagnotte puis redistribué équitablement entre les autres membres actifs.',
     en: 'This amount will be deducted from the pot then redistributed equally among the other active members.',
     ee: 'Woaɖe ga home sia le ga home gã la me eye woagama ɖe xɔ́ bubu siwo le dɔ wɔm la dome sɔsɔe.',
     kbp: 'Pa-Kaɣ Ɖɛzɩ Liidiye Ñɩma Ɛnɛ Liidiye Sɔsɔɖɛ Taa Nɛ Pa-Ma-ɩ Ñɩnɖɛ Nɛ Lɛlaa Mba Pa-Lakɩ Tʋmɩyɛ Yɔ.'
@@ -5425,7 +5425,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ña Liidiye Lɩʋ'
   },
   gd_distribute_desc_prefix: {
-    fr: 'Vous allez distribuer le pot de',
+    fr: 'Vous allez distribuer la cagnotte de',
     en: 'You are about to distribute the pot of',
     ee: 'Àma ga home',
     kbp: 'Ŋ-Kaɣ Lɩzɩ Liidiye'
@@ -5437,7 +5437,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'na'
   },
   gd_distribute_desc_for_cycle: {
-    fr: 'pour le cycle',
+    fr: 'pour le tour',
     en: 'for cycle',
     ee: 'na dzɔgbenya',
     kbp: 'kɩyakʋ'
@@ -6501,8 +6501,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ɛzɩma tontine lakɩ tʋmɩyɛ eganyé yɔɔ?'
   },
   sup_faq_1_a: {
-    fr: 'Chaque membre cotise le même montant à intervalle régulier (quotidien, hebdomadaire, bi-hebdomadaire ou mensuel). À chaque cycle, un membre reçoit le pot total selon la méthode de distribution choisie (rotation, tirage au sort ou enchères).',
-    en: 'Each member contributes the same amount at a regular interval (daily, weekly, bi-weekly, or monthly). At each cycle, one member receives the full pot according to the chosen distribution method (rotation, draw, or auction).',
+    fr: 'Chaque membre cotise le même montant à un rythme fixe : chaque jour, chaque semaine, tous les 15 jours ou chaque mois. À chaque tour, un membre reçoit toute la cagnotte, selon l’ordre convenu ou un tirage au sort.',
+    en: 'Each member pays the same amount on a fixed schedule: every day, every week, every 15 days or every month. Each round, one member receives the whole pot, in the agreed order or by draw.',
     ee: 'Xɔ́ ɖe sia ɖe naxe ga home ɖeka le ɣeyiɣi ɖoɖi dzi (gbesiagbe, kwasiɖasiɖa, kwasiɖa evelia ɖe sia ɖe alo ɣletisiɣleti). Le dzɔgbenya ɖe sia ɖe me la, xɔ́ ɖeka axɔ ga home blibo la le mɔ si wotia (trɔtrɔ, dzidzenu alo asitsatsa) nu.',
     kbp: 'Mʋyʋ kʋɖʋm kʋɖʋm haɣ liidiye kʋɖʋm ɖoŋ ɖoŋ (kɩyakʋ kʋɖʋmaɣ, kɩyɛ kʋɖʋmaɣ, kɩyɛ naalɛ kʋɖʋmaɣ yaa fenaɣ kʋɖʋmaɣ). Kɩyakʋ ŋgʋ kɩ-tɩŋa kɩ-taa yɔ, mʋyʋ kʋɖʋm mʋʋ liidiye tɩŋa ɛzɩ pɔlɩzʋʋ tʋmɩyɛ yɔ (pɩ-tazɩɣ, pɔlɩzɩɣ yaa pɔyɔɔdʋʋ).'
   },
