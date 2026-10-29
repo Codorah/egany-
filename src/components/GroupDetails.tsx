@@ -418,6 +418,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             user={profile}
             onBack={() => setSection(null)}
             onNavigateToVerification={onNavigateToVerification}
+            embedded
           />
         )}
 

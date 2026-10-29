@@ -5,7 +5,6 @@ import { mapContributionRow, mapPayoutRow } from '@/lib/mappers';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { Group, UserProfile, Contribution, Payout } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search, Wallet, FileSpreadsheet } from 'lucide-react';
@@ -22,10 +21,12 @@ interface ContributionsManagerProps {
   group: Group;
   user: UserProfile;
   onBack: () => void;
+  /** Affiché dans la fiche du cercle : pas de second en-tête ni de caisse en double. */
+  embedded?: boolean;
   onNavigateToVerification?: () => void;
 }
 
-export function ContributionsManager({ group, user, onBack, onNavigateToVerification }: ContributionsManagerProps) {
+export function ContributionsManager({ group, user, onBack, onNavigateToVerification, embedded = false }: ContributionsManagerProps) {
   const { t } = useLanguage();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<UserProfile[]>([]);
@@ -355,7 +356,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
   return (
     <div className="space-y-4 sm:space-y-5 pb-20">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center gap-3 ${embedded ? 'hidden' : ''}`}>
           <Button
             variant="ghost"
             size="icon"
@@ -395,7 +396,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
         )}
       </div>
 
-      {isManager && (
+      {isManager && !embedded && (
         <div className="glass-card rounded-3xl p-4 shadow-soft border border-border/70">
           <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
             <Wallet className="w-4 h-4 text-primary" />
@@ -438,117 +439,96 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
             )}
           </div>
           <div className="px-2 sm:px-3 pb-3">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-border/70">
-                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('member')}</TableHead>
-                  <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wide font-bold text-muted-foreground">Email</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('period')}</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('amount')}</TableHead>
-                  <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('penalty')}</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('status')}</TableHead>
-                  {isManager && <TableHead className="text-right text-[11px] uppercase tracking-wide font-bold text-muted-foreground">{t('actions')}</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContributions.length === 0 ? (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={isManager ? 7 : 6} className="text-center py-10">
-                      <div className="flex flex-col items-center gap-1.5 text-muted-foreground">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="text-xs font-medium">{t('no_contribution_found')}</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredContributions.map((c) => {
-                    const statusKey = `status-${c.id}`;
-                    const statusBusy = busyKeys.has(statusKey);
-                    return (
-                      <TableRow key={c.id} className="border-border/70">
-                        <TableCell className="font-bold text-foreground">{c.userName || t('member')}</TableCell>
-                        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{c.userEmail || '-'}</TableCell>
-                        <TableCell className="text-muted-foreground">{c.period}</TableCell>
-                        <TableCell className="font-semibold">{c.amount.toLocaleString()} {group.currency}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
+            {filteredContributions.length === 0 ? (
+              <div className="flex flex-col items-center gap-1.5 py-10 text-muted-foreground">
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-sm font-medium">{t('no_contribution_found')}</span>
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/70">
+                {filteredContributions.map((c) => {
+                  const statusKey = `status-${c.id}`;
+                  const statusBusy = busyKeys.has(statusKey);
+                  return (
+                    <li key={c.id} className="px-2 py-3.5 space-y-2.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {isManager ? (c.userName || t('member')) : c.period}
+                          </p>
+                          <p className="text-[13px] text-muted-foreground">
+                            {isManager ? `${c.period} · ` : ''}{c.amount.toLocaleString()} {group.currency}
+                          </p>
                           {c.penaltyApplied ? (
-                            <StatusBadge
-                              tone={c.penaltyStatus === 'paid' ? 'success' : 'danger'}
-                              label={`${c.penaltyApplied.toLocaleString()} ${group.currency} ${c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}`}
-                            />
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(c.status)}</TableCell>
-                        {isManager && (
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {c.status === 'pending_approval' && (
-                                <div className="flex gap-1 mr-2">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    disabled={statusBusy}
-                                    className="h-8 w-8 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer disabled:opacity-60"
-                                    onClick={() => handleUpdateStatus(c.id, 'paid')}
-                                    title={t('approve_payment')}
-                                  >
-                                    {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    disabled={statusBusy}
-                                    className="h-8 w-8 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer disabled:opacity-60"
-                                    onClick={() => handleUpdateStatus(c.id, 'pending')}
-                                    title={t('reject_proof')}
-                                  >
-                                    {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                                  </Button>
-                                </div>
-                              )}
-                              <Select
-                                value={c.status}
+                            <p className={`text-[13px] font-semibold ${c.penaltyStatus === 'paid' ? 'text-secondary' : 'text-danger'}`}>
+                              {t('penalty')} : {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="shrink-0">{getStatusBadge(c.status)}</div>
+                      </div>
+
+                      {isManager && (
+                        <div className="flex items-center gap-2">
+                          {c.status === 'pending_approval' && (
+                            <>
+                              <Button
+                                size="sm"
                                 disabled={statusBusy}
-                                onValueChange={(val: any) => handleUpdateStatus(c.id, val)}
+                                className="h-9 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold gap-1.5 cursor-pointer disabled:opacity-60"
+                                onClick={() => handleUpdateStatus(c.id, 'paid')}
                               >
-                                <SelectTrigger className="w-[130px] h-8 rounded-xl">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="paid">{t('status_paid')}</SelectItem>
-                                  <SelectItem value="pending">{t('status_pending')}</SelectItem>
-                                  <SelectItem value="late">{t('status_late')}</SelectItem>
-                                  <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </TableCell>
-                        )}
-                        {!isManager && (
-                          <TableCell className="text-right">
-                            {(c.status === 'pending' || c.status === 'late') && (
-                              <DeclarePaymentDialog
-                                contribution={c}
-                                onSubmit={(ref) => handleSubmitProof(c.id, ref)}
-                                isKycVerified={(user.kycLevel ?? 1) >= 2}
-                                onKycRequired={() => setShowKycPrompt(true)}
-                              />
-                            )}
-                            {c.status === 'pending_approval' && (
-                              <span className="text-xs text-muted-foreground italic">
-                                {t('ref_label')} {c.proofOfPayment?.reference}
-                              </span>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                                {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                {t('approve_payment')}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={statusBusy}
+                                className="h-9 rounded-xl text-danger border-danger/20 hover:bg-danger-soft gap-1.5 cursor-pointer disabled:opacity-60"
+                                onClick={() => handleUpdateStatus(c.id, 'pending')}
+                              >
+                                <X className="h-4 w-4" />
+                                {t('reject_proof')}
+                              </Button>
+                            </>
+                          )}
+                          <Select
+                            value={c.status}
+                            disabled={statusBusy}
+                            onValueChange={(val: any) => handleUpdateStatus(c.id, val)}
+                          >
+                            <SelectTrigger className="ml-auto w-[140px] h-9 rounded-xl" aria-label={t('status')}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="paid">{t('status_paid')}</SelectItem>
+                              <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                              <SelectItem value="late">{t('status_late')}</SelectItem>
+                              <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {!isManager && (c.status === 'pending' || c.status === 'late') && (
+                        <DeclarePaymentDialog
+                          contribution={c}
+                          onSubmit={(ref) => handleSubmitProof(c.id, ref)}
+                          isKycVerified={(user.kycLevel ?? 1) >= 2}
+                          onKycRequired={() => setShowKycPrompt(true)}
+                        />
+                      )}
+                      {!isManager && c.status === 'pending_approval' && (
+                        <p className="text-[13px] text-muted-foreground">
+                          {t('ref_label')} {c.proofOfPayment?.reference}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -574,7 +554,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
                         size="sm"
                         variant="outline"
                         disabled={creating}
-                        className="h-7 text-[12px] px-2 rounded-lg gap-1 cursor-pointer disabled:opacity-60"
+                        className="h-9 text-[13px] px-3 rounded-xl gap-1.5 cursor-pointer disabled:opacity-60"
                         onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
                       >
                         {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
@@ -583,7 +563,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
                       <Button
                         size="sm"
                         disabled={paying}
-                        className="btn-shine h-7 text-[12px] px-2 rounded-lg gap-1 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
+                        className="btn-shine h-9 text-[13px] px-3 rounded-xl gap-1.5 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
                         onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
                       >
                         {paying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
@@ -688,7 +668,7 @@ function DeclarePaymentDialog({
           }
         }}
         render={
-          <Button size="sm" variant="outline" className="h-8 rounded-xl gap-1.5 cursor-pointer">
+          <Button size="sm" variant="outline" className="h-10 w-full rounded-xl gap-1.5 font-bold cursor-pointer">
             <CheckCircle2 className="w-4 h-4" />
             {t('declare')}
           </Button>
