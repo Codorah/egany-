@@ -758,22 +758,23 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Informations personnelles')}
+            {renderSubHeader('Mes informations')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Nom d’affichage / Prénom usuel</Label>
+                <Label className="text-sm font-bold text-foreground">Nom affiché</Label>
                 <Input
                   value={editDisplayName}
                   onChange={(e) => setEditDisplayName(e.target.value)}
                   className="rounded-xl h-11"
-                  placeholder="Ex: Kossi"
+                  placeholder="Ex : Kossi"
                 />
+                <p className="text-[13px] text-muted-foreground">C’est le nom que voient les membres de vos cercles.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Prénom officiel</Label>
+                  <Label className="text-sm font-bold text-foreground">Prénom</Label>
                   <Input
                     value={editFirstName}
                     onChange={(e) => setEditFirstName(e.target.value)}
@@ -781,7 +782,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Nom de famille</Label>
+                  <Label className="text-sm font-bold text-foreground">Nom</Label>
                   <Input
                     value={editLastName}
                     onChange={(e) => setEditLastName(e.target.value)}
@@ -791,7 +792,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Numéro de téléphone Mobile Money</Label>
+                <Label className="text-sm font-bold text-foreground">Téléphone Mobile Money</Label>
                 <Input
                   type="tel"
                   value={editPhone}
@@ -802,17 +803,17 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Adresse e-mail</Label>
+                <Label className="text-sm font-bold text-foreground">Adresse e-mail</Label>
                 <Input
                   value={user.email}
                   disabled
                   className="rounded-xl h-11 bg-muted/50 text-muted-foreground text-xs"
                 />
-                <p className="text-[11px] text-muted-foreground">L'email sert d'identifiant de sécurité.</p>
+                <p className="text-[13px] text-muted-foreground">Elle sert à vous connecter et ne peut pas être changée ici.</p>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Date de naissance</Label>
+                <Label className="text-sm font-bold text-foreground">Date de naissance</Label>
                 <Input
                   type="date"
                   value={editDateOfBirth}
@@ -826,7 +827,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 disabled={savingProfile}
                 className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
-                {savingProfile ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
             </div>
           </motion.div>
@@ -843,7 +844,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Vérification d’identité (KYC)')}
+            {renderSubHeader('Vérifier mon identité')}
 
             {(() => {
               const kycStatus: 'verified' | 'pending' | 'unverified' = isKycOk
@@ -854,18 +855,18 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               const KYC_STATUS_COPY = {
                 verified: {
                   className: 'bg-[#EBF5EA] text-[#718A68] border-[#718A68]/30',
-                  title: 'Identité vérifiée (Tier 2)',
-                  desc: 'Votre compte dispose des plafonds complets et de la conformité UEMOA.',
+                  title: 'Identité vérifiée',
+                  desc: 'Vous pouvez créer et rejoindre des cercles.',
                 },
                 pending: {
                   className: 'bg-[#FFF4E5] text-[#C96F4A] border-[#C96F4A]/30',
-                  title: 'Document en cours d’examen',
-                  desc: 'Votre document a bien été envoyé. Notre équipe valide généralement en moins de 24h.',
+                  title: 'Nous vérifions votre document',
+                  desc: 'Il a bien été reçu. Notre équipe valide généralement en moins de 24 h, vous serez prévenu.',
                 },
                 unverified: {
                   className: 'bg-muted/60 text-muted-foreground border-border',
-                  title: 'Pièce d’identité non validée',
-                  desc: 'La vérification d’identité protège l’ensemble des membres de la tontine contre toute fraude.',
+                  title: 'Identité pas encore vérifiée',
+                  desc: 'Elle est demandée pour créer ou rejoindre un cercle, et protège tous les membres contre la fraude.',
                 },
               } as const;
               const copy = KYC_STATUS_COPY[kycStatus];
@@ -884,27 +885,27 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               {!isKycOk && (
                 <div className="space-y-3 pt-1">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-foreground">Nom et prénom complets (comme sur la CNI)</Label>
+                    <Label className="text-sm font-bold text-foreground">Nom complet (comme sur la pièce)</Label>
                     <Input
                       value={kycFullName}
                       onChange={(e) => setKycFullName(e.target.value)}
                       className="rounded-xl h-11"
-                      placeholder="Ex: Kossi Koffi Amégan"
+                      placeholder="Ex : Kossi Koffi Amégan"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-foreground">Numéro de la pièce (CNI / Passeport)</Label>
+                    <Label className="text-sm font-bold text-foreground">Numéro de la pièce</Label>
                     <Input
                       value={kycIdNumber}
                       onChange={(e) => setKycIdNumber(e.target.value)}
                       className="rounded-xl h-11 font-mono"
-                      placeholder="Ex: TG-012345678"
+                      placeholder="Carte d’identité ou passeport"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-foreground">Photo de la pièce (recto ou PDF)</Label>
+                    <Label className="text-sm font-bold text-foreground">Photo de la pièce</Label>
                     <label
                       htmlFor="kyc_upload"
                       className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#EFE2D0] dark:border-border hover:border-[#C96F4A] rounded-2xl cursor-pointer bg-[#FFFBF7] dark:bg-muted/40 transition-colors text-center gap-2"
@@ -913,9 +914,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                         <EganyeIcon name="document" size={20} />
                       </div>
                       <span className="text-xs font-bold text-foreground">
-                        {kycFile ? kycFile.name : 'Cliquez pour sélectionner la photo'}
+                        {kycFile ? kycFile.name : 'Touchez pour prendre ou choisir une photo'}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">JPG, PNG ou PDF (max. 10 Mo)</span>
+                      <span className="text-[13px] text-muted-foreground">Photo ou PDF, 10 Mo maximum</span>
                       <input
                         id="kyc_upload"
                         type="file"
@@ -931,7 +932,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     disabled={isSubmittingKyc}
                     className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
                   >
-                    {isSubmittingKyc ? 'Envoi en cours...' : 'Soumettre ma pièce d’identité'}
+                    {isSubmittingKyc ? 'Envoi…' : 'Envoyer ma pièce'}
                   </Button>
                 </div>
               )}
@@ -952,25 +953,25 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Mandataire numérique')}
+            {renderSubHeader('Personne de confiance')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Désignez une personne de confiance (conjoint, parent, frère/sœur) habilitée à suivre vos cotisations ou recevoir les alertes en cas d’impossibilité majeure.
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                Un proche (conjoint, parent, frère ou sœur) qui peut suivre vos cotisations et recevoir les alertes si vous ne pouvez plus le faire.
               </p>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Nom complet de la personne de confiance</Label>
+                <Label className="text-sm font-bold text-foreground">Son nom complet</Label>
                 <Input
                   value={mandateName}
                   onChange={(e) => setMandateName(e.target.value)}
                   className="rounded-xl h-11"
-                  placeholder="Ex: Afiwa Amégan"
+                  placeholder="Ex : Afiwa Amégan"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Numéro de téléphone</Label>
+                <Label className="text-sm font-bold text-foreground">Son téléphone</Label>
                 <Input
                   type="tel"
                   value={mandatePhone}
@@ -983,7 +984,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <div className="p-3.5 rounded-2xl bg-[#FFF8F2] border border-[#C96F4A]/25 text-xs text-muted-foreground flex items-start gap-2.5">
                 <EganyeIcon name="shield" size={16} className="text-[#C96F4A] shrink-0 mt-0.5" />
                 <span>
-                  Le mandataire ne peut <strong className="text-foreground">jamais retirer vos fonds</strong> à votre place sans validation administrative stricte.
+                  Cette personne ne peut <strong className="text-foreground">pas retirer votre argent</strong> sans une vérification stricte de notre équipe.
                 </span>
               </div>
 
@@ -992,7 +993,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 disabled={isSavingMandate}
                 className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
-                {isSavingMandate ? 'Enregistrement...' : 'Enregistrer le mandataire'}
+                {isSavingMandate ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
             </div>
           </motion.div>
@@ -1009,15 +1010,15 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Code PIN de retrait')}
+            {renderSubHeader('Code PIN')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Ce code secret à 4 chiffres vous sera demandé à chaque retrait d’argent vers votre compte Mobile Money.
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                4 chiffres secrets, demandés à chaque retrait. Ne les donnez à personne.
               </p>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Nouveau code PIN (4 chiffres)</Label>
+                <Label className="text-sm font-bold text-foreground">Nouveau code PIN</Label>
                 <Input
                   type="password"
                   inputMode="numeric"
@@ -1035,7 +1036,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 disabled={isSavingPin || newPin.length !== 4}
                 className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
-                {isSavingPin ? 'Modification...' : 'Valider mon nouveau code PIN'}
+                {isSavingPin ? 'Enregistrement…' : 'Enregistrer le code'}
               </Button>
             </div>
           </motion.div>
@@ -1052,15 +1053,15 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Mot de passe de connexion')}
+            {renderSubHeader('Mot de passe')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Choisissez un mot de passe sécurisé comportant au moins 6 caractères.
+              <p className="text-[15px] text-muted-foreground leading-relaxed">
+                Au moins 6 caractères. Mélangez lettres, chiffres et un signe pour plus de sécurité.
               </p>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">Nouveau mot de passe</Label>
+                <Label className="text-sm font-bold text-foreground">Nouveau mot de passe</Label>
                 <Input
                   type="password"
                   value={newPassword}
@@ -1076,7 +1077,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 disabled={isSavingPassword || newPassword.length < 6}
                 className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
-                {isSavingPassword ? 'Mise à jour...' : 'Changer mon mot de passe'}
+                {isSavingPassword ? 'Enregistrement…' : 'Changer le mot de passe'}
               </Button>
             </div>
           </motion.div>
