@@ -1,5 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
+
+const ENROLLED_KEY = 'eganye_biometrics_enrolled';
+const USER_ID_KEY = 'eganye_biometrics_user_id';
+
+/**
+ * L'état « biométrie activée » est partagé : l'interrupteur du profil, la
+ * fenêtre d'enregistrement et l'écran de verrouillage le lisent tous. Avec un
+ * useState par composant, l'interrupteur restait sur « off » après
+ * l'activation tant qu'on ne quittait pas l'écran.
+ */
+const enrollListeners = new Set<() => void>();
+const notifyEnrollChange = () => enrollListeners.forEach((l) => l());
+const subscribeEnroll = (listener: () => void) => {
+  enrollListeners.add(listener);
+  return () => enrollListeners.delete(listener);
+};
+function readEnrolled(): boolean {
+  try {
+    return localStorage.getItem(ENROLLED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Compte pour lequel l'empreinte a été enregistrée sur cet appareil. */
+export function getBiometricsUserId(): string | null {
+  try {
+    return localStorage.getItem(USER_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Verrouillage à activer pour ce compte, sur cet appareil ? */
+export function isAppLockEnabledFor(userId: string): boolean {
+  return readEnrolled() && getBiometricsUserId() === userId;
+}
 
 function bufferToBase64(buffer: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
@@ -18,7 +55,7 @@ export interface BiometricResult {
 
 export function useBiometrics() {
   const [isSupported, setIsSupported] = useState<boolean>(true);
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(false);
+  const isEnrolled = useSyncExternalStore(subscribeEnroll, readEnrolled, () => false);
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
   useEffect(() => {
@@ -26,14 +63,17 @@ export function useBiometrics() {
     const hasWebAuthn = !!window.PublicKeyCredential;
     const hasCapacitor = !!(window as any).Capacitor?.Plugins?.BiometricAuth;
     setIsSupported(hasWebAuthn || hasCapacitor);
-
-    // Check enrollment state
-    const enrolled = localStorage.getItem('eganye_biometrics_enrolled') === 'true';
-    setIsEnrolled(enrolled);
   }, []);
 
+  const markEnrolled = (username: string, userId?: string) => {
+    localStorage.setItem(ENROLLED_KEY, 'true');
+    localStorage.setItem('eganye_biometrics_username', username);
+    if (userId) localStorage.setItem(USER_ID_KEY, userId);
+    notifyEnrollChange();
+  };
+
   // Registers / Enrolls biometrics
-  const registerBiometrics = async (username: string): Promise<BiometricResult> => {
+  const registerBiometrics = async (username: string, userId?: string): Promise<BiometricResult> => {
     setIsAuthenticating(true);
     
     try {
@@ -50,9 +90,7 @@ export function useBiometrics() {
           });
           
           if (result.verified) {
-            localStorage.setItem('eganye_biometrics_enrolled', 'true');
-            localStorage.setItem('eganye_biometrics_username', username);
-            setIsEnrolled(true);
+            markEnrolled(username, userId);
             setIsAuthenticating(false);
             return {
               success: true,
@@ -101,10 +139,8 @@ export function useBiometrics() {
 
           if (credential) {
             const pkCredential = credential as PublicKeyCredential;
-            localStorage.setItem('eganye_biometrics_enrolled', 'true');
-            localStorage.setItem('eganye_biometrics_username', username);
             localStorage.setItem('eganye_biometrics_credential_id', bufferToBase64(pkCredential.rawId));
-            setIsEnrolled(true);
+            markEnrolled(username, userId);
             setIsAuthenticating(false);
             return {
               success: true,
@@ -212,10 +248,11 @@ export function useBiometrics() {
   };
 
   const disableBiometrics = () => {
-    localStorage.removeItem('eganye_biometrics_enrolled');
+    localStorage.removeItem(ENROLLED_KEY);
     localStorage.removeItem('eganye_biometrics_username');
     localStorage.removeItem('eganye_biometrics_credential_id');
-    setIsEnrolled(false);
+    localStorage.removeItem(USER_ID_KEY);
+    notifyEnrollChange();
     toast.info("Authentification biométrique désactivée.");
   };
 

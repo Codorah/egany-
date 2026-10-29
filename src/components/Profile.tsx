@@ -1720,6 +1720,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         isOpen={isBiometricPromptOpen}
         onClose={() => setIsBiometricPromptOpen(false)}
         username={user.displayName}
+        userId={user.uid}
         mode="register"
         onSuccess={async () => {
           setIsBiometricPromptOpen(false);

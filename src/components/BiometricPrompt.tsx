@@ -19,6 +19,8 @@ interface BiometricPromptProps {
   onClose: () => void;
   onSuccess: () => void;
   username?: string;
+  /** Compte à verrouiller par l'empreinte sur cet appareil. */
+  userId?: string;
   mode?: 'register' | 'authenticate';
 }
 
@@ -27,6 +29,7 @@ export function BiometricPrompt({
   onClose,
   onSuccess,
   username,
+  userId,
   mode = 'register'
 }: BiometricPromptProps) {
   const { t } = useLanguage();
@@ -49,7 +52,7 @@ export function BiometricPrompt({
     setScanState('scanning');
 
     const result = mode === 'register'
-      ? await registerBiometrics(displayName)
+      ? await registerBiometrics(displayName, userId)
       : { success: await authenticate(), message: '' };
 
     if (result.success) {

@@ -7,6 +7,7 @@ import { Landing } from '@/components/Landing';
 import { useShowLanding } from '@/hooks/useShowLanding';
 import { Toaster } from '@/components/ui/sonner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { AppLock } from '@/components/AppLock';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -509,6 +510,12 @@ export default function App() {
         {renderView()}
       </Suspense>
       <InstallPrompt />
+      <AppLock
+        userId={activeProfile.uid}
+        displayName={activeProfile.displayName}
+        photoURL={activeProfile.photoURL}
+        onLogout={handleLogout}
+      />
       <Toaster />
     </Layout>
   );
