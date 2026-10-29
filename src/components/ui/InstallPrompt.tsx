@@ -4,6 +4,7 @@ import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED } from '@/lib/links';
+import { isInstalledApp, isIos, promptInstall, useCanPromptInstall } from '@/lib/pwaInstall';
 
 /**
  * Invitation à installer Eganyé en PWA.
@@ -14,11 +15,6 @@ import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED } from '@/lib/links';
  * iOS Safari ne l'implémente pas, d'où les instructions manuelles.
  */
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
 const DISMISSED_KEY = 'eganye_pwa_prompt_dismissed_at';
 const INSTALLED_KEY = 'eganye_pwa_installed';
 // Un refus se respecte : on ne repropose pas avant deux semaines.
@@ -26,19 +22,6 @@ const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 // Laisse l'écran se charger avant d'interrompre : une modale qui saute au
 // visage à la première frame donne envie de la fermer sans la lire.
 const APPEAR_DELAY_MS = 4000;
-
-function isStandalone(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as { standalone?: boolean }).standalone === true
-  );
-}
-
-function isIos(): boolean {
-  if (typeof window === 'undefined') return false;
-  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-}
 
 function wasDismissedRecently(): boolean {
   try {
@@ -65,45 +48,21 @@ function remember(key: string, value: string) {
 
 export function InstallPrompt() {
   const { t } = useLanguage();
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const canPrompt = useCanPromptInstall();
   const [visible, setVisible] = useState(false);
   const [iosHint, setIosHint] = useState(false);
 
+  // L'événement d'installation est capté dès le chargement par pwaInstall ;
+  // ici on décide seulement quand proposer la fenêtre.
   useEffect(() => {
-    if (isStandalone() || wasDismissedRecently()) return;
-
-    let timer: ReturnType<typeof setTimeout>;
-
-    const onBeforeInstall = (event: Event) => {
-      // Sans preventDefault, Chrome affiche sa propre mini-infobar et
-      // l'événement n'est plus réutilisable au moment du clic.
-      event.preventDefault();
-      setDeferred(event as BeforeInstallPromptEvent);
-      timer = setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
-    };
-
-    const onInstalled = () => {
-      remember(INSTALLED_KEY, 'true');
-      setVisible(false);
-      setDeferred(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    window.addEventListener('appinstalled', onInstalled);
-
+    if (isInstalledApp() || wasDismissedRecently()) return;
+    if (!canPrompt && !isIos()) return;
     // iOS ne déclenche jamais beforeinstallprompt : on bascule sur le mode
     // « explique le geste » au lieu de ne rien proposer du tout.
-    if (isIos()) {
-      setIosHint(true);
-      timer = setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
-    }
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      window.removeEventListener('appinstalled', onInstalled);
-      clearTimeout(timer);
-    };
-  }, []);
+    setIosHint(!canPrompt && isIos());
+    const timer = setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [canPrompt]);
 
   const dismiss = useCallback(() => {
     remember(DISMISSED_KEY, String(Date.now()));
@@ -111,23 +70,14 @@ export function InstallPrompt() {
   }, []);
 
   const install = useCallback(async () => {
-    if (!deferred) return;
     setVisible(false);
-    try {
-      await deferred.prompt();
-      const { outcome } = await deferred.userChoice;
-      if (outcome === 'accepted') {
-        remember(INSTALLED_KEY, 'true');
-      } else {
-        remember(DISMISSED_KEY, String(Date.now()));
-      }
-    } catch (err) {
-      console.error('[PWA] Installation impossible :', err);
-    } finally {
-      // L'événement n'est utilisable qu'une fois.
-      setDeferred(null);
+    const outcome = await promptInstall();
+    if (outcome === 'accepted') {
+      remember(INSTALLED_KEY, 'true');
+    } else if (outcome === 'dismissed') {
+      remember(DISMISSED_KEY, String(Date.now()));
     }
-  }, [deferred]);
+  }, []);
 
   return (
     <AnimatePresence>

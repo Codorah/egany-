@@ -7568,6 +7568,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   gd_soft_copy_link: { fr: 'Copier le lien', en: 'Copy link' },
   gd_soft_show_qr: { fr: 'Afficher le QR code', en: 'Show QR code' },
   gd_soft_reliability_title: { fr: 'Fiabilité des membres', en: 'Member reliability' },
+  onb_install_app: { fr: "Installer l'application", en: 'Install the app' },
   gd_soft_reliability_desc: { fr: 'Note sur 100, selon la régularité des cotisations.', en: 'Score out of 100, based on how regularly they pay.' }
 };
 

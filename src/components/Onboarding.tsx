@@ -20,7 +20,8 @@ import {
   Users,
   Link2,
   Gift,
-  HandCoins
+  HandCoins,
+  Download
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -31,6 +32,7 @@ import {
 } from '@/lib/supabase';
 import { fetchPlatformSettings } from '@/lib/platformSettings';
 import { notifyUser } from '@/lib/notify';
+import { isInstalledApp, isIos, promptInstall, useCanPromptInstall } from '@/lib/pwaInstall';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -261,6 +263,9 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [legalModal, setLegalModal] = useState<LegalDocId | null>(null);
+  // Installer l'app web sur l'écran d'accueil, dès la première visite.
+  const canPromptInstall = useCanPromptInstall();
+  const showInstallButton = !isInstalledApp() && (canPromptInstall || isIos());
 
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -1139,6 +1144,24 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   >
                     {t('onb_already_have_account')}
                   </Button>
+
+                  {showInstallButton && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (canPromptInstall) {
+                          await promptInstall();
+                        } else {
+                          // iOS : pas d'installation en un geste, on explique.
+                          toast.info(t('install_ios_hint'), { duration: 8000 });
+                        }
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-brand hover:underline cursor-pointer"
+                    >
+                      <Download className="w-5 h-5" />
+                      {t('onb_install_app')}
+                    </button>
+                  )}
 
                   {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
                   <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground pt-1">

@@ -6,6 +6,9 @@ import { AuthProvider } from './contexts/AuthContext.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { PublicLegalPage, publicLegalPageFor } from './components/PublicLegalPage.tsx';
 import './index.css';
+// Capte l'événement d'installation PWA avant le montage des composants :
+// Chrome ne le déclenche qu'une fois, souvent très tôt.
+import './lib/pwaInstall';
 
 // Les documents légaux ont une adresse publique, lisible sans compte
 // (exigence de la console Google Play) : pas d'authentification à charger.
