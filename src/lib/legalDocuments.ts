@@ -220,8 +220,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: "3. L'offre",
         paragraphs: [
           "Notre équipe refuse la demande en vous expliquant pourquoi, ou vous fait une offre : le montant prêté (il peut être inférieur à votre demande), le taux d'intérêt, la durée en mois et le total à rembourser.",
-          "Durée de remboursement : de 3 à 24 mois. Les intérêts sont calculés une seule fois sur le montant prêté (intérêt simple) : total à rembourser = montant prêté + montant prêté × taux. Le taux annuel (intérêt simple) ne dépasse jamais 36 %, et le taux sur toute la durée ne dépasse jamais 24 % du montant prêté (par exemple : 9 % au plus sur 3 mois, 18 % au plus sur 6 mois). Le total et le taux annuel vous sont affichés au franc près avant que vous ne décidiez. Aucun autre frais ne peut vous être réclamé.",
-          "Exemple : pour 50 000 FCFA prêtés sur 6 mois à 10 % (taux annuel 20 %), vous remboursez 55 000 FCFA en tout, soit environ 9 166 FCFA par mois.",
+          "Durée de remboursement : de 3 à 24 mois. Les intérêts sont calculés une seule fois sur le montant prêté (intérêt simple) : total à rembourser = montant prêté + montant prêté × taux. Le taux en intérêt simple ne dépasse jamais 13 % par an (par exemple : 3,25 % au plus sur 3 mois, 6,5 % au plus sur 6 mois), si bien que le coût réel annuel (TEG) reste toujours inférieur au taux d'usure de 24 %. Le total et le coût réel annuel vous sont affichés au franc près avant que vous ne décidiez. Aucun autre frais ne peut vous être réclamé.",
+          "Exemple : pour 50 000 FCFA prêtés sur 6 mois à 6 % (1 % par mois, coût réel d'environ 20 % par an), vous remboursez 53 000 FCFA en tout, soit environ 8 833 FCFA par mois.",
           "Vous êtes libre d'accepter ou de refuser l'offre. Rien ne vous est versé, et vous ne devez rien, tant que vous ne l'avez pas acceptée.",
         ],
       },

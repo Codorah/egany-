@@ -10,7 +10,8 @@ import {
   CREDIT_MAX_MONTHS,
   CREDIT_MIN_MONTHS,
   CreditApplicationForReview,
-  annualRate,
+  effectiveAnnualRate,
+  defaultRateFor,
   maxRateFor,
   fetchCreditApplicationsForReview,
   makeCreditOffer,
@@ -93,7 +94,8 @@ export function AdminCreditReview({ onPendingCountChange }: AdminCreditReviewPro
 
 function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDone: () => void }) {
   const [amount, setAmount] = useState(String(app.requestedAmount));
-  const [rate, setRate] = useState('10');
+  // Taux conseillé (1 % par mois) pour la durée demandée.
+  const [rate, setRate] = useState(String(defaultRateFor(app.requestedMonths)));
   const [months, setMonths] = useState(String(app.requestedMonths));
   const [notes, setNotes] = useState('');
   const [reason, setReason] = useState('');
@@ -107,7 +109,7 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
     const a = Number(amount), r = Number(rate), m = Number(months);
     if (!a || a <= 0) return toast.error('Indiquez le montant offert.');
     if (!m || m < CREDIT_MIN_MONTHS || m > CREDIT_MAX_MONTHS) return toast.error(`La durée doit être entre ${CREDIT_MIN_MONTHS} et ${CREDIT_MAX_MONTHS} mois.`);
-    if (!(r >= 0 && r <= maxRateFor(m))) return toast.error(`Pour ${m} mois, le taux doit être entre 0 et ${maxRateFor(m)} % (36 % par an au plus).`);
+    if (!(r >= 0 && r <= maxRateFor(m))) return toast.error(`Pour ${m} mois, le taux doit être entre 0 et ${maxRateFor(m)} % (13 % par an au plus en intérêt simple, pour rester sous le taux d’usure).`);
     setBusy(true);
     const res = await makeCreditOffer({ applicationId: app.id, offeredAmount: a, interestRate: r, durationMonths: m, adminNotes: notes.trim() });
     setBusy(false);
@@ -162,7 +164,7 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
                   <Input type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[12px] font-bold text-muted-foreground">Taux (%)</Label>
+                  <Label className="text-[12px] font-bold text-muted-foreground">Taux total (%)</Label>
                   <Input type="number" min={0} max={maxRateFor(Number(months) || CREDIT_MIN_MONTHS)} step="0.5" value={rate} onChange={(e) => setRate(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
                 <div className="space-y-1">
@@ -172,7 +174,10 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
               </div>
               <p className="text-xs text-foreground">
                 La personne remboursera <strong>{fcfa(total)}</strong>
-                {Number(months) > 0 && <> , soit environ <strong>{fcfa(Math.floor(total / Number(months)))}</strong> par mois (taux annuel {annualRate(Number(rate) || 0, Number(months))} %)</>}.
+                {Number(months) > 0 && <> , soit environ <strong>{fcfa(Math.floor(total / Number(months)))}</strong> par mois (coût réel {effectiveAnnualRate(Number(rate) || 0, Number(months))} % par an)</>}.
+                <span className="block text-muted-foreground mt-1">
+                  Conseillé : {defaultRateFor(Number(months) || CREDIT_MIN_MONTHS)} % (1 % par mois). Maximum : {maxRateFor(Number(months) || CREDIT_MIN_MONTHS)} %.
+                </span>
               </p>
               <Textarea rows={2} placeholder="Message pour la personne (facultatif)" value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl bg-card text-xs" />
               <Button onClick={sendOffer} disabled={busy} className="btn-shine w-full h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white">

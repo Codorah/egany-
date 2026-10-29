@@ -102,16 +102,50 @@ export const creditCap = (totalSaved: number) => Math.max(CREDIT_FLOOR, Math.rou
 /** Google Play interdit les prêts à rembourser en 60 jours ou moins : 3 mois minimum. */
 export const CREDIT_MIN_MONTHS = 3;
 export const CREDIT_MAX_MONTHS = 24;
-/** Taux maximum sur toute la durée, fixé côté serveur (0026). */
+/** Taux maximum sur toute la durée (contrainte de la table, 0026). */
 export const CREDIT_MAX_RATE = 24;
-/** Taux annuel maximum (intérêt simple), référence de Google Play. */
-export const CREDIT_MAX_ANNUAL_RATE = 36;
-/** Taux total permis pour une durée : min(24 %, 36 % par an). */
-export const maxRateFor = (months: number) => Math.min(CREDIT_MAX_RATE, (CREDIT_MAX_ANNUAL_RATE * months) / 12);
+/**
+ * Taux d'usure UEMOA applicable à la microfinance (SFD) : 24 % par an. Il
+ * porte sur le coût réel (TEG), pas sur le taux affiché.
+ */
+export const CREDIT_USURY_RATE = 24;
+/**
+ * Plafond en intérêt simple : 13 % par an. Comme on rembourse par
+ * mensualités, le coût réel d'un taux simple est presque le double (on paie
+ * des intérêts sur de l'argent déjà remboursé) : 13 % simple donne au plus
+ * environ 23,4 % de TEG, sous le taux d'usure. Même règle côté serveur (0031).
+ */
+export const CREDIT_MAX_SIMPLE_ANNUAL_RATE = 13;
+/** Taux conseillé : 1 % par mois en intérêt simple (TEG d'environ 18 à 21 %). */
+export const CREDIT_DEFAULT_MONTHLY_RATE = 1;
 
-/** Taux annualisé d'une offre (intérêt simple), pour l'afficher à l'emprunteur. */
-export const annualRate = (ratePercent: number, months: number) =>
-  months > 0 ? Math.round(((ratePercent * 12) / months) * 10) / 10 : 0;
+/** Taux total permis pour une durée : 13 % par an, et 24 % au plus. */
+export const maxRateFor = (months: number) =>
+  Math.min(CREDIT_MAX_RATE, Math.floor(((CREDIT_MAX_SIMPLE_ANNUAL_RATE * months) / 12) * 100) / 100);
+
+/** Taux total conseillé pour une durée (1 % par mois). */
+export const defaultRateFor = (months: number) =>
+  Math.min(maxRateFor(months), CREDIT_DEFAULT_MONTHLY_RATE * months);
+
+/**
+ * Coût réel annuel (TEG) d'une offre remboursée en mensualités égales :
+ * taux mensuel qui égalise le montant prêté et les mensualités, × 12.
+ * C'est lui qu'on montre à l'emprunteur, et lui que vise le taux d'usure.
+ */
+export const effectiveAnnualRate = (ratePercent: number, months: number) => {
+  if (months <= 0 || ratePercent <= 0) return 0;
+  const payment = (1 + ratePercent / 100) / months;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 100; i += 1) {
+    const r = (lo + hi) / 2;
+    let pv = 0;
+    for (let k = 1; k <= months; k += 1) pv += payment / (1 + r) ** k;
+    if (pv > 1) lo = r;
+    else hi = r;
+  }
+  return Math.round(lo * 12 * 1000) / 10;
+};
 
 export async function fetchMyCreditApplications(userId: string): Promise<CreditApplication[]> {
   const { data, error } = await supabase

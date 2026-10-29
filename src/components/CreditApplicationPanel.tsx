@@ -10,13 +10,14 @@ import { AmountDisplay } from './ui/AmountDisplay';
 import { MarketplaceService, UserProfile } from '@/types';
 import { providerLabel } from '@/lib/marketplace';
 import {
-  CREDIT_MAX_ANNUAL_RATE,
   CREDIT_MAX_MONTHS,
   CREDIT_MAX_RATE,
   CREDIT_MIN_MONTHS,
   CreditApplication,
   acceptCreditOffer,
-  annualRate,
+  effectiveAnnualRate,
+  CREDIT_USURY_RATE,
+  CREDIT_DEFAULT_MONTHLY_RATE,
   creditCap,
   declineCreditOffer,
   isOpenApplication,
@@ -322,17 +323,17 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
 export function CreditCostDisclosure() {
   const exampleAmount = 50000;
   const exampleMonths = 6;
-  const exampleRate = 10;
+  const exampleRate = CREDIT_DEFAULT_MONTHLY_RATE * 6;
   const exampleTotal = exampleAmount + Math.round((exampleAmount * exampleRate) / 100);
   return (
     <div className="rounded-2xl border border-border p-4 space-y-1.5 text-[13px] text-muted-foreground leading-relaxed">
       <p className="font-bold text-foreground">Coût du crédit</p>
       <p>
-        Durée de remboursement : de {CREDIT_MIN_MONTHS} à {CREDIT_MAX_MONTHS} mois. Intérêt simple, sans autres frais : taux annuel maximum {CREDIT_MAX_ANNUAL_RATE} %, et
-        jamais plus de {CREDIT_MAX_RATE} % du montant prêté sur toute la durée.
+        Durée de remboursement : de {CREDIT_MIN_MONTHS} à {CREDIT_MAX_MONTHS} mois. Intérêt simple, sans autres frais. Le coût réel annuel (TEG)
+        reste toujours sous {CREDIT_USURY_RATE} %, et vous est affiché avant d’accepter.
       </p>
       <p>
-        Exemple : {fcfa(exampleAmount)} sur {exampleMonths} mois à {exampleRate} % (taux annuel {annualRate(exampleRate, exampleMonths)} %), soit {fcfa(exampleTotal)} à
+        Exemple : {fcfa(exampleAmount)} sur {exampleMonths} mois à {exampleRate} % (coût réel {effectiveAnnualRate(exampleRate, exampleMonths)} % par an), soit {fcfa(exampleTotal)} à
         rembourser en tout, environ {fcfa(Math.floor(exampleTotal / exampleMonths))} par mois.
       </p>
     </div>
@@ -405,7 +406,7 @@ function OfferAnswer({ app, service, onChanged, onShowTerms, onClose }: CreditFl
       </div>
 
       <div className="rounded-2xl border border-border px-4 divide-y divide-border">
-        <FlowRow label={`Intérêts (${app.interestRate ?? 0} %, soit ${annualRate(app.interestRate ?? 0, months)} % par an)`} value={fcfa(interest)} />
+        <FlowRow label={`Intérêts (${app.interestRate ?? 0} %, coût réel ${effectiveAnnualRate(app.interestRate ?? 0, months)} % par an)`} value={fcfa(interest)} />
         <FlowRow label="Durée" value={`${months} mois`} />
         <FlowRow label="Mensualité" value={months > 1 ? `${fcfa(monthly)} environ` : fcfa(total)} />
         <FlowRow label="Total à rembourser" value={fcfa(total)} strong />
