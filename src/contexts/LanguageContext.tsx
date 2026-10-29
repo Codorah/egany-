@@ -161,7 +161,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   },
   active_circles: {
     fr: 'Mes cercles',
-    en: 'My Active Circles',
+    en: 'My circles',
     ee: 'Nye Habɔbɔ siwo le dɔwɔm',
     kbp: 'Man tontinaa wena awɛ ñʋʋ taa'
   },
@@ -3028,10 +3028,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Essai gratuit'
   },
   bank_free_trial_desc: {
-    fr: 'Un compte épargne inclus pour essayer, sans engagement.',
-    en: 'One savings account included to try it out, no commitment.',
-    ee: 'Un compte épargne inclus pour essayer, sans engagement.',
-    kbp: 'Un compte épargne inclus pour essayer, sans engagement.'
+    fr: 'Un coffre inclus pour essayer, sans engagement.',
+    en: 'One savings account included to try it out, no commitment.'
   },
   bank_upsell_title: {
     fr: 'Envie de plusieurs coffres ?',
@@ -3040,22 +3038,16 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Envie de plusieurs coffres ?'
   },
   bank_upsell_desc: {
-    fr: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.',
-    en: 'Subscribe to create several savings accounts at once.',
-    ee: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.',
-    kbp: 'Abonne-toi pour créer plusieurs comptes épargne en parallèle.'
+    fr: 'Abonnez-vous pour créer plusieurs coffres en même temps.',
+    en: 'Subscribe to create several savings accounts at once.'
   },
   bank_create_page_title: {
-    fr: 'Créer un compte épargne',
-    en: 'Create a savings account',
-    ee: 'Créer un compte épargne',
-    kbp: 'Créer un compte épargne'
+    fr: 'Créer un coffre',
+    en: 'Create a savings account'
   },
   bank_cap_reached_note: {
-    fr: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.',
-    en: "You've reached your tier's limit — subscribe to create more.",
-    ee: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.',
-    kbp: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.'
+    fr: 'Limite de votre formule atteinte : abonnez-vous pour en créer plus.',
+    en: "You've reached your tier's limit — subscribe to create more."
   },
   bank_no_subscription_title: {
     fr: "Débloquez l'accès à Mon Épargne",
@@ -3064,9 +3056,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Mʋ waɖɛ man liidiye kpou'
   },
   bank_no_subscription_desc: {
-    fr: "Choisissez un palier pour créer vos coffres d’épargne, bloqués jusqu’à leur date.",
+    fr: 'Choisissez une formule pour créer vos coffres d’épargne, bloqués jusqu’à leur date.',
     en: 'Choose a tier to create your savings vaults, locked until their date.',
-    ee: 'Tia asixɔxɔ ɖeka be nàdze wò gaxɔ bubuawo si le blɔkɔm wɔwɔ gɔme.',
     kbp: 'Lɩzɩ kɩlɩzɩ nakʋyʋ se ŋ-paɣzɩ ño-kpou haʋ.'
   },
   bank_tier_starter: {
@@ -3112,7 +3103,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Kpou hɩɖɛ'
   },
   bank_name_placeholder: {
-    fr: 'Ex: Achat voiture, Fonds urgence...',
+    fr: 'Ex : achat moto, fonds d’urgence…',
     en: 'e.g. Car purchase, Emergency fund...',
     ee: 'Kpɔɖeŋu: Ʋu Ƒle, Kuxi Ga...',
     kbp: 'Ɛzɩ: Kɛɛ yabʋ, Kaɖɛ liidiye...'
@@ -3196,7 +3187,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ma ño-kpou kajalaɣ se ŋ-paɣzɩ marʋʋ nɛ ŋ-tɩɩ kpeɣu pɩ-taa ɖooo kɩyakʋ ŋga kɩ-caɣ yɔ.'
   },
   bank_current_tier: {
-    fr: 'Votre palier actuel',
+    fr: 'Votre formule',
     en: 'Your current tier',
     ee: 'Wò Asixɔxɔ Fifitɔ',
     kbp: 'Ño-kɩlɩzɩ lɛɛlɛɛyɔ'
@@ -3208,7 +3199,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'kpou pɩ-lakɩ'
   },
   bank_upgrade_cta: {
-    fr: 'Changer de palier',
+    fr: 'Changer de formule',
     en: 'Change tier',
     ee: 'Trɔ Asixɔxɔ',
     kbp: 'Yekiɣ kɩlɩzɩ'
@@ -7489,7 +7480,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Goal:'
   },
   bank_my_reservations: {
-    fr: 'Mes réservations',
+    fr: 'Mes coffres',
     en: 'My reservations'
   },
   bank_view_all: {
