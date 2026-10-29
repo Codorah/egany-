@@ -60,6 +60,9 @@ type ProfileSection =
   | 'notifications'
   | 'legal';
 
+/** Montants proposés en un geste pour recharger. */
+const QUICK_AMOUNTS = [5000, 10000, 25000, 50000];
+
 export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavigate }: ProfileProps) {
   const { t, language, setLanguage } = useLanguage();
 
@@ -1090,12 +1093,12 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Portefeuille Mobile Money')}
+            {renderSubHeader('Mon portefeuille')}
 
             {/* Solde card */}
             <div className="gradient-sunset rounded-3xl p-5 text-white shadow-soft space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-white/90">Solde disponible</span>
+                <span className="text-sm font-medium text-white/90">Mon solde</span>
                 <button
                   type="button"
                   onClick={() => setShowBalance(!showBalance)}
@@ -1132,7 +1135,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <button
                 type="button"
                 onClick={() => setWalletAction('recharge')}
-                className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   walletAction === 'recharge' ? 'bg-white dark:bg-card text-[#C96F4A] shadow-xs' : 'text-muted-foreground'
                 }`}
               >
@@ -1141,7 +1144,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <button
                 type="button"
                 onClick={() => setWalletAction('withdraw')}
-                className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   walletAction === 'withdraw' ? 'bg-white dark:bg-card text-[#C96F4A] shadow-xs' : 'text-muted-foreground'
                 }`}
               >
@@ -1152,23 +1155,61 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             {/* Formulaire Recharger */}
             {walletAction === 'recharge' ? (
               <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-                <h3 className="font-serif font-bold text-sm text-foreground">Recharger mon compte</h3>
+                {/* Montant en grand, avec des montants rapides */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-bold text-foreground">Combien voulez-vous ajouter ?</Label>
+                  <div className="flex items-baseline justify-center gap-2 rounded-2xl bg-muted/50 px-4 py-3">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={500}
+                      step={500}
+                      placeholder="0"
+                      aria-label="Montant en FCFA"
+                      value={rechargeAmount}
+                      onChange={(e) => setRechargeAmount(e.target.value)}
+                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-black shadow-none focus-visible:ring-0"
+                    />
+                    <span className="text-base font-bold text-muted-foreground">FCFA</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {QUICK_AMOUNTS.map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setRechargeAmount(String(amt))}
+                        className={`h-10 rounded-xl text-[13px] font-bold border transition-colors cursor-pointer ${
+                          Number(rechargeAmount) === amt
+                            ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
+                            : 'border-border text-foreground hover:bg-muted/60'
+                        }`}
+                      >
+                        {amt.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Montant (FCFA)</Label>
-                  <Input
-                    type="number"
-                    min={500}
-                    step={500}
-                    placeholder="25 000"
-                    value={rechargeAmount}
-                    onChange={(e) => setRechargeAmount(e.target.value)}
-                    className="rounded-xl h-11 text-base font-bold"
+                  <Label className="text-sm font-bold text-foreground">Avec quel opérateur ?</Label>
+                  <ChipPicker
+                    ariaLabel="Opérateur"
+                    value={rechargeMethod}
+                    onChange={setRechargeMethod}
+                    options={getOperatorsForCountry(rechargeCountry)}
                   />
-                  <p className="text-[11px] text-muted-foreground">
-                    {rechargeFeeOnTop
-                      ? 'Le montant que vous recevrez sur votre portefeuille.'
-                      : 'Le montant débité sur votre Mobile Money.'}
-                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-bold text-foreground">Numéro qui paie</Label>
+                  <Input
+                    type="tel"
+                    inputMode="tel"
+                    value={rechargePhone}
+                    onChange={(e) => setRechargePhone(e.target.value)}
+                    className="rounded-xl h-12 font-mono text-base"
+                  />
+                  <p className="text-[13px] text-muted-foreground">Vous confirmerez le paiement sur ce téléphone.</p>
                 </div>
 
                 {platformSettings?.depositFeeEnabled && (
@@ -1219,57 +1260,48 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Opérateur</Label>
-                  <ChipPicker
-                    ariaLabel="Opérateur"
-                    value={rechargeMethod}
-                    onChange={setRechargeMethod}
-                    options={getOperatorsForCountry(rechargeCountry)}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Numéro de téléphone émetteur</Label>
-                  <Input
-                    type="tel"
-                    value={rechargePhone}
-                    onChange={(e) => setRechargePhone(e.target.value)}
-                    className="rounded-xl h-11 font-mono text-sm"
-                  />
-                </div>
-
                 <Button
                   onClick={handleRecharge}
                   disabled={isRecharging}
                   className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
                   {isRecharging
-                    ? 'Paiement en cours...'
+                    ? 'Paiement en cours…'
                     : depositBreakdown && depositBreakdown.fee > 0
                       ? `Payer ${depositBreakdown.gross.toLocaleString()} FCFA`
-                      : 'Confirmer la recharge'}
+                      : 'Recharger'}
                 </Button>
               </div>
             ) : (
               /* Formulaire Retirer */
               <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
-                <h3 className="font-serif font-bold text-sm text-foreground">Retirer vers Mobile Money</h3>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Montant à retirer (FCFA)</Label>
-                  <Input
-                    type="number"
-                    min={500}
-                    step={500}
-                    placeholder="10 000"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="rounded-xl h-11 text-base font-bold"
-                  />
+                <div className="space-y-3">
+                  <Label className="text-sm font-bold text-foreground">Combien voulez-vous retirer ?</Label>
+                  <div className="flex items-baseline justify-center gap-2 rounded-2xl bg-muted/50 px-4 py-3">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={500}
+                      step={500}
+                      placeholder="0"
+                      aria-label="Montant à retirer en FCFA"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-black shadow-none focus-visible:ring-0"
+                    />
+                    <span className="text-base font-bold text-muted-foreground">FCFA</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawAmount(String(Math.floor(user.walletBalance || 0)))}
+                    className="w-full text-center text-[13px] font-bold text-brand hover:underline cursor-pointer"
+                  >
+                    Tout retirer ({(user.walletBalance || 0).toLocaleString()} FCFA)
+                  </button>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Opérateur de réception</Label>
+                  <Label className="text-sm font-bold text-foreground">Vers quel opérateur ?</Label>
                   <ChipPicker
                     ariaLabel="Opérateur"
                     value={withdrawMethod}
@@ -1279,33 +1311,39 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Numéro bénéficiaire</Label>
+                  <Label className="text-sm font-bold text-foreground">Numéro qui reçoit l'argent</Label>
                   <Input
                     type="tel"
+                    inputMode="tel"
                     value={withdrawPhone}
                     onChange={(e) => setWithdrawPhone(e.target.value)}
-                    className="rounded-xl h-11 font-mono text-sm"
+                    className="rounded-xl h-12 font-mono text-base"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Code PIN de retrait (4 chiffres)</Label>
+                  <Label className="text-sm font-bold text-foreground">Code PIN</Label>
                   <Input
                     type="password"
+                    inputMode="numeric"
                     maxLength={4}
                     value={withdrawPin}
                     onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="rounded-xl h-11 font-mono text-center tracking-widest"
+                    className="rounded-xl h-12 font-mono text-center text-lg tracking-[0.5em]"
                     placeholder="••••"
                   />
                 </div>
+
+                <p className="text-[13px] text-muted-foreground bg-muted/50 rounded-xl p-3 leading-snug">
+                  Votre demande est vérifiée par notre équipe avant l'envoi de l'argent sur votre Mobile Money.
+                </p>
 
                 <Button
                   onClick={handleWithdrawReview}
                   disabled={isWithdrawing}
                   className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
-                  {isWithdrawing ? 'Vérification...' : 'Continuer le retrait'}
+                  {isWithdrawing ? 'Vérification…' : 'Demander le retrait'}
                 </Button>
               </div>
             )}
