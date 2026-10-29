@@ -22,6 +22,7 @@ import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import { ChipPicker } from './ui/ChipPicker';
 import { PaymentPendingCard } from './ui/PaymentPendingCard';
 import { StatusBadge } from './ui/StatusBadge';
+import { SettingsGroup, SettingsRow } from './ui/SettingsList';
 
 import { supabase } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
@@ -578,7 +579,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     }`}
                   >
                     <EganyeIcon name="shield" size={11} />
-                    <span>{isKycOk ? 'Compte vérifié Tier 2' : 'Vérifier ma pièce d’identité'}</span>
+                    <span>{isKycOk ? 'Identité vérifiée' : 'Vérifier mon identité'}</span>
                   </button>
                 </div>
               </div>
@@ -591,7 +592,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-[#EFE2D0] dark:border-border/80 text-left hover:border-[#C96F4A]/40 transition-colors cursor-pointer"
                 >
                   <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground block">
-                    Mon disponible
+                    Mon solde
                   </span>
                   <p className="text-sm sm:text-base font-serif font-black text-[#C96F4A] truncate mt-0.5">
                     {(user.walletBalance || 0).toLocaleString()} FCFA
@@ -600,7 +601,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
                 <div className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-[#EFE2D0] dark:border-border/80 text-left">
                   <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground block">
-                    Fiabilité tontine
+                    Ma fiabilité
                   </span>
                   <p className="text-sm sm:text-base font-serif font-black text-[#718A68] truncate mt-0.5">
                     {user.reputationScore || 100} / 100
@@ -609,312 +610,117 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </div>
             </div>
 
-            {/* 2. GROUPES DE RÉGLAGES (MOBILE CELL LISTS) */}
+            {/* 2. RÉGLAGES, RANGÉS PAR THÈME (même présentation que la fiche d'un cercle) */}
+            <SettingsGroup title="Mon compte">
+              <SettingsRow
+                icon="profile"
+                tone="brand"
+                label="Mes informations"
+                hint="Nom, téléphone, date de naissance"
+                onClick={() => setActiveSection('personal_info')}
+              />
+              <SettingsRow
+                icon="shield"
+                tone="sage"
+                label="Vérifier mon identité"
+                hint="Carte d'identité ou passeport"
+                onClick={() => setActiveSection('kyc')}
+                value={<StatusBadge tone={isKycOk ? 'success' : 'warning'} label={isKycOk ? 'Vérifiée' : 'À faire'} />}
+              />
+              <SettingsRow
+                icon="members"
+                tone="sand"
+                label="Personne de confiance"
+                hint="Peut agir pour vous en cas d'imprévu"
+                onClick={() => setActiveSection('mandate')}
+              />
+            </SettingsGroup>
 
-            {/* GROUPE 1 : MON COMPTE */}
-            <div className="space-y-1.5 pt-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                Mon compte & identité
-              </h2>
-              <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('personal_info')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#F8F0E4] text-[#C96F4A] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="profile" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Informations personnelles
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Nom, prénom, date de naissance, téléphone
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
+            <SettingsGroup title="Sécurité">
+              <SettingsRow
+                icon="fingerprint"
+                tone="info"
+                label="Verrouiller avec l'empreinte"
+                hint="Demandée à chaque ouverture de l'app"
+                trailing={<Switch checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />}
+              />
+              <SettingsRow
+                icon="lock"
+                tone="brand"
+                label="Code PIN"
+                hint="Demandé pour chaque retrait"
+                onClick={() => setActiveSection('security_pin')}
+              />
+              <SettingsRow
+                icon="key"
+                tone="sand"
+                label="Mot de passe"
+                hint="Le changer"
+                onClick={() => setActiveSection('security_password')}
+              />
+            </SettingsGroup>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('kyc')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#EBF5EA] text-[#718A68] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="shield" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#718A68] transition-colors">
-                      Vérification d’identité (KYC)
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Carte nationale d'identité, passeport
-                    </span>
-                  </div>
-                  <StatusBadge
-                    tone={isKycOk ? 'success' : 'warning'}
-                    label={isKycOk ? 'Vérifié' : 'À faire'}
-                    className="shrink-0 mr-1"
-                  />
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
+            <SettingsGroup title="Mon argent">
+              <SettingsRow
+                icon="wallet"
+                tone="brand"
+                label="Mon portefeuille"
+                hint="Recharger ou retirer avec Mixx ou Flooz"
+                value={`${(user.walletBalance || 0).toLocaleString()} FCFA`}
+                onClick={() => setActiveSection('wallet')}
+              />
+              <SettingsRow
+                icon="star"
+                tone="gold"
+                label="Formule Ma Banque"
+                hint="Coffres d'épargne"
+                value={user.bankTier && user.bankTier !== 'none' ? user.bankTier : 'Gratuite'}
+                onClick={() => setActiveSection('subscription')}
+              />
+            </SettingsGroup>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('mandate')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#F4EFE6] text-[#3E2F24] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="members" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Mandataire numérique
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Personne de confiance en cas d’imprévu
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-              </div>
-            </div>
+            <SettingsGroup title="Préférences">
+              <SettingsRow
+                icon="globe"
+                tone="info"
+                label="Langue"
+                value={({ fr: 'Français', en: 'English', ee: 'Èʋegbe', kbp: 'Kabɩyɛ' } as Record<string, string>)[language] ?? 'Français'}
+                onClick={() => setActiveSection('language')}
+              />
+              <SettingsRow
+                icon="bell"
+                tone="brand"
+                label="Notifications"
+                hint="Rappels par SMS, WhatsApp ou e-mail"
+                onClick={() => setActiveSection('notifications')}
+              />
+            </SettingsGroup>
 
-            {/* GROUPE 2 : SÉCURITÉ */}
-            <div className="space-y-1.5 pt-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                Sécurité & Accès
-              </h2>
-              <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('security_pin')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#FDF0EB] text-[#C96F4A] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="lock" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Code PIN de retrait (4 chiffres)
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Sécurise les transactions et retraits
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('security_password')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#F4EFE6] text-[#3E2F24] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="key" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Mot de passe de connexion
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Modifier mon mot de passe
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                {/* Switch direct Biométrie */}
-                <div className="flex items-center justify-between px-4 py-3.5">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-info-soft text-info flex items-center justify-center shrink-0">
-                      <EganyeIcon name="fingerprint" size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm text-foreground block">
-                        Connexion biométrique
-                      </span>
-                      <span className="text-[11px] text-muted-foreground truncate block">
-                        Empreinte ou Face ID
-                      </span>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={biometricsEnabled}
-                    onCheckedChange={handleToggleBiometrics}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* GROUPE 3 : FINANCES & FORMULE */}
-            <div className="space-y-1.5 pt-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                Finances & Formule
-              </h2>
-              <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('wallet')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#FFF2E8] text-[#C96F4A] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="wallet" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Portefeuille Mobile Money
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Recharges Mixx, Moov Flooz & Retraits
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-[#C96F4A] mr-1">
-                    {(user.walletBalance || 0).toLocaleString()} FCFA
-                  </span>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('subscription')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#FEF6E9] text-[#C49A55] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="star" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C49A55] transition-colors">
-                      Formule Ma Banque
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Coffres et réservations multiples
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-muted-foreground mr-1 capitalize">
-                    {user.bankTier && user.bankTier !== 'none' ? user.bankTier : 'Gratuit'}
-                  </span>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-              </div>
-            </div>
-
-            {/* GROUPE 4 : PRÉFÉRENCES */}
-            <div className="space-y-1.5 pt-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                Préférences & Alertes
-              </h2>
-              <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('language')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-info-soft text-info flex items-center justify-center shrink-0">
-                    <EganyeIcon name="globe" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-info transition-colors">
-                      Langue de l’application
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Français, Èʋegbe, Kabɩyɛ
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-muted-foreground mr-1">
-                    {language === 'fr' ? 'Français' : language === 'ee' ? 'Èʋegbe' : 'Kabɩyɛ'}
-                  </span>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('notifications')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#F8F0E4] text-[#C96F4A] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="bell" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                      Notifications & Rappels
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Push, SMS, WhatsApp
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-              </div>
-            </div>
-
-            {/* GROUPE 5 : ASSISTANCE & LÉGAL */}
-            <div className="space-y-1.5 pt-1">
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-3">
-                Assistance & Légal
-              </h2>
-              <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-                <button
-                  type="button"
-                  onClick={() => onNavigate?.('support')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#EBF5EA] text-[#718A68] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="chat" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#718A68] transition-colors">
-                      Centre d’aide & Support WhatsApp
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      Besoin d’aide, poser une question
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('legal')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-[#F4EFE6] text-[#3E2F24] flex items-center justify-center shrink-0">
-                    <EganyeIcon name="document" size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#3E2F24] transition-colors">
-                      Conditions & Confidentialité
-                    </span>
-                    <span className="text-[11px] text-muted-foreground truncate block">
-                      CGU, règlement des cercles, microcrédit, données, mentions légales
-                    </span>
-                  </div>
-                  <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                </button>
-
-                {isAdminUser && (
-                  <button
-                    type="button"
-                    onClick={() => onNavigate?.('admin')}
-                    className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-[#FFF4E5] text-[#C96F4A] flex items-center justify-center shrink-0">
-                      <EganyeIcon name="shield" size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-bold text-xs sm:text-sm text-foreground block group-hover:text-[#C96F4A] transition-colors">
-                        Panneau d’administration
-                      </span>
-                      <span className="text-[11px] text-muted-foreground truncate block">
-                        Gestion plateforme, KYC et réconciliations
-                      </span>
-                    </div>
-                    <EganyeIcon name="chevron-right" size={15} className="text-muted-foreground" />
-                  </button>
-                )}
-              </div>
-            </div>
+            <SettingsGroup title="Aide">
+              <SettingsRow
+                icon="chat"
+                tone="sage"
+                label="Aide et support"
+                hint="Une question ? On vous répond"
+                onClick={() => onNavigate?.('support')}
+              />
+              <SettingsRow
+                icon="document"
+                tone="sand"
+                label="Conditions et confidentialité"
+                hint="Vos droits et nos règles"
+                onClick={() => setActiveSection('legal')}
+              />
+              {isAdminUser && (
+                <SettingsRow
+                  icon="shield"
+                  tone="brand"
+                  label="Administration"
+                  hint="Membres, vérifications, retraits"
+                  onClick={() => onNavigate?.('admin')}
+                />
+              )}
+            </SettingsGroup>
 
             {/* GROUPE 6 : SORTIE & DÉCONNEXION */}
             <div className="space-y-2 pt-2">
