@@ -7562,7 +7562,13 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   gd_delete_confirm_title: { fr: 'Supprimer ce cercle ?', en: 'Delete this circle?' },
   gd_delete_confirm_desc: { fr: 'sera supprimé pour tout le monde, avec ses messages et documents. Les membres seront prévenus.', en: 'will be deleted for everyone, with its messages and documents. Members will be notified.' },
   gd_delete_refused: { fr: 'Suppression refusée.', en: 'Deletion refused.' },
-  gd_delete_done: { fr: 'Cercle supprimé.', en: 'Circle deleted.' }
+  gd_delete_done: { fr: 'Cercle supprimé.', en: 'Circle deleted.' },
+  gd_soft_invite_title: { fr: 'Inviter des membres', en: 'Invite members' },
+  gd_soft_invite_desc: { fr: 'Partagez le code ou le lien : la personne demande à rejoindre, vous validez.', en: 'Share the code or link: the person asks to join, you approve.' },
+  gd_soft_copy_link: { fr: 'Copier le lien', en: 'Copy link' },
+  gd_soft_show_qr: { fr: 'Afficher le QR code', en: 'Show QR code' },
+  gd_soft_reliability_title: { fr: 'Fiabilité des membres', en: 'Member reliability' },
+  gd_soft_reliability_desc: { fr: 'Note sur 100, selon la régularité des cotisations.', en: 'Score out of 100, based on how regularly they pay.' }
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

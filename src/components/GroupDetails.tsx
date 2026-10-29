@@ -441,128 +441,81 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       <div className="space-y-5">
         {sectionHeader(t('gd_nav_membres'))}
 
-        {/* Share & QR Code Card */}
-        <Card className="rounded-2xl border-brand/20 bg-brand/10 overflow-hidden shadow-soft">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-8 space-y-4">
-                <div className="space-y-1">
-                  <Badge className="bg-brand text-white font-black tracking-widest text-[13px] uppercase">{t('gd_quick_share_badge')}</Badge>
-                  <h3 className="text-xl font-serif font-extrabold text-foreground tracking-tight">{t('gd_invite_link_title')}</h3>
-                  <p className="text-muted-foreground text-xs">{t('gd_invite_link_desc')}</p>
-                </div>
+        {/* Inviter : le code, WhatsApp, le lien, et le QR code sur demande */}
+        <div className="bg-white dark:bg-card rounded-3xl border border-[#EFE2D0] dark:border-border/80 shadow-soft p-5 space-y-4">
+          <div className="space-y-1">
+            <h3 className="font-serif text-lg font-black text-foreground">{t('gd_soft_invite_title')}</h3>
+            <p className="text-[13px] text-muted-foreground">{t('gd_soft_invite_desc')}</p>
+          </div>
 
-                <div className="space-y-1.5">
-                  <span className="text-[13px] font-bold uppercase text-muted-foreground">{t('gd_custom_link_label')}</span>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      title={t('gd_invite_link_aria')}
-                      aria-label={t('gd_invite_link_aria')}
-                      value={`${window.location.origin}/?join=${group.joinCode}`}
-                      className="flex-1 bg-card border border-border text-foreground text-xs px-3.5 py-2 rounded-xl focus:outline-none"
-                    />
-                    <Button
-                      size="sm"
-                      variant={copiedLink ? "default" : "outline"}
-                      className={`rounded-xl transition-all cursor-pointer ${copiedLink ? 'bg-secondary text-white border-secondary' : 'bg-card border-border hover:bg-muted'}`}
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/?join=${group.joinCode}`);
-                        setCopiedLink(true);
-                        toast.success(t('gd_invite_link_copied_toast'));
-                        setTimeout(() => setCopiedLink(false), 2000);
-                      }}
-                    >
-                      {copiedLink ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
-                      {copiedLink ? t('gd_copied_label') : t('gd_copy_label')}
-                    </Button>
-                  </div>
-                </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!group.joinCode) return;
+              navigator.clipboard.writeText(group.joinCode);
+              setCopiedCode(true);
+              toast.success(t('gd_code_copied_toast'));
+              setTimeout(() => setCopiedCode(false), 2000);
+            }}
+            className="w-full flex items-center justify-between gap-3 rounded-2xl bg-muted/50 border border-border px-4 py-3 cursor-pointer hover:bg-muted transition-colors"
+            title={t('gd_copy_code_title')}
+          >
+            <span className="text-left">
+              <span className="block text-[13px] text-muted-foreground">{t('gd_unique_code_label')}</span>
+              <span className="block font-mono text-2xl font-black tracking-[0.2em] text-foreground">{group.joinCode}</span>
+            </span>
+            {copiedCode ? <Check className="w-5 h-5 text-secondary shrink-0" /> : <Copy className="w-5 h-5 text-muted-foreground shrink-0" />}
+          </button>
 
-                <div className="flex flex-wrap items-center gap-6 pt-1">
-                  <div className="space-y-1">
-                    <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_unique_code_label')}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-black tracking-wider text-foreground bg-chip px-2.5 py-1 rounded-lg border border-border">
-                        {group.joinCode}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (group.joinCode) {
-                            navigator.clipboard.writeText(group.joinCode);
-                            setCopiedCode(true);
-                            toast.success(t('gd_code_copied_toast'));
-                            setTimeout(() => setCopiedCode(false), 2000);
-                          }
-                        }}
-                        className="text-muted-foreground hover:text-foreground transition-colors p-1 cursor-pointer"
-                        title={t('gd_copy_code_title')}
-                      >
-                        {copiedCode ? <Check className="w-4 h-4 text-secondary" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              className="h-12 rounded-full bg-[#25D366] hover:bg-[#20BE5B] text-white font-bold cursor-pointer"
+              onClick={() => {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t('gd_whatsapp_share_text')} ${window.location.origin}/?join=${group.joinCode}`)}`, '_blank');
+              }}
+            >
+              WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              className="h-12 rounded-full font-bold cursor-pointer"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/?join=${group.joinCode}`);
+                setCopiedLink(true);
+                toast.success(t('gd_invite_link_copied_toast'));
+                setTimeout(() => setCopiedLink(false), 2000);
+              }}
+            >
+              {copiedLink ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+              {copiedLink ? t('gd_copied_label') : t('gd_soft_copy_link')}
+            </Button>
+          </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_share_channels_label')}</span>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-[13px] font-bold text-brand bg-brand/10 hover:bg-brand/20 rounded-lg px-2.5 cursor-pointer"
-                        onClick={() => {
-                          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t('gd_whatsapp_share_text')} ${window.location.origin}/?join=${group.joinCode}`)}`, '_blank');
-                        }}
-                      >
-                        WhatsApp
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-[13px] font-bold text-secondary bg-secondary/10 hover:bg-secondary/20 rounded-lg px-2.5 cursor-pointer"
-                        onClick={() => {
-                          window.open(`https://telegram.me/share/url?url=${encodeURIComponent(`${window.location.origin}/?join=${group.joinCode}`)}&text=${encodeURIComponent(t('gd_telegram_share_text'))}`, '_blank');
-                        }}
-                      >
-                        Telegram
-                      </Button>
-                    </div>
-                  </div>
+          <details className="group/qr">
+            <summary className="list-none flex items-center justify-center gap-1.5 text-[13px] font-bold text-muted-foreground cursor-pointer hover:text-foreground">
+              <QrCode className="w-4 h-4" />
+              {t('gd_soft_show_qr')}
+            </summary>
+            <div className="flex flex-col items-center gap-2 pt-4">
+              {qrDataUrl ? (
+                <img src={qrDataUrl} alt={t('gd_qr_code_alt')} className="w-40 h-40 rounded-xl border border-border bg-white p-2" />
+              ) : (
+                <div className="w-40 h-40 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-              </div>
-
-              <div className="md:col-span-4 flex flex-col items-center justify-center bg-card p-4 rounded-2xl border border-border/60 shadow-inner space-y-2">
-                <div className="relative border-4 border-foreground rounded-xl p-1.5 bg-card">
-                  {qrDataUrl ? (
-                    <img src={qrDataUrl} alt={t('gd_qr_code_alt')} className="w-32 h-32 md:w-36 md:h-36" />
-                  ) : (
-                    <div className="w-32 h-32 md:w-36 md:h-36 flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-brand p-1.5 rounded-lg border-2 border-white shadow-md">
-                    <QrCode className="w-5 h-5 text-foreground" />
-                  </div>
-                </div>
-                <span className="text-[12px] font-black uppercase text-muted-foreground flex items-center gap-1">
-                  <ExternalLink className="w-3 h-3" />
-                  {t('gd_scan_to_join')}
-                </span>
-              </div>
+              )}
+              <span className="text-[13px] text-muted-foreground">{t('gd_scan_to_join')}</span>
             </div>
-          </CardContent>
-        </Card>
+          </details>
+        </div>
 
         {group.members.length > 1 && (
           <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-serif">
-                <Trophy className="w-4 h-4 text-brand" />
-                {t('gd_ranking_title')}
+                {t('gd_soft_reliability_title')}
               </CardTitle>
-              <CardDescription>{t('gd_ranking_desc_prefix')} {t('reputation_score')}.</CardDescription>
+              <CardDescription>{t('gd_soft_reliability_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-1.5">
               {[...group.members]
