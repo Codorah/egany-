@@ -643,13 +643,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     );
   }
 
-  // ── VUE PRINCIPALE MA BANQUE ──
+  // ── VUE PRINCIPALE MON ÉPARGNE ──
   return (
     <div className="space-y-4 sm:space-y-5 pb-20">
-      {/* 1. Header: Ma Banque */}
+      {/* 1. Header: Mon Épargne */}
       <div className="space-y-0.5 pt-1">
         <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
-          {t('my_bank') || "Ma Banque"}
+          {t('my_bank') || "Mon Épargne"}
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground font-medium">
           {t('my_bank_subtitle') || "Mets de l'argent de côté pour tes projets."}
@@ -705,7 +705,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-white/30 shadow-inner bg-[#A95636]/40">
             <img
               src="/onboarding/young-savers.webp"
-              alt="Ma Banque Épargne"
+              alt="Mon Épargne"
               className="w-full h-full object-cover object-top"
               onError={(e) => {
                 (e.target as HTMLElement).style.display = 'none';

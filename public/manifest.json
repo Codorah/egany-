@@ -32,8 +32,8 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Ma Banque",
-      "short_name": "Banque",
+      "name": "Mon Épargne",
+      "short_name": "Épargne",
       "url": "/?shortcut=bank",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },

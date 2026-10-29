@@ -246,7 +246,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               <div className="h-full rounded-[2rem] bg-card border border-border p-7 flex flex-col justify-between">
                 <PiggyBank className="w-8 h-8 text-brand" />
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-heading font-bold">Ma Banque</h3>
+                  <h3 className="text-lg font-heading font-bold">Mon Épargne</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">Des coffres personnels bloqués le temps que vous choisissez, pour ne pas toucher à votre épargne.</p>
                 </div>
               </div>

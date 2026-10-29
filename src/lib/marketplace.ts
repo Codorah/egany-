@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { mapMarketplaceRequestRow, mapMarketplaceServiceRow } from './mappers';
 import { MarketplaceRequest, MarketplaceService } from '@/types';
+import { SHOW_PARTNER_NAMES } from './links';
 
 export async function fetchActiveServices(): Promise<MarketplaceService[]> {
   const { data, error } = await supabase
@@ -86,3 +87,7 @@ export async function updateMarketplaceRequestStatus(params: {
   }
   return { success: true, message: 'Demande mise à jour.' };
 }
+
+/** Nom affiché sous un service : jamais une entreprise tant que SHOW_PARTNER_NAMES est faux. */
+export const providerLabel = (service: Pick<MarketplaceService, 'provider' | 'category'>) =>
+  SHOW_PARTNER_NAMES ? service.provider : service.category === 'credit' ? 'eganyé' : 'Partenaire eganyé';

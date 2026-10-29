@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AmountField, FlowCheckbox, FlowNotice, FlowRow, FlowScreen } from '@/components/ui/FlowScreen';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { MarketplaceService, UserProfile } from '@/types';
+import { providerLabel } from '@/lib/marketplace';
 import {
   CREDIT_MAX_ANNUAL_RATE,
   CREDIT_MAX_MONTHS,
@@ -182,7 +183,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
               <Icon className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-[26px] leading-tight font-serif font-bold">{service.title}</h1>
-            <p className="mt-1.5 text-[14px] opacity-90 font-medium">{service.provider}</p>
+            <p className="mt-1.5 text-[14px] opacity-90 font-medium">{providerLabel(service)}</p>
           </div>
         }
         footer={nextButton(true, 'Faire une demande')}

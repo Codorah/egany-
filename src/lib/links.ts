@@ -16,3 +16,13 @@ export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com
  * android/app/build/outputs/apk/release/app-release.apk → public/downloads/.
  */
 export const APK_DOWNLOAD_URL = '/downloads/eganye.apk';
+
+/**
+ * Afficher le nom des entreprises partenaires sur les services annexes.
+ *
+ * Dossier BCEAO : nommer un partenaire exige une convention de collaboration
+ * signée et son RCCM. Les services restent ouverts aux demandes, mais sans
+ * nom d'entreprise tant que les conventions ne sont pas signées. Passer à
+ * true une fois signées.
+ */
+export const SHOW_PARTNER_NAMES = false;

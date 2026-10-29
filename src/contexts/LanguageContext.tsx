@@ -2798,10 +2798,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Pɩyaɣ mʋyaa mba pɔ-maɣ yɔ'
   },
 
-  // Ma Banque
+  // Mon Épargne (coffres personnels ; jamais « banque » : appellation réglementée)
   my_bank: {
-    fr: 'Ma Banque',
-    en: 'My Bank',
+    fr: 'Mon Épargne',
+    en: 'My Savings',
     ee: 'BankVi Nyé',
     kbp: 'Man liidiye kpou'
   },
@@ -2860,10 +2860,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Erreur lors de la suppression.'
   },
   bank_load_error_title: {
-    fr: 'Impossible de charger Ma Banque',
-    en: 'Unable to load My Bank',
-    ee: 'Impossible de charger Ma Banque',
-    kbp: 'Impossible de charger Ma Banque'
+    fr: 'Impossible de charger Mon Épargne',
+    en: 'Unable to load My Savings',
+    ee: 'Impossible de charger Mon Épargne',
+    kbp: 'Impossible de charger Mon Épargne'
   },
   bank_retry: {
     fr: 'Réessayer',
@@ -3016,10 +3016,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Plus tard'
   },
   bank_back_to_my_bank: {
-    fr: 'Retour à Ma Banque',
-    en: 'Back to My Bank',
-    ee: 'Retour à Ma Banque',
-    kbp: 'Retour à Ma Banque'
+    fr: 'Retour à Mon Épargne',
+    en: 'Back to My Savings',
+    ee: 'Retour à Mon Épargne',
+    kbp: 'Retour à Mon Épargne'
   },
   bank_free_trial_label: {
     fr: 'Essai gratuit',
@@ -3058,32 +3058,32 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Limite de ton palier atteinte — abonne-toi pour en créer plus.'
   },
   bank_no_subscription_title: {
-    fr: "Débloquez l'accès à Ma Banque",
-    en: 'Unlock access to My Bank',
+    fr: "Débloquez l'accès à Mon Épargne",
+    en: 'Unlock access to My Savings',
     ee: 'Ʋu Mɔnu Na Nye Gaxɔ',
     kbp: 'Mʋ waɖɛ man liidiye kpou'
   },
   bank_no_subscription_desc: {
-    fr: "Choisissez un palier pour commencer à créer vos banques personnelles à délai bloqué.",
-    en: 'Choose a tier to start creating your locked personal banks.',
+    fr: "Choisissez un palier pour créer vos coffres d’épargne, bloqués jusqu’à leur date.",
+    en: 'Choose a tier to create your savings vaults, locked until their date.',
     ee: 'Tia asixɔxɔ ɖeka be nàdze wò gaxɔ bubuawo si le blɔkɔm wɔwɔ gɔme.',
     kbp: 'Lɩzɩ kɩlɩzɩ nakʋyʋ se ŋ-paɣzɩ ño-kpou haʋ.'
   },
   bank_tier_starter: {
-    fr: '1 à 5 banques',
-    en: '1 to 5 banks',
+    fr: '1 à 5 coffres',
+    en: '1 to 5 vaults',
     ee: 'Gaxɔ 1 vaseɖe 5',
     kbp: 'Kpou 1 halɩ 5'
   },
   bank_tier_growth: {
-    fr: '6 à 20 banques',
-    en: '6 to 20 banks',
+    fr: '6 à 20 coffres',
+    en: '6 to 20 vaults',
     ee: 'Gaxɔ 6 vaseɖe 20',
     kbp: 'Kpou 6 halɩ 20'
   },
   bank_tier_unlimited: {
-    fr: '21 banques et plus',
-    en: '21 banks and more',
+    fr: '21 coffres et plus',
+    en: '21 vaults and more',
     ee: 'Gaxɔ 21 kple wu nenema',
     kbp: 'Kpou 21 nɛ pɩ-yɔɔ'
   },
@@ -3100,14 +3100,14 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: '/ fenaɣ'
   },
   bank_create_new: {
-    fr: 'Créer une banque',
-    en: 'Create a bank',
+    fr: 'Créer un coffre',
+    en: 'Create a vault',
     ee: 'Wɔ Gaxɔ Yeye',
     kbp: 'Ma kpou kɩfaŋa'
   },
   bank_name_label: {
-    fr: 'Nom de la banque',
-    en: 'Bank name',
+    fr: 'Nom du coffre',
+    en: 'Vault name',
     ee: 'Gaxɔ Ŋkɔ',
     kbp: 'Kpou hɩɖɛ'
   },
@@ -3136,8 +3136,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Liidiye ŋgʋ n-sɔnzɩɣ yɔ kɩ-ñɔɔzɩ tam halɩ kɩyakʋ ŋga.'
   },
   bank_create_confirm: {
-    fr: 'Créer la banque',
-    en: 'Create the bank',
+    fr: 'Créer le coffre',
+    en: 'Create the vault',
     ee: 'Wɔ Gaxɔ La',
     kbp: 'Ma kpou'
   },
@@ -3184,14 +3184,14 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ɖɩzɩ'
   },
   bank_empty_title: {
-    fr: "Vous n'avez pas encore de banque",
-    en: "You don't have a bank yet",
+    fr: "Vous n'avez pas encore de coffre",
+    en: "You don't have a vault yet",
     ee: 'Mèsu gaxɔ haɖe o',
     kbp: 'Kpou naɖɩyɛ fɛyɩ ño-cɔlɔ fɛyɛ'
   },
   bank_empty_desc: {
-    fr: 'Créez votre première banque pour commencer à épargner sans y toucher avant terme.',
-    en: 'Create your first bank to start saving without touching it before the deadline.',
+    fr: 'Créez votre premier coffre pour épargner sans y toucher avant la date choisie.',
+    en: 'Create your first vault to save without touching it before the chosen date.',
     ee: 'Wɔ wò gaxɔ gbãtɔ be nàdze gadzraɖo gɔme mègaka asi eŋu hafi ɣeyiɣi la nade o.',
     kbp: 'Ma ño-kpou kajalaɣ se ŋ-paɣzɩ marʋʋ nɛ ŋ-tɩɩ kpeɣu pɩ-taa ɖooo kɩyakʋ ŋga kɩ-caɣ yɔ.'
   },
@@ -3202,8 +3202,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ño-kɩlɩzɩ lɛɛlɛɛyɔ'
   },
   bank_vaults_used: {
-    fr: 'banques utilisées',
-    en: 'banks used',
+    fr: 'coffres utilisés',
+    en: 'vaults used',
     ee: 'gaxɔ siwo woka zã',
     kbp: 'kpou pɩ-lakɩ'
   },
@@ -5251,16 +5251,12 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Lɩzɩ Weyi'
   },
   gd_auction_discount_label: {
-    fr: "Montant du rabais remporté à l'enchère (optionnel)",
-    en: 'Discount amount won at auction (optional)',
-    ee: 'Ga Home Si Woɖe Le Asitsatsa Me (Mele Vevie O)',
-    kbp: 'Liidiye Ñɩma Ŋgʋ Pa-Ñaɣ Asitsatsa Taa (Pɩ-Fɛyɩ Kɩ-Cɛyɩm)'
+    fr: 'Commission de priorité (facultatif)',
+    en: 'Priority fee (optional)'
   },
   gd_auction_discount_desc: {
-    fr: 'Ce montant sera déduit de la cagnotte puis redistribué équitablement entre les autres membres actifs.',
-    en: 'This amount will be deducted from the pot then redistributed equally among the other active members.',
-    ee: 'Woaɖe ga home sia le ga home gã la me eye woagama ɖe xɔ́ bubu siwo le dɔ wɔm la dome sɔsɔe.',
-    kbp: 'Pa-Kaɣ Ɖɛzɩ Liidiye Ñɩma Ɛnɛ Liidiye Sɔsɔɖɛ Taa Nɛ Pa-Ma-ɩ Ñɩnɖɛ Nɛ Lɛlaa Mba Pa-Lakɩ Tʋmɩyɛ Yɔ.'
+    fr: 'Payée par le membre qui passe en priorité : elle est retirée de sa cagnotte et partagée à parts égales entre les autres membres.',
+    en: 'Paid by the member who goes first: it is taken from their pot and shared equally among the other members.'
   },
   gd_distribute_funds_button: {
     fr: 'Distribuer les fonds',
@@ -5823,10 +5819,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Liidiye lɩʋ kɛ kaɣlaɣ taa'
   },
   cgd_dist_auction: {
-    fr: 'Enchères',
-    en: 'Auction',
-    ee: 'Asiƒoƒo',
-    kbp: 'Kɩlaʋ sɔsɔŋ taa'
+    fr: 'Commission de priorité',
+    en: 'Priority fee'
   },
   cgd_start_date_label: {
     fr: 'Date de début',
@@ -7346,7 +7340,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Espace de gestion',
     en: 'Management'
   },
-  // Ma Banque (MyBank) : textes restés en dur.
+  // Mon Épargne (MyBank) : textes restés en dur.
   mb_toast_created: {
     fr: 'Votre épargne a été créée avec succès !',
     en: 'Your savings have been created!'

@@ -675,7 +675,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <SettingsRow
                 icon="star"
                 tone="gold"
-                label="Formule Ma Banque"
+                label="Formule Épargne"
                 hint="Coffres d'épargne"
                 value={user.bankTier && user.bankTier !== 'none' ? t(`bank_tier_${user.bankTier}`) : 'Gratuite'}
                 onClick={() => setActiveSection('subscription')}
@@ -1364,7 +1364,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {renderSubHeader('Formule Ma Banque')}
+            {renderSubHeader('Formule Épargne')}
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
               <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] border border-[#C96F4A]/25 space-y-2">

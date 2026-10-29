@@ -73,7 +73,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
       {
         heading: '1. Le service',
         paragraphs: [
-          "eganyé est une application d'épargne en groupe : elle permet d'organiser des tontines (« cercles »), de tenir un portefeuille en FCFA, de mettre de l'argent de côté dans des banques personnelles bloquées dans le temps, et de demander certains services de partenaires, dont le microcrédit.",
+          "eganyé est une application d'épargne en groupe : elle permet d'organiser des tontines (« cercles »), de tenir un portefeuille en FCFA, de mettre de l'argent de côté dans des coffres d'épargne personnels, bloqués dans le temps, et de demander certains services de partenaires, dont le microcrédit.",
           "eganyé est un outil d'organisation et de tenue de comptes. eganyé n'est pas une banque et ne verse aucun intérêt sur les sommes déposées.",
         ],
       },

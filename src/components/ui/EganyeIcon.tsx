@@ -98,7 +98,7 @@ function getPath(name: EganyeIconName, sw: number): React.ReactNode {
           <rect x="16.6" y="3.5" width="4.4" height="17.5" rx="1.6" fill="currentColor" />
         </>
       );
-    // Un coffre, pas un temple grec à colonnes : « Ma Banque » désigne les
+    // Un coffre, pas un temple grec à colonnes : « Mon Épargne » désigne les
     // coffres personnels où l'on met de l'argent de côté sous clé. Les sept
     // traits fins de l'ancienne façade fusionnaient en une tache à 20 px.
     case 'bank':

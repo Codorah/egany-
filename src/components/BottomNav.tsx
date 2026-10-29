@@ -19,7 +19,7 @@ interface BottomNavProps {
  * Navigation principale mobile Eganyé — Style Fintech Haute Couture.
  * Dispose d'un orbe dynamique animé (spring physics) qui glisse et enveloppe
  * l'onglet actif avec un dégradé chaleureux Terracotta / Or Solaire.
- * 5 piliers : Accueil | Cercle | Activités | Ma Banque | Profil
+ * 5 piliers : Accueil | Cercle | Activités | Mon Épargne | Profil
  */
 export function BottomNav({
   user,
@@ -60,7 +60,7 @@ export function BottomNav({
     { id: 'dashboard', label: t('nav_home') || 'Accueil', icon: 'home' },
     { id: 'my-circles', label: t('nav_circles') || 'Cercle', icon: 'circle' },
     { id: 'activity', label: t('nav_activity') || 'Activités', icon: 'activity' },
-    { id: 'my-bank', label: t('my_bank') || 'Ma Banque', icon: 'bank' },
+    { id: 'my-bank', label: t('my_bank') || 'Mon Épargne', icon: 'bank' },
     { id: 'profile', label: t('profile') || 'Profil', icon: 'profile' },
   ];
 

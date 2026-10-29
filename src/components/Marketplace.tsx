@@ -5,7 +5,7 @@ import { FlowNotice, FlowScreen } from '@/components/ui/FlowScreen';
 import LegalDocumentDialog from './LegalDocumentDialog';
 import { toast } from 'sonner';
 import { UserProfile, MarketplaceService, MarketplaceRequest } from '@/types';
-import { fetchActiveServices, fetchMyMarketplaceRequests, submitMarketplaceRequest } from '@/lib/marketplace';
+import { fetchActiveServices, fetchMyMarketplaceRequests, providerLabel, submitMarketplaceRequest } from '@/lib/marketplace';
 import { CreditApplication, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
 import { CreditFlow } from './CreditApplicationPanel';
 import { AidFlow } from './AidApplicationPanel';
@@ -241,7 +241,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         </div>
       ) : (
         <div className="space-y-2.5">
-          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground px-1">Services partenaires</p>
+          <p className="text-[13px] font-bold text-muted-foreground px-1">Autres services</p>
           <div className="rounded-3xl border border-border bg-card divide-y divide-border overflow-hidden">
             {services.map((service) => {
               const Icon = ICONS[service.iconName] || Store;
@@ -263,7 +263,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-bold text-foreground leading-tight truncate">{service.title}</p>
-                    <p className="text-[13px] text-muted-foreground truncate">{service.provider}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">{providerLabel(service)}</p>
                     {status && (
                       <span className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${status.className}`}>{status.label}</span>
                     )}
@@ -304,7 +304,7 @@ function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputat
             <Icon className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-[26px] leading-tight font-serif font-bold">{service.title}</h1>
-          <p className="mt-1.5 text-[14px] opacity-90 font-medium">{service.provider}</p>
+          <p className="mt-1.5 text-[14px] opacity-90 font-medium">{providerLabel(service)}</p>
         </div>
       }
       footer={

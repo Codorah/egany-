@@ -397,7 +397,7 @@ export function Dashboard({
         )}
       </motion.div>
 
-      {/* ── 5. MA BANQUE — APERÇU (Épargne personnelle) ── */}
+      {/* ── 5. MON ÉPARGNE — APERÇU (coffres personnels) ── */}
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
