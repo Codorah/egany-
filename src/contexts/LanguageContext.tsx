@@ -78,13 +78,13 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     bm: 'Ton ɲini'
   },
   marketplace: {
-    fr: 'Services Annexes',
+    fr: 'Services annexes',
     en: 'Ancillary Services',
     ee: 'Subɔsubɔdɔ Bubuwo',
     kbp: 'Lɩmaɣza lɛɛka'
   },
   ai_assistant: {
-    fr: 'Copilote IA',
+    fr: 'Assistant',
     en: 'AI Copilot',
     ee: 'AI Kpeɖeŋutɔ',
     kbp: 'AI sɩnɩyʋ'
@@ -160,7 +160,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Lakasɩ nɛ tɔm susuu ñɩnɖɛ'
   },
   active_circles: {
-    fr: 'Mes Cercles Actifs',
+    fr: 'Mes cercles',
     en: 'My Active Circles',
     ee: 'Nye Habɔbɔ siwo le dɔwɔm',
     kbp: 'Man tontinaa wena awɛ ñʋʋ taa'
@@ -382,7 +382,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ɛzɩma'
   },
   dashboard_subtitle: {
-    fr: "Heureux de vous revoir ! Voici l'aperçu de vos cercles d'épargne.",
+    fr: 'Voici où en sont vos cercles.',
     en: 'Glad to see you again! Here is an overview of your savings circles.',
     ee: 'Edzɔ dzi be míegakpɔ wò! Esiae nye wò gadzraɖoƒe habɔbɔwo ƒe kpuiƒoƒo.',
     kbp: 'Man-taa wɛ leleŋ se man-nawa-ŋ! Ðɩnɩ ñɛ-tontinaa tɔm kɩ-tɩŋa cɔlɔ.'
@@ -466,7 +466,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Tontine naɖɩyɛ fɛyɩ'
   },
   no_circle_desc: {
-    fr: "Vous ne faites partie d'aucun cercle d'épargne pour le moment. Créez votre propre tontine ou rejoignez un cercle existant !",
+    fr: 'Créez votre cercle ou rejoignez celui de vos proches avec leur code.',
     en: 'You are not part of any savings circle yet. Create your own tontine or join an existing circle!',
     ee: 'Mele gadzraɖo habɔbɔ aɖeke me haɖe o. Wɔ wò ŋutɔ wò tontine alo ge ɖe habɔbɔ si li me!',
     kbp: 'Ŋ-fɛyɩ tontine naɖɩyɛ taa fɛyɛ. Ma ño-maɣmaɣ tontine yaa kpɛndɩ ŋgʋ kɩ-wɛɛ yɔ, kɩ-taa!'
@@ -7002,7 +7002,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Due:'
   },
   dash_contribution_expected: {
-    fr: 'Votre cotisation de cycle est attendue.',
+    fr: 'Votre cotisation est attendue.',
     en: 'Your contribution for this cycle is due.'
   },
   dash_contribute_cta: {
@@ -7022,7 +7022,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'members'
   },
   dash_next_prefix: {
-    fr: 'Prochaine :',
+    fr: 'Prochain tour :',
     en: 'Next:'
   },
   dash_active_badge: {
@@ -7070,7 +7070,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Transaction'
   },
   dash_services_card_subtitle: {
-    fr: 'Microcrédit, assurance santé, épargne retraite, kit solaire',
+    fr: 'Coup de pouce, microcrédit, assurance, équipement',
     en: 'Microcredit, health insurance, retirement savings, solar kit'
   },
   dash_ai_card_subtitle: {
