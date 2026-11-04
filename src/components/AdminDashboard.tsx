@@ -9,7 +9,7 @@ import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from 
 import { AdminCreditReview } from './AdminCreditReview';
 import { AdminAidReview } from './AdminAidReview';
 import { AdminServerHealth } from './AdminServerHealth';
-import { fetchPlatformSettings, updatePlatformSettings } from '@/lib/platformSettings';
+import { fetchPlatformSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { apiFetch } from '@/lib/apiBase';
@@ -99,6 +99,11 @@ export function AdminDashboard() {
   const [depositFeePercent, setDepositFeePercent] = useState('0');
   const [depositFeeFixed, setDepositFeeFixed] = useState('0');
   const [depositFeeMin, setDepositFeeMin] = useState('0');
+  // Commission sur les décaissements et sa répartition entre administrateurs
+  // (pourcentage saisi en texte par administrateur, indexé par uid).
+  const [payoutFeeMode, setPayoutFeeMode] = useState<PayoutFeeMode>('none');
+  const [payoutFeePercent, setPayoutFeePercent] = useState('0');
+  const [shareInputs, setShareInputs] = useState<Record<string, string>>({});
 
   // Ledger & Reconciliation States
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
@@ -183,6 +188,10 @@ export function AdminDashboard() {
       setDepositFeePercent(String(settings.depositFeePercent));
       setDepositFeeFixed(String(settings.depositFeeFixed));
       setDepositFeeMin(String(settings.depositFeeMin));
+      setPayoutFeeMode(settings.payoutFeeMode);
+      setPayoutFeePercent(String(settings.payoutFeePercent));
+      const shares = await fetchRevenueShares();
+      setShareInputs(Object.fromEntries(shares.map((x) => [x.profileId, String(x.percent)])));
 
     } catch (error) {
       handleAdminError(error, 'admin_collections');
@@ -1622,6 +1631,128 @@ export function AdminDashboard() {
                     className="h-9 font-bold text-xs rounded-xl cursor-pointer"
                   >
                     Enregistrer la grille
+                  </Button>
+                </div>
+
+                {/* Commission sur les décaissements, partagée entre les administrateurs.
+                    Chacun reçoit sa part directement dans son portefeuille et la
+                    retire par le circuit de retrait habituel. */}
+                <div className="p-4 border rounded-2xl bg-muted/20 border-border space-y-4">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-foreground">Revenus de la plateforme</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      Prélevés sur le pot à chaque tour, puis partagés entre les administrateurs.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-foreground">Commission par tour</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {([
+                        ['none', 'Aucune'],
+                        ['contribution_share', 'Une cotisation'],
+                        ['percent', 'Un pourcentage'],
+                      ] as [PayoutFeeMode, string][]).map(([mode, label]) => (
+                        <Button
+                          key={mode}
+                          type="button"
+                          size="sm"
+                          variant={payoutFeeMode === mode ? 'default' : 'outline'}
+                          onClick={() => setPayoutFeeMode(mode)}
+                          className="h-8 font-bold text-xs rounded-xl cursor-pointer"
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                    {payoutFeeMode === 'contribution_share' && (
+                      <p className="text-[13px] text-muted-foreground">
+                        Une cotisation est retenue sur chaque pot : 10 membres = 10 %, 5 membres = 20 %.
+                      </p>
+                    )}
+                    {payoutFeeMode === 'percent' && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={payoutFeePercent}
+                          onChange={(e) => setPayoutFeePercent(e.target.value)}
+                          className="rounded-xl h-10 text-sm font-bold w-24"
+                        />
+                        <span className="text-xs font-bold text-muted-foreground">% du pot</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-bold text-foreground">Part de chaque administrateur</Label>
+                    {users.filter((u) => u.role === 'admin').map((u) => (
+                      <div key={u.uid} className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-foreground truncate">{u.displayName || u.email}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            value={shareInputs[u.uid] ?? ''}
+                            onChange={(e) => setShareInputs((prev) => ({ ...prev, [u.uid]: e.target.value }))}
+                            placeholder="0"
+                            className="rounded-xl h-10 text-sm font-bold w-20 text-right"
+                          />
+                          <span className="text-xs font-bold text-muted-foreground">%</span>
+                        </div>
+                      </div>
+                    ))}
+                    {(() => {
+                      const total = users
+                        .filter((u) => u.role === 'admin')
+                        .reduce((sum, u) => sum + (parseFloat(shareInputs[u.uid] ?? '') || 0), 0);
+                      return (
+                        <p className={`text-[13px] font-bold ${total === 100 ? 'text-secondary' : 'text-destructive'}`}>
+                          Total : {total} % {total === 100 ? '' : '(doit faire 100 %)'}
+                        </p>
+                      );
+                    })()}
+                  </div>
+
+                  <Button
+                    size="sm"
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const pct = parseFloat(payoutFeePercent);
+                      if (payoutFeeMode === 'percent' && (!Number.isFinite(pct) || pct <= 0 || pct > 100)) {
+                        toast.error('Le pourcentage doit être compris entre 0 et 100.');
+                        return;
+                      }
+                      const shares = users
+                        .filter((u) => u.role === 'admin')
+                        .map((u) => ({ profileId: u.uid, percent: parseFloat(shareInputs[u.uid] ?? '') || 0 }))
+                        .filter((x) => x.percent > 0);
+                      if (shares.length === 0) {
+                        toast.error("Indiquez la part d'au moins un administrateur.");
+                        return;
+                      }
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const sharesResult = await saveRevenueShares(shares);
+                      if (!sharesResult.success) {
+                        setIsSavingSettings(false);
+                        toast.error(sharesResult.message || "Impossible d'enregistrer la répartition.");
+                        return;
+                      }
+                      const result = await updatePlatformSettings(
+                        { payoutFeeMode, payoutFeePercent: payoutFeeMode === 'percent' ? pct : 0 },
+                        authData.user?.id || ''
+                      );
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer la commission.");
+                        return;
+                      }
+                      toast.success('Commission et répartition enregistrées.');
+                    }}
+                    className="h-9 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Enregistrer
                   </Button>
                 </div>
 

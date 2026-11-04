@@ -9,6 +9,7 @@ import './index.css';
 // Capte l'événement d'installation PWA avant le montage des composants :
 // Chrome ne le déclenche qu'une fois, souvent très tôt.
 import './lib/pwaInstall';
+import { watchForAppUpdates } from './lib/appUpdate';
 
 // Les documents légaux ont une adresse publique, lisible sans compte
 // (exigence de la console Google Play) : pas d'authentification à charger.
@@ -41,7 +42,10 @@ if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
-        .then((reg) => console.log('[Service Worker] Registered successfully:', reg.scope))
+        .then((reg) => {
+          console.log('[Service Worker] Registered successfully:', reg.scope);
+          watchForAppUpdates(reg);
+        })
         .catch((err) => console.error('[Service Worker] Registration failed:', err));
     });
   } else {

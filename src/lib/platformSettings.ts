@@ -102,6 +102,34 @@ export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   };
 }
 
+export interface RevenueShare {
+  profileId: string;
+  percent: number;
+}
+
+/** Parts de commission de chaque administrateur (lecture réservée aux admins). */
+export async function fetchRevenueShares(): Promise<RevenueShare[]> {
+  const { data, error } = await supabase
+    .from('platform_revenue_shares')
+    .select('profile_id, share_percent');
+  if (error) {
+    console.warn('fetchRevenueShares error:', error);
+    return [];
+  }
+  return (data ?? []).map((r: any) => ({ profileId: r.profile_id, percent: Number(r.share_percent) }));
+}
+
+/**
+ * Enregistre la répartition. Le serveur refuse tout total différent de 100 %
+ * et tout compte qui n'est pas administrateur.
+ */
+export async function saveRevenueShares(shares: RevenueShare[]): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.rpc('set_platform_revenue_shares', { p_shares: shares });
+  if (error) return { success: false, message: error.message };
+  const res = data as { success: boolean; message?: string } | null;
+  return res?.success ? { success: true } : { success: false, message: res?.message || 'Enregistrement refusé.' };
+}
+
 export async function updatePlatformSettings(
   patch: Partial<PlatformSettings>,
   updatedBy: string
