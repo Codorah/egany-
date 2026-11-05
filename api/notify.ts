@@ -1,6 +1,7 @@
 import { handleCors } from './_cors.js';
 import { createClient } from '@supabase/supabase-js';
 import { requireUserOr401 } from './_requireUser.js';
+import { escapeHtml } from './_escape.js';
 
 /**
  * Enregistre une notification et la relaie sur les canaux choisis par la
@@ -45,7 +46,7 @@ async function deliverEmail(to: string, subject: string, message: string): Promi
       from,
       to,
       subject,
-      html: `<p>${message}</p>`,
+      html: `<p>${escapeHtml(message)}</p>`,
     }),
   });
 }
@@ -104,6 +105,13 @@ export default async function handler(req: any, res: any) {
   const { userId, title, message, type, link } = req.body ?? {};
   if (!userId || !title || !message || !type) {
     return res.status(400).json({ error: 'Requête incomplète.' });
+  }
+  if (typeof title !== 'string' || title.length > 150 || typeof message !== 'string' || message.length > 1000) {
+    return res.status(400).json({ error: 'Message trop long.' });
+  }
+  // Seulement des liens internes à l'application, jamais vers un site extérieur.
+  if (link !== undefined && link !== null && (typeof link !== 'string' || !link.startsWith('/') || link.startsWith('//'))) {
+    return res.status(400).json({ error: 'Lien invalide.' });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;

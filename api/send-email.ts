@@ -1,6 +1,7 @@
 import { handleCors } from './_cors.js';
 import { createClient } from '@supabase/supabase-js';
 import { requireUserOr401 } from './_requireUser.js';
+import { escapeHtml } from './_escape.js';
 
 export default async function handler(req: any, res: any) {
   if (handleCors(req, res)) return;
@@ -58,7 +59,7 @@ export default async function handler(req: any, res: any) {
         from: fromAddress,
         to: [to],
         subject,
-        html: `<p>${message}</p>`
+        html: `<p>${escapeHtml(message)}</p>`
       })
     });
 

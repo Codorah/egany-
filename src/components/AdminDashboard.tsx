@@ -473,8 +473,9 @@ export function AdminDashboard() {
       if (editingUser?.uid === userId) {
         setEditingUser(null);
       }
-    } catch (error) {
-      toast.error(t('admin_user_delete_error'));
+    } catch (error: any) {
+      // Compte avec de l'argent ou un historique : la base explique quoi faire.
+      toast.error(error?.message || t('admin_user_delete_error'));
     }
   };
 
@@ -505,25 +506,50 @@ export function AdminDashboard() {
     if (!editingUser) return;
     setIsSavingUserChanges(true);
 
-    // Bounds checking
     const finalRep = Math.max(0, Math.min(100, Number(reputationInput)));
     const finalWallet = Math.max(0, Number(walletInput));
+    const walletDelta = finalWallet - (editingUser.walletBalance || 0);
+
+    // Motif demandé avant toute écriture : annuler ici ne change rien.
+    let reason = '';
+    if (walletDelta !== 0) {
+      reason = (window.prompt(
+        `${walletDelta > 0 ? 'Créditer' : 'Débiter'} ${Math.abs(walletDelta).toLocaleString()} FCFA à ${editingUser.displayName}.\nMotif (obligatoire, visible par la personne) :`
+      ) || '').trim();
+      if (!reason) {
+        toast.error('Motif obligatoire : le solde n’a pas été modifié.');
+        setIsSavingUserChanges(false);
+        return;
+      }
+    }
 
     try {
-      const { data, error } = await supabase.from('profiles').update({
-        reputation_score: finalRep,
-        wallet_balance: finalWallet
-      }).eq('id', editingUser.uid).select('id');
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error('Action non autorisée.');
+      if (finalRep !== editingUser.reputationScore) {
+        const { data, error } = await supabase.from('profiles').update({ reputation_score: finalRep }).eq('id', editingUser.uid).select('id');
+        if (error) throw error;
+        if (!data || data.length === 0) throw new Error('Action non autorisée.');
+      }
+
+      let newWallet = editingUser.walletBalance || 0;
+      if (walletDelta !== 0) {
+        const { data, error } = await supabase.rpc('admin_adjust_wallet', {
+          p_user_id: editingUser.uid,
+          p_amount: walletDelta,
+          p_reason: reason,
+          p_idempotency_key: crypto.randomUUID(),
+        });
+        if (error) throw error;
+        const result = data as { success: boolean; message?: string };
+        if (!result?.success) throw new Error(result?.message || 'Ajustement refusé.');
+        newWallet = finalWallet;
+      }
 
       toast.success(`${t('admin_profile_adjusted')}: ${editingUser.displayName}`);
-      
-      // Sync UI state
-      setUsers(prev => prev.map(u => u.uid === editingUser.uid ? { ...u, reputationScore: finalRep, walletBalance: finalWallet } : u));
+
+      setUsers(prev => prev.map(u => u.uid === editingUser.uid ? { ...u, reputationScore: finalRep, walletBalance: newWallet } : u));
       setEditingUser(null);
-    } catch (error) {
-      toast.error(t('admin_save_error'));
+    } catch (error: any) {
+      toast.error(error?.message || t('admin_save_error'));
     } finally {
       setIsSavingUserChanges(false);
     }

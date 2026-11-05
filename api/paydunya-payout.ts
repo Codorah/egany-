@@ -375,12 +375,17 @@ async function checkEligibility(db: any, row: any): Promise<Eligibility> {
   // Un code resté à 0000 ne protège rien : pas d'envoi sans contrôle humain.
   const { data: profile, error: profileError } = await db
     .from('profiles')
-    .select('security_pin_hash')
+    .select('security_pin_hash, pin_changed_at')
     .eq('id', row.user_id)
     .maybeSingle();
   if (profileError || !profile) return { auto: false, reason: 'Profil illisible.' };
   if (!profile.security_pin_hash) {
     return { auto: false, reason: 'Code PIN encore à 0000.', defaultPin: true };
+  }
+  // Un voleur de session commencerait par changer le code : on lui laisse 24 h
+  // de moins pour vider le compte, et la personne a été prévenue.
+  if (profile.pin_changed_at && Date.now() - new Date(profile.pin_changed_at).getTime() < 24 * 3600 * 1000) {
+    return { auto: false, reason: 'Code PIN changé il y a moins de 24 h : à vérifier.' };
   }
 
   // Ligne déjà insérée : deux demandes simultanées se voient l'une l'autre.
@@ -442,22 +447,37 @@ async function handleRequest(req: any, res: any, db: any) {
   }
 
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  const debitArgs = {
+  // Le code PIN vient d'être vérifié : seul ce serveur a le droit de débiter
+  // (migration 0038). Sans cela, une session volée suffirait à déposer une demande.
+  let { data: debit, error: debitError } = await db.rpc('request_wallet_withdrawal_for', {
+    p_user_id: caller.id,
     p_idempotency_key: idempotencyKey,
     p_amount: parsedAmount,
     p_payment_method: paymentMethod,
     p_phone: phone,
     p_method_label: route.label,
     p_ip: forwarded || null,
-  };
-  let { data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', {
-    ...debitArgs,
     p_fee_on_top: feeOnTop,
     p_expected_fee: expectedFee,
   });
-  // Migration 0037 pas encore appliquée : retrait sans frais, comme avant.
+  // Migrations pas encore appliquées : même retrait par les anciennes fonctions.
   if (debitError?.code === 'PGRST202') {
-    ({ data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', debitArgs));
+    const debitArgs = {
+      p_idempotency_key: idempotencyKey,
+      p_amount: parsedAmount,
+      p_payment_method: paymentMethod,
+      p_phone: phone,
+      p_method_label: route.label,
+      p_ip: forwarded || null,
+    };
+    ({ data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', {
+      ...debitArgs,
+      p_fee_on_top: feeOnTop,
+      p_expected_fee: expectedFee,
+    }));
+    if (debitError?.code === 'PGRST202') {
+      ({ data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', debitArgs));
+    }
   }
   if (debitError) {
     console.error('[payout] Débit impossible :', debitError);
