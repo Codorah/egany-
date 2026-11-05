@@ -29,7 +29,7 @@ export interface LegalDocument {
 }
 
 /** Date de la dernière révision de l'ensemble des textes. */
-export const LEGAL_LAST_UPDATED = '21 octobre 2026';
+export const LEGAL_LAST_UPDATED = '5 novembre 2026';
 
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
@@ -89,7 +89,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: '3. Votre portefeuille',
         paragraphs: [
           "Les dépôts se font par Mobile Money (Mixx, Moov Flooz, Orange Money, MTN MoMo selon les pays) et sont encaissés par notre prestataire de paiement PayDunya. Votre solde n'est crédité qu'une fois le paiement confirmé par PayDunya. Les frais éventuels sont affichés avant que vous ne confirmiez.",
-          "Quand vous demandez un retrait, le montant est réservé sur votre solde, puis notre équipe vous l'envoie sur le numéro Mobile Money que vous avez indiqué. Le retrait est marqué effectué une fois l'envoi fait. Si l'envoi échoue, le montant est rendu à votre portefeuille.",
+          "Quand vous demandez un retrait, le montant est débité de votre solde, puis envoyé par notre prestataire PayDunya sur le numéro Mobile Money que vous avez indiqué. Vérifiez bien ce numéro : un envoi réussi ne peut pas être annulé. Certains retraits (montant élevé, plafond journalier atteint, code PIN par défaut) sont vérifiés par notre équipe avant l'envoi. Si l'envoi échoue, notre équipe le relance ou rend le montant à votre portefeuille.",
           "Chaque mouvement est inscrit dans un registre comptable à double entrée et apparaît dans votre historique.",
         ],
       },

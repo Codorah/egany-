@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { apiFetch } from './apiBase';
 
 // Kept for AdminDashboard.tsx (not yet migrated) which still casts Firestore-
 // shaped ledger/audit rows to these shapes for display.
@@ -119,39 +120,78 @@ export async function executeFinancialTransaction(params: {
   return data as { success: boolean; message: string; transactionId?: string };
 }
 
+export type WithdrawalState = 'sent' | 'processing' | 'manual' | 'failed';
+
+export interface WithdrawalResult {
+  success: boolean;
+  message?: string;
+  state?: WithdrawalState;
+  withdrawalId?: string;
+  amount?: number;
+  /** Le code PIN est encore 0000 : le retrait passe par l'équipe. */
+  defaultPin?: boolean;
+  error?: string | null;
+}
+
+const WITHDRAWAL_CONNECTION_ERROR = 'Connexion interrompue. Vérifiez votre historique avant de réessayer.';
+
+async function callPayout(action: string, body: object): Promise<WithdrawalResult> {
+  try {
+    const response = await apiFetch(`/api/paydunya-payout?action=${action}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => null);
+    if (!data) return { success: false, message: WITHDRAWAL_CONNECTION_ERROR };
+    return data as WithdrawalResult;
+  } catch (err) {
+    console.error('callPayout error:', action, err);
+    return { success: false, message: WITHDRAWAL_CONNECTION_ERROR };
+  }
+}
+
 /**
- * Demande de retrait : débit du portefeuille ET ligne `pending` pour
- * l'administrateur, dans une seule transaction Postgres.
+ * Retrait : le serveur vérifie le code PIN, débite le portefeuille, puis envoie
+ * l'argent via PayDunya quand le retrait est sous les plafonds. Sinon la demande
+ * va dans la file de l'Admin. Voir api/paydunya-payout.ts.
  *
- * Remplace l'enchaînement executeFinancialTransaction + insert client, où un
- * échec du second appel laissait l'utilisatrice débitée sans qu'aucune demande
- * n'apparaisse dans la file — l'argent disparaissait. Depuis la migration 0010
- * le client n'a d'ailleurs plus le droit d'écrire dans wallet_transactions.
+ * La clé d'idempotence rend un nouvel essai sans danger après une coupure.
  */
-export async function requestWalletWithdrawal(params: {
+export function requestWithdrawal(params: {
   idempotencyKey: string;
   amount: number;
   paymentMethod: string;
   phone: string;
-  methodLabel: string;
-}): Promise<{ success: boolean; message: string; transactionId?: string }> {
-  if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
+  pin: string;
+}): Promise<WithdrawalResult> {
+  if (isOffline()) return Promise.resolve({ success: false, message: OFFLINE_MONEY_MESSAGE });
+  return callPayout('request', params);
+}
 
-  const { ip } = await getDeviceInfo();
-  const { data, error } = await supabase.rpc('request_wallet_withdrawal', {
-    p_idempotency_key: params.idempotencyKey,
-    p_amount: params.amount,
-    p_payment_method: params.paymentMethod,
-    p_phone: params.phone,
-    p_method_label: params.methodLabel,
-    p_ip: ip,
-  });
+export function fetchWithdrawalStatus(withdrawalId: string): Promise<WithdrawalResult> {
+  return callPayout('status', { withdrawalId });
+}
 
-  if (error) {
-    console.error('requestWalletWithdrawal RPC error:', error);
-    return { success: false, message: error.message };
-  }
-  return data as { success: boolean; message: string; transactionId?: string };
+/** Admin : lance ou relance l'envoi PayDunya d'un retrait de la file. */
+export function sendWithdrawalViaPaydunya(withdrawalId: string): Promise<WithdrawalResult> {
+  return callPayout('send', { withdrawalId });
+}
+
+/**
+ * Admin : rend la main sur un envoi resté « en cours ». Le jeton est conservé :
+ * si PayDunya confirme plus tard, le retrait sera bien marqué envoyé.
+ */
+export async function releaseStuckWithdrawal(transactionId: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase
+    .from('wallet_transactions')
+    .update({ payout_state: 'manual', payout_error: 'Débloqué par un admin après vérification sur PayDunya.' })
+    .eq('id', transactionId)
+    .eq('status', 'pending')
+    .eq('payout_state', 'processing')
+    .select('id');
+  if (error) return { success: false, message: error.message };
+  if (!data || data.length === 0) return { success: false, message: 'Ce retrait n’est plus en cours.' };
+  return { success: true };
 }
 
 export interface PendingWithdrawal {
@@ -163,15 +203,15 @@ export interface PendingWithdrawal {
   paymentMethod: string;
   reference: string | null;
   date: string;
+  payoutState: 'processing' | 'manual' | 'sent' | null;
+  payoutError: string | null;
+  payoutStartedAt: string | null;
 }
 
 /**
- * Retraits Mobile Money : Paydunya n'expose que l'encaissement (checkout),
- * pas le décaissement automatique — un vrai retrait nécessite qu'un admin
- * envoie physiquement l'argent via Mobile Money, puis marque la demande
- * traitée ici. Le portefeuille de l'utilisateur est débité immédiatement à
- * la demande (l'argent est réservé), remboursé uniquement si l'admin
- * marque le retrait en échec.
+ * File de l'Admin : retraits débités, pas encore envoyés. Les envois en cours
+ * chez PayDunya y figurent aussi, sans possibilité d'action tant que leur issue
+ * n'est pas connue.
  */
 export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
   const { data, error } = await supabase
@@ -193,12 +233,16 @@ export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
     paymentMethod: row.payment_method || '',
     reference: row.reference,
     date: row.date,
+    payoutState: row.payout_state ?? null,
+    payoutError: row.payout_error ?? null,
+    payoutStartedAt: row.payout_started_at ?? null,
   }));
 }
 
 export interface ProcessedWithdrawal extends PendingWithdrawal {
   status: 'completed' | 'failed';
   payoutReference?: string | null;
+  payoutFee?: number | null;
 }
 
 /** Historique des retraits déjà traités (envoyés ou échoués), du plus récent au plus ancien. */
@@ -220,22 +264,30 @@ export async function fetchProcessedWithdrawals(limit = 100): Promise<ProcessedW
     paymentMethod: row.payment_method || '',
     reference: row.reference,
     date: row.date,
+    payoutState: row.payout_state ?? null,
+    payoutError: row.payout_error ?? null,
+    payoutStartedAt: row.payout_started_at ?? null,
     status: row.status,
     payoutReference: row.payout_reference ?? null,
+    payoutFee: row.payout_fee === null || row.payout_fee === undefined ? null : Number(row.payout_fee),
   }));
 }
+
+/** Un envoi PayDunya en cours peut encore réussir : ni envoi manuel, ni remboursement. */
+const NOT_BEING_SENT = 'payout_state.is.null,payout_state.eq.manual';
 
 export async function completeWithdrawal(transactionId: string, payoutReference: string): Promise<{ success: boolean; message?: string }> {
   const ref = payoutReference.trim();
   if (!ref) return { success: false, message: 'La référence de la transaction Mobile Money est obligatoire.' };
   const { data, error } = await supabase
     .from('wallet_transactions')
-    .update({ status: 'completed', payout_reference: ref })
+    .update({ status: 'completed', payout_state: 'sent', payout_reference: ref })
     .eq('id', transactionId)
     .eq('status', 'pending')
+    .or(NOT_BEING_SENT)
     .select('id');
   if (error) return { success: false, message: error.message };
-  if (!data || data.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
+  if (!data || data.length === 0) return { success: false, message: 'Retrait déjà traité, ou envoi PayDunya en cours.' };
   return { success: true };
 }
 
@@ -252,9 +304,10 @@ export async function failWithdrawal(params: {
     .from('wallet_transactions')
     .select('id')
     .eq('id', params.transactionId)
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .or(NOT_BEING_SENT);
   if (pendingError) return { success: false, message: pendingError.message };
-  if (!pending || pending.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
+  if (!pending || pending.length === 0) return { success: false, message: 'Retrait déjà traité, ou envoi PayDunya en cours.' };
 
   const refund = await executeFinancialTransaction({
     idempotencyKey: `withdraw_refund_${params.transactionId}`,
@@ -275,27 +328,6 @@ export async function failWithdrawal(params: {
     .eq('status', 'pending');
   if (error) return { success: false, message: `Remboursé, mais statut non mis à jour : ${error.message}` };
   return { success: true };
-}
-
-export interface PinVerificationResult {
-  ok: boolean;
-  locked: boolean;
-  remainingAttempts?: number;
-  lockedUntil?: string;
-  message: string;
-}
-
-export async function verifyUserPin(userId: string, enteredPin: string): Promise<PinVerificationResult> {
-  const { data, error } = await supabase.rpc('verify_user_pin', {
-    p_user_id: userId,
-    p_entered_pin: enteredPin,
-  });
-
-  if (error) {
-    console.error('verifyUserPin RPC error:', error);
-    return { ok: false, locked: false, message: 'Erreur lors de la vérification du code PIN.' };
-  }
-  return data as PinVerificationResult;
 }
 
 export async function setUserPin(userId: string, newPin: string): Promise<{ success: boolean; message: string }> {

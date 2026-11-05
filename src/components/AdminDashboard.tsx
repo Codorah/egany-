@@ -3,13 +3,13 @@ import { supabase } from '@/lib/supabase';
 import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
-import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, fetchProcessedWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal, ProcessedWithdrawal } from '@/lib/ledger';
+import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, fetchProcessedWithdrawals, completeWithdrawal, failWithdrawal, sendWithdrawalViaPaydunya, fetchWithdrawalStatus, releaseStuckWithdrawal, PendingWithdrawal, ProcessedWithdrawal } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
 import { AdminCreditReview } from './AdminCreditReview';
 import { AdminAidReview } from './AdminAidReview';
 import { AdminServerHealth } from './AdminServerHealth';
-import { fetchPlatformSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
+import { fetchPlatformSettings, fetchAutoWithdrawSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { apiFetch } from '@/lib/apiBase';
@@ -95,6 +95,9 @@ export function AdminDashboard() {
   // Frais du prestataire sur les dépôts. Saisis en texte pour ne pas gêner la
   // frappe (un champ numérique contrôlé qui reparse à chaque touche empêche
   // d'écrire « 2.5 » : le point disparaît dès qu'il est tapé).
+  const [autoWithdrawEnabled, setAutoWithdrawEnabled] = useState(true);
+  const [autoWithdrawMaxAmount, setAutoWithdrawMaxAmount] = useState('25000');
+  const [autoWithdrawDailyMax, setAutoWithdrawDailyMax] = useState('50000');
   const [depositFeeEnabled, setDepositFeeEnabled] = useState(false);
   const [depositFeePercent, setDepositFeePercent] = useState('0');
   const [depositFeeFixed, setDepositFeeFixed] = useState('0');
@@ -192,6 +195,12 @@ export function AdminDashboard() {
       setDepositFeeMin(String(settings.depositFeeMin));
       setPayoutFeeMode(settings.payoutFeeMode);
       setPayoutFeePercent(String(settings.payoutFeePercent));
+      const autoWithdraw = await fetchAutoWithdrawSettings();
+      if (autoWithdraw) {
+        setAutoWithdrawEnabled(autoWithdraw.autoWithdrawEnabled);
+        setAutoWithdrawMaxAmount(String(autoWithdraw.autoWithdrawMaxAmount));
+        setAutoWithdrawDailyMax(String(autoWithdraw.autoWithdrawDailyMax));
+      }
       const shares = await fetchRevenueShares();
       setShareInputs(Object.fromEntries(shares.map((x) => [x.profileId, String(x.percent)])));
 
@@ -280,6 +289,52 @@ export function AdminDashboard() {
       toast.error(error.message || 'Erreur lors du traitement de la demande.');
     } finally {
       setReviewingRequestId(null);
+    }
+  };
+
+  const reloadWithdrawals = async () => {
+    setPendingWithdrawals(await fetchPendingWithdrawals());
+    setProcessedWithdrawals(await fetchProcessedWithdrawals());
+  };
+
+  const reportPayout = (result: { success: boolean; message?: string; state?: string; error?: string | null }) => {
+    if (!result.success) toast.error(result.message || "Erreur lors de l'envoi.");
+    else if (result.state === 'sent') toast.success('Envoi confirmé par PayDunya.');
+    else if (result.state === 'processing') toast.info('Envoi en cours chez PayDunya.');
+    else if (result.state === 'failed') toast.info('Ce retrait a déjà été remboursé.');
+    else toast.error(result.error || "L'envoi n'a pas abouti.");
+  };
+
+  const handleSendViaPaydunya = async (w: PendingWithdrawal) => {
+    if (!window.confirm(`Envoyer ${w.amount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}) via PayDunya ?`)) return;
+    setProcessingWithdrawalId(w.id);
+    try {
+      reportPayout(await sendWithdrawalViaPaydunya(w.id));
+      await reloadWithdrawals();
+    } finally {
+      setProcessingWithdrawalId(null);
+    }
+  };
+
+  const handleCheckPayout = async (w: PendingWithdrawal) => {
+    setProcessingWithdrawalId(w.id);
+    try {
+      reportPayout(await fetchWithdrawalStatus(w.id));
+      await reloadWithdrawals();
+    } finally {
+      setProcessingWithdrawalId(null);
+    }
+  };
+
+  const handleReleasePayout = async (w: PendingWithdrawal) => {
+    if (!window.confirm("Débloquer ce retrait ? Vérifiez d'abord sur votre tableau de bord PayDunya que cet envoi n'est pas parti, sinon la personne risque d'être payée deux fois.")) return;
+    setProcessingWithdrawalId(w.id);
+    try {
+      const result = await releaseStuckWithdrawal(w.id);
+      if (!result.success) toast.error(result.message || 'Déblocage impossible.');
+      await reloadWithdrawals();
+    } finally {
+      setProcessingWithdrawalId(null);
     }
   };
 
@@ -1643,6 +1698,89 @@ export function AdminDashboard() {
                   </Button>
                 </div>
 
+                <div className="p-4 border rounded-2xl bg-muted/20 border-border space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-foreground">Retraits automatiques (PayDunya)</p>
+                      <p className="text-[13px] text-muted-foreground">
+                        Sous ces plafonds, l'argent part sans intervention. Au-dessus, le retrait attend dans la file de l'Admin.
+                      </p>
+                    </div>
+                    <Button
+                      variant={autoWithdrawEnabled ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isSavingSettings}
+                      onClick={async () => {
+                        const next = !autoWithdrawEnabled;
+                        setIsSavingSettings(true);
+                        const { data: authData } = await supabase.auth.getUser();
+                        const result = await updatePlatformSettings({ autoWithdrawEnabled: next }, authData.user?.id || '');
+                        setIsSavingSettings(false);
+                        if (!result.success) {
+                          toast.error(result.message || "Impossible d'enregistrer ce réglage.");
+                          return;
+                        }
+                        setAutoWithdrawEnabled(next);
+                        toast.info(next ? 'Retraits automatiques activés.' : 'Retraits automatiques désactivés.');
+                      }}
+                      className={`h-8 font-bold text-xs rounded-xl cursor-pointer shrink-0 ${autoWithdrawEnabled ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border'}`}
+                    >
+                      {autoWithdrawEnabled ? 'Activés' : 'Désactivés'}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-bold text-foreground">Plafond par retrait (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={autoWithdrawMaxAmount}
+                        onChange={(e) => setAutoWithdrawMaxAmount(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-bold text-foreground">Plafond par jour et par personne (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={autoWithdrawDailyMax}
+                        onChange={(e) => setAutoWithdrawDailyMax(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const maxAmount = parseFloat(autoWithdrawMaxAmount);
+                      const dailyMax = parseFloat(autoWithdrawDailyMax);
+                      if ([maxAmount, dailyMax].some((v) => !Number.isFinite(v) || v < 0)) {
+                        toast.error('Les deux plafonds doivent être des nombres positifs.');
+                        return;
+                      }
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const result = await updatePlatformSettings(
+                        { autoWithdrawMaxAmount: maxAmount, autoWithdrawDailyMax: dailyMax },
+                        authData.user?.id || ''
+                      );
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer ces plafonds.");
+                        return;
+                      }
+                      toast.success('Plafonds enregistrés.');
+                    }}
+                    className="h-9 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Enregistrer les plafonds
+                  </Button>
+                </div>
+
                 {/* Commission sur les décaissements, partagée entre les administrateurs.
                     Chacun reçoit sa part directement dans son portefeuille et la
                     retire par le circuit de retrait habituel. */}
@@ -1787,10 +1925,10 @@ export function AdminDashboard() {
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                 <ArrowUpRight className="w-5 h-5 text-brand" />
-                Retraits Mobile Money en attente
+                Retraits Mobile Money à traiter
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                Paydunya ne décaisse pas automatiquement vers Mobile Money : envoyez l'argent manuellement puis marquez la demande traitée. Le portefeuille de l'utilisateur est déjà débité (réservé).
+                Les petits retraits partent seuls via PayDunya. Ici : ceux au-dessus des plafonds, ceux que PayDunya a refusés, et les envois en cours. Le portefeuille est déjà débité.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -1808,28 +1946,70 @@ export function AdminDashboard() {
                         <p className="text-[13px] text-muted-foreground">
                           Demandé le {new Date(w.date).toLocaleString()}
                         </p>
+                        {w.payoutState === 'processing' && (
+                          <p className="text-[13px] font-bold text-primary-ink">Envoi PayDunya en cours</p>
+                        )}
+                        {w.payoutState !== 'processing' && w.payoutError && (
+                          <p className="text-[13px] font-bold text-danger">{w.payoutError}</p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          onClick={() => handleCompleteWithdrawal(w)}
-                          disabled={processingWithdrawalId === w.id}
-                          className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
-                        >
-                          <Check className="w-3.5 h-3.5 mr-1.5" />
-                          Envoyé
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFailWithdrawal(w)}
-                          disabled={processingWithdrawalId === w.id}
-                          className="h-9 rounded-xl text-xs font-bold border-danger/30 text-danger hover:bg-danger-soft"
-                        >
-                          <X className="w-3.5 h-3.5 mr-1.5" />
-                          Échec (rembourser)
-                        </Button>
-                      </div>
+                      {w.payoutState === 'processing' ? (
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCheckPayout(w)}
+                            disabled={processingWithdrawalId === w.id}
+                            className="h-9 rounded-xl text-xs font-bold"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                            Vérifier
+                          </Button>
+                          {w.payoutStartedAt && Date.now() - new Date(w.payoutStartedAt).getTime() > 30 * 60 * 1000 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReleasePayout(w)}
+                              disabled={processingWithdrawalId === w.id}
+                              className="h-9 rounded-xl text-xs font-bold border-danger/30 text-danger hover:bg-danger-soft"
+                            >
+                              Débloquer
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            onClick={() => handleSendViaPaydunya(w)}
+                            disabled={processingWithdrawalId === w.id}
+                            className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                          >
+                            <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+                            Envoyer via PayDunya
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCompleteWithdrawal(w)}
+                            disabled={processingWithdrawalId === w.id}
+                            className="h-9 rounded-xl text-xs font-bold"
+                          >
+                            <Check className="w-3.5 h-3.5 mr-1.5" />
+                            Déjà envoyé à la main
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFailWithdrawal(w)}
+                            disabled={processingWithdrawalId === w.id}
+                            className="h-9 rounded-xl text-xs font-bold border-danger/30 text-danger hover:bg-danger-soft"
+                          >
+                            <X className="w-3.5 h-3.5 mr-1.5" />
+                            Rembourser
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1861,6 +2041,7 @@ export function AdminDashboard() {
                         {w.status === 'completed' && (
                           <p className="text-[13px] text-muted-foreground">
                             Réf. transaction : {w.payoutReference || 'non renseignée'}
+                            {w.payoutFee ? ` • Frais PayDunya : ${w.payoutFee.toLocaleString()} FCFA` : ''}
                           </p>
                         )}
                       </div>

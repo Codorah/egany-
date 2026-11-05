@@ -102,6 +102,33 @@ export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   };
 }
 
+export interface AutoWithdrawSettings {
+  autoWithdrawEnabled: boolean;
+  autoWithdrawMaxAmount: number;
+  autoWithdrawDailyMax: number;
+}
+
+/**
+ * Lecture séparée de fetchPlatformSettings : si ces colonnes manquent (migration
+ * 0036 pas appliquée), les frais de dépôt et le mode maintenance restent lus.
+ */
+export async function fetchAutoWithdrawSettings(): Promise<AutoWithdrawSettings | null> {
+  const { data, error } = await supabase
+    .from('platform_settings')
+    .select('auto_withdraw_enabled, auto_withdraw_max_amount, auto_withdraw_daily_max')
+    .eq('id', 1)
+    .maybeSingle();
+  if (error || !data) {
+    if (error) console.warn('fetchAutoWithdrawSettings error:', error);
+    return null;
+  }
+  return {
+    autoWithdrawEnabled: data.auto_withdraw_enabled,
+    autoWithdrawMaxAmount: Number(data.auto_withdraw_max_amount),
+    autoWithdrawDailyMax: Number(data.auto_withdraw_daily_max),
+  };
+}
+
 export interface RevenueShare {
   profileId: string;
   percent: number;
@@ -131,7 +158,7 @@ export async function saveRevenueShares(shares: RevenueShare[]): Promise<{ succe
 }
 
 export async function updatePlatformSettings(
-  patch: Partial<PlatformSettings>,
+  patch: Partial<PlatformSettings & AutoWithdrawSettings>,
   updatedBy: string
 ): Promise<{ success: boolean; message?: string }> {
   const { data, error } = await supabase
@@ -146,6 +173,9 @@ export async function updatePlatformSettings(
       ...(patch.depositFeePercent !== undefined ? { deposit_fee_percent: patch.depositFeePercent } : {}),
       ...(patch.depositFeeFixed !== undefined ? { deposit_fee_fixed: patch.depositFeeFixed } : {}),
       ...(patch.depositFeeMin !== undefined ? { deposit_fee_min: patch.depositFeeMin } : {}),
+      ...(patch.autoWithdrawEnabled !== undefined ? { auto_withdraw_enabled: patch.autoWithdrawEnabled } : {}),
+      ...(patch.autoWithdrawMaxAmount !== undefined ? { auto_withdraw_max_amount: patch.autoWithdrawMaxAmount } : {}),
+      ...(patch.autoWithdrawDailyMax !== undefined ? { auto_withdraw_daily_max: patch.autoWithdrawDailyMax } : {}),
       updated_at: new Date().toISOString(),
       updated_by: updatedBy,
     })

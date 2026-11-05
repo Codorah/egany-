@@ -21,6 +21,7 @@ import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
 import { ChipPicker } from './ui/ChipPicker';
 import { PaymentPendingCard } from './ui/PaymentPendingCard';
+import { WithdrawalPendingCard } from './ui/WithdrawalPendingCard';
 import { StatusBadge } from './ui/StatusBadge';
 import { SettingsGroup, SettingsRow } from './ui/SettingsList';
 
@@ -28,7 +29,7 @@ import { supabase, isPasswordProviderUser } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
 import { KYC_VERIFIED_LEVEL, submitKycDocument, fetchLatestKycSubmission } from '@/lib/kyc';
 import { useBiometrics } from '@/hooks/useBiometrics';
-import { requestWalletWithdrawal, verifyUserPin, setUserPin } from '@/lib/ledger';
+import { requestWithdrawal, setUserPin, type WithdrawalState } from '@/lib/ledger';
 import {
   computeDepositFee,
   fetchPlatformSettings,
@@ -138,6 +139,14 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
   // Paiement SoftPay en cours : l'opérateur a poussé une demande de code sur
   // le téléphone et on attend que l'utilisatrice la valide.
+  const [pendingWithdrawal, setPendingWithdrawal] = useState<{
+    withdrawalId: string | null;
+    state: WithdrawalState;
+    amount: number;
+    operatorLabel: string;
+    phone: string;
+    defaultPin: boolean;
+  } | null>(null);
   const [pendingPayment, setPendingPayment] = useState<{
     invoiceToken: string;
     netAmount: number;
@@ -481,40 +490,32 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     const withdrawMethodLabel = findOperatorLabel(withdrawMethod);
     setIsWithdrawing(true);
     try {
-      const pinResult = await verifyUserPin(user.uid, withdrawPin);
-      if (!pinResult.ok) {
-        toast.error(pinResult.message || 'Code PIN incorrect.');
-        setIsWithdrawing(false);
-        return;
-      }
-
       if (!withdrawIdempotencyKeyRef.current) {
         withdrawIdempotencyKeyRef.current = crypto.randomUUID();
       }
-      // Paydunya n'expose que l'encaissement, pas le décaissement automatique
-      // vers Mobile Money : l'argent est réservé (débité) immédiatement, puis
-      // un admin l'envoie manuellement et marque la demande traitée. Le solde
-      // est remboursé automatiquement si l'admin marque le retrait en échec.
-      //
-      // Le débit et la ligne « en attente » sont écrits ensemble côté Postgres
-      // (request_wallet_withdrawal) : auparavant c'étaient deux appels, et si
-      // le second échouait l'argent était débité sans qu'aucune demande
-      // n'apparaisse dans la file de l'administrateur.
-      const result = await requestWalletWithdrawal({
+      // Le serveur vérifie le code PIN, débite, puis envoie via PayDunya ou
+      // place la demande dans la file de l'Admin (api/paydunya-payout.ts).
+      // En cas de coupure, la clé est conservée : réessayer ne débite pas deux fois.
+      const result = await requestWithdrawal({
         idempotencyKey: withdrawIdempotencyKeyRef.current,
         amount: amt,
         paymentMethod: withdrawMethod,
         phone: withdrawPhone,
-        methodLabel: withdrawMethodLabel,
+        pin: withdrawPin,
       });
       if (!result.success) throw new Error(result.message);
 
       withdrawIdempotencyKeyRef.current = null;
-      toast.success(`Retrait de ${amt.toLocaleString()} FCFA initié vers ${withdrawMethodLabel}.`);
-      setWithdrawAmount('');
       setWithdrawPin('');
       setShowWithdrawConfirm(false);
-      setActiveSection(null);
+      setPendingWithdrawal({
+        withdrawalId: result.withdrawalId ?? null,
+        state: result.state ?? 'manual',
+        amount: result.amount ?? amt,
+        operatorLabel: withdrawMethodLabel,
+        phone: withdrawPhone,
+        defaultPin: Boolean(result.defaultPin),
+      });
     } catch (err: any) {
       console.error('Withdrawal error:', err);
       toast.error(err.message || 'Erreur lors du retrait');
@@ -1143,7 +1144,20 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             {/* Paiement en attente de validation sur le téléphone : il prend
                 toute la place, parce que c'est la seule chose à faire à cet
                 instant. Le reste du portefeuille attendra. */}
-            {pendingPayment ? (
+            {pendingWithdrawal ? (
+              <WithdrawalPendingCard
+                {...pendingWithdrawal}
+                onDone={() => {
+                  setPendingWithdrawal(null);
+                  setWithdrawAmount('');
+                }}
+                onChangePin={() => {
+                  setPendingWithdrawal(null);
+                  setWithdrawAmount('');
+                  setActiveSection('security_pin');
+                }}
+              />
+            ) : pendingPayment ? (
               <PaymentPendingCard
                 invoiceToken={pendingPayment.invoiceToken}
                 netAmount={pendingPayment.netAmount}
@@ -1370,7 +1384,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 </div>
 
                 <p className="text-[13px] text-muted-foreground bg-muted/50 rounded-xl p-3 leading-snug">
-                  Votre demande est vérifiée par notre équipe avant l'envoi de l'argent sur votre Mobile Money.
+                  Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé. Vous recevrez une notification dès que l'argent est envoyé.
                 </p>
 
                 <Button
@@ -1378,7 +1392,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   disabled={isWithdrawing}
                   className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
-                  {isWithdrawing ? 'Vérification…' : 'Demander le retrait'}
+                  {isWithdrawing ? 'Envoi en cours…' : 'Retirer'}
                 </Button>
               </div>
             )}
