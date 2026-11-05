@@ -9,7 +9,7 @@ import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from 
 import { AdminCreditReview } from './AdminCreditReview';
 import { AdminAidReview } from './AdminAidReview';
 import { AdminServerHealth } from './AdminServerHealth';
-import { fetchPlatformSettings, fetchAutoWithdrawSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
+import { fetchPlatformSettings, fetchAutoWithdrawSettings, fetchWithdrawFeeSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { apiFetch } from '@/lib/apiBase';
@@ -95,6 +95,10 @@ export function AdminDashboard() {
   // Frais du prestataire sur les dépôts. Saisis en texte pour ne pas gêner la
   // frappe (un champ numérique contrôlé qui reparse à chaque touche empêche
   // d'écrire « 2.5 » : le point disparaît dès qu'il est tapé).
+  const [withdrawFeeEnabled, setWithdrawFeeEnabled] = useState(false);
+  const [withdrawFeePercent, setWithdrawFeePercent] = useState('0');
+  const [withdrawFeeFixed, setWithdrawFeeFixed] = useState('0');
+  const [withdrawFeeMin, setWithdrawFeeMin] = useState('0');
   const [autoWithdrawEnabled, setAutoWithdrawEnabled] = useState(true);
   const [autoWithdrawMaxAmount, setAutoWithdrawMaxAmount] = useState('25000');
   const [autoWithdrawDailyMax, setAutoWithdrawDailyMax] = useState('50000');
@@ -195,6 +199,13 @@ export function AdminDashboard() {
       setDepositFeeMin(String(settings.depositFeeMin));
       setPayoutFeeMode(settings.payoutFeeMode);
       setPayoutFeePercent(String(settings.payoutFeePercent));
+      const withdrawFees = await fetchWithdrawFeeSettings();
+      if (withdrawFees) {
+        setWithdrawFeeEnabled(withdrawFees.withdrawFeeEnabled);
+        setWithdrawFeePercent(String(withdrawFees.withdrawFeePercent));
+        setWithdrawFeeFixed(String(withdrawFees.withdrawFeeFixed));
+        setWithdrawFeeMin(String(withdrawFees.withdrawFeeMin));
+      }
       const autoWithdraw = await fetchAutoWithdrawSettings();
       if (autoWithdraw) {
         setAutoWithdrawEnabled(autoWithdraw.autoWithdrawEnabled);
@@ -306,7 +317,7 @@ export function AdminDashboard() {
   };
 
   const handleSendViaPaydunya = async (w: PendingWithdrawal) => {
-    if (!window.confirm(`Envoyer ${w.amount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}) via PayDunya ?`)) return;
+    if (!window.confirm(`Envoyer ${w.sendAmount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}) via PayDunya ?`)) return;
     setProcessingWithdrawalId(w.id);
     try {
       reportPayout(await sendWithdrawalViaPaydunya(w.id));
@@ -339,7 +350,7 @@ export function AdminDashboard() {
   };
 
   const handleCompleteWithdrawal = async (w: PendingWithdrawal) => {
-    const payoutRef = (window.prompt(`Envoyez d'abord ${w.amount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}).\nPuis saisissez la référence de la transaction Mobile Money (obligatoire) :`) || '').trim();
+    const payoutRef = (window.prompt(`Envoyez d'abord ${w.sendAmount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}).\nPuis saisissez la référence de la transaction Mobile Money (obligatoire) :`) || '').trim();
     if (!payoutRef) {
       toast.error("Référence de transaction obligatoire : le retrait n'a pas été marqué envoyé.");
       return;
@@ -348,13 +359,13 @@ export function AdminDashboard() {
     try {
       const result = await completeWithdrawal(w.id, payoutRef);
       if (!result.success) throw new Error(result.message);
-      toast.success(`Retrait de ${w.amount.toLocaleString()} FCFA marqué comme envoyé.`);
+      toast.success(`Retrait de ${w.sendAmount.toLocaleString()} FCFA marqué comme envoyé.`);
       setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
       setProcessedWithdrawals(prev => [{ ...w, status: 'completed' as const, payoutReference: payoutRef }, ...prev]);
       await notifyUser({
         userId: w.userId,
         title: 'Retrait effectué',
-        message: `Votre retrait de ${w.amount.toLocaleString()} FCFA vers ${w.paymentMethod.toUpperCase()} a été envoyé.`,
+        message: `Votre retrait de ${w.sendAmount.toLocaleString()} FCFA vers ${w.paymentMethod.toUpperCase()} a été envoyé.`,
         type: 'system',
       });
     } catch (error: any) {
@@ -1701,6 +1712,100 @@ export function AdminDashboard() {
                 <div className="p-4 border rounded-2xl bg-muted/20 border-border space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-foreground">Frais de retrait</p>
+                      <p className="text-[13px] text-muted-foreground">
+                        Affichés avant confirmation. La personne choisit de les payer en plus ou de les retirer du montant reçu.
+                      </p>
+                    </div>
+                    <Button
+                      variant={withdrawFeeEnabled ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={isSavingSettings}
+                      onClick={async () => {
+                        const next = !withdrawFeeEnabled;
+                        setIsSavingSettings(true);
+                        const { data: authData } = await supabase.auth.getUser();
+                        const result = await updatePlatformSettings({ withdrawFeeEnabled: next }, authData.user?.id || '');
+                        setIsSavingSettings(false);
+                        if (!result.success) {
+                          toast.error(result.message || "Impossible d'enregistrer ce réglage.");
+                          return;
+                        }
+                        setWithdrawFeeEnabled(next);
+                        toast.info(next ? 'Frais de retrait activés.' : 'Frais de retrait désactivés.');
+                      }}
+                      className={`h-8 font-bold text-xs rounded-xl cursor-pointer shrink-0 ${withdrawFeeEnabled ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border'}`}
+                    >
+                      {withdrawFeeEnabled ? 'Activés' : 'Désactivés'}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-bold text-foreground">Pourcentage (%)</Label>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={withdrawFeePercent}
+                        onChange={(e) => setWithdrawFeePercent(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-bold text-foreground">Part fixe (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={withdrawFeeFixed}
+                        onChange={(e) => setWithdrawFeeFixed(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-bold text-foreground">Minimum (FCFA)</Label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        value={withdrawFeeMin}
+                        onChange={(e) => setWithdrawFeeMin(e.target.value)}
+                        className="rounded-xl h-10 text-sm font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    disabled={isSavingSettings}
+                    onClick={async () => {
+                      const pct = parseFloat(withdrawFeePercent);
+                      const fixed = Number(withdrawFeeFixed);
+                      const min = Number(withdrawFeeMin);
+                      if (!Number.isFinite(pct) || pct < 0 || !Number.isInteger(fixed) || fixed < 0 || !Number.isInteger(min) || min < 0) {
+                        toast.error('Pourcentage positif ; part fixe et minimum en FCFA entiers.');
+                        return;
+                      }
+                      setIsSavingSettings(true);
+                      const { data: authData } = await supabase.auth.getUser();
+                      const result = await updatePlatformSettings(
+                        { withdrawFeePercent: pct, withdrawFeeFixed: fixed, withdrawFeeMin: min },
+                        authData.user?.id || ''
+                      );
+                      setIsSavingSettings(false);
+                      if (!result.success) {
+                        toast.error(result.message || "Impossible d'enregistrer ces frais.");
+                        return;
+                      }
+                      toast.success('Frais de retrait enregistrés.');
+                    }}
+                    className="h-9 font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    Enregistrer les frais de retrait
+                  </Button>
+                </div>
+
+                <div className="p-4 border rounded-2xl bg-muted/20 border-border space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
                       <p className="text-xs font-bold text-foreground">Retraits automatiques (PayDunya)</p>
                       <p className="text-[13px] text-muted-foreground">
                         Sous ces plafonds, l'argent part sans intervention. Au-dessus, le retrait attend dans la file de l'Admin.
@@ -1942,7 +2047,10 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-0.5">
                         <p className="text-sm font-bold text-foreground">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-black text-brand">{w.amount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-black text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        {w.fee > 0 && (
+                          <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
+                        )}
                         <p className="text-[13px] text-muted-foreground">
                           Demandé le {new Date(w.date).toLocaleString()}
                         </p>
@@ -2036,7 +2144,10 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex items-start justify-between gap-4">
                       <div className="space-y-0.5 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-black text-brand">{w.amount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-black text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        {w.fee > 0 && (
+                          <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
+                        )}
                         <p className="text-[13px] text-muted-foreground">Demandé le {new Date(w.date).toLocaleString()}</p>
                         {w.status === 'completed' && (
                           <p className="text-[13px] text-muted-foreground">

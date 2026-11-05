@@ -129,6 +129,58 @@ export async function fetchAutoWithdrawSettings(): Promise<AutoWithdrawSettings 
   };
 }
 
+export interface WithdrawFeeSettings {
+  withdrawFeeEnabled: boolean;
+  withdrawFeePercent: number;
+  withdrawFeeFixed: number;
+  withdrawFeeMin: number;
+}
+
+/** Lecture séparée, pour la même raison que fetchAutoWithdrawSettings. */
+export async function fetchWithdrawFeeSettings(): Promise<WithdrawFeeSettings | null> {
+  const { data, error } = await supabase
+    .from('platform_settings')
+    .select('withdraw_fee_enabled, withdraw_fee_percent, withdraw_fee_fixed, withdraw_fee_min')
+    .eq('id', 1)
+    .maybeSingle();
+  if (error || !data) {
+    if (error) console.warn('fetchWithdrawFeeSettings error:', error);
+    return null;
+  }
+  return {
+    withdrawFeeEnabled: data.withdraw_fee_enabled,
+    withdrawFeePercent: Number(data.withdraw_fee_percent),
+    withdrawFeeFixed: Number(data.withdraw_fee_fixed),
+    withdrawFeeMin: Number(data.withdraw_fee_min),
+  };
+}
+
+export interface WithdrawFeeBreakdown {
+  /** Ce qui part sur le Mobile Money. */
+  net: number;
+  fee: number;
+  /** Ce qui quitte le portefeuille. */
+  debit: number;
+}
+
+/**
+ * Doit donner exactement le même résultat que request_wallet_withdrawal
+ * (migration 0037), qui refuse le retrait sinon. Le toFixed retire les erreurs
+ * d'arrondi des nombres à virgule : 1000 × 1,1 / 100 vaut 11,000000000000002 en
+ * JavaScript, ce qui donnerait 12 F ici et 11 F en base.
+ */
+export function computeWithdrawFee(amount: number, settings: WithdrawFeeSettings | null, feeOnTop: boolean): WithdrawFeeBreakdown {
+  const rounded = Math.max(0, Math.round(amount) || 0);
+  if (!settings?.withdrawFeeEnabled || rounded <= 0) {
+    return { net: rounded, fee: 0, debit: rounded };
+  }
+  const raw = (rounded * settings.withdrawFeePercent) / 100 + settings.withdrawFeeFixed;
+  const fee = Math.max(Math.ceil(Number(raw.toFixed(6))), settings.withdrawFeeMin);
+  return feeOnTop
+    ? { net: rounded, fee, debit: rounded + fee }
+    : { net: Math.max(0, rounded - fee), fee, debit: rounded };
+}
+
 export interface RevenueShare {
   profileId: string;
   percent: number;
@@ -158,7 +210,7 @@ export async function saveRevenueShares(shares: RevenueShare[]): Promise<{ succe
 }
 
 export async function updatePlatformSettings(
-  patch: Partial<PlatformSettings & AutoWithdrawSettings>,
+  patch: Partial<PlatformSettings & AutoWithdrawSettings & WithdrawFeeSettings>,
   updatedBy: string
 ): Promise<{ success: boolean; message?: string }> {
   const { data, error } = await supabase
@@ -173,6 +225,10 @@ export async function updatePlatformSettings(
       ...(patch.depositFeePercent !== undefined ? { deposit_fee_percent: patch.depositFeePercent } : {}),
       ...(patch.depositFeeFixed !== undefined ? { deposit_fee_fixed: patch.depositFeeFixed } : {}),
       ...(patch.depositFeeMin !== undefined ? { deposit_fee_min: patch.depositFeeMin } : {}),
+      ...(patch.withdrawFeeEnabled !== undefined ? { withdraw_fee_enabled: patch.withdrawFeeEnabled } : {}),
+      ...(patch.withdrawFeePercent !== undefined ? { withdraw_fee_percent: patch.withdrawFeePercent } : {}),
+      ...(patch.withdrawFeeFixed !== undefined ? { withdraw_fee_fixed: patch.withdrawFeeFixed } : {}),
+      ...(patch.withdrawFeeMin !== undefined ? { withdraw_fee_min: patch.withdrawFeeMin } : {}),
       ...(patch.autoWithdrawEnabled !== undefined ? { auto_withdraw_enabled: patch.autoWithdrawEnabled } : {}),
       ...(patch.autoWithdrawMaxAmount !== undefined ? { auto_withdraw_max_amount: patch.autoWithdrawMaxAmount } : {}),
       ...(patch.autoWithdrawDailyMax !== undefined ? { auto_withdraw_daily_max: patch.autoWithdrawDailyMax } : {}),

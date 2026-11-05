@@ -127,7 +127,11 @@ export interface WithdrawalResult {
   message?: string;
   state?: WithdrawalState;
   withdrawalId?: string;
+  /** Ce qui est envoyé sur le Mobile Money. */
   amount?: number;
+  /** Ce qui a quitté le portefeuille, frais compris. */
+  debited?: number;
+  fee?: number;
   /** Le code PIN est encore 0000 : le retrait passe par l'équipe. */
   defaultPin?: boolean;
   error?: string | null;
@@ -163,6 +167,8 @@ export function requestWithdrawal(params: {
   paymentMethod: string;
   phone: string;
   pin: string;
+  feeOnTop: boolean;
+  expectedFee: number;
 }): Promise<WithdrawalResult> {
   if (isOffline()) return Promise.resolve({ success: false, message: OFFLINE_MONEY_MESSAGE });
   return callPayout('request', params);
@@ -199,7 +205,11 @@ export interface PendingWithdrawal {
   userId: string;
   userName: string;
   userEmail: string;
+  /** Ce qui a quitté le portefeuille, frais compris : c'est ce qu'on rembourse. */
   amount: number;
+  /** Ce qu'il faut envoyer. */
+  sendAmount: number;
+  fee: number;
   paymentMethod: string;
   reference: string | null;
   date: string;
@@ -230,6 +240,8 @@ export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
     // sort du portefeuille, et l'historique affiche un montant signé). Ici
     // l'admin raisonne en « combien envoyer », donc valeur absolue.
     amount: Math.abs(Number(row.amount)),
+    sendAmount: row.payout_amount === null || row.payout_amount === undefined ? Math.abs(Number(row.amount)) : Number(row.payout_amount),
+    fee: Number(row.withdraw_fee ?? 0),
     paymentMethod: row.payment_method || '',
     reference: row.reference,
     date: row.date,
@@ -261,6 +273,8 @@ export async function fetchProcessedWithdrawals(limit = 100): Promise<ProcessedW
     userName: row.profiles?.display_name || 'Utilisateur',
     userEmail: row.profiles?.email || '',
     amount: Math.abs(Number(row.amount)),
+    sendAmount: row.payout_amount === null || row.payout_amount === undefined ? Math.abs(Number(row.amount)) : Number(row.payout_amount),
+    fee: Number(row.withdraw_fee ?? 0),
     paymentMethod: row.payment_method || '',
     reference: row.reference,
     date: row.date,

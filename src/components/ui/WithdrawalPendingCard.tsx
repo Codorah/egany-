@@ -21,7 +21,11 @@ const TIMEOUT_MS = 3 * 60 * 1000;
 interface WithdrawalPendingCardProps {
   withdrawalId: string | null;
   state: WithdrawalState;
+  /** Ce qui est envoyé sur le Mobile Money. */
   amount: number;
+  /** Ce qui a quitté le portefeuille, frais compris. */
+  debited: number;
+  fee: number;
   operatorLabel: string;
   phone: string;
   defaultPin: boolean;
@@ -33,6 +37,8 @@ export function WithdrawalPendingCard({
   withdrawalId,
   state: initialState,
   amount,
+  debited,
+  fee,
   operatorLabel,
   phone,
   defaultPin,
@@ -107,7 +113,7 @@ export function WithdrawalPendingCard({
         <div className="space-y-1.5">
           <h3 className="text-base font-serif font-black text-foreground">Retrait remboursé</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            Cet envoi n'a pas pu être fait. {amountLabel} ont été rendus à votre portefeuille.
+            Cet envoi n'a pas pu être fait. {debited.toLocaleString()} FCFA ont été rendus à votre portefeuille.
           </p>
         </div>
         <Button
@@ -151,8 +157,25 @@ export function WithdrawalPendingCard({
         <p className="text-[13px] text-muted-foreground leading-relaxed">
           {isProcessing
             ? <>{amountLabel} sont en route vers votre compte {operatorLabel} (<strong className="text-foreground">{phone}</strong>).</>
-            : <>{amountLabel} ont été débités de votre portefeuille. Notre équipe finalise l'envoi vers {operatorLabel} (<strong className="text-foreground">{phone}</strong>).</>}
+            : <>{amountLabel} seront envoyés vers {operatorLabel} (<strong className="text-foreground">{phone}</strong>). Notre équipe finalise cet envoi.</>}
         </p>
+      </div>
+
+      <div className="rounded-2xl bg-muted/50 border border-[#EFE2D0] dark:border-border/80 p-3.5 space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Débité de votre solde</span>
+          <span className="font-bold text-foreground tabular-nums">{debited.toLocaleString()} FCFA</span>
+        </div>
+        {fee > 0 && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Dont frais de retrait</span>
+            <span className="font-bold text-foreground tabular-nums">{fee.toLocaleString()} FCFA</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Envoyé sur votre compte</span>
+          <span className="font-bold text-foreground tabular-nums">{amountLabel}</span>
+        </div>
       </div>
 
       <p className="text-[13px] text-center text-muted-foreground leading-relaxed">

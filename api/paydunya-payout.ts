@@ -128,8 +128,16 @@ function stateOf(row: any): PayoutState {
   return row.payout_state === 'processing' ? 'processing' : 'manual';
 }
 
-function amountOf(row: any): number {
+/** Ce qui a quitté le portefeuille, frais compris. */
+function debitOf(row: any): number {
   return Math.abs(Number(row.amount));
+}
+
+/** Ce qu'il faut envoyer. Anciennes lignes sans frais : égal au débit. */
+function amountOf(row: any): number {
+  return row.payout_amount === null || row.payout_amount === undefined
+    ? debitOf(row)
+    : Number(row.payout_amount);
 }
 
 function fcfa(value: number): string {
@@ -380,13 +388,13 @@ async function checkEligibility(db: any, row: any): Promise<Eligibility> {
   startOfDay.setUTCHours(0, 0, 0, 0);
   const { data: today, error: todayError } = await db
     .from('wallet_transactions')
-    .select('amount')
+    .select('amount, payout_amount')
     .eq('user_id', row.user_id)
     .eq('type', 'withdraw')
     .neq('status', 'failed')
     .gte('date', startOfDay.toISOString());
   if (todayError) return { auto: false, reason: 'Plafond journalier non vérifiable.' };
-  const total = (today || []).reduce((sum: number, line: any) => sum + Math.abs(Number(line.amount)), 0);
+  const total = (today || []).reduce((sum: number, line: any) => sum + amountOf(line), 0);
   const dailyMax = Number(settings.auto_withdraw_daily_max);
   if (total > dailyMax) {
     return { auto: false, reason: `Plafond journalier dépassé (${fcfa(dailyMax)} FCFA par jour).` };
@@ -399,7 +407,7 @@ async function handleRequest(req: any, res: any, db: any) {
   const caller = await requireUser(req);
   if (!caller) return res.status(401).json({ success: false, message: 'Authentification requise.' });
 
-  const { idempotencyKey, amount, paymentMethod, phone, pin } = req.body ?? {};
+  const { idempotencyKey, amount, paymentMethod, phone, pin, feeOnTop, expectedFee } = req.body ?? {};
   const parsedAmount = Number(amount);
   if (!Number.isInteger(parsedAmount) || parsedAmount < MIN_WITHDRAWAL) {
     return res.status(400).json({ success: false, message: `Le retrait minimum est de ${fcfa(MIN_WITHDRAWAL)} FCFA, sans décimales.` });
@@ -416,6 +424,10 @@ async function handleRequest(req: any, res: any, db: any) {
     return res.status(400).json({ success: false, message: 'Veuillez saisir votre code PIN à 4 chiffres.' });
   }
 
+  if (typeof feeOnTop !== 'boolean' || !Number.isFinite(expectedFee) || expectedFee < 0) {
+    return res.status(400).json({ success: false, message: 'Requête invalide.' });
+  }
+
   const asCaller = callerClient(req);
   const { data: pinResult, error: pinError } = await asCaller.rpc('verify_user_pin', {
     p_user_id: caller.id,
@@ -430,14 +442,23 @@ async function handleRequest(req: any, res: any, db: any) {
   }
 
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  const { data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', {
+  const debitArgs = {
     p_idempotency_key: idempotencyKey,
     p_amount: parsedAmount,
     p_payment_method: paymentMethod,
     p_phone: phone,
     p_method_label: route.label,
     p_ip: forwarded || null,
+  };
+  let { data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', {
+    ...debitArgs,
+    p_fee_on_top: feeOnTop,
+    p_expected_fee: expectedFee,
   });
+  // Migration 0037 pas encore appliquée : retrait sans frais, comme avant.
+  if (debitError?.code === 'PGRST202') {
+    ({ data: debit, error: debitError } = await asCaller.rpc('request_wallet_withdrawal', debitArgs));
+  }
   if (debitError) {
     console.error('[payout] Débit impossible :', debitError);
     // Coupure possible après le débit : on n'affirme rien. La clé d'idempotence
@@ -451,7 +472,7 @@ async function handleRequest(req: any, res: any, db: any) {
   // Migration 0036 pas encore appliquée : le débit est fait, la demande est
   // dans la file de l'Admin comme avant.
   if (!debit.withdrawalId) {
-    return res.status(200).json({ success: true, state: 'manual', amount: parsedAmount });
+    return res.status(200).json({ success: true, state: 'manual', amount: parsedAmount, debited: parsedAmount, fee: 0 });
   }
 
   const { data: row, error: rowError } = await db
@@ -463,11 +484,26 @@ async function handleRequest(req: any, res: any, db: any) {
     .maybeSingle();
   if (rowError || !row) {
     console.error('[payout] Demande introuvable après débit :', debit.withdrawalId, rowError);
-    return res.status(200).json({ success: true, state: 'manual', amount: parsedAmount, withdrawalId: debit.withdrawalId });
+    return res.status(200).json({ success: true, state: 'manual', amount: parsedAmount, debited: parsedAmount, fee: 0, withdrawalId: debit.withdrawalId });
   }
 
   const reply = (state: PayoutState, extra: object = {}) =>
-    res.status(200).json({ success: true, state, amount: amountOf(row), withdrawalId: row.id, ...extra });
+    res.status(200).json({
+      success: true,
+      state,
+      amount: amountOf(row),
+      debited: debitOf(row),
+      fee: Number(row.withdraw_fee ?? 0),
+      withdrawalId: row.id,
+      ...extra,
+    });
+
+  const debitNotice = () => {
+    const fee = Number(row.withdraw_fee ?? 0);
+    return `${fcfa(debitOf(row))} FCFA ont été débités de votre portefeuille`
+      + (fee > 0 ? ` (dont ${fcfa(fee)} FCFA de frais)` : '')
+      + ` pour un envoi de ${fcfa(amountOf(row))} FCFA vers ${destinationOf(row)}.`;
+  };
 
   // Même clé rejouée, décision déjà prise : on donne l'état, sans rien renvoyer.
   if (row.payout_state !== null) return reply(await refresh(db, row));
@@ -488,7 +524,7 @@ async function handleRequest(req: any, res: any, db: any) {
         db,
         row.user_id,
         'Retrait en cours de traitement',
-        `${fcfa(amountOf(row))} FCFA ont été débités de votre portefeuille pour un envoi vers ${destinationOf(row)}. Notre équipe finalise cet envoi.`
+        `${debitNotice()} Notre équipe finalise cet envoi.`
       );
       await notifyAdmins(db, row, eligibility.reason || 'à traiter.');
     }
@@ -513,7 +549,7 @@ async function handleRequest(req: any, res: any, db: any) {
     db,
     row.user_id,
     'Retrait en cours',
-    `${fcfa(amountOf(row))} FCFA ont été débités de votre portefeuille pour un envoi vers ${destinationOf(row)}.`
+    debitNotice()
   );
 
   return reply(await startPayout(db, claimed[0], callbackUrlOf(req)));

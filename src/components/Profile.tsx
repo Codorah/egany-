@@ -35,6 +35,9 @@ import {
   fetchPlatformSettings,
   type DepositFeeBreakdown,
   type PlatformSettings,
+  fetchWithdrawFeeSettings,
+  computeWithdrawFee,
+  type WithdrawFeeSettings,
 } from '@/lib/platformSettings';
 import { PAYDUNYA_COUNTRIES, getOperatorsForCountry, findOperatorLabel } from '@/lib/paydunyaMethods';
 import { apiUrl, apiFetch } from '@/lib/apiBase';
@@ -143,6 +146,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     withdrawalId: string | null;
     state: WithdrawalState;
     amount: number;
+    debited: number;
+    fee: number;
     operatorLabel: string;
     phone: string;
     defaultPin: boolean;
@@ -157,6 +162,14 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
   // Ce qui arrivera sur le portefeuille (net), ce que Paydunya prélève (fee),
   // et ce qui sera réellement débité de son Mobile Money (gross).
+  const [withdrawFeeOnTop, setWithdrawFeeOnTop] = useState(true);
+  const [withdrawFeeSettings, setWithdrawFeeSettings] = useState<WithdrawFeeSettings | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchWithdrawFeeSettings().then((settings) => { if (!cancelled) setWithdrawFeeSettings(settings); });
+    return () => { cancelled = true; };
+  }, []);
+
   const depositBreakdown: DepositFeeBreakdown | null = React.useMemo(() => {
     const amount = parseFloat(rechargeAmount);
     if (!platformSettings || !Number.isFinite(amount) || amount <= 0) return null;
@@ -168,7 +181,12 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
   const [withdrawCountry, setWithdrawCountry] = useState('tg');
   const [withdrawMethod, setWithdrawMethod] = useState('tmoney_tg');
   const [withdrawPhone, setWithdrawPhone] = useState(user.phone || '');
-  useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount, withdrawPhone, withdrawMethod]);
+  useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount, withdrawPhone, withdrawMethod, withdrawFeeOnTop]);
+  const withdrawBreakdown = React.useMemo(() => {
+    const amount = parseFloat(withdrawAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    return computeWithdrawFee(amount, withdrawFeeSettings, withdrawFeeOnTop);
+  }, [withdrawAmount, withdrawFeeSettings, withdrawFeeOnTop]);
   const [withdrawPin, setWithdrawPin] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
@@ -466,8 +484,19 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       toast.error('Montant de retrait invalide');
       return;
     }
-    if (amt > (user.walletBalance || 0)) {
-      toast.error('Solde disponible insuffisant');
+    if (!Number.isInteger(amt)) {
+      toast.error('Le montant doit être un nombre entier de FCFA');
+      return;
+    }
+    const breakdown = computeWithdrawFee(amt, withdrawFeeSettings, withdrawFeeOnTop);
+    if (breakdown.debit > (user.walletBalance || 0)) {
+      toast.error(breakdown.fee > 0 && amt <= (user.walletBalance || 0)
+        ? `Solde insuffisant : il faut ${breakdown.debit.toLocaleString()} FCFA, frais compris. Décochez « Payer les frais en plus » pour les retirer du montant.`
+        : 'Solde disponible insuffisant');
+      return;
+    }
+    if (breakdown.net <= 0) {
+      toast.error('Montant trop faible une fois les frais retenus');
       return;
     }
     if (!withdrawMethod) {
@@ -502,6 +531,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         paymentMethod: withdrawMethod,
         phone: withdrawPhone,
         pin: withdrawPin,
+        feeOnTop: withdrawFeeOnTop,
+        expectedFee: computeWithdrawFee(amt, withdrawFeeSettings, withdrawFeeOnTop).fee,
       });
       if (!result.success) throw new Error(result.message);
 
@@ -512,6 +543,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         withdrawalId: result.withdrawalId ?? null,
         state: result.state ?? 'manual',
         amount: result.amount ?? amt,
+        debited: result.debited ?? amt,
+        fee: result.fee ?? 0,
         operatorLabel: withdrawMethodLabel,
         phone: withdrawPhone,
         defaultPin: Boolean(result.defaultPin),
@@ -1335,7 +1368,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   </div>
                   <button
                     type="button"
-                    onClick={() => setWithdrawAmount(String(Math.floor(user.walletBalance || 0)))}
+                    onClick={() => {
+                      // Tout retirer : les frais ne peuvent venir que du montant lui-même.
+                      setWithdrawFeeOnTop(false);
+                      setWithdrawAmount(String(Math.floor(user.walletBalance || 0)));
+                    }}
                     className="w-full text-center text-[13px] font-bold text-brand hover:underline cursor-pointer"
                   >
                     Tout retirer ({(user.walletBalance || 0).toLocaleString()} FCFA)
@@ -1382,6 +1419,50 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     Code oublié ? Le changer
                   </button>
                 </div>
+
+                {withdrawFeeSettings?.withdrawFeeEnabled && (
+                  <label className="flex items-start gap-3 rounded-2xl border border-[#EFE2D0] dark:border-border/80 p-3.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={withdrawFeeOnTop}
+                      onChange={(e) => setWithdrawFeeOnTop(e.target.checked)}
+                      className="mt-0.5 w-5 h-5 shrink-0 accent-[#C96F4A] cursor-pointer"
+                    />
+                    <span className="space-y-0.5">
+                      <span className="block text-xs font-bold text-foreground">Payer les frais en plus</span>
+                      <span className="block text-[13px] text-muted-foreground leading-snug">
+                        {withdrawFeeOnTop
+                          ? 'Les frais sont pris sur votre solde en plus du montant : vous recevez le montant entier.'
+                          : 'Les frais sont retirés du montant que vous recevez.'}
+                      </span>
+                    </span>
+                  </label>
+                )}
+
+                {/* Affiché avant de confirmer : personne ne doit découvrir les frais après coup. */}
+                {withdrawBreakdown && withdrawBreakdown.fee > 0 && (
+                  <div className="rounded-2xl border border-[#EFE2D0] dark:border-border/80 bg-muted/50 p-3.5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{withdrawFeeOnTop ? 'Vous recevez' : 'Débité de votre solde'}</span>
+                      <span className="font-bold text-foreground tabular-nums">
+                        {(withdrawFeeOnTop ? withdrawBreakdown.net : withdrawBreakdown.debit).toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Frais de retrait</span>
+                      <span className="font-bold text-foreground tabular-nums">
+                        {withdrawFeeOnTop ? '+' : '−'} {withdrawBreakdown.fee.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground">{withdrawFeeOnTop ? 'Débité de votre solde' : 'Vous recevez'}</span>
+                      <span className="text-sm font-serif font-black text-primary-ink tabular-nums">
+                        {(withdrawFeeOnTop ? withdrawBreakdown.debit : withdrawBreakdown.net).toLocaleString()} FCFA
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <p className="text-[13px] text-muted-foreground bg-muted/50 rounded-xl p-3 leading-snug">
                   Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé. Vous recevrez une notification dès que l'argent est envoyé.
@@ -1631,8 +1712,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
         isLoading={isWithdrawing}
         type="debit"
         title="Confirmer le retrait"
-        description={`Retrait de ${parseFloat(withdrawAmount || '0').toLocaleString()} FCFA vers ${findOperatorLabel(withdrawMethod)} (${withdrawPhone}).`}
-        amount={parseFloat(withdrawAmount) || 0}
+        description={`Envoi de ${(withdrawBreakdown?.net ?? 0).toLocaleString()} FCFA vers ${findOperatorLabel(withdrawMethod)} (${withdrawPhone})${withdrawBreakdown?.fee ? `, frais de ${withdrawBreakdown.fee.toLocaleString()} FCFA compris dans le débit` : ''}.`}
+        amount={withdrawBreakdown?.debit ?? 0}
         currency="FCFA"
         confirmLabel="Confirmer le retrait"
       />
