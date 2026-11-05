@@ -151,14 +151,17 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
       const result = await createPersonalVault({
         name: getProjectLabel(),
-        description: `Objectif : ${goalAmount.toLocaleString()} FCFA`,
+        description: `Objectif : ${goalAmount} FCFA`,
         lockDays,
       });
       if (!result.success) throw new Error(result.message);
 
       // If initial deposit specified and user has sufficient wallet balance, deposit it right away
       if (initialAmt > 0 && result.vaultId && initialAmt <= user.walletBalance) {
-        await depositToVault(result.vaultId, initialAmt);
+        const deposit = await depositToVault(result.vaultId, initialAmt);
+        if (!deposit.success) {
+          toast.warning(deposit.message || "Le premier versement n'a pas pu être fait. Réessayez depuis votre coffre.");
+        }
       }
 
       const freshVaults = await fetchMyVaults(user.uid);
@@ -306,8 +309,8 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   // format « Objectif : N FCFA » faute de colonne dédiée côté DB — un seul
   // point d'analyse pour ne pas diverger entre le total et l'affichage par coffre.
   const getVaultGoal = (vault: PersonalVault) => {
-    const match = vault.description?.match(/(\d[\d\s]*)/);
-    const parsed = match ? parseInt(match[0].replace(/\s/g, ''), 10) : 0;
+    const match = vault.description?.match(/(\d[\d\s.,]*)/);
+    const parsed = match ? parseInt(match[0].replace(/\D/g, ''), 10) : 0;
     return parsed > 0 ? parsed : Math.max(vault.balance, 100000);
   };
 

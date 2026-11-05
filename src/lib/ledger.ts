@@ -214,14 +214,16 @@ export async function failWithdrawal(params: {
   amount: number;
   reason?: string;
 }): Promise<{ success: boolean; message?: string }> {
-  const { data, error } = await supabase
+  // On vérifie que la demande est toujours en attente, puis on REMBOURSE
+  // d'abord : si le remboursement échoue, la demande reste « en attente » et
+  // l'admin peut réessayer (la clé d'idempotence évite tout double crédit).
+  const { data: pending, error: pendingError } = await supabase
     .from('wallet_transactions')
-    .update({ status: 'failed', description: params.reason || 'Retrait échoué — remboursé.' })
+    .select('id')
     .eq('id', params.transactionId)
-    .eq('status', 'pending')
-    .select('id');
-  if (error) return { success: false, message: error.message };
-  if (!data || data.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
+    .eq('status', 'pending');
+  if (pendingError) return { success: false, message: pendingError.message };
+  if (!pending || pending.length === 0) return { success: false, message: 'Action non autorisée ou retrait déjà traité.' };
 
   const refund = await executeFinancialTransaction({
     idempotencyKey: `withdraw_refund_${params.transactionId}`,
@@ -234,6 +236,13 @@ export async function failWithdrawal(params: {
     creditAccount: `user_wallet:${params.userId}`,
   });
   if (!refund.success) return { success: false, message: refund.message };
+
+  const { error } = await supabase
+    .from('wallet_transactions')
+    .update({ status: 'failed', description: params.reason || 'Retrait échoué — remboursé.' })
+    .eq('id', params.transactionId)
+    .eq('status', 'pending');
+  if (error) return { success: false, message: `Remboursé, mais statut non mis à jour : ${error.message}` };
   return { success: true };
 }
 

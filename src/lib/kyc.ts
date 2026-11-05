@@ -15,7 +15,10 @@ export async function submitKycDocument(params: {
   file: File;
 }): Promise<{ success: boolean; message: string }> {
   const { userId, fullName, idNumber, file } = params;
-  const path = `${userId}/${Date.now()}-${file.name}`;
+  // Nom de fichier assaini : espaces, accents et crochets (fréquents sur
+  // mobile) sont refusés par Supabase Storage (« Invalid key »).
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg';
+  const path = `${userId}/${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage.from('kyc-documents').upload(path, file);
   if (uploadError) {

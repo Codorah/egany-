@@ -370,7 +370,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     const newVal = !currentVal;
     setter(newVal);
     try {
-      await supabase.from('profiles').update({ [channel]: newVal }).eq('id', user.uid);
+      const { error } = await supabase.from('profiles').update({ [channel]: newVal }).eq('id', user.uid);
+      if (error) throw error;
       toast.success('Préférence enregistrée');
     } catch {
       setter(currentVal);

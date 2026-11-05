@@ -1,3 +1,4 @@
+import { setRecoveryInProgress } from '@/lib/recoveryFlag';
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AvatarWorkshop } from './AvatarWorkshop';
@@ -540,12 +541,14 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
     try {
       // Le code échange contre une session ; c'est elle qui autorise ensuite
       // l'écriture du nouveau mot de passe.
+      setRecoveryInProgress(true);
       const { error } = await verifyPasswordResetCode(email, code);
       if (error) throw error;
       setPassword('');
       setConfirmPassword('');
       setScreen('reset');
     } catch (err: any) {
+      setRecoveryInProgress(false);
       console.error('Recovery OTP error:', err);
       toast.error(t('onb_otp_invalid'));
       setOtpDigits(Array(OTP_LENGTH).fill(''));
@@ -570,6 +573,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
       if (error) throw error;
       // On repart d'une session propre : l'utilisatrice se reconnecte avec son
       // nouveau mot de passe, ce qui confirme qu'elle l'a bien mémorisé.
+      setRecoveryInProgress(false);
       await supabase.auth.signOut();
       setPassword('');
       setConfirmPassword('');

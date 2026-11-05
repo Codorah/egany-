@@ -1,3 +1,4 @@
+import { isRecoveryInProgress } from '@/lib/recoveryFlag';
 import React, { useState, Suspense, lazy } from 'react';
 import { Layout } from '@/components/Layout';
 import { Dashboard } from '@/components/Dashboard';
@@ -99,7 +100,9 @@ export default function App() {
 
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   React.useEffect(() => {
-    fetchPlatformSettings().then((s) => setMaintenanceMode(s.maintenanceMode));
+    fetchPlatformSettings()
+      .then((s) => setMaintenanceMode(s.maintenanceMode))
+      .catch(() => { /* réglages indisponibles : l'appli reste ouverte */ });
   }, []);
   
   const [view, setViewState] = useState<View>('dashboard');
@@ -216,7 +219,10 @@ export default function App() {
     }
 
     // Clear URL params without refreshing
-    if (code || paySim || shortcut || params.get('paydunya_success') || params.get('paydunya_cancel')) {
+    // Retour Paydunya : on garde l'adresse tant que le profil n'est pas chargé,
+    // sinon le message et la redirection vers le portefeuille seraient perdus.
+    const waitingForProfile = params.get('paydunya_success') === 'true' && !activeProfile;
+    if (!waitingForProfile && (code || paySim || shortcut || params.get('paydunya_success') || params.get('paydunya_cancel'))) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [profile, groups]);
@@ -404,7 +410,9 @@ export default function App() {
   }
 
   const isAdminUser = activeProfile?.role === 'admin';
-  if (maintenanceMode && !isAdminUser) {
+  // Visiteur déconnecté : on laisse l'écran de connexion, sinon l'équipe ne
+  // pourrait plus se reconnecter pour lever la maintenance.
+  if (maintenanceMode && activeProfile && !isAdminUser) {
     return (
       <div className="h-dvh w-full flex flex-col items-center justify-center bg-background text-foreground px-6 text-center gap-4">
         <img src="/icons/icon-128.png" alt="eganyé" className="w-16 h-16 rounded-2xl shadow-xl" />
@@ -452,7 +460,7 @@ export default function App() {
     );
   }
 
-  if (!activeProfile) {
+  if (!activeProfile || isRecoveryInProgress()) {
     if (showLanding && authEntry === null) {
       return (
         <Landing
