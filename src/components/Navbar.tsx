@@ -104,8 +104,8 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                     onClick={() => setLanguage(code)}
                     className="rounded-xl cursor-pointer flex items-center justify-between"
                   >
-                    <span className={`font-medium ${language === code ? 'text-primary font-bold' : ''}`}>{label}</span>
-                    {language === code && <Check className="w-3.5 h-3.5 text-primary" />}
+                    <span className={`font-medium ${language === code ? 'text-primary-ink font-bold' : ''}`}>{label}</span>
+                    {language === code && <Check className="w-3.5 h-3.5 text-primary-ink" />}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -195,28 +195,28 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                 )}
                 {/* Sur mobile la barre latérale est masquée : ses entrées secondaires passent ici. */}
                 <DropdownMenuItem onClick={() => onNavigate?.('calendar')} className="md:hidden rounded-xl cursor-pointer">
-                  <CalendarDays className="mr-2 h-4 w-4 text-primary" />
+                  <CalendarDays className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('calendar')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate?.('marketplace')} className="md:hidden rounded-xl cursor-pointer">
-                  <Store className="mr-2 h-4 w-4 text-primary" />
+                  <Store className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('marketplace')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate?.('ai-assistant')} className="md:hidden rounded-xl cursor-pointer">
-                  <Bot className="mr-2 h-4 w-4 text-primary" />
+                  <Bot className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('ai_assistant')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-1 md:hidden" />
                 <DropdownMenuItem onClick={() => onNavigate?.('profile')} className="rounded-xl cursor-pointer">
-                  <UserCircle className="mr-2 h-4 w-4 text-primary" />
+                  <UserCircle className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate?.('profile')} className="rounded-xl cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4 text-primary" />
+                  <Settings className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onNavigate?.('support')} className="rounded-xl cursor-pointer">
-                  <LifeBuoy className="mr-2 h-4 w-4 text-primary" />
+                  <LifeBuoy className="mr-2 h-4 w-4 text-primary-ink" />
                   <span className="font-medium">{t('support')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-1" />

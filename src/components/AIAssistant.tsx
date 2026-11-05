@@ -139,7 +139,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       {/* Operational Treasury Alerts */}
       <div className="bg-card border border-border/80 rounded-3xl p-5 shadow-soft space-y-4 shrink-0">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Activity className="w-4 h-4 text-primary" />
+          <Activity className="w-4 h-4 text-primary-ink" />
           {t('ais_detection_health_title')}
         </h3>
 
@@ -182,7 +182,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
 
           <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl space-y-2">
             <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <FileText className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold text-foreground">
                   {activeGroups.length} {t('ais_active_circles_count_label')}
@@ -210,7 +210,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
           onClick={() => handleSend(t('ais_prompt_late_summary'))}
           className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
         >
-          <Bell className="w-3.5 h-3.5 text-primary" /> {t('ais_smart_reminders_chip')}
+          <Bell className="w-3.5 h-3.5 text-primary-ink" /> {t('ais_smart_reminders_chip')}
         </button>
         <button
           onClick={() => handleSend(t('ais_prompt_treasury_report'))}
@@ -229,7 +229,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       {/* Chat Interface */}
       <div className="flex-1 bg-card border border-border/80 rounded-3xl shadow-soft flex flex-col overflow-hidden min-h-[300px]">
         <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center gap-2">
-          <Bot className="w-4 h-4 text-primary" />
+          <Bot className="w-4 h-4 text-primary-ink" />
           <span className="text-xs font-bold text-foreground">{t('ais_conversation_label')}</span>
         </div>
 

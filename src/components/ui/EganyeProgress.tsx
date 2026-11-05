@@ -21,7 +21,7 @@ interface EganyeProgressProps {
 }
 
 const TONE_COLORS: Record<NonNullable<EganyeProgressProps['tone']>, { stroke: string; bg: string; text: string }> = {
-  primary: { stroke: 'var(--primary)', bg: 'var(--primary)', text: 'text-primary' },
+  primary: { stroke: 'var(--primary)', bg: 'var(--primary)', text: 'text-primary-ink' },
   secondary: { stroke: 'var(--secondary)', bg: 'var(--secondary)', text: 'text-secondary' },
   success: { stroke: 'var(--success)', bg: 'var(--success)', text: 'text-success' },
   warning: { stroke: 'var(--warning)', bg: 'var(--warning)', text: 'text-warning' },

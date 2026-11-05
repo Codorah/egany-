@@ -46,8 +46,8 @@ export function TontineCard({ group, onClick }: TontineCardProps) {
           amount={group.contributionAmount}
           currency={group.currency}
           size="sm"
-          className="text-primary mt-0.5"
-          currencyClassName="text-primary/70"
+          className="text-primary-ink mt-0.5"
+          currencyClassName="text-primary-ink/70"
         />
       </div>
 

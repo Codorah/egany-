@@ -116,7 +116,7 @@ export function BottomNav({
                       className={`transition-colors duration-200 ${
                         active
                           ? 'text-white drop-shadow-xs'
-                          : 'text-muted-foreground group-hover:text-primary'
+                          : 'text-muted-foreground group-hover:text-primary-ink'
                       }`}
                     />
                   </motion.div>
@@ -130,7 +130,7 @@ export function BottomNav({
                   }}
                   className={`relative z-10 text-[13px]  font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
                     active
-                      ? 'font-black text-primary'
+                      ? 'font-black text-primary-ink'
                       : 'font-bold text-muted-foreground group-hover:text-foreground'
                   }`}
                 >

@@ -405,7 +405,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                         {totalPot.toLocaleString()} {group.currency}
                       </span>
                       <span className={`flex items-center justify-end gap-1 text-[13px] font-bold ${
-                        isPast ? 'text-secondary' : isCurrent ? 'text-primary' : 'text-muted-foreground'
+                        isPast ? 'text-secondary' : isCurrent ? 'text-primary-ink' : 'text-muted-foreground'
                       }`}>
                         {isPast ? <CheckCircle className="w-3 h-3" /> : isCurrent ? <Clock className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
                         {isPast ? t('status_paid') : isCurrent ? t('gd_next_short_label') : t('gd_waiting_short_label')}
@@ -678,7 +678,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     { id: 'membres', label: t('gd_nav_membres') || 'Membres', icon: 'members', bg: 'bg-[#F4EFE6]', text: 'text-[#3E2F24]' },
     { id: 'calendrier', label: t('calendar') || 'Calendrier', icon: 'calendar-finance', bg: 'bg-[#FEF6E9]', text: 'text-[#C49A55]' },
     { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-info-soft', text: 'text-info' },
-    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-primary' },
+    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-primary-ink' },
     { id: 'parametres', label: t('gd_nav_parametres') || 'Paramètres', icon: 'settings', bg: 'bg-muted', text: 'text-muted-foreground' },
   ];
 
@@ -720,7 +720,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {/* 2. Bloc Principal : Prochaine Cotisation */}
       <div className="bg-white dark:bg-card rounded-3xl p-5 shadow-soft border border-[#EFE2D0] dark:border-border/80 space-y-3.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+          <span className="text-xs font-bold text-primary-ink flex items-center gap-1.5">
             <EganyeIcon name="pending" size={14} />
             <span>{t('gd_next_contribution')}</span>
           </span>
@@ -751,7 +751,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {profile && (profile.kycLevel ?? 1) < 2 && (
         <div className="bg-[#FFF8F2] dark:bg-card border border-primary/25 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0">
               <EganyeIcon name="shield" size={16} />
             </div>
             <div className="min-w-0">
@@ -802,10 +802,10 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
               <div className={`w-9 h-9 rounded-xl ${link.bg} ${link.text} flex items-center justify-center shrink-0`}>
                 <EganyeIcon name={link.icon} size={18} />
               </div>
-              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-primary-ink transition-colors">
                 {link.label}
               </span>
-              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary-ink transition-colors" />
             </button>
           ))}
         </div>

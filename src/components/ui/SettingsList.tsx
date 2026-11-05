@@ -18,7 +18,7 @@ export function SettingsGroup({ title, children }: { title?: string; children: R
 }
 
 const TONES = {
-  brand: 'bg-[#FFF2E8] text-primary',
+  brand: 'bg-[#FFF2E8] text-primary-ink',
   sage: 'bg-success-soft text-secondary',
   sand: 'bg-[#F4EFE6] text-[#3E2F24]',
   gold: 'bg-[#FEF6E9] text-[#C49A55]',

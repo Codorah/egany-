@@ -49,7 +49,7 @@ export function ChooseCircleToPay({ groups, onSelect, onBack }: ChooseCircleToPa
               onClick={() => onSelect(group.id)}
               className="w-full glass-card rounded-2xl p-4 shadow-soft border border-border text-left flex items-center gap-3.5 cursor-pointer active:scale-[0.985] transition-transform"
             >
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-serif font-bold text-base">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0 font-serif font-bold text-base">
                 {group.name.substring(0, 2).toUpperCase()}
               </div>
 

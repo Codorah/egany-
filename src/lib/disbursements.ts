@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { isOffline, OFFLINE_MONEY_MESSAGE } from './ledger';
 import { Frequency } from '@/types';
-import { addDays, parseISO } from 'date-fns';
+import { addDays, addMonths, parseISO } from 'date-fns';
 
 /**
  * Calculates the next payout date based on frequency. Pure function, no I/O —
@@ -19,7 +19,7 @@ export function calculateNextPayoutDate(currentDateStr: string, frequency: Frequ
   } else if (frequency === 'bi-weekly') {
     nextDate = addDays(date, 14);
   } else {
-    nextDate = addDays(date, 30);
+    nextDate = addMonths(date, 1);
   }
   return nextDate.toISOString();
 }

@@ -41,8 +41,8 @@ type ProjectCategory = 'scolaire' | 'voyage' | 'maison' | 'urgence' | 'commerce'
 const PROJECT_CATEGORIES: { id: ProjectCategory; labelKey: string; icon: EganyeIconName; bg: string; color: string }[] = [
   { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies', bg: 'bg-success-soft', color: 'text-secondary' },
   { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel', bg: 'bg-info-soft', color: 'text-info' },
-  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-primary' },
-  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-primary' },
+  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-primary-ink' },
+  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-primary-ink' },
   { id: 'commerce', labelKey: 'bank_project_commerce', icon: 'coin', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
   { id: 'autre', labelKey: 'bank_project_autre', icon: 'savings', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
 ];
@@ -336,10 +336,10 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       return { icon: 'studies' as const, bg: 'bg-success-soft text-secondary' };
     }
     if (text.includes('urgenc') || text.includes('santé') || text.includes('sante') || text.includes('secours') || text.includes('imprévu')) {
-      return { icon: 'shield' as const, bg: 'bg-[#FDF0EB] text-primary' };
+      return { icon: 'shield' as const, bg: 'bg-[#FDF0EB] text-primary-ink' };
     }
     if (text.includes('maison') || text.includes('logem') || text.includes('loyer') || text.includes('habit')) {
-      return { icon: 'house' as const, bg: 'bg-[#FFF2E8] text-primary' };
+      return { icon: 'house' as const, bg: 'bg-[#FFF2E8] text-primary-ink' };
     }
     if (text.includes('commerc') || text.includes('affair') || text.includes('boutiqu')) {
       return { icon: 'coin' as const, bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
@@ -430,7 +430,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         onClick={() => setCreateProject(cat.id)}
                         className={`p-3.5 rounded-2xl border-2 text-left font-bold text-xs sm:text-sm cursor-pointer transition-all flex flex-col gap-2 ${
                           createProject === cat.id
-                            ? 'border-primary bg-primary/5 text-primary'
+                            ? 'border-primary bg-primary/5 text-primary-ink'
                             : 'border-border text-foreground hover:bg-muted/60'
                         }`}
                       >
@@ -485,7 +485,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                           onClick={() => setCreateAmount(amt)}
                           className={`py-1 px-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                             createAmount === amt
-                              ? 'border-primary bg-primary/10 text-primary'
+                              ? 'border-primary bg-primary/10 text-primary-ink'
                               : 'border-border text-muted-foreground hover:text-foreground'
                           }`}
                         >
@@ -562,11 +562,11 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                   {/* Règle de protection */}
                   <div className="p-3.5 rounded-2xl bg-[#FFF8F2] dark:bg-card border border-primary/20 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0 mt-0.5">
                       <EganyeIcon name="shield" size={16} />
                     </div>
                     <div className="text-xs space-y-1">
-                      <p className="font-bold text-primary">{t('mb_reserved_title')}</p>
+                      <p className="font-bold text-primary-ink">{t('mb_reserved_title')}</p>
                       <p className="text-muted-foreground leading-relaxed">
                         {t('mb_reserved_desc')}
                       </p>
@@ -591,7 +591,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                     <div className="flex items-center justify-between pb-2 border-b border-border/60">
                       <span className="text-xs text-muted-foreground font-medium">Montant cible</span>
-                      <span className="text-base font-serif font-black text-primary">
+                      <span className="text-base font-serif font-black text-primary-ink">
                         {(parseFloat(createAmount) || 0).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -614,7 +614,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-medium">{t('mb_status_label')}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-warning-soft text-primary border border-primary/25">
+                      <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-warning-soft text-primary-ink border border-primary/25">
                         {t('mb_locked_badge')}
                       </span>
                     </div>
@@ -698,7 +698,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               <button
                 type="button"
                 onClick={() => onNavigate?.('wallet-recharge')}
-                className="inline-flex items-center gap-1.5 bg-white text-primary hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-white text-primary-ink hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
               >
                 <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
                 <span>{t('recharge') || "Recharger"}</span>
@@ -782,7 +782,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           <button
             type="button"
             onClick={() => setShowAllReservations(!showAllReservations)}
-            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{showAllReservations ? "Réduire" : (t('bank_view_all') || "Voir tout")}</span>
             <EganyeIcon name="chevron-right" size={13} />
@@ -807,7 +807,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       <EganyeIcon name={info.icon} size={20} />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-primary transition-colors">
+                      <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-primary-ink transition-colors">
                         {vault.name}
                       </h4>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -826,12 +826,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       className={`px-2.5 py-1 rounded-full text-[13px] font-bold ${
                         unlocked
                           ? 'bg-success-soft text-secondary border border-secondary/25'
-                          : 'bg-warning-soft text-primary border border-primary/25'
+                          : 'bg-warning-soft text-primary-ink border border-primary/25'
                       }`}
                     >
                       {unlocked ? t('mb_unlocked') : t('mb_in_progress')}
                     </span>
-                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary-ink transition-colors" />
                   </div>
                 </div>
               );
@@ -949,7 +949,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 <div className={`p-3.5 rounded-2xl text-xs space-y-1 ${
                   unlocked
                     ? 'bg-success-soft text-secondary border border-secondary/25'
-                    : 'bg-[#FFF8F2] text-primary border border-primary/20'
+                    : 'bg-[#FFF8F2] text-primary-ink border border-primary/20'
                 }`}>
                   <p className="font-bold flex items-center gap-1.5">
                     <EganyeIcon name={unlocked ? "check" : "shield"} size={14} />
@@ -1024,7 +1024,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-11 font-bold rounded-xl border-primary/40 text-primary hover:bg-primary/10 cursor-pointer"
+                    className="h-11 font-bold rounded-xl border-primary/40 text-primary-ink hover:bg-primary/10 cursor-pointer"
                     onClick={() => handleWithdraw(false)}
                     disabled={actionBusy || activeVault.balance <= 0}
                   >

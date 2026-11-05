@@ -28,7 +28,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       case 'reminder':
         return <Clock className="w-4 h-4 text-brand" />;
       case 'chat':
-        return <MessageCircle className="w-4 h-4 text-primary" />;
+        return <MessageCircle className="w-4 h-4 text-primary-ink" />;
       case 'payout':
         return <DollarSign className="w-4 h-4 text-secondary" />;
       default:

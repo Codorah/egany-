@@ -135,7 +135,7 @@ export function Dashboard({
   const activityLook = (tx: WalletTransaction): { icon: EganyeIconName; bg: string } => {
     switch (tx.type) {
       case 'recharge':
-        return { icon: 'wallet', bg: 'bg-[#FFF2E8] text-primary' };
+        return { icon: 'wallet', bg: 'bg-[#FFF2E8] text-primary-ink' };
       case 'contribution_debit':
         return { icon: 'cotisation', bg: 'bg-success-soft text-secondary' };
       case 'payout_credit':
@@ -172,7 +172,7 @@ export function Dashboard({
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight truncate flex items-center gap-1.5">
               <span>{t('dashboard_greeting')}</span>
-              <span className="text-primary">
+              <span className="text-primary-ink">
                 {user.displayName?.split(' ')[0] || user.displayName || t('dash_friend_fallback')}
               </span>
               <span>👋</span>
@@ -187,7 +187,7 @@ export function Dashboard({
           {/* Notification bell with badge */}
           <button
             onClick={() => onNavigate?.('activity')}
-            className="relative w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center justify-center text-foreground hover:text-primary transition-colors cursor-pointer"
+            className="relative w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center justify-center text-foreground hover:text-primary-ink transition-colors cursor-pointer"
             aria-label={t('dash_notifications_aria')}
           >
             <EganyeIcon name="bell" size={18} />
@@ -239,7 +239,7 @@ export function Dashboard({
             <div className="flex items-center gap-2.5 pt-1">
               <button
                 onClick={() => onNavigate?.('wallet-recharge')}
-                className="bg-white text-primary hover:bg-white/95 px-5 py-2.5 rounded-full font-bold text-sm shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
+                className="bg-white text-primary-ink hover:bg-white/95 px-5 py-2.5 rounded-full font-bold text-sm shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
               >
                 <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
                 <span>{t('recharge') || 'Recharger'}</span>
@@ -267,7 +267,7 @@ export function Dashboard({
           {nextGroupToPay ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <span className="text-xs font-bold text-primary-ink flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span>{t('dash_todo_now')}</span>
                 </span>
@@ -316,7 +316,7 @@ export function Dashboard({
               </div>
               <button
                 onClick={() => onNavigate?.('my-circles')}
-                className="text-xs font-bold text-primary hover:underline shrink-0 cursor-pointer"
+                className="text-xs font-bold text-primary-ink hover:underline shrink-0 cursor-pointer"
               >
                 {t('dash_discover')}
               </button>
@@ -335,7 +335,7 @@ export function Dashboard({
           </div>
           <button
             onClick={() => onNavigate?.('my-circles')}
-            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{t('view_all') || 'Voir tout'}</span>
             <EganyeIcon name="chevron-right" size={13} />
@@ -371,7 +371,7 @@ export function Dashboard({
                     {group.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="font-bold text-foreground text-sm truncate group-hover:text-primary transition-colors">
+                    <h4 className="font-bold text-foreground text-sm truncate group-hover:text-primary-ink transition-colors">
                       {group.name}
                     </h4>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -387,7 +387,7 @@ export function Dashboard({
                   <EganyeIcon
                     name="chevron-right"
                     size={16}
-                    className="text-muted-foreground group-hover:text-primary transition-colors"
+                    className="text-muted-foreground group-hover:text-primary-ink transition-colors"
                   />
                 </div>
               </div>
@@ -404,7 +404,7 @@ export function Dashboard({
           </h2>
           <button
             onClick={() => onNavigate?.('my-bank')}
-            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{t('dash_view_my_savings')}</span>
             <EganyeIcon name="chevron-right" size={13} />
@@ -467,7 +467,7 @@ export function Dashboard({
           </h2>
           <button
             onClick={() => onNavigate?.('activity')}
-            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{t('dash_view_all_activity')}</span>
             <EganyeIcon name="chevron-right" size={13} />
@@ -492,7 +492,7 @@ export function Dashboard({
             </div>
           ) : recentActivities.length === 0 ? (
             <div className="py-7 px-3 text-center space-y-1.5">
-              <div className="w-11 h-11 rounded-2xl bg-[#FFF2E8] text-primary flex items-center justify-center mx-auto">
+              <div className="w-11 h-11 rounded-2xl bg-[#FFF2E8] text-primary-ink flex items-center justify-center mx-auto">
                 <EganyeIcon name="wallet" size={20} />
               </div>
               <p className="font-bold text-foreground text-sm pt-1">{t('dash_no_operation_title')}</p>
@@ -502,7 +502,7 @@ export function Dashboard({
               <button
                 type="button"
                 onClick={() => onNavigate?.('wallet-recharge')}
-                className="text-xs font-bold text-primary hover:opacity-80 transition-opacity pt-1 cursor-pointer"
+                className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity pt-1 cursor-pointer"
               >
                 {t('dash_recharge_my_wallet')}
               </button>
@@ -536,7 +536,7 @@ export function Dashboard({
                   <div className="text-right shrink-0">
                     <p
                       className={`font-serif font-bold text-xs sm:text-sm tabular-nums ${
-                        positive ? 'text-secondary' : 'text-primary'
+                        positive ? 'text-secondary' : 'text-primary-ink'
                       }`}
                     >
                       {positive ? '+' : '−'}{Math.abs(act.amount).toLocaleString()} FCFA

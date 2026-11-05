@@ -84,7 +84,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
     <div className="space-y-4 sm:space-y-5 pb-20">
       <div>
         <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
-          <CalendarDays className="w-5 h-5 text-primary" />
+          <CalendarDays className="w-5 h-5 text-primary-ink" />
           {t('cal_page_title')}
         </h1>
         <p className="text-[13px] text-muted-foreground font-medium">{t('cal_page_subtitle')}</p>
@@ -121,7 +121,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
                   inMonth ? 'bg-card border-border/70' : 'bg-transparent border-transparent text-muted-foreground/60'
                 } ${isToday(day) ? 'border-primary border-2' : ''}`}
               >
-                <span className={`font-bold ${isToday(day) ? 'text-primary' : ''}`}>{format(day, 'd')}</span>
+                <span className={`font-bold ${isToday(day) ? 'text-primary-ink' : ''}`}>{format(day, 'd')}</span>
                 {dayEvents.length > 0 && (
                   <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
                     {dayEvents.slice(0, 3).map((_, i) => (

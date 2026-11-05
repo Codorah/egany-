@@ -29,7 +29,7 @@ const FaqAccordionItem: React.FC<FaqAccordionItemProps> = ({ question, answer })
         className="press-row w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-muted transition-colors"
       >
         <span className="text-sm font-bold text-foreground">{question}</span>
-        <ChevronDown className={`w-4 h-4 shrink-0 text-primary transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 shrink-0 text-primary-ink transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div className="px-4 pb-4 text-[13px] text-muted-foreground leading-relaxed">{answer}</div>
@@ -92,7 +92,7 @@ export function Support({ user, onBack }: SupportProps) {
         </Button>
         <div>
           <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
-            <LifeBuoy className="w-5 h-5 text-primary" />
+            <LifeBuoy className="w-5 h-5 text-primary-ink" />
             {t('support')}
           </h1>
           <p className="text-[13px] text-muted-foreground font-medium">{t('sup_header_subtitle')}</p>
@@ -101,7 +101,7 @@ export function Support({ user, onBack }: SupportProps) {
 
       <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
         <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-primary" />
+          <HelpCircle className="w-4 h-4 text-primary-ink" />
           {t('sup_faq_title')}
         </h2>
         <div className="space-y-2">

@@ -190,7 +190,7 @@ function PillField({
 }) {
   return (
     <div className="relative">
-      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-primary/12 text-primary flex items-center justify-center pointer-events-none z-10">
+      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-primary/12 text-primary-ink flex items-center justify-center pointer-events-none z-10">
         <Icon className="w-5 h-5" />
       </div>
       <Input
@@ -1172,7 +1172,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     <button
                       type="button"
                       onClick={() => setLegalModal('cgu')}
-                      className="hover:text-primary hover:underline cursor-pointer"
+                      className="hover:text-primary-ink hover:underline cursor-pointer"
                     >
                       Conditions d'utilisation
                     </button>
@@ -1180,7 +1180,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     <button
                       type="button"
                       onClick={() => setLegalModal('confidentialite')}
-                      className="hover:text-primary hover:underline cursor-pointer"
+                      className="hover:text-primary-ink hover:underline cursor-pointer"
                     >
                       Confidentialité
                     </button>

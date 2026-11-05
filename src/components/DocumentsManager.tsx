@@ -132,7 +132,7 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
     <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-4">
       <div>
         <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary" />
+          <FileText className="w-4 h-4 text-primary-ink" />
           {t('doc_section_title')}
         </h2>
         <p className="text-[13px] text-muted-foreground mt-0.5">{t('doc_section_desc')}</p>
@@ -157,7 +157,7 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary-ink" /></div>
       ) : documents.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">{t('doc_empty_state')}</p>
       ) : (

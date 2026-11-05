@@ -15,7 +15,7 @@ const TONE_CLASSES: Record<Tone, string> = {
   success: 'bg-success-soft text-secondary border-secondary/20',
   warning: 'bg-warning-soft text-warning border-warning/20',
   danger: 'bg-danger-soft text-danger border-danger/20',
-  info: 'bg-primary/10 text-primary border-primary/20',
+  info: 'bg-primary/10 text-primary-ink border-primary/20',
   neutral: 'bg-muted text-muted-foreground border-border',
   gold: 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/20',
 };

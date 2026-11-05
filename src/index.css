@@ -28,6 +28,7 @@
     --color-eganye-gold: #C49A55;
 
     /* ── Semantic Aliases ── */
+    --color-primary-ink: var(--primary-ink);
     --color-brand: var(--brand);
     --color-brand-deep: var(--brand-deep);
     --color-sage: var(--sage);
@@ -113,6 +114,8 @@
     /* Action principale — terracotta */
     --primary: #C96F4A;
     --primary-foreground: #FFFFFF;
+    /* Orange pour le TEXTE : plus foncé que --primary (contraste AA sur clair) */
+    --primary-ink: #A5502B;
 
     /* Argent, sécurité, validation — olive */
     --secondary: #55704D;
@@ -174,6 +177,7 @@
 
     --primary: #DD8760;
     --primary-foreground: #211810;
+    --primary-ink: #DD8760;
 
     --secondary: #8CA87E;
     --secondary-foreground: #1C2318;

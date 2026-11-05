@@ -174,7 +174,7 @@ function OptionCard({
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className={`block text-[15px] font-bold ${selected ? 'text-primary' : 'text-foreground'}`}>{title}</span>
+        <span className={`block text-[15px] font-bold ${selected ? 'text-primary-ink' : 'text-foreground'}`}>{title}</span>
         <span className="block text-[13px] text-muted-foreground leading-snug">{hint}</span>
       </span>
       <span className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
@@ -516,7 +516,7 @@ export function CreateGroupDialog({
               <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-primary/25 text-left space-y-3">
                 <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cagnotte distribuée</span>
-                  <span className="font-serif font-black text-xl text-primary">
+                  <span className="font-serif font-black text-xl text-primary-ink">
                     {createdGroup.potAmount.toLocaleString()} FCFA
                   </span>
                 </div>
@@ -586,7 +586,7 @@ export function CreateGroupDialog({
           <div className="flex-1 flex flex-col">
             <div className="flex justify-end px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">{closeButton}</div>
             <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6 pb-10">
-              <div className="w-20 h-20 rounded-[28px] bg-primary/10 text-primary flex items-center justify-center">
+              <div className="w-20 h-20 rounded-[28px] bg-primary/10 text-primary-ink flex items-center justify-center">
                 <EganyeIcon name="shield" size={36} />
               </div>
 
@@ -745,7 +745,7 @@ export function CreateGroupDialog({
                             onClick={() => setValue('contributionAmount', amt, { shouldValidate: true })}
                             className={`h-12 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
                               contributionAmount === amt
-                                ? 'border-primary bg-primary/10 text-primary'
+                                ? 'border-primary bg-primary/10 text-primary-ink'
                                 : 'border-border bg-card text-foreground hover:bg-muted/60'
                             }`}
                           >
@@ -813,7 +813,7 @@ export function CreateGroupDialog({
 
                       {/* La cagnotte se calcule sous les yeux : l'intérêt du cercle */}
                       <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-3xl p-5 border border-primary/30 space-y-1 text-center">
-                        <span className="text-[13px] font-bold uppercase tracking-wider text-primary">
+                        <span className="text-[13px] font-bold uppercase tracking-wider text-primary-ink">
                           Cagnotte par tour
                         </span>
                         <p className="text-3xl font-serif font-black text-foreground">
@@ -940,7 +940,7 @@ export function CreateGroupDialog({
                           type="checkbox"
                           id="terms"
                           {...register('termsAccepted')}
-                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-primary-ink focus:ring-primary/50 cursor-pointer"
                         />
                         <div className="space-y-1">
                           <Label htmlFor="terms" className="text-[15px] font-bold text-foreground cursor-pointer">
@@ -951,7 +951,7 @@ export function CreateGroupDialog({
                             <button
                               type="button"
                               onClick={() => setShowReglement(true)}
-                              className="font-bold text-primary hover:underline cursor-pointer"
+                              className="font-bold text-primary-ink hover:underline cursor-pointer"
                             >
                               Lire le règlement des cercles
                             </button>

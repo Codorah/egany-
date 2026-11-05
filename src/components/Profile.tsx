@@ -594,7 +594,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-bold cursor-pointer transition-colors ${
                       isKycOk
                         ? 'bg-success-soft text-secondary border border-secondary/25'
-                        : 'bg-warning-soft text-primary border border-primary/25 hover:bg-[#FFEBD4]'
+                        : 'bg-warning-soft text-primary-ink border border-primary/25 hover:bg-[#FFEBD4]'
                     }`}
                   >
                     <EganyeIcon name="shield" size={11} />
@@ -613,7 +613,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <span className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground block">
                     Mon solde
                   </span>
-                  <p className="text-sm sm:text-base font-serif font-black text-primary truncate mt-0.5">
+                  <p className="text-sm sm:text-base font-serif font-black text-primary-ink truncate mt-0.5">
                     {(user.walletBalance || 0).toLocaleString()} FCFA
                   </p>
                 </button>
@@ -746,7 +746,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <button
                 type="button"
                 onClick={onLogout}
-                className="w-full h-12 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border text-primary hover:bg-warning-soft font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
+                className="w-full h-12 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border text-primary-ink hover:bg-warning-soft font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
               >
                 <EganyeIcon name="withdraw" size={16} />
                 <span>Se déconnecter de l’application</span>
@@ -875,7 +875,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   desc: 'Vous pouvez créer et rejoindre des cercles.',
                 },
                 pending: {
-                  className: 'bg-warning-soft text-primary border-primary/30',
+                  className: 'bg-warning-soft text-primary-ink border-primary/30',
                   title: 'Nous vérifions votre document',
                   desc: 'Il a bien été reçu. Notre équipe valide généralement en moins de 24 h, vous serez prévenu.',
                 },
@@ -926,7 +926,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       htmlFor="kyc_upload"
                       className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#EFE2D0] dark:border-border hover:border-primary rounded-2xl cursor-pointer bg-[#FFFBF7] dark:bg-muted/40 transition-colors text-center gap-2"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary-ink flex items-center justify-center">
                         <EganyeIcon name="document" size={20} />
                       </div>
                       <span className="text-xs font-bold text-foreground">
@@ -998,7 +998,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </div>
 
               <div className="p-3.5 rounded-2xl bg-[#FFF8F2] border border-primary/25 text-xs text-muted-foreground flex items-start gap-2.5">
-                <EganyeIcon name="shield" size={16} className="text-primary shrink-0 mt-0.5" />
+                <EganyeIcon name="shield" size={16} className="text-primary-ink shrink-0 mt-0.5" />
                 <span>
                   Cette personne ne peut <strong className="text-foreground">pas retirer votre argent</strong> sans une vérification stricte de notre équipe.
                 </span>
@@ -1164,7 +1164,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 type="button"
                 onClick={() => setWalletAction('recharge')}
                 className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                  walletAction === 'recharge' ? 'bg-white dark:bg-card text-primary shadow-xs' : 'text-muted-foreground'
+                  walletAction === 'recharge' ? 'bg-white dark:bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Recharger
@@ -1173,7 +1173,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 type="button"
                 onClick={() => setWalletAction('withdraw')}
                 className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                  walletAction === 'withdraw' ? 'bg-white dark:bg-card text-primary shadow-xs' : 'text-muted-foreground'
+                  walletAction === 'withdraw' ? 'bg-white dark:bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Retirer
@@ -1208,7 +1208,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                         onClick={() => setRechargeAmount(String(amt))}
                         className={`h-10 rounded-xl text-[13px] font-bold border transition-colors cursor-pointer ${
                           Number(rechargeAmount) === amt
-                            ? 'border-primary bg-primary/10 text-primary'
+                            ? 'border-primary bg-primary/10 text-primary-ink'
                             : 'border-border text-foreground hover:bg-muted/60'
                         }`}
                       >
@@ -1281,7 +1281,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-foreground">{rechargeFeeOnTop ? 'Total à payer' : 'Vous recevez'}</span>
-                      <span className="text-sm font-serif font-black text-primary tabular-nums">
+                      <span className="text-sm font-serif font-black text-primary-ink tabular-nums">
                         {(rechargeFeeOnTop ? depositBreakdown.gross : depositBreakdown.net).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -1363,7 +1363,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <button
                     type="button"
                     onClick={() => setActiveSection('security_pin')}
-                    className="text-[13px] font-bold text-primary underline underline-offset-2 cursor-pointer"
+                    className="text-[13px] font-bold text-primary-ink underline underline-offset-2 cursor-pointer"
                   >
                     Code oublié ? Le changer
                   </button>
@@ -1402,7 +1402,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
               <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] border border-primary/25 space-y-2">
-                <span className="text-[13px] font-bold uppercase tracking-wider text-primary">
+                <span className="text-[13px] font-bold uppercase tracking-wider text-primary-ink">
                   Votre formule actuelle
                 </span>
                 <p className="text-xl font-serif font-black text-foreground capitalize">
@@ -1449,7 +1449,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   }}
                   className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 text-left cursor-pointer transition-all ${
                     language === lang.code
-                      ? 'border-primary bg-primary/5 text-primary'
+                      ? 'border-primary bg-primary/5 text-primary-ink'
                       : 'border-border text-foreground hover:bg-muted/40'
                   }`}
                 >

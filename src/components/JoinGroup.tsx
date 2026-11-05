@@ -86,7 +86,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-ink" />
         <p className="text-muted-foreground">{t('jg_searching_circle')}</p>
       </div>
     );

@@ -180,11 +180,11 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                       {/* En-tête expéditeur (nom + badge créateur) */}
                       {!isMine && !isSameSenderAsPrev && (
                         <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className="text-[13px] font-extrabold text-primary dark:text-primary">
+                          <span className="text-[13px] font-extrabold text-primary-ink dark:text-primary-ink">
                             {msg.userName}
                           </span>
                           {isCreator && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-warning-soft dark:bg-primary/20 text-primary dark:text-primary text-[13px] font-bold">
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-warning-soft dark:bg-primary/20 text-primary-ink dark:text-primary-ink text-[13px] font-bold">
                               👑 Organisateur
                             </span>
                           )}
@@ -234,7 +234,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
             key={idx}
             type="button"
             onClick={() => handleSendMessage(chip)}
-            className="shrink-0 text-[13px] font-semibold px-3 py-1 rounded-full bg-[#FFFBF7] dark:bg-muted border border-[#EFE2D0] dark:border-border text-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer select-none"
+            className="shrink-0 text-[13px] font-semibold px-3 py-1 rounded-full bg-[#FFFBF7] dark:bg-muted border border-[#EFE2D0] dark:border-border text-foreground hover:border-primary hover:text-primary-ink transition-colors cursor-pointer select-none"
           >
             {chip}
           </button>

@@ -272,7 +272,7 @@ export function ActivityScreen({
                           {hasAmount && (
                             <span
                               className={`text-xs font-black font-serif block mt-0.5 ${
-                                isPositive ? 'text-secondary' : 'text-primary'
+                                isPositive ? 'text-secondary' : 'text-primary-ink'
                               }`}
                             >
                               {isPositive ? `+ ${item.amount?.toLocaleString()} FCFA` : `- ${Math.abs(item.amount || 0).toLocaleString()} FCFA`}

@@ -23,7 +23,7 @@ const TONE_STYLES: Record<TimelineTone, { dot: string; icon: string }> = {
   success: { dot: 'bg-success-soft border-secondary', icon: 'text-secondary' },
   warning: { dot: 'bg-warning-soft border-warning', icon: 'text-warning' },
   danger: { dot: 'bg-danger-soft border-danger', icon: 'text-danger' },
-  info: { dot: 'bg-primary/10 border-primary', icon: 'text-primary' },
+  info: { dot: 'bg-primary/10 border-primary', icon: 'text-primary-ink' },
   neutral: { dot: 'bg-muted border-border', icon: 'text-muted-foreground' },
 };
 

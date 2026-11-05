@@ -32,7 +32,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   const { t } = useLanguage();
   const statusLabels: Record<MarketplaceRequest['status'], { label: string; className: string }> = {
     pending: { label: t('status_pending'), className: 'bg-warning-soft text-warning' },
-    contacted: { label: t('mkt_status_contacted'), className: 'bg-primary/10 text-primary' },
+    contacted: { label: t('mkt_status_contacted'), className: 'bg-primary/10 text-primary-ink' },
     approved: { label: t('mkt_status_approved'), className: 'bg-success-soft text-secondary' },
     rejected: { label: t('mkt_status_rejected'), className: 'bg-danger-soft text-danger' },
   };
@@ -134,7 +134,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
     if (!open) return null;
     if (open.status === 'submitted') return { label: 'Demande en cours d’étude', className: 'bg-warning-soft text-warning' };
     if (open.status === 'offered') return { label: 'Une offre vous attend', className: 'bg-success-soft text-secondary' };
-    return { label: `Reste à rembourser : ${remainingDue(open).toLocaleString('fr-FR')} FCFA`, className: 'bg-primary/10 text-primary' };
+    return { label: `Reste à rembourser : ${remainingDue(open).toLocaleString('fr-FR')} FCFA`, className: 'bg-primary/10 text-primary-ink' };
   };
 
   const openService = (service: MarketplaceService) =>
@@ -228,7 +228,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         <p className="mt-3 text-[13px] leading-relaxed opacity-95">
           Besoin d'argent pour votre activité ? Dites combien, présentez-vous en vidéo : notre équipe peut vous offrir le montant.
         </p>
-        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary px-4 h-9 text-[13px] font-black">
+        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary-ink px-4 h-9 text-[13px] font-black">
           {aidStatus ? aidStatus.label : 'Demander un coup de pouce'}
         </span>
       </button>

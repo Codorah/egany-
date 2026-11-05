@@ -132,7 +132,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-5">
       <div>
         <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
+          <Users className="w-4 h-4 text-primary-ink" />
           {t('mm_management_title')}
         </h2>
         <p className="text-[13px] text-muted-foreground mt-0.5">{t('mm_management_desc')}</p>

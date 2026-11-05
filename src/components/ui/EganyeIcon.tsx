@@ -9,7 +9,7 @@ import React from 'react';
  *
  * Usage:
  *   <EganyeIcon name="home" />
- *   <EganyeIcon name="circle" size={20} className="text-primary" />
+ *   <EganyeIcon name="circle" size={20} className="text-primary-ink" />
  */
 
 export type EganyeIconName =

@@ -408,7 +408,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       {isManager && !embedded && (
         <div className="glass-card rounded-3xl p-4 shadow-soft border border-border/70">
           <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
-            <Wallet className="w-4 h-4 text-primary" />
+            <Wallet className="w-4 h-4 text-primary-ink" />
             {t('circle_accounting')}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -591,7 +591,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       {/* Dialogue de vérification d'identité juste-à-temps */}
       <Dialog open={showKycPrompt} onOpenChange={setShowKycPrompt}>
         <DialogContent className="max-w-sm rounded-3xl p-6 text-center space-y-3 bg-card border border-border">
-          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary mx-auto flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary-ink mx-auto flex items-center justify-center">
             <AlertCircle className="w-7 h-7" />
           </div>
           <DialogHeader className="space-y-1">

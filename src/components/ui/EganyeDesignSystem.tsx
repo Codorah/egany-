@@ -39,7 +39,7 @@ export const EganyeButton = React.forwardRef<HTMLButtonElement, EganyeButtonProp
       secondary: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-soft',
       outline: 'border-2 border-[#EFE2D0] dark:border-border text-foreground hover:bg-muted/50',
       ghost: 'text-foreground hover:bg-muted/60',
-      white: 'bg-white text-primary hover:bg-white/90 shadow-soft',
+      white: 'bg-white text-primary-ink hover:bg-white/90 shadow-soft',
     }[variant];
 
     return (
@@ -135,7 +135,7 @@ export function EganyeSection({ title, actionText, onAction, children, className
           <button
             type="button"
             onClick={onAction}
-            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{actionText}</span>
             <EganyeIcon name="chevron-right" size={13} />

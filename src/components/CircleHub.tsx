@@ -91,11 +91,11 @@ export function CircleHub({
           onClick={onSearch}
           className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-primary flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-primary-ink flex items-center justify-center shrink-0">
             <EganyeIcon name="search" size={17} />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate">
+            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary-ink transition-colors truncate">
               {t('cir_search_title')}
             </p>
             <p className="text-[13px] text-muted-foreground truncate">
@@ -135,7 +135,7 @@ export function CircleHub({
         >
           <div className="flex items-center justify-between">
             <h3 className="font-serif font-bold text-sm text-foreground flex items-center gap-2">
-              <EganyeIcon name="code" size={16} className="text-primary" />
+              <EganyeIcon name="code" size={16} className="text-primary-ink" />
               <span>{t('cir_join_section_title') || 'Rejoindre un cercle'}</span>
             </h3>
             <button
@@ -215,7 +215,7 @@ export function CircleHub({
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-foreground text-sm sm:text-base truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-bold text-foreground text-sm sm:text-base truncate group-hover:text-primary-ink transition-colors">
                           {group.name}
                         </h3>
                         {group.isPrivate && (
@@ -243,7 +243,7 @@ export function CircleHub({
                     <EganyeIcon
                       name="chevron-right"
                       size={16}
-                      className="text-muted-foreground group-hover:text-primary transition-colors"
+                      className="text-muted-foreground group-hover:text-primary-ink transition-colors"
                     />
                   </div>
                 </div>
