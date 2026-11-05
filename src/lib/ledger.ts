@@ -196,6 +196,33 @@ export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
   }));
 }
 
+export interface ProcessedWithdrawal extends PendingWithdrawal {
+  status: 'completed' | 'failed';
+}
+
+/** Historique des retraits déjà traités (envoyés ou échoués), du plus récent au plus ancien. */
+export async function fetchProcessedWithdrawals(limit = 100): Promise<ProcessedWithdrawal[]> {
+  const { data, error } = await supabase
+    .from('wallet_transactions')
+    .select('*, profiles!wallet_transactions_user_id_fkey(display_name, email)')
+    .eq('type', 'withdraw')
+    .in('status', ['completed', 'failed'])
+    .order('date', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    id: row.id,
+    userId: row.user_id,
+    userName: row.profiles?.display_name || 'Utilisateur',
+    userEmail: row.profiles?.email || '',
+    amount: Math.abs(Number(row.amount)),
+    paymentMethod: row.payment_method || '',
+    reference: row.reference,
+    date: row.date,
+    status: row.status,
+  }));
+}
+
 export async function completeWithdrawal(transactionId: string): Promise<{ success: boolean; message?: string }> {
   const { data, error } = await supabase
     .from('wallet_transactions')

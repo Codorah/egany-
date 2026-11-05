@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { mapProfileRow, mapLedgerEntryRow, mapAuditLogRow, mapReconciliationReportRow, PROFILE_COLUMNS } from '@/lib/mappers';
 import { hydrateGroups } from '@/lib/groups';
 import { UserProfile, Group } from '@/types';
-import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal } from '@/lib/ledger';
+import { LedgerEntry, AuditLog, performFullSystemReconciliation, fetchPendingWithdrawals, fetchProcessedWithdrawals, completeWithdrawal, failWithdrawal, PendingWithdrawal, ProcessedWithdrawal } from '@/lib/ledger';
 import { fetchPendingKycSubmissions, getKycDocumentUrl, reviewKycSubmission } from '@/lib/kyc';
 import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from '@/lib/marketplace';
 import { AdminCreditReview } from './AdminCreditReview';
@@ -113,6 +113,7 @@ export function AdminDashboard() {
 
   // Pending Mobile Money withdrawal queue (manual disbursement — Paydunya has no payout API)
   const [pendingWithdrawals, setPendingWithdrawals] = useState<PendingWithdrawal[]>([]);
+  const [processedWithdrawals, setProcessedWithdrawals] = useState<ProcessedWithdrawal[]>([]);
   const [processingWithdrawalId, setProcessingWithdrawalId] = useState<string | null>(null);
 
   // Comptes fermés depuis Profil : le profil est déjà anonymisé, il reste à
@@ -172,6 +173,7 @@ export function AdminDashboard() {
       setKycSubmissions(await fetchPendingKycSubmissions());
       setMarketplaceRequests(await fetchPendingMarketplaceRequests());
       setPendingWithdrawals(await fetchPendingWithdrawals());
+      setProcessedWithdrawals(await fetchProcessedWithdrawals());
 
       const { data: deletionRows, error: deletionError } = await supabase
         .from('account_deletion_requests')
@@ -288,6 +290,7 @@ export function AdminDashboard() {
       if (!result.success) throw new Error(result.message);
       toast.success(`Retrait de ${w.amount.toLocaleString()} FCFA marqué comme envoyé.`);
       setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
+      setProcessedWithdrawals(prev => [{ ...w, status: 'completed' as const }, ...prev]);
       await notifyUser({
         userId: w.userId,
         title: 'Retrait effectué',
@@ -309,6 +312,7 @@ export function AdminDashboard() {
       if (!result.success) throw new Error(result.message);
       toast.success('Retrait annulé, portefeuille remboursé.');
       setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
+      setProcessedWithdrawals(prev => [{ ...w, status: 'failed' as const }, ...prev]);
       await notifyUser({
         userId: w.userId,
         title: 'Retrait échoué — remboursé',
@@ -1828,8 +1832,40 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
+          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+            <CardHeader className="pb-4 bg-muted/30 border-b border-border">
+              <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                Retraits traités ({processedWithdrawals.length})
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Les 100 derniers retraits envoyés ou en échec. Vérifiez ici le numéro et le montant en cas de litige.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 max-h-[480px] overflow-y-auto">
+              {processedWithdrawals.length === 0 ? (
+                <p className="text-center py-12 text-muted-foreground text-xs font-medium">Aucun retrait traité.</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {processedWithdrawals.map((w) => (
+                    <div key={w.id} className="p-5 flex items-start justify-between gap-4">
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{w.userName} • {w.userEmail}</p>
+                        <p className="text-xs font-black text-brand">{w.amount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-[13px] text-muted-foreground">Demandé le {new Date(w.date).toLocaleString()}</p>
+                      </div>
+                      <span className={`shrink-0 text-[13px] font-bold px-2.5 py-1 rounded-full ${w.status === 'completed' ? 'bg-success-soft text-secondary' : 'bg-danger/10 text-danger'}`}>
+                        {w.status === 'completed' ? 'Envoyé' : 'Échec'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Left side: Reconciliation control */}
             <div className="lg:col-span-4 space-y-6">
               <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
