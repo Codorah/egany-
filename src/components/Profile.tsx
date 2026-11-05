@@ -24,7 +24,7 @@ import { PaymentPendingCard } from './ui/PaymentPendingCard';
 import { StatusBadge } from './ui/StatusBadge';
 import { SettingsGroup, SettingsRow } from './ui/SettingsList';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isPasswordProviderUser } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
 import { KYC_VERIFIED_LEVEL, submitKycDocument, fetchLatestKycSubmission } from '@/lib/kyc';
 import { useBiometrics } from '@/hooks/useBiometrics';
@@ -99,6 +99,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
   // Security States
   const [newPin, setNewPin] = useState('');
+  const [pinAccountPassword, setPinAccountPassword] = useState('');
   const [isSavingPin, setIsSavingPin] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
@@ -259,10 +260,24 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
     }
     setIsSavingPin(true);
     try {
+      // Pas d'ancien code demandé (il peut être oublié) : on s'assure plutôt
+      // que c'est bien la titulaire, avec le mot de passe de son compte.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (isPasswordProviderUser(sessionData.session)) {
+        if (!pinAccountPassword) {
+          throw new Error('Saisissez le mot de passe de votre compte pour confirmer.');
+        }
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: pinAccountPassword,
+        });
+        if (authError) throw new Error('Mot de passe du compte incorrect.');
+      }
       const res = await setUserPin(user.uid, newPin);
       if (!res.success) throw new Error(res.message);
       toast.success('Code PIN modifié avec succès !');
       setNewPin('');
+      setPinAccountPassword('');
       setActiveSection(null);
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la modification du code PIN');
@@ -1015,7 +1030,19 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
               <p className="text-[15px] text-muted-foreground leading-relaxed">
                 4 chiffres secrets, demandés à chaque retrait. Ne les donnez à personne.
+                Code oublié ? Choisissez-en un nouveau ici : il suffit de confirmer avec le mot de passe de votre compte.
               </p>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-bold text-foreground">Mot de passe de votre compte</Label>
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  value={pinAccountPassword}
+                  onChange={(e) => setPinAccountPassword(e.target.value)}
+                  className="rounded-xl h-12"
+                />
+              </div>
 
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-foreground">Nouveau code PIN</Label>
@@ -1027,7 +1054,6 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   className="rounded-xl h-12 text-center text-2xl font-mono tracking-widest"
                   placeholder="••••"
-                  autoFocus
                 />
               </div>
 
@@ -1333,6 +1359,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     className="rounded-xl h-12 font-mono text-center text-lg tracking-[0.5em]"
                     placeholder="••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection('security_pin')}
+                    className="text-[13px] font-bold text-primary underline underline-offset-2 cursor-pointer"
+                  >
+                    Code oublié ? Le changer
+                  </button>
                 </div>
 
                 <p className="text-[13px] text-muted-foreground bg-muted/50 rounded-xl p-3 leading-snug">

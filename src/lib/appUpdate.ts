@@ -8,11 +8,11 @@ import { toast } from 'sonner';
  * une nouvelle version prend donc la main sans attendre. Rien à valider côté
  * utilisateur — la notification informe, elle ne demande pas la permission.
  * « Mettre à jour » recharge tout de suite ; sans geste, la page se recharge
- * seule après quelques secondes, en attendant la fin d'une saisie en cours
+ * seule après 5 secondes, en attendant la fin d'une saisie en cours
  * (code PIN, montant…) pour ne rien faire perdre.
  */
 
-const RELOAD_DELAY_MS = 8000;
+const RELOAD_DELAY_MS = 5000;
 const RETRY_WHILE_TYPING_MS = 4000;
 const CHECK_EVERY_MS = 30 * 60 * 1000;
 
