@@ -220,6 +220,15 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       });
       if (!ledgerResult.success) {
         console.error('Ledger entry failed for manual payment:', ledgerResult.message);
+        // Écriture comptable refusée : on annule le « payé » pour que la caisse
+        // et le registre restent d'accord, et on le dit au gestionnaire.
+        if (existing) {
+          await supabase.from('contributions').update({ status: existing.status }).eq('id', existing.id);
+        } else {
+          await supabase.from('contributions').delete().eq('id', inserted.id);
+        }
+        toast.error(`Paiement non enregistré : ${ledgerResult.message || 'réessayez dans un instant.'}`);
+        return;
       }
 
       toast.success(`${t('payment_registered_for')} ${userName}`);

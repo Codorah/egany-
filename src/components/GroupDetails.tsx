@@ -99,10 +99,13 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   // chiffres différents pour "l'argent dans la caisse" selon l'écran).
   React.useEffect(() => {
     const fetchTreasury = async () => {
-      const [{ data: contribRows }, { data: payoutRows }] = await Promise.all([
+      const [{ data: contribRows, error: contribError }, { data: payoutRows, error: payoutError }] = await Promise.all([
         supabase.from('contributions').select('amount, status').eq('group_id', group.id),
         supabase.from('payouts').select('amount').eq('group_id', group.id),
       ]);
+      // Échec de lecture : on garde les chiffres précédents plutôt que de
+      // conclure à tort que « aucun argent n'a circulé ».
+      if (contribError || payoutError) return;
       const collected = (contribRows ?? [])
         .filter((c) => c.status === 'paid')
         .reduce((sum, c) => sum + Number(c.amount), 0);
@@ -113,25 +116,28 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       );
     };
     fetchTreasury();
-  }, [group.id]);
+    // Relu au retour sur l'accueil de la fiche : un paiement ou une
+    // distribution fait dans une sous-section change ces chiffres.
+  }, [group.id, section]);
 
   // "Ma situation" — ce que CETTE personne a cotisé dans CE cercle, pour la
   // carte résumé de l'accueil de la fiche (brief : "35 000 FCFA cotisés").
   React.useEffect(() => {
     if (!profile) return;
     const fetchMine = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('contributions')
         .select('amount, status')
         .eq('group_id', group.id)
         .eq('user_id', profile.uid);
+      if (error) return;
       const total = (data ?? [])
         .filter((c) => c.status === 'paid')
         .reduce((sum, c) => sum + Number(c.amount), 0);
       setMyContributed(total);
     };
     fetchMine();
-  }, [group.id, profile?.uid]);
+  }, [group.id, profile?.uid, section]);
 
   // Génération locale du QR code (plus de dépendance à api.qrserver.com,
   // qui exposait le lien d'invitation à un tiers et ne fonctionnait pas hors-ligne).

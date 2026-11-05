@@ -43,7 +43,13 @@ export function useGroups(userId?: string) {
       return;
     }
 
-    const hydrated = await hydrateGroups(groupRows ?? []);
+    let hydrated;
+    try {
+      hydrated = await hydrateGroups(groupRows ?? [], { strict: true });
+    } catch {
+      fallBackToSnapshot();
+      return;
+    }
     setGroups(hydrated);
     saveSnapshot(uid, 'groups', hydrated);
     setLoading(false);

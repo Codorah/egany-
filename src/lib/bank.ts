@@ -48,25 +48,25 @@ export async function createPersonalVault(params: {
   return data as { success: boolean; message: string; vaultId?: string };
 }
 
-export async function depositToVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
+export async function depositToVault(vaultId: string, amount: number, idempotencyKey: string = crypto.randomUUID()): Promise<{ success: boolean; message: string }> {
   if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
 
   const { data, error } = await supabase.rpc('deposit_to_vault', {
     p_vault_id: vaultId,
     p_amount: amount,
-    p_idempotency_key: crypto.randomUUID(),
+    p_idempotency_key: idempotencyKey,
   });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string };
 }
 
-export async function withdrawFromVault(vaultId: string, amount: number): Promise<{ success: boolean; message: string }> {
+export async function withdrawFromVault(vaultId: string, amount: number, idempotencyKey: string = crypto.randomUUID()): Promise<{ success: boolean; message: string }> {
   if (isOffline()) return { success: false, message: OFFLINE_MONEY_MESSAGE };
 
   const { data, error } = await supabase.rpc('withdraw_from_vault', {
     p_vault_id: vaultId,
     p_amount: amount,
-    p_idempotency_key: crypto.randomUUID(),
+    p_idempotency_key: idempotencyKey,
   });
   if (error) return { success: false, message: error.message };
   return data as { success: boolean; message: string };

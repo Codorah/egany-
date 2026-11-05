@@ -10,7 +10,10 @@ import { isKycVerified } from './kyc';
  * payoutOrder[] reconstructed from the join table) — shared by useGroups,
  * SearchGroups and JoinGroup so this logic lives in exactly one place.
  */
-export async function hydrateGroups(groupRows: Record<string, any>[]): Promise<Group[]> {
+export async function hydrateGroups(
+  groupRows: Record<string, any>[],
+  options: { strict?: boolean } = {}
+): Promise<Group[]> {
   if (groupRows.length === 0) return [];
 
   const groupIds = groupRows.map((g) => g.id);
@@ -21,6 +24,9 @@ export async function hydrateGroups(groupRows: Record<string, any>[]): Promise<G
 
   if (error) {
     console.error('Error fetching group members:', error);
+    // Mode strict : mieux vaut garder les anciennes données que des cercles
+    // affichés sans aucun membre.
+    if (options.strict) throw error;
     return groupRows.map((row) => mapGroupRow(row, []));
   }
 

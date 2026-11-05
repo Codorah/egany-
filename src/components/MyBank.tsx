@@ -212,6 +212,15 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
   const isUnlocked = (vault: PersonalVault) => new Date(vault.unlockAt).getTime() <= now;
 
+  // Même opération (coffre + montant) = même clé : si la réponse se perd et que
+  // la personne retape, le serveur ne l'exécute pas deux fois.
+  const vaultOpKeys = React.useRef(new Map<string, string>());
+  const vaultOpKey = (op: string, vaultId: string, value: number) => {
+    const id = `${op}:${vaultId}:${value}`;
+    if (!vaultOpKeys.current.has(id)) vaultOpKeys.current.set(id, crypto.randomUUID());
+    return { id, key: vaultOpKeys.current.get(id)! };
+  };
+
   const handleDeposit = async () => {
     if (!activeVault) return;
     const value = parseFloat(actionAmount);
@@ -225,8 +234,10 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     }
     setActionBusy(true);
     try {
-      const result = await depositToVault(activeVault.id, value);
+      const op = vaultOpKey('deposit', activeVault.id, value);
+      const result = await depositToVault(activeVault.id, value, op.key);
       if (!result.success) throw new Error(result.message);
+      vaultOpKeys.current.delete(op.id);
       toast.success(result.message);
       setActiveVault(null);
       setActionAmount('');
@@ -257,8 +268,10 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
     setActionBusy(true);
     try {
-      const result = await withdrawFromVault(activeVault.id, value);
+      const op = vaultOpKey('withdraw', activeVault.id, value);
+      const result = await withdrawFromVault(activeVault.id, value, op.key);
       if (!result.success) throw new Error(result.message);
+      vaultOpKeys.current.delete(op.id);
       toast.success(result.message);
       setActiveVault(null);
       setActionAmount('');

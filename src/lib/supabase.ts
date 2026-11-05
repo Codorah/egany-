@@ -14,12 +14,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * ... after subscribe()" on the second mount. Proactively drop any stale
  * channel with the same topic before creating a new one to avoid this.
  */
+let channelCounter = 0;
 export const createChannel = (topic: string) => {
-  const existing = supabase.getChannels().find((c) => c.topic === `realtime:${topic}`);
-  if (existing) {
-    supabase.removeChannel(existing);
-  }
-  return supabase.channel(topic);
+  // Nom unique à chaque appel : deux composants qui écoutent la même chose
+  // (ex. Dashboard et son graphique) ne se coupent plus mutuellement. Chaque
+  // composant retire SON canal à son démontage, ce qui règle aussi StrictMode.
+  channelCounter += 1;
+  return supabase.channel(`${topic}#${channelCounter}`);
 };
 
 export const logout = () => {
