@@ -198,6 +198,7 @@ export async function fetchPendingWithdrawals(): Promise<PendingWithdrawal[]> {
 
 export interface ProcessedWithdrawal extends PendingWithdrawal {
   status: 'completed' | 'failed';
+  payoutReference?: string | null;
 }
 
 /** Historique des retraits déjà traités (envoyés ou échoués), du plus récent au plus ancien. */
@@ -220,13 +221,16 @@ export async function fetchProcessedWithdrawals(limit = 100): Promise<ProcessedW
     reference: row.reference,
     date: row.date,
     status: row.status,
+    payoutReference: row.payout_reference ?? null,
   }));
 }
 
-export async function completeWithdrawal(transactionId: string): Promise<{ success: boolean; message?: string }> {
+export async function completeWithdrawal(transactionId: string, payoutReference: string): Promise<{ success: boolean; message?: string }> {
+  const ref = payoutReference.trim();
+  if (!ref) return { success: false, message: 'La référence de la transaction Mobile Money est obligatoire.' };
   const { data, error } = await supabase
     .from('wallet_transactions')
-    .update({ status: 'completed' })
+    .update({ status: 'completed', payout_reference: ref })
     .eq('id', transactionId)
     .eq('status', 'pending')
     .select('id');

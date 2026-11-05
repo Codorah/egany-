@@ -284,13 +284,18 @@ export function AdminDashboard() {
   };
 
   const handleCompleteWithdrawal = async (w: PendingWithdrawal) => {
+    const payoutRef = (window.prompt(`Envoyez d'abord ${w.amount.toLocaleString()} FCFA au ${w.reference} (${w.paymentMethod.toUpperCase()}).\nPuis saisissez la référence de la transaction Mobile Money (obligatoire) :`) || '').trim();
+    if (!payoutRef) {
+      toast.error("Référence de transaction obligatoire : le retrait n'a pas été marqué envoyé.");
+      return;
+    }
     setProcessingWithdrawalId(w.id);
     try {
-      const result = await completeWithdrawal(w.id);
+      const result = await completeWithdrawal(w.id, payoutRef);
       if (!result.success) throw new Error(result.message);
       toast.success(`Retrait de ${w.amount.toLocaleString()} FCFA marqué comme envoyé.`);
       setPendingWithdrawals(prev => prev.filter(p => p.id !== w.id));
-      setProcessedWithdrawals(prev => [{ ...w, status: 'completed' as const }, ...prev]);
+      setProcessedWithdrawals(prev => [{ ...w, status: 'completed' as const, payoutReference: payoutRef }, ...prev]);
       await notifyUser({
         userId: w.userId,
         title: 'Retrait effectué',
@@ -1853,6 +1858,11 @@ export function AdminDashboard() {
                         <p className="text-sm font-bold text-foreground truncate">{w.userName} • {w.userEmail}</p>
                         <p className="text-xs font-black text-brand">{w.amount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
                         <p className="text-[13px] text-muted-foreground">Demandé le {new Date(w.date).toLocaleString()}</p>
+                        {w.status === 'completed' && (
+                          <p className="text-[13px] text-muted-foreground">
+                            Réf. transaction : {w.payoutReference || 'non renseignée'}
+                          </p>
+                        )}
                       </div>
                       <span className={`shrink-0 text-[13px] font-bold px-2.5 py-1 rounded-full ${w.status === 'completed' ? 'bg-success-soft text-secondary' : 'bg-danger/10 text-danger'}`}>
                         {w.status === 'completed' ? 'Envoyé' : 'Échec'}

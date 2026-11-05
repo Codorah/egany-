@@ -3226,3 +3226,6 @@ begin
   );
 end;
 $$;
+
+-- 0035: référence de transaction Mobile Money des retraits
+alter table public.wallet_transactions add column if not exists payout_reference text;
