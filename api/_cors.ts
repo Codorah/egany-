@@ -19,6 +19,11 @@ const NATIVE_APP_ORIGINS = new Set([
   'capacitor://localhost',
 ]);
 
+/** Vrai si l'appel vient de l'APK, dont l'origine (localhost) n'est pas joignable depuis Internet. */
+export function isNativeAppOrigin(origin: string | undefined): boolean {
+  return Boolean(origin && NATIVE_APP_ORIGINS.has(origin));
+}
+
 export function handleCors(req: any, res: any): boolean {
   const origin: string | undefined = req.headers?.origin;
   if (origin && NATIVE_APP_ORIGINS.has(origin)) {

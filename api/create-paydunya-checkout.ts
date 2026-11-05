@@ -1,4 +1,4 @@
-import { handleCors } from './_cors.js';
+import { handleCors, isNativeAppOrigin } from './_cors.js';
 import { requireUserOr401 } from './_requireUser.js';
 
 /**
@@ -183,7 +183,12 @@ export default async function handler(req: any, res: any) {
     const token = process.env.PAYDUNYA_TOKEN;
     const mode = process.env.PAYDUNYA_MODE || 'sandbox';
 
-    const origin = req.headers.origin || `https://${req.headers.host}`;
+    // Depuis l'APK, l'origine est https://localhost : PayDunya ne pourrait ni
+    // joindre le webhook (dépôt jamais crédité), ni ramener l'utilisatrice sur le
+    // site. On donne donc l'adresse publique du serveur.
+    const origin = !req.headers.origin || isNativeAppOrigin(req.headers.origin)
+      ? `https://${req.headers.host}`
+      : req.headers.origin;
     const isProduction = process.env.VERCEL_ENV === 'production';
 
     if (!masterKey || !privateKey || !token) {
