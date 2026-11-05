@@ -253,7 +253,10 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
           placeholder={t('chat_input_placeholder') || 'Écrivez un message au groupe...'}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 rounded-full h-11 bg-[#F8F0E4]/60 dark:bg-muted border-transparent focus:border-primary px-4 text-xs sm:text-sm"
+          className="flex-1 rounded-full h-11 bg-[#F8F0E4]/60 dark:bg-muted border-transparent focus:border-primary px-4 text-base"
+          aria-label="Message"
+          enterKeyHint="send"
+          autoComplete="off"
         />
 
         <Button

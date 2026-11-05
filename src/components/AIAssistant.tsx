@@ -265,7 +265,10 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            className="rounded-2xl h-11 text-xs border-border/80 focus-visible:ring-primary"
+            className="rounded-2xl h-11 text-base border-border/80 focus-visible:ring-primary"
+            aria-label="Votre question"
+            enterKeyHint="send"
+            autoComplete="off"
           />
           <Button onClick={() => handleSend()} className="group/send gradient-sunset text-white rounded-2xl h-11 px-4 cursor-pointer">
             <Send className="w-4 h-4 transition-transform duration-200 group-hover/send:translate-x-0.5 group-hover/send:-translate-y-0.5" />

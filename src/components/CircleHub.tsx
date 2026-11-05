@@ -152,7 +152,12 @@ export function CircleHub({
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder={t('cir_code_placeholder')}
-              className="flex-1 h-11 px-3.5 rounded-xl border border-border text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="flex-1 h-11 px-3.5 rounded-xl border border-border bg-card text-foreground text-base font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
+              aria-label="Code d'invitation"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="off"
               autoFocus
             />
             <button

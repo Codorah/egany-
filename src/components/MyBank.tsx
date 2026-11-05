@@ -686,7 +686,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               <button
                 type="button"
                 onClick={() => setShowBalance(!showBalance)}
-                className="p-1.5 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
+                className="p-3 -m-1.5 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
                 aria-label={showBalance ? "Masquer le solde" : "Afficher le solde"}
               >
                 <EganyeIcon name={showBalance ? "eye" : "eye-off"} size={17} />
@@ -995,7 +995,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         key={amt}
                         type="button"
                         onClick={() => setActionAmount(amt)}
-                        className="py-1 px-2 text-[13px] font-bold rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
+                        className="py-2.5 px-3 text-[13px] font-bold rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
                       >
                         +{parseInt(amt).toLocaleString()}
                       </button>
@@ -1004,7 +1004,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       <button
                         type="button"
                         onClick={() => setActionAmount(activeVault.balance.toString())}
-                        className="py-1 px-2 text-[13px] font-bold rounded-lg border border-secondary text-secondary bg-secondary/10 cursor-pointer ml-auto"
+                        className="py-2.5 px-3 text-[13px] font-bold rounded-lg border border-secondary text-secondary bg-secondary/10 cursor-pointer ml-auto"
                       >
                         {t('mb_withdraw_all')}
                       </button>

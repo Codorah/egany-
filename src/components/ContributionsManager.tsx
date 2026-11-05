@@ -442,7 +442,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
                   placeholder={t('search_member')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-9 text-xs rounded-xl"
+                  className="pl-8 h-11 text-base rounded-xl" aria-label="Rechercher un paiement" autoComplete="off"
                 />
               </div>
             )}

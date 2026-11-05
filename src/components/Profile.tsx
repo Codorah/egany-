@@ -156,10 +156,10 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const withdrawIdempotencyKeyRef = React.useRef<string | null>(null);
-  useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount]);
   const [withdrawCountry, setWithdrawCountry] = useState('tg');
   const [withdrawMethod, setWithdrawMethod] = useState('tmoney_tg');
   const [withdrawPhone, setWithdrawPhone] = useState(user.phone || '');
+  useEffect(() => { withdrawIdempotencyKeyRef.current = null; }, [withdrawAmount, withdrawPhone, withdrawMethod]);
   const [withdrawPin, setWithdrawPin] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);

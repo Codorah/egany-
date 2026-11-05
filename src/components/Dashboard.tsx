@@ -69,7 +69,10 @@ export function Dashboard({
 
   // Find next upcoming contribution
   const activeGroups = groups.filter((g) => g.status === 'active');
-  const nextGroupToPay = activeGroups[0] || null;
+  const nextGroupToPay =
+    [...activeGroups].sort(
+      (a, b) => new Date(a.nextPayoutDate).getTime() - new Date(b.nextPayoutDate).getTime()
+    )[0] || null;
 
   // Activité récente — les VRAIES opérations du portefeuille.
   //
@@ -211,7 +214,8 @@ export function Dashboard({
                 </span>
                 <button
                   onClick={() => setShowBalance(!showBalance)}
-                  className="p-1 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
+                  className="p-3 -m-2 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
+                  aria-label={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
                   title={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
                 >
                   <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={15} />

@@ -101,8 +101,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          // On ne garde en cache que les pages réussies (pas un 500/503) ;
+          // la coquille est aussi rangée sous /index.html pour le mode hors ligne.
+          if (networkResponse && networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            const shell = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+              cache.put('/index.html', shell);
+            });
+          }
           return networkResponse;
         })
         .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
@@ -115,7 +123,11 @@ self.addEventListener('fetch', (event) => {
       // Return cached response instantly if available, while fetching the latest in the background
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          // Un chunk disparu après un déploiement revient en HTML (rewrite
+          // Vercel) : ne jamais le ranger sous l'URL d'un .js/.css.
+          const type = networkResponse && networkResponse.headers ? (networkResponse.headers.get('content-type') || '') : '';
+          const htmlForAsset = type.includes('text/html') && /\.(js|css|mjs)(\?|$)/.test(event.request.url);
+          if (networkResponse && networkResponse.status === 200 && !htmlForAsset) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);

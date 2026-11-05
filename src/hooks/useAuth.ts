@@ -12,6 +12,7 @@ export function useAuth() {
 
   useEffect(() => {
     let profileChannel: ReturnType<typeof supabase.channel> | null = null;
+    let loadedUid: string | null = null;
 
     const fetchProfile = async (uid: string) => {
       const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).eq('id', uid).single();
@@ -25,6 +26,7 @@ export function useAuth() {
     };
 
     const loadProfile = async (uid: string) => {
+      loadedUid = uid;
       const fresh = await fetchProfile(uid);
       if (fresh) {
         setProfile(fresh);
@@ -60,8 +62,14 @@ export function useAuth() {
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      // Supabase ré-émet SIGNED_IN à chaque retour sur l'onglet : même
+      // personne, canal déjà ouvert = rien à recharger (évite aussi les
+      // canaux en double et les requêtes inutiles).
+      if (session?.user && profileChannel && session.user.id === loadedUid && event !== 'SIGNED_OUT') {
+        return;
+      }
       setUser(session?.user ?? null);
-      if (event === 'SIGNED_OUT') clearSnapshots();
+      if (event === 'SIGNED_OUT') { clearSnapshots(); loadedUid = null; }
 
       if (profileChannel) {
         supabase.removeChannel(profileChannel);

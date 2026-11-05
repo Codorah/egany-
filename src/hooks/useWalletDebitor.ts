@@ -102,11 +102,14 @@ export function useWalletDebitor(profile: UserProfile | null, groups: Group[]) {
               } else if (!cont.notifiedInsufficient) {
                 const { penaltyAmount } = calculateLatePenalty(cont, group);
 
-                await supabase.from('contributions').update({
+                const { error: lateError } = await supabase.from('contributions').update({
                   status: 'late',
                   notified_insufficient: true,
                   ...(penaltyAmount > 0 ? { penalty_applied: penaltyAmount, penalty_status: 'pending' } : {})
                 }).eq('id', cont.id);
+                // Marquage refusé : on n'envoie ni notification ni message
+                // (ils repartiraient toutes les 30 s).
+                if (lateError) throw lateError;
 
                 const penaltyMsg = penaltyAmount > 0 ? ` Une pénalité de retard de ${penaltyAmount.toLocaleString()} ${group.currency} a été appliquée.` : '';
 
