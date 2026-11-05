@@ -67,7 +67,7 @@ export function ErrorState({
     <div
       role="alert"
       className={
-        (fullScreen ? 'h-screen w-screen' : 'w-full py-14') +
+        (fullScreen ? 'h-dvh w-full' : 'w-full py-14') +
         ' flex flex-col items-center justify-center text-center px-6 gap-5 bg-background'
       }
     >

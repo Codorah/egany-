@@ -103,8 +103,8 @@ function AuthLayout({
   // Sur ordinateur, l'écran devient une carte centrée de la largeur d'un
   // téléphone : étiré sur 1 440 px, le formulaire n'avait plus de forme.
   return (
-    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
-      <div className="relative w-full min-h-screen md:min-h-[720px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
+    <div className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+      <div className="relative w-full min-h-dvh md:min-h-[720px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
 
         {/* Bandeau coloré + filigrane photo réelle + courbe */}
         <div
@@ -1035,9 +1035,9 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   /* ---------------- Bienvenue, intention & avatar --------------------- */
 
   return (
-    <div className="w-full min-h-screen md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+    <div className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
       <div
-        className={`w-full min-h-screen md:min-h-[740px] flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:py-8 relative overflow-hidden md:rounded-[2rem] md:shadow-elevated transition-all duration-500 ${
+        className={`w-full min-h-dvh md:min-h-[740px] flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:py-8 relative overflow-hidden md:rounded-[2rem] md:shadow-elevated transition-all duration-500 ${
           screen === 'avatar' ? 'md:max-w-lg' : 'md:max-w-[440px]'
         }`}
       >

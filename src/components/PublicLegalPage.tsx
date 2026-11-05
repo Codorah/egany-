@@ -61,7 +61,7 @@ export function PublicLegalPage({ docId }: { docId: LegalDocId | 'suppression' }
   const doc = docId === 'suppression' ? DELETION_DOC : LEGAL_DOCUMENTS[docId];
 
   return (
-    <main className="min-h-screen bg-background text-foreground px-4 py-10">
+    <main className="min-h-dvh bg-background text-foreground px-4 py-10">
       <article className="max-w-2xl mx-auto space-y-6">
         <header className="space-y-2">
           <a href="/" className="text-2xl font-serif font-black lowercase text-brand">eganyé</a>

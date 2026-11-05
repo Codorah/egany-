@@ -21,7 +21,7 @@ export function LoadingScreen({
   return (
     <div
       className={`flex flex-col items-center justify-center gap-4 ${
-        fullScreen ? 'h-screen w-screen bg-background' : 'py-12'
+        fullScreen ? 'h-dvh w-full bg-background' : 'py-12'
       }`}
     >
       {withMascot ? (

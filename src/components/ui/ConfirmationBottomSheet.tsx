@@ -75,7 +75,7 @@ export function ConfirmationBottomSheet({
                 scale: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0.95
               }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="pointer-events-auto bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border flex flex-col overflow-hidden max-h-[90vh]"
+              className="pointer-events-auto bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border flex flex-col overflow-hidden max-h-[90dvh]"
             >
               {/* Drag/Swipe Indicator for Mobile Bottom Sheet */}
               <div className="flex justify-center py-3 sm:hidden">
@@ -109,14 +109,15 @@ export function ConfirmationBottomSheet({
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Fermer"
+                  className="p-3 -m-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="px-6 py-2 space-y-4">
+              <div className="px-6 py-2 space-y-4 overflow-y-auto min-h-0">
                 {isLoading ? (
                   <div className="py-4 flex flex-col items-center justify-center space-y-2">
                     <EganyeMascot variant="payment" size={90} message={t('cbs_processing_message')} />
@@ -179,7 +180,7 @@ export function ConfirmationBottomSheet({
               </div>
 
               {/* Actions Footer */}
-              <div className="p-6 bg-muted border-t border-border flex flex-col sm:flex-row gap-3 mt-4">
+              <div className="p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] bg-muted border-t border-border flex flex-col sm:flex-row gap-3 mt-4 shrink-0">
                 <Button
                   variant="outline"
                   onClick={onClose}

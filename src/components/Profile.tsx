@@ -1580,7 +1580,8 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             value={user.photoURL || ''}
             onChange={async (newAvatar) => {
               try {
-                await supabase.from('profiles').update({ photo_url: newAvatar }).eq('id', user.uid);
+                const { error } = await supabase.from('profiles').update({ avatar_url: newAvatar }).eq('id', user.uid);
+                if (error) throw error;
                 toast.success('Avatar mis à jour !');
                 setIsAvatarWorkshopOpen(false);
               } catch {

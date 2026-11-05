@@ -19,7 +19,7 @@ interface LayoutProps {
 
 export function Layout({ children, user, view, onNavigate, onLogout }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col pt-[env(safe-area-inset-top)] md:pl-64">
+    <div className="min-h-dvh bg-background text-foreground flex flex-col pt-[env(safe-area-inset-top)] md:pl-64">
       {user && <Sidebar user={user} currentView={view} onNavigate={onNavigate} />}
       
       <div className="flex-1 flex flex-col w-full min-w-0">
