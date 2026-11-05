@@ -9,6 +9,7 @@ import { fetchPendingMarketplaceRequests, updateMarketplaceRequestStatus } from 
 import { AdminCreditReview } from './AdminCreditReview';
 import { AdminAidReview } from './AdminAidReview';
 import { AdminServerHealth } from './AdminServerHealth';
+import { AdminBalances } from './AdminBalances';
 import { fetchPlatformSettings, fetchAutoWithdrawSettings, fetchWithdrawFeeSettings, updatePlatformSettings, fetchRevenueShares, saveRevenueShares, PayoutFeeMode } from '@/lib/platformSettings';
 import { KycSubmission, MarketplaceRequest } from '@/types';
 import { notifyUser } from '@/lib/notify';
@@ -801,6 +802,7 @@ export function AdminDashboard() {
       {(() => {
         const adminSections = [
           { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: pendingDeletions.length },
+          { id: 'balances', label: 'Soldes', icon: Coins, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'groups', label: t('admin_tab_groups'), icon: GroupsIcon, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'kyc', label: 'KYC', icon: BadgeCheck, color: 'bg-eganye-gold/10 text-eganye-gold', count: kycSubmissions.length },
           { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length + pendingCreditCount + pendingAidCount },
@@ -811,7 +813,7 @@ export function AdminDashboard() {
         return (
           <Tabs value={adminSection ?? 'users'} onValueChange={setAdminSection} className="w-full">
             {/* Desktop: classic tab strip — plenty of horizontal room */}
-            <TabsList className="hidden md:grid w-full grid-cols-6 max-w-3xl bg-muted p-1 rounded-2xl">
+            <TabsList className="hidden md:grid w-full grid-cols-7 max-w-4xl bg-muted p-1 rounded-2xl">
               {adminSections.map((s) => (
                 <TabsTrigger key={s.id} value={s.id} className="flex items-center gap-2 font-bold text-xs py-2 rounded-xl cursor-pointer">
                   <s.icon className="w-4 h-4" />
@@ -1167,6 +1169,10 @@ export function AdminDashboard() {
         </TabsContent>
 
         {/* TAB 2: GROUP/TONTINE MANAGEMENT */}
+        <TabsContent value="balances" className="mt-6">
+          <AdminBalances />
+        </TabsContent>
+
         <TabsContent value="groups" className="mt-6">
           <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
