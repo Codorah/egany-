@@ -38,7 +38,7 @@ export function StatusBadge({ label, tone = 'neutral', pulse = false, icon, clas
   const iconName = icon || TONE_ICONS[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border text-[11px] font-bold px-2.5 py-0.5 whitespace-nowrap ${TONE_CLASSES[tone]} ${pulse ? 'animate-pulse' : ''} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full border text-[13px] font-bold px-2.5 py-0.5 whitespace-nowrap ${TONE_CLASSES[tone]} ${pulse ? 'animate-pulse' : ''} ${className}`}
     >
       <EganyeIcon name={iconName} size={12} strokeWidth={2.2} />
       {label}

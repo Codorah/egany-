@@ -18,8 +18,8 @@ export function SettingsGroup({ title, children }: { title?: string; children: R
 }
 
 const TONES = {
-  brand: 'bg-[#FFF2E8] text-[#C96F4A]',
-  sage: 'bg-[#EBF5EA] text-[#718A68]',
+  brand: 'bg-[#FFF2E8] text-primary',
+  sage: 'bg-success-soft text-secondary',
   sand: 'bg-[#F4EFE6] text-[#3E2F24]',
   gold: 'bg-[#FEF6E9] text-[#C49A55]',
   info: 'bg-info-soft text-info',

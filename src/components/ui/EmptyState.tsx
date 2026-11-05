@@ -67,7 +67,7 @@ export function EmptyState({
           {actionText && onAction && (
             <Button
               onClick={onAction}
-              className="w-full rounded-2xl h-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white font-bold text-xs cursor-pointer shadow-xs"
+              className="w-full rounded-2xl h-11 bg-primary hover:bg-[#B85C36] text-white font-bold text-xs cursor-pointer shadow-xs"
             >
               {actionText}
             </Button>

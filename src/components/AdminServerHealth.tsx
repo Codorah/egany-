@@ -120,7 +120,7 @@ function RecoverPayment() {
   return (
     <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
       <p className="text-xs font-bold text-foreground">Rattraper un paiement PayDunya non crédité</p>
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         Copiez le token d'une facture payée depuis votre tableau de bord PayDunya. Il est revérifié auprès de PayDunya et ne peut jamais être crédité deux fois.
       </p>
       <div className="flex gap-2">

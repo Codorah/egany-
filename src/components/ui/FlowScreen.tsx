@@ -64,7 +64,7 @@ export function FlowScreen({ onBack, title, step, totalSteps, hero, heading, des
               <ArrowLeft className="w-5 h-5" />
             </button>
             <p className="flex-1 text-center text-[15px] font-bold text-foreground truncate">{title}</p>
-            <div className="w-11 shrink-0 text-right pr-2 text-[12px] font-bold text-muted-foreground tabular-nums">
+            <div className="w-11 shrink-0 text-right pr-2 text-[13px] font-bold text-muted-foreground tabular-nums">
               {step && totalSteps ? `${step}/${totalSteps}` : ''}
             </div>
           </div>
@@ -109,7 +109,7 @@ export function FlowRow({ label, value, strong, onEdit }: { label: string; value
       <span className="flex items-center gap-2 min-w-0">
         <span className="font-bold text-foreground text-right truncate">{value}</span>
         {onEdit && (
-          <button type="button" onClick={onEdit} className="text-[12px] font-bold text-brand underline cursor-pointer shrink-0">
+          <button type="button" onClick={onEdit} className="text-[13px] font-bold text-brand underline cursor-pointer shrink-0">
             Modifier
           </button>
         )}

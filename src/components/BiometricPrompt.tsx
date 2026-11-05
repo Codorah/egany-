@@ -286,7 +286,7 @@ export function BiometricPrompt({
             </div>
 
             {/* Footnote */}
-            <p className="text-[12px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
+            <p className="text-[13px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
               {t('biom_footnote')}
             </p>
 

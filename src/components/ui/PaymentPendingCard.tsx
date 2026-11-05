@@ -171,7 +171,7 @@ export function PaymentPendingCard({
       <div className="flex justify-center pt-1">
         <div className="relative">
           <motion.span
-            className="absolute inset-0 rounded-full bg-[#C96F4A]/20"
+            className="absolute inset-0 rounded-full bg-primary/20"
             animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
           />
@@ -202,12 +202,12 @@ export function PaymentPendingCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#C96F4A] animate-pulse" />
+      <div className="flex items-center justify-center gap-2 text-[13px] text-muted-foreground">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
         <span>{t('pay_waiting_confirmation')} · {timeLabel}</span>
       </div>
 
-      <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
+      <p className="text-[13px] text-center text-muted-foreground leading-relaxed">
         {t('pay_can_leave')}
       </p>
 

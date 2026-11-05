@@ -30,15 +30,15 @@ export function LoadingScreen({
         <div className="animate-logo-appear relative">
           <EganyeLogo size={60} />
           {/* Anneau d'aura lumineuse */}
-          <div className="absolute -inset-2 rounded-full border border-[#C96F4A]/25 animate-ping" />
+          <div className="absolute -inset-2 rounded-full border border-primary/25 animate-ping" />
         </div>
       )}
 
       {/* Indicateur de chargement en 3 points chauds */}
       <div className="flex items-center gap-1.5 pt-1">
-        <div className="w-2 h-2 rounded-full bg-[#C96F4A] animate-pulse" style={{ animationDelay: '0ms' }} />
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0ms' }} />
         <div className="w-2 h-2 rounded-full bg-[#E5A93C] animate-pulse" style={{ animationDelay: '200ms' }} />
-        <div className="w-2 h-2 rounded-full bg-[#718A68] animate-pulse" style={{ animationDelay: '400ms' }} />
+        <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" style={{ animationDelay: '400ms' }} />
       </div>
 
       {message && (

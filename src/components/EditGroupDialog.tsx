@@ -222,7 +222,7 @@ export function EditGroupDialog({
                         type="button"
                         onClick={() => setFrequency(f.value)}
                         className={`h-11 rounded-xl text-sm font-bold border-2 cursor-pointer transition-colors ${
-                          frequency === f.value ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]' : 'border-border text-foreground'
+                          frequency === f.value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-foreground'
                         }`}
                       >
                         {f.label}
@@ -244,7 +244,7 @@ export function EditGroupDialog({
                         type="button"
                         onClick={() => setDistribution(value)}
                         className={`h-11 rounded-xl text-sm font-bold border-2 cursor-pointer transition-colors ${
-                          distribution === value ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]' : 'border-border text-foreground'
+                          distribution === value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-foreground'
                         }`}
                       >
                         {label}

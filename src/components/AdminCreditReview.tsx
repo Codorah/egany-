@@ -79,7 +79,7 @@ export function AdminCreditReview({ onPendingCountChange }: AdminCreditReviewPro
             if (list.length === 0) return null;
             return (
               <div key={status}>
-                <p className="px-5 pt-4 pb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{title} ({list.length})</p>
+                <p className="px-5 pt-4 pb-1 text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{title} ({list.length})</p>
                 <div className="divide-y divide-border">
                   {list.map((app) => <ApplicationRow key={app.id} app={app} onDone={load} />)}
                 </div>
@@ -160,15 +160,15 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
             <>
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[12px] font-bold text-muted-foreground">Montant (FCFA)</Label>
+                  <Label className="text-[13px] font-bold text-muted-foreground">Montant (FCFA)</Label>
                   <Input type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[12px] font-bold text-muted-foreground">Taux total (%)</Label>
+                  <Label className="text-[13px] font-bold text-muted-foreground">Taux total (%)</Label>
                   <Input type="number" min={0} max={maxRateFor(Number(months) || CREDIT_MIN_MONTHS)} step="0.5" value={rate} onChange={(e) => setRate(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[12px] font-bold text-muted-foreground">Durée (mois)</Label>
+                  <Label className="text-[13px] font-bold text-muted-foreground">Durée (mois)</Label>
                   <Input type="number" min={CREDIT_MIN_MONTHS} max={CREDIT_MAX_MONTHS} value={months} onChange={(e) => setMonths(e.target.value)} className="h-10 rounded-xl bg-card" />
                 </div>
               </div>

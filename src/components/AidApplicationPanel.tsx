@@ -248,7 +248,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
             onChange={(e) => setDescription(e.target.value)}
             className="rounded-2xl text-base"
           />
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {missing > 0 ? `Encore ${missing} caractère${missing > 1 ? 's' : ''} au minimum.` : 'C’est bon.'}
           </p>
         </div>
@@ -302,7 +302,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
               <span className="text-sm font-bold text-foreground break-all">
                 {videoFile ? videoFile.name : 'Appuyez pour filmer ou choisir une vidéo'}
               </span>
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {videoFile ? `${(videoFile.size / 1024 / 1024).toFixed(1)} Mo · appuyez pour changer` : '50 Mo maximum'}
               </span>
             </button>
@@ -317,7 +317,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
               onChange={(e) => setVideoLink(e.target.value)}
               className="rounded-2xl h-13 text-base"
             />
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {videoLink.trim() && !linkOk ? 'Le lien doit commencer par https://' : 'YouTube, TikTok, Facebook ou Google Drive.'}
             </p>
           </div>

@@ -163,22 +163,22 @@ function OptionCard({
       onClick={onClick}
       aria-pressed={selected}
       className={`w-full flex items-center gap-3.5 p-4 rounded-2xl border-2 text-left transition-colors cursor-pointer ${
-        selected ? 'border-[#C96F4A] bg-[#C96F4A]/5' : 'border-border bg-card hover:bg-muted/60'
+        selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted/60'
       }`}
     >
       {icon && (
         <span className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-          selected ? 'bg-[#C96F4A] text-white' : 'bg-muted text-muted-foreground'
+          selected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
         }`}>
           <EganyeIcon name={icon} size={20} />
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className={`block text-[15px] font-bold ${selected ? 'text-[#C96F4A]' : 'text-foreground'}`}>{title}</span>
+        <span className={`block text-[15px] font-bold ${selected ? 'text-primary' : 'text-foreground'}`}>{title}</span>
         <span className="block text-[13px] text-muted-foreground leading-snug">{hint}</span>
       </span>
       <span className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
-        selected ? 'border-[#C96F4A] bg-[#C96F4A] text-white' : 'border-border'
+        selected ? 'border-primary bg-primary text-white' : 'border-border'
       }`}>
         {selected && <Check className="w-3 h-3" strokeWidth={3} />}
       </span>
@@ -499,7 +499,7 @@ export function CreateGroupDialog({
           <div className="flex-1 overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <div className="space-y-5 text-center py-6 max-w-sm mx-auto">
               <DialogTitle className="sr-only">Cercle créé</DialogTitle>
-              <div className="w-20 h-20 rounded-[28px] bg-[#EBF5EA] text-[#718A68] mx-auto flex items-center justify-center shadow-soft">
+              <div className="w-20 h-20 rounded-[28px] bg-success-soft text-secondary mx-auto flex items-center justify-center shadow-soft">
                 <EganyeIcon name="check" size={38} strokeWidth={2.5} />
               </div>
 
@@ -513,10 +513,10 @@ export function CreateGroupDialog({
               </div>
 
               {/* Carte récapitulative du cercle */}
-              <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-[#C96F4A]/25 text-left space-y-3">
-                <div className="flex items-center justify-between border-b border-[#C96F4A]/15 pb-2.5">
+              <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-primary/25 text-left space-y-3">
+                <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cagnotte distribuée</span>
-                  <span className="font-serif font-black text-xl text-[#C96F4A]">
+                  <span className="font-serif font-black text-xl text-primary">
                     {createdGroup.potAmount.toLocaleString()} FCFA
                   </span>
                 </div>
@@ -565,8 +565,8 @@ export function CreateGroupDialog({
               </div>
 
               {/* Badge de réassurance sur la vérification */}
-              <div className="p-3 rounded-xl bg-[#EBF5EA]/80 dark:bg-muted/60 border border-[#718A68]/20 flex items-center gap-2.5 text-left">
-                <div className="w-6 h-6 rounded-full bg-[#718A68]/15 text-[#718A68] flex items-center justify-center shrink-0">
+              <div className="p-3 rounded-xl bg-success-soft/80 dark:bg-muted/60 border border-secondary/20 flex items-center gap-2.5 text-left">
+                <div className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
                   <EganyeIcon name="shield" size={13} />
                 </div>
                 <p className="text-xs text-muted-foreground leading-snug">
@@ -586,7 +586,7 @@ export function CreateGroupDialog({
           <div className="flex-1 flex flex-col">
             <div className="flex justify-end px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">{closeButton}</div>
             <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6 pb-10">
-              <div className="w-20 h-20 rounded-[28px] bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center">
+              <div className="w-20 h-20 rounded-[28px] bg-primary/10 text-primary flex items-center justify-center">
                 <EganyeIcon name="shield" size={36} />
               </div>
 
@@ -640,7 +640,7 @@ export function CreateGroupDialog({
                   <div
                     key={i}
                     className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                      i < step ? 'bg-[#C96F4A]' : 'bg-muted'
+                      i < step ? 'bg-primary' : 'bg-muted'
                     }`}
                   />
                 ))}
@@ -745,7 +745,7 @@ export function CreateGroupDialog({
                             onClick={() => setValue('contributionAmount', amt, { shouldValidate: true })}
                             className={`h-12 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
                               contributionAmount === amt
-                                ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
+                                ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-border bg-card text-foreground hover:bg-muted/60'
                             }`}
                           >
@@ -802,7 +802,7 @@ export function CreateGroupDialog({
                             onClick={() => setMembers(n)}
                             className={`h-11 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
                               maxMembers === n
-                                ? 'border-[#718A68] bg-[#EBF5EA] text-[#718A68]'
+                                ? 'border-secondary bg-success-soft text-secondary'
                                 : 'border-border bg-card text-foreground hover:bg-muted/60'
                             }`}
                           >
@@ -812,8 +812,8 @@ export function CreateGroupDialog({
                       </div>
 
                       {/* La cagnotte se calcule sous les yeux : l'intérêt du cercle */}
-                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-3xl p-5 border border-[#C96F4A]/30 space-y-1 text-center">
-                        <span className="text-[12px] font-bold uppercase tracking-wider text-[#C96F4A]">
+                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-3xl p-5 border border-primary/30 space-y-1 text-center">
+                        <span className="text-[13px] font-bold uppercase tracking-wider text-primary">
                           Cagnotte par tour
                         </span>
                         <p className="text-3xl font-serif font-black text-foreground">
@@ -940,7 +940,7 @@ export function CreateGroupDialog({
                           type="checkbox"
                           id="terms"
                           {...register('termsAccepted')}
-                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-[#C96F4A] focus:ring-[#C96F4A]/50 cursor-pointer"
+                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
                         />
                         <div className="space-y-1">
                           <Label htmlFor="terms" className="text-[15px] font-bold text-foreground cursor-pointer">
@@ -951,7 +951,7 @@ export function CreateGroupDialog({
                             <button
                               type="button"
                               onClick={() => setShowReglement(true)}
-                              className="font-bold text-[#C96F4A] hover:underline cursor-pointer"
+                              className="font-bold text-primary hover:underline cursor-pointer"
                             >
                               Lire le règlement des cercles
                             </button>

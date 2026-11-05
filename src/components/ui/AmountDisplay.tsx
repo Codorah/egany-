@@ -18,7 +18,7 @@ const SIZE_CLASSES: Record<NonNullable<AmountDisplayProps['size']>, string> = {
 };
 
 const CURRENCY_SIZE_CLASSES: Record<NonNullable<AmountDisplayProps['size']>, string> = {
-  sm: 'text-[11px]',
+  sm: 'text-[13px]',
   md: 'text-[13px]',
   lg: 'text-sm',
   xl: 'text-sm',

@@ -106,7 +106,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1">
+        <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground uppercase tracking-wide mb-1">
           {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -153,7 +153,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-foreground truncate">{event.groupName}</p>
-                    <p className="text-[12px] text-muted-foreground capitalize">{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
+                    <p className="text-[13px] text-muted-foreground capitalize">{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
                   </div>
                 </div>
                 <Badge variant="outline" className="rounded-full shrink-0">{event.amount.toLocaleString()} {event.currency}</Badge>

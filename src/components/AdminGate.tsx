@@ -109,7 +109,7 @@ export function AdminGate({ user, children, onCancel }: AdminGateProps) {
         className="w-full max-w-sm bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-5"
       >
         <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-2xl bg-[#FFF4E5] text-[#C96F4A] flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary flex items-center justify-center">
             <EganyeIcon name="shield" size={24} />
           </div>
         </div>

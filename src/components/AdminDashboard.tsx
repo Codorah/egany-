@@ -742,7 +742,7 @@ export function AdminDashboard() {
                   <s.icon className="w-4 h-4" />
                   {s.label}
                   {s.count > 0 && (
-                    <Badge className="bg-brand text-white text-[12px] h-4 px-1.5 border-none">{s.count}</Badge>
+                    <Badge className="bg-brand text-white text-[13px] h-4 px-1.5 border-none">{s.count}</Badge>
                   )}
                 </TabsTrigger>
               ))}
@@ -917,9 +917,9 @@ export function AdminDashboard() {
                         <CustomAvatar photoURL={u.photoURL} name={u.displayName} size={40} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-foreground">{u.displayName}</p>
-                          <p className="truncate text-[12px] text-muted-foreground">{u.email}</p>
+                          <p className="truncate text-[13px] text-muted-foreground">{u.email}</p>
                         </div>
-                        <Badge className={`shrink-0 border-none px-2 py-0.5 text-[11px] font-bold uppercase ${
+                        <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold uppercase ${
                           u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground'
                         }`}>
                           {u.role === 'admin' ? t('admin_administrator') : t('member')}
@@ -928,7 +928,7 @@ export function AdminDashboard() {
 
                       <div className="flex items-center gap-4 rounded-xl bg-muted/50 px-3 py-2">
                         <div className="min-w-0">
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                             {t('admin_reputation_col')}
                           </p>
                           <p className={`font-serif text-sm font-black ${
@@ -937,13 +937,13 @@ export function AdminDashboard() {
                               : u.reputationScore >= 50 ? 'text-brand' : 'text-danger'
                           }`}>
                             {u.reputationScore}
-                            <span className="ml-1 text-[11px] font-bold uppercase text-muted-foreground">
+                            <span className="ml-1 text-[13px] font-bold uppercase text-muted-foreground">
                               {u.reputationScore >= 85 ? 'S-Tier' : u.reputationScore >= 70 ? 'A-Tier' : u.reputationScore >= 50 ? 'B-Tier' : 'C-Tier'}
                             </span>
                           </p>
                         </div>
                         <div className="ml-auto text-right">
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                             {t('admin_wallet_col')}
                           </p>
                           <p className="font-serif text-sm font-black text-foreground">
@@ -989,12 +989,12 @@ export function AdminDashboard() {
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider pl-6">{t('admin_profil_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider">Email</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider">{t('admin_role_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-center">{t('admin_reputation_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-right">{t('admin_wallet_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider pl-6">{t('admin_profil_col')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">Email</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_role_col')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('admin_reputation_col')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right">{t('admin_wallet_col')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1019,7 +1019,7 @@ export function AdminDashboard() {
                           <TableCell className="text-xs text-muted-foreground">{u.email}</TableCell>
                           
                           <TableCell>
-                            <Badge className={`text-[12px] font-bold px-2 py-0.5 border-none uppercase ${
+                            <Badge className={`text-[13px] font-bold px-2 py-0.5 border-none uppercase ${
                               u.role === 'admin' 
                                 ? 'bg-brand/10 text-brand' 
                                 : 'bg-muted text-muted-foreground'
@@ -1041,7 +1041,7 @@ export function AdminDashboard() {
                               }`}>
                                 {u.reputationScore}
                               </span>
-                              <span className="text-[12px] uppercase tracking-wider font-bold text-muted-foreground">
+                              <span className="text-[13px] uppercase tracking-wider font-bold text-muted-foreground">
                                 {u.reputationScore >= 85 ? 'S-Tier' : u.reputationScore >= 70 ? 'A-Tier' : u.reputationScore >= 50 ? 'B-Tier' : 'C-Tier'}
                               </span>
                             </div>
@@ -1161,11 +1161,11 @@ export function AdminDashboard() {
                         <div className="flex items-start gap-3">
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-bold text-foreground">{g.name}</p>
-                            <p className="truncate text-[12px] text-muted-foreground">
+                            <p className="truncate text-[13px] text-muted-foreground">
                               {t('admin_invite_code')} : {g.joinCode || t('admin_none_word')}
                             </p>
                           </div>
-                          <Badge className={`shrink-0 border-none px-2 py-0.5 text-[11px] font-bold uppercase ${
+                          <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold uppercase ${
                             g.status === 'active' ? 'bg-secondary/10 text-secondary'
                               : g.status === 'pending' ? 'bg-brand/10 text-brand'
                               : 'bg-muted text-muted-foreground'
@@ -1176,7 +1176,7 @@ export function AdminDashboard() {
 
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-muted/50 px-3 py-2">
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                               {t('admin_installment_amount')}
                             </p>
                             <p className="font-serif text-sm font-black text-foreground">
@@ -1184,13 +1184,13 @@ export function AdminDashboard() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                               {t('members')}
                             </p>
                             <p className="text-sm font-bold text-foreground">{g.members?.length || 0}</p>
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                               {t('admin_payout_cycle')}
                             </p>
                             <p className="text-sm font-bold text-foreground">
@@ -1198,7 +1198,7 @@ export function AdminDashboard() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                               {t('frequency')}
                             </p>
                             <p className="text-sm font-bold capitalize text-foreground">
@@ -1226,13 +1226,13 @@ export function AdminDashboard() {
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider pl-6">{t('admin_circle_name')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-center">{t('members')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider">{t('admin_installment_amount')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider">{t('admin_payout_cycle')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-center">{t('frequency')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider">{t('status')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[12px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider pl-6">{t('admin_circle_name')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('members')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_installment_amount')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_payout_cycle')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('frequency')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('status')}</TableHead>
+                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1281,7 +1281,7 @@ export function AdminDashboard() {
                             </TableCell>
                             
                             <TableCell>
-                              <Badge className={`text-[12px] font-bold uppercase border-none px-2 py-0.5 ${
+                              <Badge className={`text-[13px] font-bold uppercase border-none px-2 py-0.5 ${
                                 g.status === 'active' 
                                   ? 'bg-secondary/10 text-secondary' 
                                   : g.status === 'pending'
@@ -1558,7 +1558,7 @@ export function AdminDashboard() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-bold text-foreground">Pourcentage (%)</Label>
+                      <Label className="text-[13px] font-bold text-foreground">Pourcentage (%)</Label>
                       <Input
                         type="text"
                         inputMode="decimal"
@@ -1568,7 +1568,7 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-bold text-foreground">Part fixe (FCFA)</Label>
+                      <Label className="text-[13px] font-bold text-foreground">Part fixe (FCFA)</Label>
                       <Input
                         type="text"
                         inputMode="numeric"
@@ -1578,7 +1578,7 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-bold text-foreground">Minimum (FCFA)</Label>
+                      <Label className="text-[13px] font-bold text-foreground">Minimum (FCFA)</Label>
                       <Input
                         type="text"
                         inputMode="numeric"
@@ -1646,7 +1646,7 @@ export function AdminDashboard() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-bold text-foreground">Commission par tour</Label>
+                    <Label className="text-[13px] font-bold text-foreground">Commission par tour</Label>
                     <div className="flex flex-wrap gap-2">
                       {([
                         ['none', 'Aucune'],
@@ -1685,7 +1685,7 @@ export function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-bold text-foreground">Part de chaque administrateur</Label>
+                    <Label className="text-[13px] font-bold text-foreground">Part de chaque administrateur</Label>
                     {users.filter((u) => u.role === 'admin').map((u) => (
                       <div key={u.uid} className="flex items-center justify-between gap-3">
                         <span className="text-xs font-bold text-foreground truncate">{u.displayName || u.email}</span>
@@ -1896,12 +1896,12 @@ export function AdminDashboard() {
                       <span className="text-muted-foreground">{t('admin_recon_status')}</span>
                       {reconReports[0] ? (
                         Number(reconReports[0].totalDiscrepancies) > 0 ? (
-                          <Badge className="bg-danger/15 text-danger border-none text-[12px] px-1.5 font-bold">ÉCART</Badge>
+                          <Badge className="bg-danger/15 text-danger border-none text-[13px] px-1.5 font-bold">ÉCART</Badge>
                         ) : (
-                          <Badge className="bg-secondary/15 text-secondary border-none text-[12px] px-1.5 font-bold">100% OK</Badge>
+                          <Badge className="bg-secondary/15 text-secondary border-none text-[13px] px-1.5 font-bold">100% OK</Badge>
                         )
                       ) : (
-                        <Badge className="bg-muted text-muted-foreground border-none text-[12px] px-1.5 font-bold">NON VÉRIFIÉ</Badge>
+                        <Badge className="bg-muted text-muted-foreground border-none text-[13px] px-1.5 font-bold">NON VÉRIFIÉ</Badge>
                       )}
                     </div>
                   </div>
@@ -1942,13 +1942,13 @@ export function AdminDashboard() {
                       <div key={report.id} className="p-2.5 rounded-xl border border-border bg-muted/50 flex flex-col gap-1 text-[13px]">
                         <div className="flex justify-between font-bold">
                           <span className="text-foreground">{t('admin_report_word')} {report.id.substring(0, 8)}</span>
-                          <span className="text-secondary font-bold uppercase text-[12px] bg-success-soft px-1 border border-secondary/20">{t('admin_success_upper')}</span>
+                          <span className="text-secondary font-bold uppercase text-[13px] bg-success-soft px-1 border border-secondary/20">{t('admin_success_upper')}</span>
                         </div>
-                        <div className="flex justify-between text-muted-foreground text-[12px]">
+                        <div className="flex justify-between text-muted-foreground text-[13px]">
                           <span>{new Date(report.timestamp).toLocaleString()}</span>
                           <span>{report.totalLedgerEntriesChecked} {t('admin_entries_checked')}</span>
                         </div>
-                        <div className="text-[12px] text-muted-foreground border-t border-dashed pt-1 mt-1 flex justify-between">
+                        <div className="text-[13px] text-muted-foreground border-t border-dashed pt-1 mt-1 flex justify-between">
                           <span>{t('admin_gaps_short')} <strong className="text-secondary">{report.totalDiscrepancies} FCFA</strong></span>
                           <span>{t('admin_accounts_short')} <strong>{report.totalUsersChecked}</strong></span>
                         </div>
@@ -1985,21 +1985,21 @@ export function AdminDashboard() {
                         ledgerEntries.map((entry) => (
                           <div key={entry.id} className="space-y-1.5 px-4 py-3">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono text-[12px] text-muted-foreground">
+                              <span className="font-mono text-[13px] text-muted-foreground">
                                 {new Date(entry.createdAt).toLocaleTimeString()}
                               </span>
                               <div className="flex items-center gap-2">
                                 {entry.type === 'credit' ? (
-                                  <Badge className="h-4 rounded-sm border border-secondary/20 bg-success-soft px-1 text-[11px] font-black uppercase tracking-wider text-secondary">{t('admin_credit')}</Badge>
+                                  <Badge className="h-4 rounded-sm border border-secondary/20 bg-success-soft px-1 text-[13px] font-black uppercase tracking-wider text-secondary">{t('admin_credit')}</Badge>
                                 ) : (
-                                  <Badge className="h-4 rounded-sm border border-danger/20 bg-danger-soft px-1 text-[11px] font-black uppercase tracking-wider text-danger">{t('admin_debit')}</Badge>
+                                  <Badge className="h-4 rounded-sm border border-danger/20 bg-danger-soft px-1 text-[13px] font-black uppercase tracking-wider text-danger">{t('admin_debit')}</Badge>
                                 )}
                                 <span className={`font-bold text-sm ${entry.type === 'credit' ? 'text-secondary' : 'text-danger'}`}>
                                   {entry.type === 'credit' ? '+' : '-'}{entry.amount.toLocaleString()} {entry.currency}
                                 </span>
                               </div>
                             </div>
-                            <p className="font-mono text-[12px]">
+                            <p className="font-mono text-[13px]">
                               {entry.account.startsWith('user_wallet:') ? (
                                 <span className="font-semibold text-foreground">{t('admin_wallet_prefix')} {entry.account.split(':')[1].substring(0, 6)}...</span>
                               ) : entry.account.startsWith('tontine_group:') ? (
@@ -2008,7 +2008,7 @@ export function AdminDashboard() {
                                 <span className="font-semibold text-muted-foreground">{entry.account}</span>
                               )}
                             </p>
-                            <p className="truncate font-mono text-[11px] text-muted-foreground">
+                            <p className="truncate font-mono text-[13px] text-muted-foreground">
                               {t('admin_counterparty_col')} : {entry.counterparty}
                             </p>
                           </div>
@@ -2020,11 +2020,11 @@ export function AdminDashboard() {
                       <Table>
                         <TableHeader className="bg-muted">
                           <TableRow>
-                            <TableHead className="text-[12px] font-black uppercase text-muted-foreground tracking-wider">{t('date')}</TableHead>
-                            <TableHead className="text-[12px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_account_col')}</TableHead>
-                            <TableHead className="text-[12px] font-black uppercase text-muted-foreground tracking-wider text-center">{t('admin_type_col')}</TableHead>
-                            <TableHead className="text-[12px] font-black uppercase text-muted-foreground tracking-wider text-right">{t('amount')}</TableHead>
-                            <TableHead className="text-[12px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_counterparty_col')}</TableHead>
+                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('date')}</TableHead>
+                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_account_col')}</TableHead>
+                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider text-center">{t('admin_type_col')}</TableHead>
+                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider text-right">{t('amount')}</TableHead>
+                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_counterparty_col')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody className="text-[13px]">
@@ -2051,15 +2051,15 @@ export function AdminDashboard() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   {entry.type === 'credit' ? (
-                                    <Badge className="bg-success-soft text-secondary border border-secondary/20 text-[12px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_credit')}</Badge>
+                                    <Badge className="bg-success-soft text-secondary border border-secondary/20 text-[13px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_credit')}</Badge>
                                   ) : (
-                                    <Badge className="bg-danger-soft text-danger border border-danger/20 text-[12px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_debit')}</Badge>
+                                    <Badge className="bg-danger-soft text-danger border border-danger/20 text-[13px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_debit')}</Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${entry.type === 'credit' ? 'text-secondary' : 'text-danger'}`}>
                                   {entry.type === 'credit' ? '+' : '-'}{entry.amount.toLocaleString()} {entry.currency}
                                 </TableCell>
-                                <TableCell className="text-muted-foreground font-mono text-[12px] max-w-[100px] truncate">
+                                <TableCell className="text-muted-foreground font-mono text-[13px] max-w-[100px] truncate">
                                   {entry.counterparty}
                                 </TableCell>
                               </TableRow>
@@ -2089,7 +2089,7 @@ export function AdminDashboard() {
                           <div key={log.id} className="border-b border-slate-900/40 pb-2 flex flex-col gap-1 leading-normal">
                             <div className="flex justify-between items-start">
                               <span className="text-slate-400">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                              <span className={log.status === 'success' ? 'text-emerald-400 font-bold text-[12px]' : 'text-red-400 font-bold text-[12px]'}>
+                              <span className={log.status === 'success' ? 'text-emerald-400 font-bold text-[13px]' : 'text-red-400 font-bold text-[13px]'}>
                                 {log.status.toUpperCase()}
                               </span>
                             </div>

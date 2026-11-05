@@ -147,7 +147,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                   {/* Séparateur temporel épuré */}
                   {showDateSeparator && (
                     <div className="flex justify-center my-3">
-                      <span className="px-3 py-1 rounded-full bg-[#EFE2D0]/60 dark:bg-muted text-[10px] font-bold text-muted-foreground tracking-wide uppercase select-none shadow-2xs">
+                      <span className="px-3 py-1 rounded-full bg-[#EFE2D0]/60 dark:bg-muted text-[13px] font-bold text-muted-foreground tracking-wide uppercase select-none shadow-2xs">
                         {formatDaySeparator(msg.createdAt)}
                       </span>
                     </div>
@@ -180,11 +180,11 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                       {/* En-tête expéditeur (nom + badge créateur) */}
                       {!isMine && !isSameSenderAsPrev && (
                         <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className="text-[11px] font-extrabold text-[#C96F4A] dark:text-primary">
+                          <span className="text-[13px] font-extrabold text-primary dark:text-primary">
                             {msg.userName}
                           </span>
                           {isCreator && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-[#FFF4E5] dark:bg-primary/20 text-[#C96F4A] dark:text-primary text-[9px] font-bold">
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-warning-soft dark:bg-primary/20 text-primary dark:text-primary text-[13px] font-bold">
                               👑 Organisateur
                             </span>
                           )}
@@ -195,7 +195,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                       <div
                         className={`relative px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs ${
                           isMine
-                            ? 'bg-gradient-to-br from-[#C96F4A] to-[#B85C36] text-white rounded-2xl rounded-br-xs'
+                            ? 'bg-gradient-to-br from-primary to-[#B85C36] text-white rounded-2xl rounded-br-xs'
                             : 'bg-white dark:bg-card border border-[#EFE2D0] dark:border-border text-foreground rounded-2xl rounded-bl-xs'
                         }`}
                       >
@@ -203,7 +203,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
 
                         {/* Horodatage & coches de lecture */}
                         <div
-                          className={`flex items-center justify-end gap-1 mt-1 text-[9px] select-none ${
+                          className={`flex items-center justify-end gap-1 mt-1 text-[13px] select-none ${
                             isMine ? 'text-white/75' : 'text-muted-foreground'
                           }`}
                         >
@@ -211,7 +211,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                             {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMine && (
-                            <span className="text-[10px] font-bold tracking-tighter" title="Distribué">
+                            <span className="text-[13px] font-bold tracking-tighter" title="Distribué">
                               ✓✓
                             </span>
                           )}
@@ -234,7 +234,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
             key={idx}
             type="button"
             onClick={() => handleSendMessage(chip)}
-            className="shrink-0 text-[11px] font-semibold px-3 py-1 rounded-full bg-[#FFFBF7] dark:bg-muted border border-[#EFE2D0] dark:border-border text-foreground hover:border-[#C96F4A] hover:text-[#C96F4A] transition-colors cursor-pointer select-none"
+            className="shrink-0 text-[13px] font-semibold px-3 py-1 rounded-full bg-[#FFFBF7] dark:bg-muted border border-[#EFE2D0] dark:border-border text-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer select-none"
           >
             {chip}
           </button>
@@ -253,14 +253,14 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
           placeholder={t('chat_input_placeholder') || 'Écrivez un message au groupe...'}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 rounded-full h-11 bg-[#F8F0E4]/60 dark:bg-muted border-transparent focus:border-[#C96F4A] px-4 text-xs sm:text-sm"
+          className="flex-1 rounded-full h-11 bg-[#F8F0E4]/60 dark:bg-muted border-transparent focus:border-primary px-4 text-xs sm:text-sm"
         />
 
         <Button
           type="submit"
           size="icon"
           disabled={!newMessage.trim() || sending}
-          className="rounded-full h-11 w-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white shrink-0 cursor-pointer shadow-xs transition-transform active:scale-95 disabled:opacity-40"
+          className="rounded-full h-11 w-11 bg-primary hover:bg-[#B85C36] text-white shrink-0 cursor-pointer shadow-xs transition-transform active:scale-95 disabled:opacity-40"
           aria-label="Envoyer le message"
         >
           <EganyeIcon name="send" size={16} />

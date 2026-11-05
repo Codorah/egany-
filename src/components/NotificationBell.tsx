@@ -82,7 +82,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                       {notification.message}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-medium text-muted-foreground flex items-center gap-1">
+                      <span className="text-[13px] font-medium text-muted-foreground flex items-center gap-1">
                         {notification.createdAt
                           ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: fr })
                           : t('nb_just_now')}

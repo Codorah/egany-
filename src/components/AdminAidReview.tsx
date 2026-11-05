@@ -149,7 +149,7 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
         {mode === 'grant' ? (
           <>
             <div className="space-y-1">
-              <Label className="text-[12px] font-bold text-muted-foreground">Montant versé (FCFA)</Label>
+              <Label className="text-[13px] font-bold text-muted-foreground">Montant versé (FCFA)</Label>
               <Input type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-10 rounded-xl bg-card" />
             </div>
             <Textarea rows={2} placeholder="Message pour la personne (facultatif)" value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl bg-card text-xs" />

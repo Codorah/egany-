@@ -55,7 +55,7 @@ export function EganyeLogo({
             EGANYÉ
           </span>
           <span
-            className="font-extrabold uppercase tracking-wider leading-tight text-[#C96F4A]"
+            className="font-extrabold uppercase tracking-wider leading-tight text-primary"
             style={{ fontSize: Math.max(8, size * 0.2) }}
           >
             Tontine & Épargne

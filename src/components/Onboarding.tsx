@@ -997,7 +997,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                 transition={{ delay: 0.1, duration: 0.3 }}
                 className="space-y-3"
               >
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-serif font-bold uppercase tracking-wider bg-[#C96F4A]/90 text-white shadow-soft backdrop-blur-sm">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-serif font-bold uppercase tracking-wider bg-primary/90 text-white shadow-soft backdrop-blur-sm">
                   {currentSlide.badge}
                 </span>
                 <h2 className="text-[28px] sm:text-3xl font-serif font-bold text-white leading-tight drop-shadow-lg text-balance">
@@ -1168,11 +1168,11 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   )}
 
                   {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
-                  <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground pt-1">
+                  <div className="flex items-center justify-center gap-3 text-[13px] text-muted-foreground pt-1">
                     <button
                       type="button"
                       onClick={() => setLegalModal('cgu')}
-                      className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                      className="hover:text-primary hover:underline cursor-pointer"
                     >
                       Conditions d'utilisation
                     </button>
@@ -1180,7 +1180,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     <button
                       type="button"
                       onClick={() => setLegalModal('confidentialite')}
-                      className="hover:text-[#C96F4A] hover:underline cursor-pointer"
+                      className="hover:text-primary hover:underline cursor-pointer"
                     >
                       Confidentialité
                     </button>

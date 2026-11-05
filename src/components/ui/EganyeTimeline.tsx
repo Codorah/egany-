@@ -88,7 +88,7 @@ export function EganyeTimeline({ items, className = '' }: EganyeTimelineProps) {
                   )}
                 </div>
                 {item.time && (
-                  <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap shrink-0 pt-0.5">
+                  <span className="text-[13px] text-muted-foreground font-medium whitespace-nowrap shrink-0 pt-0.5">
                     {item.time}
                   </span>
                 )}

@@ -89,16 +89,16 @@ export function CircleHub({
         <button
           type="button"
           onClick={onSearch}
-          className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-[#C96F4A]/40 transition-colors cursor-pointer group"
+          className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-[#C96F4A] flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-primary flex items-center justify-center shrink-0">
             <EganyeIcon name="search" size={17} />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-[#C96F4A] transition-colors truncate">
+            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate">
               {t('cir_search_title')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[13px] text-muted-foreground truncate">
               {t('cir_search_desc')}
             </p>
           </div>
@@ -108,17 +108,17 @@ export function CircleHub({
           type="button"
           onClick={() => setShowJoinPanel(!showJoinPanel)}
           className={`bg-white dark:bg-card border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left transition-colors cursor-pointer group ${
-            showJoinPanel ? 'border-[#C96F4A] ring-2 ring-[#C96F4A]/15' : 'border-[#EFE2D0] dark:border-border/80 hover:border-[#C96F4A]/40'
+            showJoinPanel ? 'border-primary ring-2 ring-primary/15' : 'border-[#EFE2D0] dark:border-border/80 hover:border-primary/40'
           }`}
         >
-          <div className="w-9 h-9 rounded-xl bg-[#EBF5EA] text-[#718A68] flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-success-soft text-secondary flex items-center justify-center shrink-0">
             <EganyeIcon name="qr-code" size={17} />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-[#718A68] transition-colors truncate">
+            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-secondary transition-colors truncate">
               {t('cir_join_title')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[13px] text-muted-foreground truncate">
               {t('cir_join_desc')}
             </p>
           </div>
@@ -131,11 +131,11 @@ export function CircleHub({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="bg-white dark:bg-card border border-[#C96F4A]/30 rounded-2xl p-4 shadow-soft space-y-3"
+          className="bg-white dark:bg-card border border-primary/30 rounded-2xl p-4 shadow-soft space-y-3"
         >
           <div className="flex items-center justify-between">
             <h3 className="font-serif font-bold text-sm text-foreground flex items-center gap-2">
-              <EganyeIcon name="code" size={16} className="text-[#C96F4A]" />
+              <EganyeIcon name="code" size={16} className="text-primary" />
               <span>{t('cir_join_section_title') || 'Rejoindre un cercle'}</span>
             </h3>
             <button
@@ -152,7 +152,7 @@ export function CircleHub({
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder={t('cir_code_placeholder')}
-              className="flex-1 h-11 px-3.5 rounded-xl border border-border text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C96F4A]/30"
+              className="flex-1 h-11 px-3.5 rounded-xl border border-border text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
               autoFocus
             />
             <button
@@ -162,7 +162,7 @@ export function CircleHub({
               {t('cir_validate')}
             </button>
           </form>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {t('cir_join_hint')}
           </p>
         </motion.div>
@@ -202,19 +202,19 @@ export function CircleHub({
                 <div
                   key={group.id}
                   onClick={() => onSelectGroup(group.id)}
-                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-[#C96F4A]/40 transition-colors cursor-pointer group"
+                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-[#718A68] flex items-center justify-center shrink-0 font-serif font-black text-base border border-[#EFE2D0]">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-black text-base border border-[#EFE2D0]">
                       {group.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-foreground text-sm sm:text-base truncate group-hover:text-[#C96F4A] transition-colors">
+                        <h3 className="font-bold text-foreground text-sm sm:text-base truncate group-hover:text-primary transition-colors">
                           {group.name}
                         </h3>
                         {group.isPrivate && (
-                          <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          <span className="text-[13px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                             {t('cir_private_badge')}
                           </span>
                         )}
@@ -222,23 +222,23 @@ export function CircleHub({
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
                         {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString()} FCFA / {group.frequency === 'monthly' ? t('cir_per_month') : t('cir_per_cycle')}
                       </p>
-                      <p className="text-[11px] text-muted-foreground/80 mt-0.5 flex items-center gap-1.5">
+                      <p className="text-[13px] text-muted-foreground/80 mt-0.5 flex items-center gap-1.5">
                         <span>{t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}</span>
                         {isMyTurnNext && (
-                          <span className="text-[#718A68] font-bold">{t('cir_your_turn')}</span>
+                          <span className="text-secondary font-bold">{t('cir_your_turn')}</span>
                         )}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25">
+                    <span className="px-2.5 py-1 rounded-full text-[13px] font-bold bg-success-soft text-secondary border border-secondary/25">
                       {t('dash_active_badge')}
                     </span>
                     <EganyeIcon
                       name="chevron-right"
                       size={16}
-                      className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors"
+                      className="text-muted-foreground group-hover:text-primary transition-colors"
                     />
                   </div>
                 </div>

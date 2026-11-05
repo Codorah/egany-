@@ -280,7 +280,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
             onChange={(e) => setDescription(e.target.value)}
             className="rounded-2xl text-base"
           />
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {missing > 0 ? `Encore ${missing} caractère${missing > 1 ? 's' : ''} au minimum.` : 'C’est bon.'}
           </p>
         </div>
@@ -491,17 +491,17 @@ function ActiveCredit({ app, user, service, onChanged, onClose }: CreditFlowProp
             <li key={inst.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
               <span className="text-muted-foreground">{inst.number}. {dateFr(inst.dueDate)}</span>
               <span className="font-bold text-foreground">{fcfa(inst.amountDue)}</span>
-              <span className={`px-2 py-0.5 rounded-full text-[12px] font-bold ${statusLook[inst.status]}`}>{statusText[inst.status]}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[13px] font-bold ${statusLook[inst.status]}`}>{statusText[inst.status]}</span>
             </li>
           ))}
         </ul>
-        <p className="text-[12px] text-muted-foreground">Chaque mensualité est prélevée automatiquement à sa date si votre portefeuille le permet. Vous pouvez aussi rembourser en avance.</p>
+        <p className="text-[13px] text-muted-foreground">Chaque mensualité est prélevée automatiquement à sa date si votre portefeuille le permet. Vous pouvez aussi rembourser en avance.</p>
       </div>
 
       <div className="space-y-2">
         <p className="text-sm font-bold text-foreground">Rembourser maintenant</p>
         <AmountField value={amount} onChange={setAmount} max={remaining} />
-        <p className="text-[12px] text-muted-foreground text-center">Solde du portefeuille : {fcfa(user.walletBalance)}</p>
+        <p className="text-[13px] text-muted-foreground text-center">Solde du portefeuille : {fcfa(user.walletBalance)}</p>
       </div>
     </FlowScreen>
   );

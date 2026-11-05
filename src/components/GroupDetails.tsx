@@ -345,7 +345,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                     </Label>
                     <Input
                       id="auction_discount"
-                      type="number"
+                      type="number" inputMode="numeric"
                       min={0}
                       placeholder="0"
                       value={auctionDiscount}
@@ -393,7 +393,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                       <div>
                         <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                           {memberName(memberId)}
-                          {isCurrent && <Badge className="bg-primary text-white text-[12px] px-1.5 py-0">{t('status_active')}</Badge>}
+                          {isCurrent && <Badge className="bg-primary text-white text-[13px] px-1.5 py-0">{t('status_active')}</Badge>}
                         </p>
                         <p className="text-[13px] text-muted-foreground">
                           {isPast ? t('gd_payout_done_label') : isCurrent ? t('gd_current_turn_label') : t('gd_upcoming_label')}
@@ -674,11 +674,11 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   const daysRemaining = Math.max(0, Math.ceil((new Date(group.nextPayoutDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
   const links: { id: Section; label: string; icon: EganyeIconName; bg: string; text: string }[] = [
-    { id: 'cotisations', label: t('gd_nav_cotisations') || 'Cotisations', icon: 'cotisation', bg: 'bg-[#EBF5EA]', text: 'text-[#718A68]' },
+    { id: 'cotisations', label: t('gd_nav_cotisations') || 'Cotisations', icon: 'cotisation', bg: 'bg-success-soft', text: 'text-secondary' },
     { id: 'membres', label: t('gd_nav_membres') || 'Membres', icon: 'members', bg: 'bg-[#F4EFE6]', text: 'text-[#3E2F24]' },
     { id: 'calendrier', label: t('calendar') || 'Calendrier', icon: 'calendar-finance', bg: 'bg-[#FEF6E9]', text: 'text-[#C49A55]' },
     { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-info-soft', text: 'text-info' },
-    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-[#C96F4A]' },
+    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-primary' },
     { id: 'parametres', label: t('gd_nav_parametres') || 'Paramètres', icon: 'settings', bg: 'bg-muted', text: 'text-muted-foreground' },
   ];
 
@@ -694,7 +694,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
 
       {/* 1. Header du Cercle */}
       <div className="flex items-center gap-3.5 bg-white dark:bg-card p-4 rounded-3xl border border-[#EFE2D0] dark:border-border/80 shadow-soft">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-[#718A68] flex items-center justify-center shrink-0 font-serif font-black text-xl border border-[#EFE2D0]">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-black text-xl border border-[#EFE2D0]">
           {group.name.slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
@@ -702,7 +702,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             <h1 className="text-lg sm:text-xl font-serif font-black tracking-tight text-foreground truncate">
               {group.name}
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF5EA] text-[#718A68] shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-success-soft text-secondary shrink-0">
               {group.status === 'active' ? t('dash_active_badge') : t('gd_status_finished')}
             </span>
           </div>
@@ -720,7 +720,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {/* 2. Bloc Principal : Prochaine Cotisation */}
       <div className="bg-white dark:bg-card rounded-3xl p-5 shadow-soft border border-[#EFE2D0] dark:border-border/80 space-y-3.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-[#C96F4A] flex items-center gap-1.5">
+          <span className="text-xs font-bold text-primary flex items-center gap-1.5">
             <EganyeIcon name="pending" size={14} />
             <span>{t('gd_next_contribution')}</span>
           </span>
@@ -749,21 +749,21 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
 
       {/* Bannière de vérification progressive (Juste-à-temps) */}
       {profile && (profile.kycLevel ?? 1) < 2 && (
-        <div className="bg-[#FFF8F2] dark:bg-card border border-[#C96F4A]/25 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+        <div className="bg-[#FFF8F2] dark:bg-card border border-primary/25 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <EganyeIcon name="shield" size={16} />
             </div>
             <div className="min-w-0">
               <p className="font-bold text-xs text-foreground truncate">{t('gd_kyc_banner_title')}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{t('gd_kyc_banner_desc')}</p>
+              <p className="text-[13px] text-muted-foreground truncate">{t('gd_kyc_banner_desc')}</p>
             </div>
           </div>
           {onNavigateToVerification && (
             <Button
               size="sm"
               onClick={onNavigateToVerification}
-              className="bg-[#C96F4A] hover:bg-[#B8623E] text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0 cursor-pointer"
+              className="bg-primary hover:bg-[#B8623E] text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0 cursor-pointer"
             >
               {t('gd_kyc_banner_cta')}
             </Button>
@@ -774,14 +774,14 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       {/* 3. Ma Situation */}
       <div className="bg-white dark:bg-card rounded-2xl p-4 shadow-soft border border-[#EFE2D0] dark:border-border/80 grid grid-cols-2 gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_my_total')}</span>
+          <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_my_total')}</span>
           <p className="text-base font-serif font-black text-foreground mt-0.5">
             {myContributed !== null ? myContributed.toLocaleString() : '0'} {group.currency}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] font-bold uppercase text-muted-foreground block">{t('gd_cycle_position')}</span>
-          <p className="text-base font-serif font-black text-[#718A68] mt-0.5">
+          <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_cycle_position')}</span>
+          <p className="text-base font-serif font-black text-secondary mt-0.5">
             {myPositionIdx >= 0 ? `#${myPositionIdx + 1} ${t('gd_out_of')} ${group.members.length}` : '-'}
           </p>
         </div>
@@ -802,10 +802,10 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
               <div className={`w-9 h-9 rounded-xl ${link.bg} ${link.text} flex items-center justify-center shrink-0`}>
                 <EganyeIcon name={link.icon} size={18} />
               </div>
-              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-[#C96F4A] transition-colors">
+              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-primary transition-colors">
                 {link.label}
               </span>
-              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors" />
+              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
             </button>
           ))}
         </div>

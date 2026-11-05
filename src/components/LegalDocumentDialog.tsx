@@ -43,7 +43,7 @@ export default function LegalDocumentDialog({ docId, onClose }: LegalDocumentDia
             <div className="pt-3">
               <Button
                 onClick={onClose}
-                className="w-full rounded-2xl h-10 bg-[#C96F4A] hover:bg-[#B85C36] text-white text-xs font-bold"
+                className="w-full rounded-2xl h-10 bg-primary hover:bg-[#B85C36] text-white text-xs font-bold"
               >
                 J'ai compris
               </Button>

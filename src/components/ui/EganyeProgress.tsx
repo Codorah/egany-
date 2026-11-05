@@ -87,7 +87,7 @@ export function EganyeProgress({
               {label || Math.round(value)}
             </span>
             {!label && (
-              <span className="text-[9px] font-bold text-muted-foreground">/ {max}</span>
+              <span className="text-[13px] font-bold text-muted-foreground">/ {max}</span>
             )}
           </div>
         )}
@@ -112,7 +112,7 @@ export function EganyeProgress({
           <span className={`text-xs font-bold ${colors.text}`}>
             {label || `${Math.round(percentage * 100)}%`}
           </span>
-          <span className="text-[11px] text-muted-foreground font-medium">
+          <span className="text-[13px] text-muted-foreground font-medium">
             {value.toLocaleString()} / {max.toLocaleString()}
           </span>
         </div>

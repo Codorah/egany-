@@ -78,7 +78,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
             <span className="text-lg font-serif font-black tracking-tight text-foreground lowercase leading-none">
               eganyé
             </span>
-            <span className="text-[12px] font-bold text-brand uppercase tracking-wider leading-none mt-0.5 hidden sm:block">
+            <span className="text-[13px] font-bold text-brand uppercase tracking-wider leading-none mt-0.5 hidden sm:block">
               {t('nav_tagline')}
             </span>
           </div>

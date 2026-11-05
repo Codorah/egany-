@@ -413,15 +413,15 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="p-3 rounded-2xl bg-success-soft border border-secondary/20">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-secondary">{t('total_collected_in')}</p>
+              <p className="text-[13px] font-bold uppercase tracking-wide text-secondary">{t('total_collected_in')}</p>
               <p className="text-lg font-serif font-black text-secondary mt-0.5">{totalCollected.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-2xl bg-brand/10 border border-brand/20">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-brand">{t('total_distributed_out')}</p>
+              <p className="text-[13px] font-bold uppercase tracking-wide text-brand">{t('total_distributed_out')}</p>
               <p className="text-lg font-serif font-black text-brand mt-0.5">{totalDistributed.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-2xl bg-muted border border-border">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{t('available_funds')}</p>
+              <p className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground">{t('available_funds')}</p>
               <p className="text-lg font-serif font-black text-foreground mt-0.5">{availableFunds.toLocaleString()} {group.currency}</p>
             </div>
           </div>
@@ -591,7 +591,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       {/* Dialogue de vérification d'identité juste-à-temps */}
       <Dialog open={showKycPrompt} onOpenChange={setShowKycPrompt}>
         <DialogContent className="max-w-sm rounded-3xl p-6 text-center space-y-3 bg-card border border-border">
-          <div className="w-14 h-14 rounded-2xl bg-[#FFF4E5] text-[#C96F4A] mx-auto flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary mx-auto flex items-center justify-center">
             <AlertCircle className="w-7 h-7" />
           </div>
           <DialogHeader className="space-y-1">
@@ -608,7 +608,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
                 setShowKycPrompt(false);
                 onNavigateToVerification?.();
               }}
-              className="w-full rounded-xl h-11 font-bold bg-[#C96F4A] hover:bg-[#B8623E] text-white cursor-pointer"
+              className="w-full rounded-xl h-11 font-bold bg-primary hover:bg-[#B8623E] text-white cursor-pointer"
             >
               Vérifier ma pièce d'identité
             </Button>

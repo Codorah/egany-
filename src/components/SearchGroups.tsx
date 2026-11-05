@@ -115,7 +115,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
               <div key={group.id} className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 space-y-3">
                 <div className="flex justify-between items-start gap-2">
                   <h3 className="font-serif font-bold text-sm text-foreground truncate">{group.name}</h3>
-                  <Badge variant="outline" className="text-[12px] rounded-full shrink-0">{t(`freq_${group.frequency}`)}</Badge>
+                  <Badge variant="outline" className="text-[13px] rounded-full shrink-0">{t(`freq_${group.frequency}`)}</Badge>
                 </div>
                 <p className="text-[13px] text-muted-foreground line-clamp-2">{group.description}</p>
 

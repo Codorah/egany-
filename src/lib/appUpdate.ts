@@ -19,6 +19,9 @@ const CHECK_EVERY_MS = 30 * 60 * 1000;
 let updateAnnounced = false;
 
 function isTyping(): boolean {
+  // Une fenêtre ouverte (confirmation de retrait, paiement en cours…) compte
+  // aussi : on ne recharge pas la page au milieu d'une opération d'argent.
+  if (document.querySelector('[role="dialog"], [role="alertdialog"], [data-slot="dialog-content"]')) return true;
   const el = document.activeElement;
   if (!el) return false;
   const tag = el.tagName;

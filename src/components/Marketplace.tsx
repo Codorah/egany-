@@ -228,7 +228,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         <p className="mt-3 text-[13px] leading-relaxed opacity-95">
           Besoin d'argent pour votre activité ? Dites combien, présentez-vous en vidéo : notre équipe peut vous offrir le montant.
         </p>
-        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-[#C96F4A] px-4 h-9 text-[13px] font-black">
+        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary px-4 h-9 text-[13px] font-black">
           {aidStatus ? aidStatus.label : 'Demander un coup de pouce'}
         </span>
       </button>
@@ -265,7 +265,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
                     <p className="text-[15px] font-bold text-foreground leading-tight truncate">{service.title}</p>
                     <p className="text-[13px] text-muted-foreground truncate">{providerLabel(service)}</p>
                     {status && (
-                      <span className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${status.className}`}>{status.label}</span>
+                      <span className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[13px] font-bold ${status.className}`}>{status.label}</span>
                     )}
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />

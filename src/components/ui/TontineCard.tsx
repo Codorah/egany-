@@ -39,7 +39,7 @@ export function TontineCard({ group, onClick }: TontineCardProps) {
 
       <div className="flex-1 min-w-0">
         <h3 className="font-serif font-bold text-sm text-foreground truncate">{group.name}</h3>
-        <p className="text-[12px] text-muted-foreground mt-0.5">
+        <p className="text-[13px] text-muted-foreground mt-0.5">
           {group.members.length} {t('member')}s · {t(`freq_${group.frequency}`)}
         </p>
         <AmountDisplay

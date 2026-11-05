@@ -39,10 +39,10 @@ const TIERS: BankTier[] = ['starter', 'growth', 'unlimited'];
 type ProjectCategory = 'scolaire' | 'voyage' | 'maison' | 'urgence' | 'commerce' | 'autre';
 
 const PROJECT_CATEGORIES: { id: ProjectCategory; labelKey: string; icon: EganyeIconName; bg: string; color: string }[] = [
-  { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies', bg: 'bg-[#EBF5EA]', color: 'text-[#718A68]' },
+  { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies', bg: 'bg-success-soft', color: 'text-secondary' },
   { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel', bg: 'bg-info-soft', color: 'text-info' },
-  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-[#C96F4A]' },
-  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-[#C96F4A]' },
+  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-primary' },
+  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-primary' },
   { id: 'commerce', labelKey: 'bank_project_commerce', icon: 'coin', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
   { id: 'autre', labelKey: 'bank_project_autre', icon: 'savings', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
 ];
@@ -333,13 +333,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       return { icon: 'travel' as const, bg: 'bg-info-soft text-info' };
     }
     if (text.includes('étud') || text.includes('etud') || text.includes('scol') || text.includes('ecol') || text.includes('univ')) {
-      return { icon: 'studies' as const, bg: 'bg-[#EBF5EA] text-[#718A68]' };
+      return { icon: 'studies' as const, bg: 'bg-success-soft text-secondary' };
     }
     if (text.includes('urgenc') || text.includes('santé') || text.includes('sante') || text.includes('secours') || text.includes('imprévu')) {
-      return { icon: 'shield' as const, bg: 'bg-[#FDF0EB] text-[#C96F4A]' };
+      return { icon: 'shield' as const, bg: 'bg-[#FDF0EB] text-primary' };
     }
     if (text.includes('maison') || text.includes('logem') || text.includes('loyer') || text.includes('habit')) {
-      return { icon: 'house' as const, bg: 'bg-[#FFF2E8] text-[#C96F4A]' };
+      return { icon: 'house' as const, bg: 'bg-[#FFF2E8] text-primary' };
     }
     if (text.includes('commerc') || text.includes('affair') || text.includes('boutiqu')) {
       return { icon: 'coin' as const, bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
@@ -403,7 +403,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   <div
                     key={i}
                     className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                      i < createStep ? 'bg-[#C96F4A]' : 'bg-muted'
+                      i < createStep ? 'bg-primary' : 'bg-muted'
                     }`}
                   />
                 ))}
@@ -430,7 +430,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         onClick={() => setCreateProject(cat.id)}
                         className={`p-3.5 rounded-2xl border-2 text-left font-bold text-xs sm:text-sm cursor-pointer transition-all flex flex-col gap-2 ${
                           createProject === cat.id
-                            ? 'border-[#C96F4A] bg-[#C96F4A]/5 text-[#C96F4A]'
+                            ? 'border-primary bg-primary/5 text-primary'
                             : 'border-border text-foreground hover:bg-muted/60'
                         }`}
                       >
@@ -468,7 +468,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   <div className="space-y-2">
                     <Label className="text-xs font-bold text-foreground">Montant cible (FCFA)</Label>
                     <Input
-                      type="number"
+                      type="number" inputMode="numeric"
                       min={1000}
                       step={5000}
                       value={createAmount}
@@ -485,7 +485,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                           onClick={() => setCreateAmount(amt)}
                           className={`py-1 px-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
                             createAmount === amt
-                              ? 'border-[#C96F4A] bg-[#C96F4A]/10 text-[#C96F4A]'
+                              ? 'border-primary bg-primary/10 text-primary'
                               : 'border-border text-muted-foreground hover:text-foreground'
                           }`}
                         >
@@ -498,19 +498,19 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   <div className="space-y-2 pt-2 border-t border-border/70">
                     <div className="flex items-center justify-between">
                       <Label className="text-xs font-bold text-foreground">Dépôt de départ immédiat (optionnel)</Label>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[13px] text-muted-foreground">
                         Dispo : {(user.walletBalance || 0).toLocaleString()} FCFA
                       </span>
                     </div>
                     <Input
-                      type="number"
+                      type="number" inputMode="numeric"
                       min={0}
                       value={createInitialDeposit}
                       onChange={(e) => setCreateInitialDeposit(e.target.value)}
                       placeholder="0 FCFA"
                       className="rounded-xl h-11 font-medium"
                     />
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       {t('mb_start_hint')}
                     </p>
                   </div>
@@ -552,7 +552,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                             d.setMonth(d.getMonth() + dur.months);
                             setCreateDeadline(d.toISOString().slice(0, 10));
                           }}
-                          className="py-1.5 text-center text-xs font-bold rounded-lg border border-border hover:border-[#C96F4A] hover:bg-[#C96F4A]/5 transition-colors cursor-pointer"
+                          className="py-1.5 text-center text-xs font-bold rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
                         >
                           {dur.label}
                         </button>
@@ -561,12 +561,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   </div>
 
                   {/* Règle de protection */}
-                  <div className="p-3.5 rounded-2xl bg-[#FFF8F2] dark:bg-card border border-[#C96F4A]/20 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#C96F4A]/10 text-[#C96F4A] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="p-3.5 rounded-2xl bg-[#FFF8F2] dark:bg-card border border-primary/20 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                       <EganyeIcon name="shield" size={16} />
                     </div>
                     <div className="text-xs space-y-1">
-                      <p className="font-bold text-[#C96F4A]">{t('mb_reserved_title')}</p>
+                      <p className="font-bold text-primary">{t('mb_reserved_title')}</p>
                       <p className="text-muted-foreground leading-relaxed">
                         {t('mb_reserved_desc')}
                       </p>
@@ -591,7 +591,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                     <div className="flex items-center justify-between pb-2 border-b border-border/60">
                       <span className="text-xs text-muted-foreground font-medium">Montant cible</span>
-                      <span className="text-base font-serif font-black text-[#C96F4A]">
+                      <span className="text-base font-serif font-black text-primary">
                         {(parseFloat(createAmount) || 0).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -614,7 +614,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-medium">{t('mb_status_label')}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FFF4E5] text-[#C96F4A] border border-[#C96F4A]/25">
+                      <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-warning-soft text-primary border border-primary/25">
                         {t('mb_locked_badge')}
                       </span>
                     </div>
@@ -698,7 +698,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               <button
                 type="button"
                 onClick={() => onNavigate?.('wallet-recharge')}
-                className="inline-flex items-center gap-1.5 bg-white text-[#C96F4A] hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-white text-primary hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
               >
                 <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
                 <span>{t('recharge') || "Recharger"}</span>
@@ -738,7 +738,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-[#718A68] shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-secondary shrink-0">
               <EganyeIcon name="savings" size={20} strokeWidth={2} />
             </div>
             <div>
@@ -766,7 +766,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             <span className="text-muted-foreground font-medium">
               {t('bank_goal_prefix') || "Objectif :"} {totalGoal.toLocaleString()} FCFA
             </span>
-            <span className="font-bold text-[#718A68]">
+            <span className="font-bold text-secondary">
               {progressPercent}%
             </span>
           </div>
@@ -782,7 +782,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           <button
             type="button"
             onClick={() => setShowAllReservations(!showAllReservations)}
-            className="text-xs font-bold text-[#C96F4A] hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
+            className="text-xs font-bold text-primary hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
           >
             <span>{showAllReservations ? "Réduire" : (t('bank_view_all') || "Voir tout")}</span>
             <EganyeIcon name="chevron-right" size={13} />
@@ -800,20 +800,20 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 <div
                   key={vault.id}
                   onClick={() => { setActiveVault(vault); setActionAmount(''); }}
-                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-[#C96F4A]/40 transition-colors cursor-pointer group"
+                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-11 h-11 rounded-2xl ${info.bg} flex items-center justify-center shrink-0`}>
                       <EganyeIcon name={info.icon} size={20} />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-[#C96F4A] transition-colors">
+                      <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-primary transition-colors">
                         {vault.name}
                       </h4>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
                         {vault.balance.toLocaleString()} / {goal.toLocaleString()} FCFA
                       </p>
-                      <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                      <p className="text-[13px] text-muted-foreground/80 mt-0.5">
                         {unlocked
                           ? t('mb_available_for_withdrawal')
                           : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
@@ -823,15 +823,15 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      className={`px-2.5 py-1 rounded-full text-[13px] font-bold ${
                         unlocked
-                          ? 'bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25'
-                          : 'bg-[#FFF4E5] text-[#C96F4A] border border-[#C96F4A]/25'
+                          ? 'bg-success-soft text-secondary border border-secondary/25'
+                          : 'bg-warning-soft text-primary border border-primary/25'
                       }`}
                     >
                       {unlocked ? t('mb_unlocked') : t('mb_in_progress')}
                     </span>
-                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-[#C96F4A] transition-colors" />
+                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                 </div>
               );
@@ -860,7 +860,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           <span>+ Créer une épargne</span>
         </button>
         {!canCreateVault && (
-          <p className="text-[12px] text-center text-muted-foreground mt-1.5">{t('bank_cap_reached_note')}</p>
+          <p className="text-[13px] text-center text-muted-foreground mt-1.5">{t('bank_cap_reached_note')}</p>
         )}
       </div>
 
@@ -869,7 +869,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{hasActiveSubscription ? t('bank_current_tier') : t('bank_free_trial_label')}</p>
           <p className="font-bold text-foreground">{hasActiveSubscription ? t(`bank_tier_${user.bankTier}`) : t('bank_free_trial_desc')}</p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             {t('bank_vaults_used')}: {vaults.length}/{maxVaults}
           </p>
         </div>
@@ -948,8 +948,8 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {/* Status notice */}
                 <div className={`p-3.5 rounded-2xl text-xs space-y-1 ${
                   unlocked
-                    ? 'bg-[#EBF5EA] text-[#718A68] border border-[#718A68]/25'
-                    : 'bg-[#FFF8F2] text-[#C96F4A] border border-[#C96F4A]/20'
+                    ? 'bg-success-soft text-secondary border border-secondary/25'
+                    : 'bg-[#FFF8F2] text-primary border border-primary/20'
                 }`}>
                   <p className="font-bold flex items-center gap-1.5">
                     <EganyeIcon name={unlocked ? "check" : "shield"} size={14} />
@@ -965,13 +965,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {/* Balances */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase">Solde du coffre</p>
+                    <p className="text-[13px] font-bold text-muted-foreground uppercase">Solde du coffre</p>
                     <p className="text-base font-serif font-black text-foreground mt-0.5">
                       {activeVault.balance.toLocaleString()} FCFA
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase">Mon disponible</p>
+                    <p className="text-[13px] font-bold text-muted-foreground uppercase">Mon disponible</p>
                     <p className="text-base font-serif font-black text-foreground mt-0.5">
                       {user.walletBalance.toLocaleString()} FCFA
                     </p>
@@ -982,7 +982,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold text-foreground">Montant de l'opération (FCFA)</Label>
                   <Input
-                    type="number"
+                    type="number" inputMode="numeric"
                     min={1}
                     placeholder="Ex: 25 000"
                     value={actionAmount}
@@ -995,7 +995,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                         key={amt}
                         type="button"
                         onClick={() => setActionAmount(amt)}
-                        className="py-1 px-2 text-[11px] font-bold rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
+                        className="py-1 px-2 text-[13px] font-bold rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
                       >
                         +{parseInt(amt).toLocaleString()}
                       </button>
@@ -1004,7 +1004,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       <button
                         type="button"
                         onClick={() => setActionAmount(activeVault.balance.toString())}
-                        className="py-1 px-2 text-[11px] font-bold rounded-lg border border-[#718A68] text-[#718A68] bg-[#718A68]/10 cursor-pointer ml-auto"
+                        className="py-1 px-2 text-[13px] font-bold rounded-lg border border-secondary text-secondary bg-secondary/10 cursor-pointer ml-auto"
                       >
                         {t('mb_withdraw_all')}
                       </button>
@@ -1024,7 +1024,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-11 font-bold rounded-xl border-[#C96F4A]/40 text-[#C96F4A] hover:bg-[#C96F4A]/10 cursor-pointer"
+                    className="h-11 font-bold rounded-xl border-primary/40 text-primary hover:bg-primary/10 cursor-pointer"
                     onClick={() => handleWithdraw(false)}
                     disabled={actionBusy || activeVault.balance <= 0}
                   >
@@ -1039,7 +1039,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       type="button"
                       onClick={() => handleRelock(activeVault, 90)}
                       disabled={actionBusy}
-                      className="text-xs font-bold text-[#718A68] hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-secondary hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <EganyeIcon name="refresh" size={12} /> Prolonger de 3 mois
                     </button>
@@ -1082,7 +1082,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             </Button>
             <Button
               onClick={() => handleWithdraw(true)}
-              className="flex-1 rounded-xl h-11 font-bold bg-[#C96F4A] hover:bg-[#B8623E] text-white"
+              className="flex-1 rounded-xl h-11 font-bold bg-primary hover:bg-[#B8623E] text-white"
             >
               {t('mb_confirm')}
             </Button>

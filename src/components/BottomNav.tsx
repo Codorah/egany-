@@ -116,7 +116,7 @@ export function BottomNav({
                       className={`transition-colors duration-200 ${
                         active
                           ? 'text-white drop-shadow-xs'
-                          : 'text-muted-foreground group-hover:text-[#C96F4A]'
+                          : 'text-muted-foreground group-hover:text-primary'
                       }`}
                     />
                   </motion.div>
@@ -128,7 +128,7 @@ export function BottomNav({
                     opacity: active ? 1 : 0.8,
                     scale: active ? 1.05 : 0.95,
                   }}
-                  className={`relative z-10 text-[10px] sm:text-[11px] font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
+                  className={`relative z-10 text-[13px]  font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
                     active
                       ? 'font-black text-primary'
                       : 'font-bold text-muted-foreground group-hover:text-foreground'

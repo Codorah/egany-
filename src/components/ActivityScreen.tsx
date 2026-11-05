@@ -131,7 +131,7 @@ export function ActivityScreen({
       case 'cotisation':
         return { bg: 'bg-[#566C50]', icon: 'coin', iconColor: 'text-white' };
       case 'recharge':
-        return { bg: 'bg-[#C96F4A]', icon: 'arrow-up', iconColor: 'text-white' };
+        return { bg: 'bg-primary', icon: 'arrow-up', iconColor: 'text-white' };
       case 'transfer':
         return { bg: 'bg-[#2D6A64]', icon: 'transfer', iconColor: 'text-white' };
       case 'member':
@@ -141,7 +141,7 @@ export function ActivityScreen({
       case 'savings':
         return { bg: 'bg-[#3E2F24]', icon: 'lock', iconColor: 'text-white' };
       case 'distribution':
-        return { bg: 'bg-[#718A68]', icon: 'members', iconColor: 'text-white' };
+        return { bg: 'bg-secondary', icon: 'members', iconColor: 'text-white' };
       default:
         return { bg: 'bg-primary', icon: 'activity', iconColor: 'text-white' };
     }
@@ -166,7 +166,7 @@ export function ActivityScreen({
           onClick={() => setFilter('all')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
             filter === 'all'
-              ? 'bg-[#C96F4A] text-white shadow-xs'
+              ? 'bg-primary text-white shadow-xs'
               : 'bg-card text-muted-foreground border border-border/70 hover:text-foreground'
           }`}
         >
@@ -177,7 +177,7 @@ export function ActivityScreen({
           onClick={() => setFilter('cotisations')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
             filter === 'cotisations'
-              ? 'bg-[#C96F4A] text-white shadow-xs'
+              ? 'bg-primary text-white shadow-xs'
               : 'bg-card text-muted-foreground border border-border/70 hover:text-foreground'
           }`}
         >
@@ -188,7 +188,7 @@ export function ActivityScreen({
           onClick={() => setFilter('transactions')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
             filter === 'transactions'
-              ? 'bg-[#C96F4A] text-white shadow-xs'
+              ? 'bg-primary text-white shadow-xs'
               : 'bg-card text-muted-foreground border border-border/70 hover:text-foreground'
           }`}
         >
@@ -199,7 +199,7 @@ export function ActivityScreen({
           onClick={() => setFilter('notifications')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 ${
             filter === 'notifications'
-              ? 'bg-[#C96F4A] text-white shadow-xs'
+              ? 'bg-primary text-white shadow-xs'
               : 'bg-card text-muted-foreground border border-border/70 hover:text-foreground'
           }`}
         >
@@ -257,7 +257,7 @@ export function ActivityScreen({
                           <h3 className="font-serif font-bold text-sm text-foreground truncate">
                             {item.title}
                           </h3>
-                          <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+                          <p className="text-[13px] text-muted-foreground truncate mt-0.5">
                             {item.subtitle}
                           </p>
                         </div>
@@ -266,13 +266,13 @@ export function ActivityScreen({
                       {/* Right: Time + Amount or Chevron */}
                       <div className="text-right shrink-0 flex items-center gap-1.5">
                         <div>
-                          <span className="text-[11px] text-muted-foreground font-medium block">
+                          <span className="text-[13px] text-muted-foreground font-medium block">
                             {item.time}
                           </span>
                           {hasAmount && (
                             <span
                               className={`text-xs font-black font-serif block mt-0.5 ${
-                                isPositive ? 'text-[#718A68]' : 'text-[#C96F4A]'
+                                isPositive ? 'text-secondary' : 'text-primary'
                               }`}
                             >
                               {isPositive ? `+ ${item.amount?.toLocaleString()} FCFA` : `- ${Math.abs(item.amount || 0).toLocaleString()} FCFA`}

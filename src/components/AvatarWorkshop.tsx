@@ -98,7 +98,7 @@ export function AvatarWorkshop({
           type="button"
           onClick={() => allowPhotoUpload && fileInputRef.current?.click()}
           disabled={!allowPhotoUpload || isUploading}
-          className="relative ring-4 ring-[#C96F4A]/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft cursor-pointer group"
+          className="relative ring-4 ring-primary/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft cursor-pointer group"
           aria-label={hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}
         >
           <CustomAvatar photoURL={value} name={name} size={108} />
@@ -139,7 +139,7 @@ export function AvatarWorkshop({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="w-full rounded-2xl h-11 bg-[#C96F4A] hover:bg-[#B85C36] text-white font-bold text-xs gap-2 shadow-xs cursor-pointer"
+            className="w-full rounded-2xl h-11 bg-primary hover:bg-[#B85C36] text-white font-bold text-xs gap-2 shadow-xs cursor-pointer"
           >
             <EganyeIcon name="camera" size={16} />
             <span>{hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}</span>
@@ -162,13 +162,13 @@ export function AvatarWorkshop({
 
       <div className="flex items-center gap-2 w-full max-w-xs text-muted-foreground/60">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-[10px] font-bold uppercase tracking-wide">ou</span>
+        <span className="text-[13px] font-bold uppercase tracking-wide">ou</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
       {/* Sélection optionnelle d'un symbole */}
       <div className="w-full max-w-xs space-y-2">
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide text-left">
+        <p className="text-[13px] font-bold text-muted-foreground uppercase tracking-wide text-left">
           {t('avw_choose_emoji')}
         </p>
         <div className="grid grid-cols-8 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
@@ -183,7 +183,7 @@ export function AvatarWorkshop({
                 aria-pressed={selected}
                 className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
                   selected
-                    ? 'bg-[#C96F4A]/15 ring-2 ring-[#C96F4A]'
+                    ? 'bg-primary/15 ring-2 ring-primary'
                     : 'bg-muted/60 hover:bg-muted ring-1 ring-transparent'
                 }`}
               >
@@ -195,8 +195,8 @@ export function AvatarWorkshop({
       </div>
 
       {/* Note de réassurance */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[11px] text-muted-foreground max-w-xs">
-        <EganyeIcon name="shield" size={14} className="text-[#718A68] shrink-0" />
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[13px] text-muted-foreground max-w-xs">
+        <EganyeIcon name="shield" size={14} className="text-secondary shrink-0" />
         <span>{t('avw_privacy_note')}</span>
       </div>
     </div>
