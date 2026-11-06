@@ -4,18 +4,24 @@ import { fetchMemberProfiles } from '@/lib/members';
 import { mapContributionRow, mapPayoutRow } from '@/lib/mappers';
 import { executeFinancialTransaction } from '@/lib/ledger';
 import { Group, UserProfile, Contribution, Payout } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowLeft, CheckCircle2, Clock, AlertCircle, Plus, FileText, Check, X, Search, Wallet, FileSpreadsheet } from 'lucide-react';
+import { Check, ChevronRight, Download, FileSpreadsheet, FileText, Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StatusBadge } from './ui/StatusBadge';
 import { MemberCard } from './ui/MemberCard';
+import { ScreenBar } from './ui/ScreenBar';
 import { Skeleton } from './ui/Skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface ContributionsManagerProps {
   group: Group;
@@ -24,9 +30,11 @@ interface ContributionsManagerProps {
   /** Affiché dans la fiche du cercle : pas de second en-tête ni de caisse en double. */
   embedded?: boolean;
   onNavigateToVerification?: () => void;
+  /** Arrivée par « Cotiser » : ouvre tout de suite la déclaration de la cotisation due. */
+  autoDeclare?: boolean;
 }
 
-export function ContributionsManager({ group, user, onBack, onNavigateToVerification, embedded = false }: ContributionsManagerProps) {
+export function ContributionsManager({ group, user, onBack, onNavigateToVerification, embedded = false, autoDeclare = false }: ContributionsManagerProps) {
   const { t } = useLanguage();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<UserProfile[]>([]);
@@ -34,12 +42,21 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showKycPrompt, setShowKycPrompt] = useState(false);
+  const [actionsFor, setActionsFor] = useState<UserProfile | null>(null);
   // Une opération financière (déclarer/valider/rejeter un paiement) par
   // clé "action-cibleId" à la fois : un double-tap sur mobile réseau lent
   // ne doit jamais créer deux fois la même écriture comptable.
   const [busyKeys, setBusyKeys] = useState<Set<string>>(new Set());
 
   const isManager = user.uid === group.creatorId || user.role === 'admin';
+
+  useBackHandler(
+    React.useCallback(() => {
+      setActionsFor(null);
+      return true;
+    }, []),
+    actionsFor !== null
+  );
 
   const setBusy = (key: string, val: boolean) => {
     setBusyKeys((prev) => {
@@ -104,17 +121,36 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
     return () => { supabase.removeChannel(channel); };
   }, [group.id, isManager]);
 
-  const handleUpdateStatus = async (contributionId: string, newStatus: 'paid' | 'pending' | 'late' | 'pending_approval') => {
-    const key = `status-${contributionId}`;
+  const handleUpdateStatus = async (contribution: Contribution, newStatus: 'paid' | 'pending' | 'late' | 'pending_approval') => {
+    const key = `status-${contribution.id}`;
     if (busyKeys.has(key)) return;
     setBusy(key, true);
     try {
-      const { error } = await supabase.from('contributions').update({ status: newStatus }).eq('id', contributionId);
+      if (newStatus === 'paid' && contribution.status !== 'paid') {
+        // Valider un paiement reçu hors de l'app, c'est de l'argent entre les mains de
+        // l'organisateur : il doit entrer au grand livre, seule source du pot depuis la
+        // migration 0038. Sans cette écriture, le serveur refuserait la distribution.
+        const penalty = contribution.penaltyStatus === 'pending' ? contribution.penaltyApplied || 0 : 0;
+        const ledger = await executeFinancialTransaction({
+          idempotencyKey: `manual_cash_${contribution.id}`,
+          userId: contribution.userId,
+          amount: contribution.amount + penalty,
+          currency: group.currency || 'FCFA',
+          description: `Cotisation validée (hors application) - ${group.name} (${contribution.period || ''})`,
+          actionType: 'contribution_payment',
+          debitAccount: `external_cash:${contribution.userId}`,
+          creditAccount: `tontine_group:${group.id}`,
+          metadata: { contributionId: contribution.id, groupId: group.id },
+        });
+        if (!ledger.success) throw new Error(ledger.message);
+      }
+      const { error } = await supabase.from('contributions').update({ status: newStatus }).eq('id', contribution.id);
       if (error) throw error;
       toast.success(t('status_updated'));
-    } catch (error) {
+      setActionsFor(null);
+    } catch (error: any) {
       console.error("Error updating status:", error);
-      toast.error(t('status_update_error'));
+      toast.error(error?.message || t('status_update_error'));
     } finally {
       setBusy(key, false);
     }
@@ -159,6 +195,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       });
       if (error) throw error;
       toast.success(`${t('contribution_call_created_for')} ${userName}`);
+      setActionsFor(null);
     } catch (error) {
       console.error("Error creating contribution:", error);
       toast.error(t('error_creating'));
@@ -232,6 +269,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       }
 
       toast.success(`${t('payment_registered_for')} ${userName}`);
+      setActionsFor(null);
     } catch (error) {
       console.error("Error registering payment:", error);
       toast.error(t('error_registering_payment'));
@@ -256,19 +294,19 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
     return `${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
-  const getStatusBadge = (status: string) => {
+  const statusLabel = (status: string) => {
     switch (status) {
-      case 'paid':
-        return <StatusBadge tone="success" label={t('status_paid')} />;
-      case 'pending':
-        return <StatusBadge tone="info" label={t('status_pending')} />;
-      case 'late':
-        return <StatusBadge tone="danger" label={t('status_late')} />;
-      case 'pending_approval':
-        return <StatusBadge tone="info" label={t('status_verifying')} pulse />;
-      default:
-        return <StatusBadge tone="neutral" label={status} />;
+      case 'paid': return t('status_paid');
+      case 'pending': return t('status_pending');
+      case 'late': return t('status_late');
+      case 'pending_approval': return t('status_verifying');
+      default: return status;
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const tone = status === 'paid' ? 'success' : status === 'late' ? 'danger' : status === 'pending_approval' ? 'warning' : 'neutral';
+    return <StatusBadge tone={tone} label={statusLabel(status)} />;
   };
 
   const filteredContributions = searchTerm
@@ -333,296 +371,310 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-5 pb-20">
-        <div className="flex items-center gap-3">
-          <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-3 w-28" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <Skeleton className="h-16 rounded-2xl" />
-          <Skeleton className="h-16 rounded-2xl" />
-          <Skeleton className="h-16 rounded-2xl" />
-        </div>
-        <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
-          <Skeleton className="h-4 w-32" />
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center justify-between gap-3 py-1.5">
-              <div className="space-y-1.5 flex-1">
-                <Skeleton className="h-3.5 w-2/3" />
-                <Skeleton className="h-3 w-1/3" />
-              </div>
-              <Skeleton className="h-5 w-16 rounded-full" />
-            </div>
-          ))}
-        </div>
+      <div className="space-y-2">
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4 sm:space-y-5 pb-20">
-      <div className="flex items-center justify-between gap-3">
-        <div className={`flex items-center gap-3 ${embedded ? 'hidden' : ''}`}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="rounded-xl shrink-0 cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground truncate">
-              {isManager ? t('contributions_management') : t('my_contributions_title')}
-            </h1>
-            <p className="text-[13px] text-muted-foreground font-medium truncate">
-              {group.name} • {group.contributionAmount.toLocaleString()} {group.currency}
-            </p>
-          </div>
-        </div>
-        {isManager && (
-          <div className="flex gap-2 shrink-0">
-            <Button
-              variant="outline"
-              onClick={handleExportExcel}
-              className="rounded-xl gap-1.5 cursor-pointer"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('export_excel')}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleExportPDF}
-              className="rounded-xl gap-1.5 border-danger/20 text-danger hover:bg-danger-soft cursor-pointer"
-            >
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('export_pdf')}</span>
-            </Button>
-          </div>
-        )}
-      </div>
+  const unpaidStatuses = ['pending', 'late', 'pending_approval'];
+  const myDue = contributions
+    .filter((c) => c.userId === user.uid && (c.status === 'pending' || c.status === 'late'))
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const myInReview = contributions.filter((c) => c.userId === user.uid && c.status === 'pending_approval');
+  const toValidate = contributions.filter((c) => c.status === 'pending_approval');
+  const currentPeriod = formatPeriod(new Date());
 
-      {isManager && !embedded && (
-        <div className="glass-card rounded-2xl p-4 shadow-soft border border-border/70">
-          <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
-            <Wallet className="w-4 h-4 text-primary-ink" />
-            {t('circle_accounting')}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <div className="p-3 rounded-2xl bg-success-soft border border-secondary/20">
-              <p className="text-[13px] font-bold text-secondary">{t('total_collected_in')}</p>
-              <p className="text-lg font-serif font-bold text-secondary mt-0.5">{totalCollected.toLocaleString()} {group.currency}</p>
-            </div>
-            <div className="p-3 rounded-2xl bg-brand/10 border border-brand/20">
-              <p className="text-[13px] font-bold text-brand">{t('total_distributed_out')}</p>
-              <p className="text-lg font-serif font-bold text-brand mt-0.5">{totalDistributed.toLocaleString()} {group.currency}</p>
-            </div>
-            <div className="p-3 rounded-2xl bg-muted border border-border">
-              <p className="text-[13px] font-bold text-muted-foreground">{t('available_funds')}</p>
-              <p className="text-lg font-serif font-bold text-foreground mt-0.5">{availableFunds.toLocaleString()} {group.currency}</p>
-            </div>
-          </div>
-        </div>
+  // Par membre : le plus ancien impayé, sinon la cotisation du mois.
+  const lineOf = (uid: string) => {
+    const mine = contributions.filter((c) => c.userId === uid);
+    const unpaid = mine
+      .filter((c) => unpaidStatuses.includes(c.status))
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    return unpaid[0] ?? mine.find((c) => c.period === currentPeriod) ?? null;
+  };
+
+  const selectedLine = actionsFor ? lineOf(actionsFor.uid) : null;
+  const selectedBusy = !!actionsFor && (
+    busyKeys.has(`create-${actionsFor.uid}`)
+    || busyKeys.has(`pay-${actionsFor.uid}`)
+    || (selectedLine ? busyKeys.has(`status-${selectedLine.id}`) : false)
+  );
+
+  const myPayments = (
+    <section className="space-y-2">
+      <h2 className="px-1 text-sm font-bold text-foreground">{isManager ? t('cir_my_contribution') : t('my_payments')}</h2>
+      {myDue.length === 0 && myInReview.length === 0 ? (
+        <p className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm text-muted-foreground">{t('cir_nothing_to_pay')}</p>
+      ) : (
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {[...myDue, ...myInReview].map((c, index) => (
+            <li key={c.id} className="space-y-2.5 px-4 py-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-bold tabular-nums text-foreground">
+                    {(c.amount + (c.penaltyStatus === 'pending' ? c.penaltyApplied || 0 : 0)).toLocaleString()} {group.currency}
+                  </p>
+                  <p className="text-[13px] text-muted-foreground">
+                    {c.period}
+                    {c.penaltyStatus === 'pending' && c.penaltyApplied ? ` · ${t('penalty')} ${c.penaltyApplied.toLocaleString()} ${group.currency} ${t('penalty_due_short')}` : ''}
+                  </p>
+                </div>
+                {getStatusBadge(c.status)}
+              </div>
+              {c.status === 'pending_approval' ? (
+                <p className="text-[13px] text-muted-foreground">{t('ref_label')} {c.proofOfPayment?.reference}</p>
+              ) : (
+                <>
+                  <p className="text-[13px] text-muted-foreground">{t('cir_auto_debit')}</p>
+                  <DeclarePaymentDialog
+                    contribution={c}
+                    onSubmit={(ref) => handleSubmitProof(c.id, ref)}
+                    isKycVerified={(user.kycLevel ?? 1) >= 2}
+                    onKycRequired={() => setShowKycPrompt(true)}
+                    autoOpen={autoDeclare && index === 0}
+                  />
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="space-y-5 pb-20">
+      {!embedded && (
+        <ScreenBar title={group.name} onBack={onBack} />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className={`glass-card rounded-2xl shadow-soft border border-border/70 overflow-hidden ${isManager ? "lg:col-span-2" : "lg:col-span-3"}`}>
-          <div className="p-4 sm:p-5 pb-3 space-y-1">
-            <h2 className="text-base font-serif font-bold text-foreground">{isManager ? t('payment_history') : t('my_payments')}</h2>
-            <p className="text-[13px] text-muted-foreground">
-              {isManager ? t('contributions_list_desc') : t('my_contributions_desc')}
-            </p>
-            {isManager && (
-              <div className="relative pt-2 max-w-xs">
-                <Search className="absolute left-2.5 top-4.5 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  placeholder={t('search_member')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-11 text-base rounded-xl" aria-label="Rechercher un paiement" autoComplete="off"
-                />
-              </div>
-            )}
+      {isManager && !embedded && (
+        <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {[
+            [t('total_collected_in'), totalCollected],
+            [t('total_distributed_out'), totalDistributed],
+            [t('available_funds'), availableFunds],
+          ].map(([label, value]) => (
+            <div key={label as string} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-bold tabular-nums text-foreground">{(value as number).toLocaleString()} {group.currency}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {myPayments}
+
+      {isManager && toValidate.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="px-1 text-sm font-bold text-foreground">{t('cir_to_validate')} ({toValidate.length})</h2>
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {toValidate.map((c) => {
+              const busy = busyKeys.has(`status-${c.id}`);
+              return (
+                <li key={c.id} className="flex items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">{c.userName || t('member')}</p>
+                    <p className="truncate text-[13px] text-muted-foreground">
+                      {c.amount.toLocaleString()} {group.currency} · {t('ref_label')} {c.proofOfPayment?.reference}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleUpdateStatus(c, 'pending')}
+                    className="h-11 shrink-0 cursor-pointer rounded-xl px-3 text-[13px] font-bold text-muted-foreground transition-colors duration-150 hover:bg-muted disabled:opacity-50"
+                  >
+                    {t('reject_proof')}
+                  </button>
+                  <Button disabled={busy} onClick={() => handleUpdateStatus(c, 'paid')} className="h-11 shrink-0 cursor-pointer gap-1.5 rounded-xl font-bold">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {t('cir_validate')}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {isManager && members.length > 0 && (
+        <section className="space-y-2">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-sm font-bold text-foreground">{t('circle_members')}</h2>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={
+                <button type="button" className="flex h-11 cursor-pointer items-center gap-1.5 rounded-xl px-2 text-[13px] font-bold text-muted-foreground transition-colors duration-150 hover:bg-muted">
+                  <Download className="h-4 w-4" />
+                  {t('cir_export')}
+                </button>
+              } />
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportExcel} className="min-h-11 cursor-pointer gap-2">
+                  <FileSpreadsheet className="h-4 w-4" /> {t('export_excel')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF} className="min-h-11 cursor-pointer gap-2">
+                  <FileText className="h-4 w-4" /> {t('export_pdf')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="px-2 sm:px-3 pb-3">
+          <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {members.map((member) => {
+              const line = lineOf(member.uid);
+              return (
+                <button
+                  key={member.uid}
+                  type="button"
+                  onClick={() => setActionsFor(member)}
+                  className="block w-full cursor-pointer text-left transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 active:bg-muted"
+                >
+                  <MemberCard
+                    avatarUrl={member.photoURL}
+                    name={member.displayName}
+                    subtitle={line ? `${line.period} · ${line.amount.toLocaleString()} ${group.currency}` : t('cir_not_called')}
+                    trailing={
+                      <>
+                        {line && getStatusBadge(line.status)}
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      </>
+                    }
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {isManager && contributions.length > 0 && (
+        <details className="group/history">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-1 text-sm font-bold text-foreground">
+            {t('cir_history')} ({contributions.length})
+            <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open/history:rotate-90" />
+          </summary>
+          <div className="space-y-2 pt-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('search_member')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-11 rounded-xl pl-9 text-base"
+                aria-label={t('search_member')}
+                autoComplete="off"
+              />
+            </div>
             {filteredContributions.length === 0 ? (
-              <div className="flex flex-col items-center gap-1.5 py-10 text-muted-foreground">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">{t('no_contribution_found')}</span>
-              </div>
+              <p className="py-6 text-center text-sm text-muted-foreground">{t('no_contribution_found')}</p>
             ) : (
-              <ul className="divide-y divide-border/70">
-                {filteredContributions.map((c) => {
-                  const statusKey = `status-${c.id}`;
-                  const statusBusy = busyKeys.has(statusKey);
-                  return (
-                    <li key={c.id} className="px-2 py-3.5 space-y-2.5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">
-                            {isManager ? (c.userName || t('member')) : c.period}
-                          </p>
-                          <p className="text-[13px] text-muted-foreground">
-                            {isManager ? `${c.period} · ` : ''}{c.amount.toLocaleString()} {group.currency}
-                          </p>
-                          {c.penaltyApplied ? (
-                            <p className={`text-[13px] font-semibold ${c.penaltyStatus === 'paid' ? 'text-secondary' : 'text-danger'}`}>
-                              {t('penalty')} : {c.penaltyApplied.toLocaleString()} {group.currency} {c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="shrink-0">{getStatusBadge(c.status)}</div>
-                      </div>
-
-                      {isManager && (
-                        <div className="flex items-center gap-2">
-                          {c.status === 'pending_approval' && (
-                            <>
-                              <Button
-                                size="sm"
-                                disabled={statusBusy}
-                                className="h-9 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold gap-1.5 cursor-pointer disabled:opacity-60"
-                                onClick={() => handleUpdateStatus(c.id, 'paid')}
-                              >
-                                {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                {t('approve_payment')}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={statusBusy}
-                                className="h-9 rounded-xl text-danger border-danger/20 hover:bg-danger-soft gap-1.5 cursor-pointer disabled:opacity-60"
-                                onClick={() => handleUpdateStatus(c.id, 'pending')}
-                              >
-                                <X className="h-4 w-4" />
-                                {t('reject_proof')}
-                              </Button>
-                            </>
-                          )}
-                          <Select
-                            value={c.status}
-                            disabled={statusBusy}
-                            onValueChange={(val: any) => handleUpdateStatus(c.id, val)}
-                          >
-                            <SelectTrigger className="ml-auto w-[140px] h-9 rounded-xl" aria-label={t('status')}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="paid">{t('status_paid')}</SelectItem>
-                              <SelectItem value="pending">{t('status_pending')}</SelectItem>
-                              <SelectItem value="late">{t('status_late')}</SelectItem>
-                              <SelectItem value="pending_approval">{t('status_verification_short')}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {!isManager && (c.status === 'pending' || c.status === 'late') && (
-                        <DeclarePaymentDialog
-                          contribution={c}
-                          onSubmit={(ref) => handleSubmitProof(c.id, ref)}
-                          isKycVerified={(user.kycLevel ?? 1) >= 2}
-                          onKycRequired={() => setShowKycPrompt(true)}
-                        />
-                      )}
-                      {!isManager && c.status === 'pending_approval' && (
-                        <p className="text-[13px] text-muted-foreground">
-                          {t('ref_label')} {c.proofOfPayment?.reference}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
+              <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+                {filteredContributions.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-foreground">{c.userName || t('member')}</p>
+                      <p className="text-[13px] text-muted-foreground">
+                        {c.period} · {c.amount.toLocaleString()} {group.currency}
+                        {c.penaltyApplied ? ` · ${t('penalty')} ${c.penaltyApplied.toLocaleString()} ${c.penaltyStatus === 'paid' ? t('penalty_paid_short') : t('penalty_due_short')}` : ''}
+                      </p>
+                    </div>
+                    {getStatusBadge(c.status)}
+                  </li>
+                ))}
               </ul>
             )}
           </div>
-        </div>
+        </details>
+      )}
 
-        {isManager && (
-          <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
-            <div>
-              <h2 className="text-base font-serif font-bold text-foreground">{t('circle_members')}</h2>
-              <p className="text-[13px] text-muted-foreground">{t('init_contribution_desc')}</p>
+      {!isManager && contributions.some((c) => c.status === 'paid') && (
+        <section className="space-y-2">
+          <h2 className="px-1 text-sm font-bold text-foreground">{t('cir_history')}</h2>
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {contributions.filter((c) => c.status === 'paid').map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span className="text-foreground">{c.period}</span>
+                <span className="font-bold tabular-nums text-foreground">{c.amount.toLocaleString()} {group.currency}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Actions sur un membre : une seule ligne par membre, le reste ici. */}
+      <Dialog open={actionsFor !== null} onOpenChange={(open) => { if (!open) setActionsFor(null); }}>
+        <DialogContent className="gap-3">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">{actionsFor?.displayName}</DialogTitle>
+            <DialogDescription>
+              {selectedLine
+                ? `${selectedLine.period} · ${selectedLine.amount.toLocaleString()} ${group.currency} · ${statusLabel(selectedLine.status)}`
+                : t('cir_not_called')}
+            </DialogDescription>
+          </DialogHeader>
+          {actionsFor && (
+            <div className="divide-y divide-border rounded-2xl border border-border">
+              {selectedLine?.status === 'pending_approval' && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleUpdateStatus(selectedLine, 'paid')} label={t('cir_validate')} />
+              )}
+              {selectedLine?.status === 'pending_approval' && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleUpdateStatus(selectedLine, 'pending')} label={t('reject_proof')} />
+              )}
+              {!contributions.some((c) => c.userId === actionsFor.uid && c.period === currentPeriod) && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleCreateContribution(actionsFor.uid, actionsFor.displayName, actionsFor.email)} label={`${t('cir_call_action')} (${currentPeriod})`} />
+              )}
+              {contributions.find((c) => c.userId === actionsFor.uid && c.period === currentPeriod)?.status !== 'paid' && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleRegisterPayment(actionsFor.uid, actionsFor.displayName, actionsFor.email)} label={`${t('cir_cash_action')} (${currentPeriod})`} />
+              )}
+              {selectedLine && selectedLine.status !== 'late' && selectedLine.status !== 'paid' && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleUpdateStatus(selectedLine, 'late')} label={`${t('cir_set_status')} : ${t('status_late')}`} />
+              )}
+              {selectedLine && selectedLine.status !== 'pending' && (
+                <SheetRow disabled={selectedBusy} onClick={() => handleUpdateStatus(selectedLine, 'pending')} label={`${t('cir_set_status')} : ${t('status_pending')}`} />
+              )}
             </div>
-            <div className="space-y-2">
-              {members.map((member) => {
-                const creating = busyKeys.has(`create-${member.uid}`);
-                const paying = busyKeys.has(`pay-${member.uid}`);
-                return (
-                  <MemberCard
-                    key={member.uid}
-                    avatarUrl={member.photoURL}
-                    name={member.displayName}
-                    subtitle={`${t('score_label')} ${member.reputationScore}/100`}
-                    trailing={
-                    <div className="flex flex-col gap-1.5 shrink-0">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={creating}
-                        className="h-9 text-[13px] px-3 rounded-xl gap-1.5 cursor-pointer disabled:opacity-60"
-                        onClick={() => handleCreateContribution(member.uid, member.displayName, member.email)}
-                      >
-                        {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                        {t('call_contribution')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={paying}
-                        className="h-9 text-[13px] px-3 rounded-xl gap-1.5 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
-                        onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
-                      >
-                        {paying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                        {t('pay')}
-                      </Button>
-                    </div>
-                    }
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialogue de vérification d'identité juste-à-temps */}
       <Dialog open={showKycPrompt} onOpenChange={setShowKycPrompt}>
-        <DialogContent className="max-w-sm rounded-2xl p-6 text-center space-y-3 bg-card border border-border">
-          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary-ink mx-auto flex items-center justify-center">
-            <AlertCircle className="w-7 h-7" />
-          </div>
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="font-serif text-lg font-bold text-foreground">
-              Vérification d'identité requise
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              Pour que votre cotisation de {group.contributionAmount.toLocaleString()} {group.currency} soit validée en toute sécurité, veuillez confirmer votre identité (Carte d'identité nationale, passeport ou carte d'électeur).
+        <DialogContent className="gap-3">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Vérification d'identité requise</DialogTitle>
+            <DialogDescription className="leading-relaxed">
+              Confirmez votre identité pour que votre cotisation de {group.contributionAmount.toLocaleString()} {group.currency} soit validée : carte d'identité, passeport ou carte d'électeur.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-2 pt-2">
-            <Button
-              onClick={() => {
-                setShowKycPrompt(false);
-                onNavigateToVerification?.();
-              }}
-              className="w-full rounded-xl h-11 font-bold bg-primary hover:bg-[#B8623E] text-white cursor-pointer"
-            >
-              Vérifier ma pièce d'identité
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setShowKycPrompt(false)}
-              className="w-full rounded-xl text-xs text-muted-foreground cursor-pointer"
-            >
-              Plus tard
-            </Button>
-          </div>
+          <Button
+            onClick={() => {
+              setShowKycPrompt(false);
+              onNavigateToVerification?.();
+            }}
+            className="h-12 w-full cursor-pointer rounded-xl font-bold"
+          >
+            Vérifier mon identité
+          </Button>
+          <Button variant="ghost" onClick={() => setShowKycPrompt(false)} className="h-11 w-full cursor-pointer rounded-xl font-bold text-muted-foreground">
+            Plus tard
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function SheetRow({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex min-h-12 w-full cursor-pointer items-center px-4 text-left text-sm font-bold text-foreground transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 disabled:opacity-50"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -631,16 +683,35 @@ function DeclarePaymentDialog({
   onSubmit,
   isKycVerified = true,
   onKycRequired,
+  autoOpen = false,
 }: {
   contribution: Contribution;
   onSubmit: (reference: string) => void;
   isKycVerified?: boolean;
   onKycRequired?: () => void;
+  autoOpen?: boolean;
 }) {
   const { t } = useLanguage();
   const [reference, setReference] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useBackHandler(
+    React.useCallback(() => {
+      setIsOpen(false);
+      return true;
+    }, []),
+    isOpen
+  );
+
+  // « Cotiser » amène directement ici. La vérification d'identité reste exigée.
+  const autoOpened = React.useRef(false);
+  useEffect(() => {
+    if (!autoOpen || autoOpened.current) return;
+    autoOpened.current = true;
+    if (isKycVerified) setIsOpen(true);
+    else onKycRequired?.();
+  }, [autoOpen, isKycVerified, onKycRequired]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -662,35 +733,28 @@ function DeclarePaymentDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (open && !isKycVerified) {
-        onKycRequired?.();
-        return;
-      }
-      setIsOpen(open);
-    }}>
-      <DialogTrigger
-        onClick={(e) => {
-          if (!isKycVerified) {
-            e.preventDefault();
-            onKycRequired?.();
-          }
-        }}
-        render={
-          <Button size="sm" variant="outline" className="h-10 w-full rounded-xl gap-1.5 font-bold cursor-pointer">
-            <CheckCircle2 className="w-4 h-4" />
-            {t('declare')}
-          </Button>
+    <>
+    <Button
+      onClick={() => {
+        if (!isKycVerified) {
+          onKycRequired?.();
+          return;
         }
-      />
-      <DialogContent className="rounded-2xl">
+        setIsOpen(true);
+      }}
+      className="h-12 w-full cursor-pointer rounded-xl font-bold"
+    >
+      {t('declare')}
+    </Button>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-serif">{t('declare_payment')}</DialogTitle>
+          <DialogTitle className="text-lg font-bold">{t('declare_payment')}</DialogTitle>
           <DialogDescription>
             {t('declare_payment_desc')}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="reference">{t('transaction_reference')}</Label>
             <Input
@@ -698,19 +762,18 @@ function DeclarePaymentDialog({
               placeholder={t('reference_placeholder')}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              className="rounded-xl"
+              className="h-12 rounded-xl text-base"
+              autoComplete="off"
               autoFocus
             />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" className="rounded-xl cursor-pointer" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
-            <Button type="submit" disabled={isSubmitting} className="rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {t('send_proof')}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" disabled={isSubmitting} className="h-12 w-full cursor-pointer gap-2 rounded-xl font-bold disabled:opacity-60">
+            {isSubmitting && <Loader2 className="h-5 w-5 animate-spin" />}
+            {t('send_proof')}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

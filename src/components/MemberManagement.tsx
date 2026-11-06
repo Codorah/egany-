@@ -1,37 +1,50 @@
 import React from 'react';
+import { Check, ChevronRight, Loader2, UserMinus, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { fetchMemberProfiles } from '@/lib/members';
 import { Group, UserProfile, GroupMemberRole } from '@/types';
 import { notifyUser } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Check, X, UserMinus, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { MemberCard } from './ui/MemberCard';
-import { StatusBadge } from './ui/StatusBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface MemberManagementProps {
   group: Group;
   currentUserId: string;
+  /** Organisateur ou admin : demandes, rôles et exclusion. Sinon, la liste seule. */
+  canManage: boolean;
 }
 
-export function MemberManagement({ group, currentUserId }: MemberManagementProps) {
+const ROLES: GroupMemberRole[] = ['member', 'treasurer', 'secretary'];
+
+export function MemberManagement({ group, currentUserId, canManage }: MemberManagementProps) {
   const { t } = useLanguage();
   const roleLabels: Record<GroupMemberRole, string> = {
     member: t('member'),
     treasurer: t('mm_role_treasurer'),
-    secretary: t('mm_role_secretary')
+    secretary: t('mm_role_secretary'),
   };
   const [profiles, setProfiles] = React.useState<Record<string, UserProfile>>({});
   const [busyUid, setBusyUid] = React.useState<string | null>(null);
   const [excludeTarget, setExcludeTarget] = React.useState<string | null>(null);
+  const [selectedUid, setSelectedUid] = React.useState<string | null>(null);
 
-  const pendingMembers = group.pendingMembers || [];
+  useBackHandler(
+    React.useCallback(() => {
+      setSelectedUid(null);
+      return true;
+    }, []),
+    selectedUid !== null
+  );
+
+  const pendingMembers = canManage ? group.pendingMembers || [] : [];
   const allUids = React.useMemo(
-    () => Array.from(new Set([...group.members, ...pendingMembers])),
-    [group.members, pendingMembers]
+    () => Array.from(new Set([...group.members, ...(group.pendingMembers || [])])),
+    [group.members, group.pendingMembers]
   );
 
   React.useEffect(() => {
@@ -44,6 +57,8 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     };
     fetchProfiles();
   }, [allUids]);
+
+  const nameOf = (uid: string) => profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`;
 
   const notify = (userId: string, title: string, message: string) =>
     notifyUser({ userId, title, message, type: 'system', link: `/group/${group.id}` });
@@ -85,14 +100,6 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
     }
   };
 
-  const handleExcludeRequest = (uid: string) => {
-    if (uid === group.creatorId) {
-      toast.error(t('mm_creator_cannot_be_excluded'));
-      return;
-    }
-    setExcludeTarget(uid);
-  };
-
   const handleExcludeConfirm = async () => {
     const uid = excludeTarget;
     if (!uid) return;
@@ -102,9 +109,10 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       if (error) throw error;
       await notify(uid, `${t('mm_exclusion_title')} ${group.name}`, `${t('mm_exclusion_body_open')}${group.name}${t('mm_exclusion_body_close')}`);
       toast.success(t('mm_member_excluded_toast'));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error excluding member:', error);
-      toast.error(t('mm_exclude_error'));
+      // Cercle commencé : la base refuse et explique pourquoi (migration 0038).
+      toast.error(error?.message || t('mm_exclude_error'));
     } finally {
       setBusyUid(null);
       setExcludeTarget(null);
@@ -118,6 +126,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       const { error } = await supabase.from('group_members').update({ role }).eq('group_id', group.id).eq('user_id', uid);
       if (error) throw error;
       toast.success(`${t('mm_role_updated_prefix')} ${roleLabels[role]}.`);
+      setSelectedUid(null);
     } catch (error) {
       console.error('Error updating member role:', error);
       toast.error(t('mm_role_change_error'));
@@ -128,77 +137,123 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
 
   if (group.members.length === 0 && pendingMembers.length === 0) return null;
 
-  return (
-    <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-5">
-      <div>
-        <h2 className="text-base font-serif font-bold text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary-ink" />
-          {t('mm_management_title')}
-        </h2>
-        <p className="text-[13px] text-muted-foreground mt-0.5">{t('mm_management_desc')}</p>
-      </div>
+  const sortedMembers = [...group.members].sort(
+    (a, b) => (profiles[b]?.reputationScore || 0) - (profiles[a]?.reputationScore || 0)
+  );
+  const selectedRole: GroupMemberRole = (selectedUid && group.memberRoles?.[selectedUid]) || 'member';
 
+  return (
+    <div className="space-y-5">
       {pendingMembers.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-bold text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
-          {pendingMembers.map((uid) => (
-            <MemberCard
-              key={uid}
-              tone="pending"
-              avatarUrl={profiles[uid]?.photoURL}
-              name={profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}
-              trailing={
-                <>
-                  <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-secondary border-secondary/20 hover:bg-success-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleAccept(uid)} title={t('mm_accept_title')}>
-                    {busyUid === uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  </Button>
-                  <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleReject(uid)} title={t('mm_reject_title')}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </>
-              }
-            />
-          ))}
-        </div>
+        <section className="space-y-2">
+          <h2 className="px-1 text-sm font-bold text-foreground">
+            {t('mm_pending_requests_label')} ({pendingMembers.length})
+          </h2>
+          <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {pendingMembers.map((uid) => (
+              <MemberCard
+                key={uid}
+                avatarUrl={profiles[uid]?.photoURL}
+                name={nameOf(uid)}
+                trailing={
+                  <>
+                    <button
+                      type="button"
+                      disabled={busyUid === uid}
+                      onClick={() => handleReject(uid)}
+                      aria-label={t('mm_reject_title')}
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted disabled:opacity-50"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyUid === uid}
+                      onClick={() => handleAccept(uid)}
+                      aria-label={t('mm_accept_title')}
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity duration-150 disabled:opacity-50"
+                    >
+                      {busyUid === uid ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+                    </button>
+                  </>
+                }
+              />
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="space-y-2">
-        <p className="text-xs font-bold text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
-        {group.members.map((uid) => {
-          const isCreatorRow = uid === group.creatorId;
-          const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';
-          return (
-            <MemberCard
-              key={uid}
-              avatarUrl={profiles[uid]?.photoURL}
-              name={profiles[uid]?.displayName || `${t('member')} ${uid.slice(0, 6)}`}
-              subtitle={isCreatorRow ? <StatusBadge tone="info" label={t('mm_creator_badge')} /> : undefined}
-              trailing={
-                <>
-                  {/* La créatrice reste l'organisatrice : pas de rôle à lui changer. */}
-                  {!isCreatorRow && (
-                  <Select value={role} onValueChange={(val) => handleRoleChange(uid, val as GroupMemberRole)} disabled={busyUid === uid}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">{t('member')}</SelectItem>
-                      <SelectItem value="treasurer">{t('mm_role_treasurer')}</SelectItem>
-                      <SelectItem value="secretary">{t('mm_role_secretary')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  )}
-                  {!isCreatorRow && (
-                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-xl text-danger border-danger/20 hover:bg-danger-soft cursor-pointer" disabled={busyUid === uid} onClick={() => handleExcludeRequest(uid)} title={t('mm_exclude_title')}>
-                      <UserMinus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </>
-              }
-            />
-          );
-        })}
-      </div>
+      <section className="space-y-2">
+        <h2 className="px-1 text-sm font-bold text-foreground">
+          {t('mm_current_members_label')} ({group.members.length})
+        </h2>
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {sortedMembers.map((uid) => {
+            const isCreatorRow = uid === group.creatorId;
+            const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';
+            const details = [
+              isCreatorRow ? t('mm_creator_badge') : role !== 'member' ? roleLabels[role] : null,
+              uid === currentUserId ? t('gd_you_badge') : null,
+              `${t('score_label')} ${profiles[uid]?.reputationScore ?? '-'}/100`,
+            ].filter(Boolean).join(' · ');
+            const row = (
+              <MemberCard
+                avatarUrl={profiles[uid]?.photoURL}
+                name={nameOf(uid)}
+                subtitle={details}
+                trailing={canManage && !isCreatorRow ? <ChevronRight className="h-5 w-5 text-muted-foreground" /> : undefined}
+              />
+            );
+            if (!canManage || isCreatorRow) return <div key={uid}>{row}</div>;
+            return (
+              <button
+                key={uid}
+                type="button"
+                onClick={() => setSelectedUid(uid)}
+                className="block w-full cursor-pointer text-left transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 active:bg-muted"
+              >
+                {row}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <Dialog open={selectedUid !== null} onOpenChange={(open) => { if (!open) setSelectedUid(null); }}>
+        <DialogContent className="gap-3">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">{selectedUid ? nameOf(selectedUid) : ''}</DialogTitle>
+            <DialogDescription>{t('cir_role_title')}</DialogDescription>
+          </DialogHeader>
+          <div className="divide-y divide-border rounded-2xl border border-border">
+            {ROLES.map((role) => (
+              <button
+                key={role}
+                type="button"
+                disabled={!selectedUid || busyUid === selectedUid}
+                onClick={() => selectedUid && handleRoleChange(selectedUid, role)}
+                aria-pressed={selectedRole === role}
+                className="flex min-h-12 w-full cursor-pointer items-center justify-between px-4 text-left text-sm font-bold text-foreground transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 disabled:opacity-50"
+              >
+                {roleLabels[role]}
+                {selectedRole === role && <Check className="h-5 w-5 text-primary-ink" />}
+              </button>
+            ))}
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const uid = selectedUid;
+              setSelectedUid(null);
+              if (uid) setExcludeTarget(uid);
+            }}
+            className="h-12 w-full cursor-pointer gap-2 rounded-xl font-bold text-danger hover:bg-danger-soft hover:text-danger"
+          >
+            <UserMinus className="h-5 w-5" />
+            {t('mm_exclude_title')}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmationBottomSheet
         isOpen={!!excludeTarget}

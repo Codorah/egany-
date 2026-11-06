@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send } from 'lucide-react';
+import { format, isToday, isYesterday } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapMessageRow } from '@/lib/mappers';
 import { UserProfile, Message } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { CustomAvatar } from './CustomAvatar';
-import { EganyeIcon } from './ui/EganyeIcon';
-import { EganyeMascot } from './ui/EganyeMascot';
-import { format, isToday, isYesterday } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Skeleton } from './ui/Skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { motion, AnimatePresence } from 'motion/react';
 
 interface ChatProps {
   groupId: string;
@@ -20,14 +16,14 @@ interface ChatProps {
   creatorId?: string;
 }
 
-// Suggestions de réponses rapides adaptées à la tontine
+// Proposées seulement dans une conversation vide, pour lancer l'échange.
 const QUICK_TONTINE_CHIPS = [
-  '💰 J’ai envoyé ma cotisation !',
-  '🎉 Félicitations pour ce tour !',
-  '🤝 Merci à tout le cercle !',
-  '⏳ Je cotise dans la journée',
+  'J’ai envoyé ma cotisation',
+  'Merci à tout le cercle',
+  'Je cotise dans la journée',
 ];
 
+/** La discussion occupe l'espace que lui donne son parent : il doit être en flex colonne. */
 export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
   const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,9 +47,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
     }
     setMessages((data ?? []).map(mapMessageRow));
     setLoading(false);
-    setTimeout(() => {
-      if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }, 80);
+    setTimeout(() => scrollRef.current?.scrollIntoView({ block: 'end' }), 80);
   }, [groupId]);
 
   useEffect(() => {
@@ -88,8 +82,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
         content,
       });
       if (error) throw error;
-      // La souscription realtime (postgres_changes INSERT) déclenche déjà
-      // fetchMessages() sur ce même événement — pas besoin de le refaire ici.
+      // La souscription realtime déclenche déjà fetchMessages() sur cet événement.
     } catch (error) {
       console.error('Error sending message:', error);
       setNewMessage(content);
@@ -98,7 +91,6 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
     }
   };
 
-  // Helper pour formater la date du séparateur
   const formatDaySeparator = (dateStr?: string) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -108,33 +100,39 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-13.5rem)] min-h-[460px] -mx-4 sm:mx-0 bg-[#FBF7F0]/40 dark:bg-background/40 rounded-2xl overflow-hidden border border-[#EFE2D0]/80 dark:border-border/60">
-      {/* ── ZONE DE DÉFILEMENT DES MESSAGES ── */}
-      <ScrollArea className="flex-1 px-3 sm:px-4">
-        <div className="space-y-3 py-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4">
+        <div className="space-y-1 py-4">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <EganyeMascot variant="loading" size={70} />
-              <p className="text-xs text-muted-foreground font-medium animate-pulse">
-                Chargement des échanges...
-              </p>
+            <div className="space-y-3" aria-label="Chargement">
+              <Skeleton className="h-12 w-2/3 rounded-2xl" />
+              <Skeleton className="ml-auto h-12 w-1/2 rounded-2xl" />
+              <Skeleton className="h-12 w-3/5 rounded-2xl" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-12 px-4 max-w-sm mx-auto space-y-3">
-              <EganyeMascot variant="empty" size={90} />
-              <h4 className="text-sm font-serif font-bold text-foreground">
-                Discussion de {groupName || 'ce cercle'}
-              </h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Partagez des nouvelles, confirmez vos versements ou encouragez le bénéficiaire de ce tour !
+            <div className="mx-auto max-w-sm space-y-4 px-2 py-12 text-center">
+              <h2 className="text-base font-bold text-foreground">Discussion de {groupName || 'ce cercle'}</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Donnez des nouvelles et confirmez vos versements.
               </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {QUICK_TONTINE_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => handleSendMessage(chip)}
+                    className="min-h-11 cursor-pointer rounded-full border border-border bg-card px-4 text-[13px] font-bold text-foreground transition-colors duration-150 hover:bg-muted"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             messages.map((msg, idx) => {
               const isMine = msg.userId === user.uid;
               const prev = messages[idx - 1];
 
-              // Date separator check
               const currentDate = msg.createdAt ? new Date(msg.createdAt).toDateString() : '';
               const prevDate = prev?.createdAt ? new Date(prev.createdAt).toDateString() : '';
               const showDateSeparator = idx === 0 || currentDate !== prevDate;
@@ -144,78 +142,40 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
 
               return (
                 <React.Fragment key={msg.id}>
-                  {/* Séparateur temporel épuré */}
                   {showDateSeparator && (
-                    <div className="flex justify-center my-3">
-                      <span className="px-3 py-1 rounded-full bg-[#EFE2D0]/60 dark:bg-muted text-[13px] font-bold text-muted-foreground select-none shadow-2xs">
-                        {formatDaySeparator(msg.createdAt)}
-                      </span>
-                    </div>
+                    <p className="select-none py-3 text-center text-[13px] font-bold text-muted-foreground">
+                      {formatDaySeparator(msg.createdAt)}
+                    </p>
                   )}
 
-                  {/* Ligne de message style WhatsApp / iMessage */}
                   <div
-                    className={`flex items-end gap-2 ${
-                      isMine ? 'flex-row-reverse' : 'flex-row'
-                    } ${isSameSenderAsPrev ? 'mt-1' : 'mt-2.5'}`}
+                    className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'} ${
+                      isSameSenderAsPrev ? '' : 'pt-2'
+                    }`}
                   >
-                    {/* Avatar expéditeur (autres membres uniquement) */}
                     {!isMine && (
                       <div className="w-7 shrink-0">
-                        {!isSameSenderAsPrev ? (
-                          <CustomAvatar
-                            photoURL={msg.userPhoto}
-                            name={msg.userName}
-                            size={28}
-                            className="ring-1 ring-white dark:ring-card"
-                          />
-                        ) : (
-                          <div className="w-7" />
-                        )}
+                        {!isSameSenderAsPrev && <CustomAvatar photoURL={msg.userPhoto} name={msg.userName} size={28} />}
                       </div>
                     )}
 
-                    {/* Bulle de texte */}
-                    <div className={`flex flex-col max-w-[80%] sm:max-w-[70%] ${isMine ? 'items-end' : 'items-start'}`}>
-                      {/* En-tête expéditeur (nom + badge créateur) */}
+                    <div className={`flex max-w-[80%] flex-col sm:max-w-[70%] ${isMine ? 'items-end' : 'items-start'}`}>
                       {!isMine && !isSameSenderAsPrev && (
-                        <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className="text-[13px] font-bold text-primary-ink dark:text-primary-ink">
-                            {msg.userName}
-                          </span>
-                          {isCreator && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-warning-soft dark:bg-primary/20 text-primary-ink dark:text-primary-ink text-[13px] font-bold">
-                              👑 Organisateur
-                            </span>
-                          )}
-                        </div>
+                        <p className="mb-1 px-1 text-[13px] font-bold text-foreground">
+                          {msg.userName}
+                          {isCreator && <span className="font-normal text-muted-foreground"> · Organisateur</span>}
+                        </p>
                       )}
 
-                      {/* Corps de la bulle avec queue directionnelle */}
                       <div
-                        className={`relative px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs ${
-                          isMine
-                            ? 'bg-gradient-to-br from-primary to-[#B85C36] text-white rounded-2xl rounded-br-xs'
-                            : 'bg-card border border-[#EFE2D0] dark:border-border text-foreground rounded-2xl rounded-bl-xs'
+                        className={`rounded-2xl px-3.5 py-2 text-[15px] leading-snug ${
+                          isMine ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground'
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-
-                        {/* Horodatage & coches de lecture */}
-                        <div
-                          className={`flex items-center justify-end gap-1 mt-1 text-[13px] select-none ${
-                            isMine ? 'text-white/75' : 'text-muted-foreground'
-                          }`}
-                        >
-                          <span>
-                            {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
-                          </span>
-                          {isMine && (
-                            <span className="text-[13px] font-bold tracking-tighter" title="Distribué">
-                              ✓✓
-                            </span>
-                          )}
-                        </div>
+                        <p className={`mt-0.5 select-none text-right text-[13px] ${isMine ? 'text-primary-foreground/85' : 'text-muted-foreground'}`}>
+                          {msg.createdAt && format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -225,49 +185,32 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
           )}
           <div ref={scrollRef} />
         </div>
-      </ScrollArea>
-
-      {/* ── PILLS DE RÉPONSES RAPIDES TONTINE ── */}
-      <div className="px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5 border-t border-[#EFE2D0]/60 dark:border-border/40 bg-white/60 dark:bg-card/60">
-        {QUICK_TONTINE_CHIPS.map((chip, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => handleSendMessage(chip)}
-            className="shrink-0 text-[13px] font-semibold px-3 py-1 rounded-full bg-[#FFFBF7] dark:bg-muted border border-[#EFE2D0] dark:border-border text-foreground hover:border-primary hover:text-primary-ink transition-colors cursor-pointer select-none"
-          >
-            {chip}
-          </button>
-        ))}
       </div>
 
-      {/* ── BARRE DE SAISIE MOBILE NATIVE ── */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="p-3 border-t border-[#EFE2D0] dark:border-border bg-card flex items-center gap-2 shrink-0"
+        className="flex shrink-0 items-center gap-2 border-t border-border bg-card px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
-        <Input
+        <input
           placeholder={t('chat_input_placeholder') || 'Écrivez un message au groupe...'}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 rounded-full h-11 bg-[#F8F0E4]/60 dark:bg-muted border-transparent focus:border-primary px-4 text-base"
+          className="h-11 min-w-0 flex-1 rounded-full border border-input bg-background px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
           aria-label="Message"
           enterKeyHint="send"
           autoComplete="off"
         />
-
-        <Button
+        <button
           type="submit"
-          size="icon"
           disabled={!newMessage.trim() || sending}
-          className="rounded-full h-11 w-11 bg-primary hover:bg-[#B85C36] text-white shrink-0 cursor-pointer shadow-xs transition-transform active:scale-95 disabled:opacity-40"
           aria-label="Envoyer le message"
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity duration-150 disabled:opacity-40"
         >
-          <EganyeIcon name="send" size={16} />
-        </Button>
+          <Send className="h-5 w-5" />
+        </button>
       </form>
     </div>
   );

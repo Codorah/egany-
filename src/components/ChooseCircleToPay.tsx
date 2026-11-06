@@ -1,10 +1,11 @@
 import React from 'react';
-import { ArrowLeft, ChevronRight, Users } from 'lucide-react';
-import { Group } from '@/types';
-import { EmptyState } from './ui/EmptyState';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Group } from '@/types';
+import { EmptyState } from './ui/EmptyState';
+import { ScreenBar } from './ui/ScreenBar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChooseCircleToPayProps {
   groups: Group[];
@@ -20,20 +21,8 @@ export function ChooseCircleToPay({ groups, onSelect, onBack }: ChooseCircleToPa
   const { t } = useLanguage();
 
   return (
-    <div className="space-y-5 pb-4">
-      <div className="flex items-center gap-3 pt-1">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label={t('a11y_back')}
-          className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-foreground hover:bg-muted cursor-pointer shrink-0"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-[24px] leading-tight font-serif font-bold text-foreground tracking-tight">
-          {t('cotiser_pick_circle_title')}
-        </h1>
-      </div>
+    <div className="space-y-4 pb-4">
+      <ScreenBar title={t('cotiser_pick_circle_title')} onBack={onBack} />
 
       {groups.length === 0 ? (
         <EmptyState
@@ -42,37 +31,24 @@ export function ChooseCircleToPay({ groups, onSelect, onBack }: ChooseCircleToPa
           description={t('no_circle_desc')}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
           {groups.map((group) => (
             <button
               key={group.id}
+              type="button"
               onClick={() => onSelect(group.id)}
-              className="w-full glass-card rounded-2xl p-4 shadow-soft border border-border text-left flex items-center gap-3.5 cursor-pointer active:scale-[0.985] transition-transform"
+              className="flex min-h-16 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 active:bg-muted"
             >
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0 font-serif font-bold text-base">
-                {group.name.substring(0, 2).toUpperCase()}
-              </div>
-
-              <div className="flex-1 min-w-0 space-y-1">
-                <span className="block font-serif font-bold text-base text-foreground truncate">
-                  {group.name}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-bold text-foreground">{group.name}</span>
+                <span className="block text-[13px] text-muted-foreground">
+                  {t('deadline_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
                 </span>
-                <span className="block text-[13px] font-semibold text-muted-foreground">
-                  {t('deadline_prefix')}{' '}
-                  {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
-                </span>
-              </div>
-
-              <div className="text-right shrink-0">
-                <span className="block text-base font-bold text-foreground">
-                  {group.contributionAmount.toLocaleString()}
-                </span>
-                <span className="block text-[13px] font-bold text-muted-foreground">
-                  {group.currency}
-                </span>
-              </div>
-
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </span>
+              <span className="shrink-0 text-sm font-bold tabular-nums text-foreground">
+                {group.contributionAmount.toLocaleString()} {group.currency}
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
             </button>
           ))}
         </div>

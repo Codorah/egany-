@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, Check, Minus, Plus } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Check, Copy, Minus, Plus, ShieldCheck, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { EganyeIcon } from './ui/EganyeIcon';
 import { SignaturePad } from './SignaturePad';
 import { supabase } from '@/lib/supabase';
 import { KYC_VERIFIED_LEVEL } from '@/lib/kyc';
@@ -24,6 +23,7 @@ import { toast } from 'sonner';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LegalDocumentDialog from './LegalDocumentDialog';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 /**
  * Alphabet du code d'invitation : sans 0/O, 1/I/L ni U/V.
@@ -111,77 +111,73 @@ function buildFormSchema(t: (key: string) => string) {
 type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 const PRESET_THEMES = [
-  { label: 'Solidarité Famille', icon: 'house' as const, desc: 'Entraide familiale et projets communs' },
-  { label: 'Tontine Collègues', icon: 'coin' as const, desc: 'Épargne mensuelle entre collègues de travail' },
-  { label: 'Projet Moto / Véhicule', icon: 'travel' as const, desc: 'Financement groupé d’équipement et mobilité' },
-  { label: 'Commerce & Marché', icon: 'savings' as const, desc: 'Fonds de roulement pour activités marchandes' },
-  { label: 'Épargne Fêtes & Célébrations', icon: 'star' as const, desc: 'Anticipation des fêtes et rentrées scolaires' },
+  { label: 'Solidarité Famille', desc: 'Entraide familiale et projets communs' },
+  { label: 'Tontine Collègues', desc: 'Épargne mensuelle entre collègues de travail' },
+  { label: 'Projet Moto / Véhicule', desc: 'Financement groupé d’équipement et mobilité' },
+  { label: 'Commerce & Marché', desc: 'Fonds de roulement pour activités marchandes' },
+  { label: 'Épargne Fêtes & Célébrations', desc: 'Anticipation des fêtes et rentrées scolaires' },
 ];
 
-const PRESET_AMOUNTS = [5000, 10000, 25000, 50000, 100000];
+const PRESET_AMOUNTS = [5000, 10000, 25000, 50000];
 const PRESET_MEMBERS = [5, 10, 12, 15];
 
 const FREQUENCY_OPTIONS = [
-  { value: 'monthly', label: 'Chaque mois', hint: 'Le rythme le plus courant' },
-  { value: 'bi-weekly', label: 'Tous les 15 jours', hint: 'Deux cotisations par mois' },
-  { value: 'weekly', label: 'Chaque semaine', hint: 'Pour les petites cotisations' },
-  { value: 'daily', label: 'Chaque jour', hint: 'Idéal pour le commerce au marché' },
+  { value: 'monthly', label: 'Chaque mois' },
+  { value: 'bi-weekly', label: 'Tous les 15 jours' },
+  { value: 'weekly', label: 'Chaque semaine' },
+  { value: 'daily', label: 'Chaque jour' },
 ] as const;
 
 /**
- * Un écran par question, comme une app mobile : le cercle se remplit pas à
- * pas au lieu d'un long formulaire dans une fenêtre. Chaque étape ne valide
- * que ses propres champs avant de passer à la suivante.
+ * Trois écrans : le cercle, son rythme et ses règles, puis l'engagement. Chaque étape
+ * ne valide que ses propres champs avant de passer à la suivante.
  */
 const STEPS = [
-  { title: 'Comment s’appelle ton cercle ?', subtitle: 'Choisis une idée ou écris ton propre nom.', fields: ['name'] },
-  { title: 'Combien cotise chaque membre ?', subtitle: 'Le montant que chacun verse à chaque tour.', fields: ['contributionAmount'] },
-  { title: 'Combien de participants ?', subtitle: 'Toi compris. Chacun recevra la cagnotte à son tour.', fields: ['maxMembers'] },
-  { title: 'À quel rythme ?', subtitle: 'La fréquence des cotisations et la date du 1er tour.', fields: ['frequency', 'startDate'] },
-  { title: 'Les règles du cercle', subtitle: 'Qui reçoit la cagnotte, et comment on s’organise.', fields: ['distributionMethod'] },
-  { title: 'Ton engagement', subtitle: 'Vérifie le récapitulatif, puis signe pour créer le cercle.', fields: ['termsAccepted', 'signature'] },
-] as const satisfies readonly { title: string; subtitle: string; fields: readonly (keyof FormValues)[] }[];
+  { title: 'Votre cercle', fields: ['name', 'contributionAmount', 'maxMembers'] },
+  { title: 'Rythme et règles', fields: ['frequency', 'startDate', 'distributionMethod'] },
+  { title: 'Votre engagement', fields: ['termsAccepted', 'signature'] },
+] as const satisfies readonly { title: string; fields: readonly (keyof FormValues)[] }[];
 
+// Glissement court ; désactivé par le réglage « réduire les animations » du téléphone.
 const slide = {
-  enter: (dir: number) => ({ x: dir > 0 ? 64 : -64, opacity: 0 }),
+  enter: (dir: number) => ({ x: dir > 0 ? 32 : -32, opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -64 : 64, opacity: 0 }),
+  exit: (dir: number) => ({ x: dir > 0 ? -32 : 32, opacity: 0 }),
 };
 
-function OptionCard({
-  selected, onClick, title, hint, icon,
-}: {
+function ChoiceRow({ selected, onClick, title, hint }: {
   selected: boolean;
   onClick: () => void;
   title: string;
-  hint: string;
-  icon?: React.ComponentProps<typeof EganyeIcon>['name'];
+  hint?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`w-full flex items-center gap-3.5 p-4 rounded-2xl border-2 text-left transition-colors cursor-pointer ${
-        selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted/60'
+      className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-bold text-foreground">{title}</span>
+        {hint && <span className="block text-[13px] leading-snug text-muted-foreground">{hint}</span>}
+      </span>
+      {selected && <Check className="h-5 w-5 shrink-0 text-primary-ink" />}
+    </button>
+  );
+}
+
+function Pill({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`min-h-11 cursor-pointer rounded-full border px-4 text-[13px] font-bold transition-colors duration-150 ${
+        selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
       }`}
     >
-      {icon && (
-        <span className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-          selected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-        }`}>
-          <EganyeIcon name={icon} size={20} />
-        </span>
-      )}
-      <span className="min-w-0 flex-1">
-        <span className={`block text-[15px] font-bold ${selected ? 'text-primary-ink' : 'text-foreground'}`}>{title}</span>
-        <span className="block text-[13px] text-muted-foreground leading-snug">{hint}</span>
-      </span>
-      <span className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${
-        selected ? 'border-primary bg-primary text-white' : 'border-border'
-      }`}>
-        {selected && <Check className="w-3 h-3" strokeWidth={3} />}
-      </span>
+      {children}
     </button>
   );
 }
@@ -246,6 +242,7 @@ export function CreateGroupDialog({
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [showReglement, setShowReglement] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   // Valeur par défaut de date de début : dans 7 jours
   const defaultStartDate = useMemo(() => {
@@ -323,7 +320,23 @@ export function CreateGroupDialog({
     setDirection(1);
     setCreatedGroup(null);
     setCopiedCode(false);
+    setShowOptions(false);
   };
+
+  // Retour Android : étape précédente, puis fermeture. L'écran du dessous ne bouge pas.
+  useBackHandler(
+    React.useCallback(() => {
+      if (!createdGroup && step > 1) {
+        setDirection(-1);
+        setStep((s) => Math.max(s - 1, 1));
+      } else {
+        setOpen(false);
+        resetForm();
+      }
+      return true;
+    }, [createdGroup, step]),
+    open
+  );
 
   const setMembers = (n: number) =>
     setValue('maxMembers', Math.min(100, Math.max(2, n)), { shouldValidate: true });
@@ -357,7 +370,7 @@ export function CreateGroupDialog({
 
       const groupData = {
         name: values.name.trim(),
-        description: values.description?.trim() || 'Tontine collective et solidaire Eganyé',
+        description: values.description?.trim() || 'Tontine collective et solidaire eganyé',
         contribution_amount: values.contributionAmount,
         frequency: values.frequency,
         currency: values.currency,
@@ -413,8 +426,7 @@ export function CreateGroupDialog({
         link: `/group/${newGroup.id}`,
       }).catch((err) => console.warn('Circle creation notification skipped:', err));
 
-      toast.success('Votre cercle a été créé avec succès !');
-      onGroupCreated?.(newGroup.id);
+      toast.success('Votre cercle est créé.');
     } catch (error: any) {
       console.error('Error creating group:', error);
       toast.error(error.message || 'Erreur lors de la création du cercle');
@@ -435,7 +447,7 @@ export function CreateGroupDialog({
     if (!createdGroup) return;
     navigator.clipboard.writeText(createdGroup.joinCode);
     setCopiedCode(true);
-    toast.success('Code copié dans le presse-papier !');
+    toast.success('Code copié.');
     setTimeout(() => setCopiedCode(false), 2500);
   };
 
@@ -443,7 +455,7 @@ export function CreateGroupDialog({
     if (!createdGroup) return '';
     const shareUrl = `${window.location.origin}/?join=${createdGroup.joinCode}`;
     return encodeURIComponent(
-      `👋 Salut ! Je viens de créer la tontine "${createdGroup.name}" sur Eganyé.\n\n` +
+      `👋 Salut ! Je viens de créer la tontine "${createdGroup.name}" sur eganyé.\n\n` +
       `💰 Cotisation : ${createdGroup.potAmount / createdGroup.membersCount} FCFA ${frequencyLabel(createdGroup.frequency)}\n` +
       `🎁 Cagnotte par tour : ${createdGroup.potAmount.toLocaleString()} FCFA\n\n` +
       `Rejoins-nous directement avec le code : *${createdGroup.joinCode}*\n` +
@@ -454,11 +466,14 @@ export function CreateGroupDialog({
   const closeButton = (
     <button
       type="button"
-      onClick={() => setOpen(false)}
+      onClick={() => {
+        setOpen(false);
+        resetForm();
+      }}
       aria-label="Fermer"
-      className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer shrink-0"
+      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
     >
-      <EganyeIcon name="close" size={18} />
+      <X className="h-5 w-5" />
     </button>
   );
 
@@ -479,156 +494,121 @@ export function CreateGroupDialog({
         nativeButton={trigger ? triggerIsNativeButton : true}
         render={
           trigger || (
-            <Button className="gradient-sunset flex items-center gap-2 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer">
-              <EganyeIcon name="plus" size={18} strokeWidth={2.5} />
+            <Button className="h-11 cursor-pointer gap-2 rounded-xl font-bold">
+              <Plus className="h-5 w-5" />
               <span>Créer un cercle</span>
             </Button>
           )
         }
       />
 
-      {/* Plein écran sur téléphone ; sur ordinateur, un cadre au format
-          téléphone pour garder la même expérience écran par écran. */}
+      {/* Plein écran sur téléphone ; sur ordinateur, un cadre au format téléphone. */}
       <DialogContent
         showCloseButton={false}
         showHandle={false}
-        className="top-0 h-[100dvh] flex flex-col gap-0 p-0 pb-0 rounded-none bg-background overflow-hidden sm:h-[min(860px,92vh)] sm:max-w-md sm:rounded-[2rem] sm:pb-0"
+        className="top-0 flex h-[100dvh] flex-col gap-0 overflow-hidden rounded-none bg-background p-0 pb-0 sm:h-[min(860px,92vh)] sm:max-w-md sm:rounded-2xl sm:pb-0"
       >
-        {/* ── CAS 1 : ÉCRAN DE SUCCÈS & INVITATION WHATSAPP ── */}
         {createdGroup ? (
           <div className="flex-1 overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-            <div className="space-y-5 text-center py-6 max-w-sm mx-auto">
-              <DialogTitle className="sr-only">Cercle créé</DialogTitle>
-              <div className="w-20 h-20 rounded-[28px] bg-success-soft text-secondary mx-auto flex items-center justify-center shadow-soft">
-                <EganyeIcon name="check" size={38} strokeWidth={2.5} />
+            <div className="mx-auto max-w-sm space-y-5 py-6">
+              <div className="space-y-1.5 text-center">
+                <DialogTitle className="text-2xl font-bold text-foreground">Votre cercle est créé</DialogTitle>
+                <p className="text-sm text-muted-foreground">Invitez maintenant les participants de « {createdGroup.name} ».</p>
               </div>
 
-              <div className="space-y-1.5">
-                <h2 className="font-serif font-bold text-2xl text-foreground tracking-tight">
-                  Cercle créé avec succès ! 🎉
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Ton cercle <span className="font-bold text-foreground">{createdGroup.name}</span> est prêt. Il ne te reste plus qu'à inviter les participants !
-                </p>
-              </div>
-
-              {/* Carte récapitulative du cercle */}
-              <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-primary/25 text-left space-y-3">
-                <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
-                  <span className="text-xs font-bold text-muted-foreground">Cagnotte distribuée</span>
-                  <span className="font-serif font-bold text-xl text-primary-ink">
-                    {createdGroup.potAmount.toLocaleString()} FCFA
-                  </span>
+              <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                  <dt className="text-muted-foreground">Cagnotte par tour</dt>
+                  <dd className="font-bold tabular-nums text-foreground">{createdGroup.potAmount.toLocaleString()} FCFA</dd>
                 </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Places prévues</span>
-                  <span className="font-bold text-foreground">{createdGroup.membersCount} participants</span>
+                <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                  <dt className="text-muted-foreground">Places prévues</dt>
+                  <dd className="font-bold tabular-nums text-foreground">{createdGroup.membersCount}</dd>
                 </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Code d'invitation</span>
-                  <div className="flex items-center gap-1.5 font-mono font-bold text-lg text-[#3E2F24] dark:text-foreground">
-                    <span>{createdGroup.joinCode}</span>
+                <div className="flex items-center justify-between gap-3 py-1 pl-4 pr-1 text-sm">
+                  <dt className="text-muted-foreground">Code d'invitation</dt>
+                  <dd className="flex items-center gap-1 font-mono text-lg font-bold text-foreground">
+                    {createdGroup.joinCode}
                     <button
                       type="button"
                       onClick={handleCopyCode}
-                      className="p-1.5 rounded-md hover:bg-white/60 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                      title="Copier le code"
+                      aria-label="Copier le code"
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted"
                     >
-                      <EganyeIcon name={copiedCode ? "check" : "copy"} size={16} />
+                      {copiedCode ? <Check className="h-5 w-5 text-secondary" /> : <Copy className="h-5 w-5" />}
                     </button>
-                  </div>
+                  </dd>
                 </div>
-              </div>
+              </dl>
 
-              {/* Gros bouton d'invitation WhatsApp */}
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-2">
                 <a
                   href={`https://wa.me/?text=${getWhatsAppMessage()}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-13 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20BE5B] text-white font-bold text-[15px] shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
+                  className="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-primary-foreground"
                 >
-                  <EganyeIcon name="send" size={18} />
-                  <span>Inviter mes proches sur WhatsApp</span>
+                  Inviter sur WhatsApp
                 </a>
-
                 <Button
                   variant="outline"
-                  size="lg"
-                  onClick={() => setOpen(false)}
-                  className="w-full rounded-full font-bold cursor-pointer"
+                  onClick={() => {
+                    const id = createdGroup.id;
+                    setOpen(false);
+                    resetForm();
+                    onGroupCreated?.(id);
+                  }}
+                  className="h-12 w-full cursor-pointer rounded-xl font-bold"
                 >
                   Accéder au cercle
                 </Button>
               </div>
-
-              {/* Badge de réassurance sur la vérification */}
-              <div className="p-3 rounded-xl bg-success-soft/80 dark:bg-muted/60 border border-secondary/20 flex items-center gap-2.5 text-left">
-                <div className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
-                  <EganyeIcon name="shield" size={13} />
-                </div>
-                <p className="text-xs text-muted-foreground leading-snug">
-                  <strong className="text-foreground">Sécurité :</strong> Les membres et vous pourrez valider votre pièce d'identité avant le lancement officiel des paiements.
-                </p>
-              </div>
             </div>
           </div>
         ) : kycState === 'checking' ? (
-          /* Évite de montrer un formulaire de plusieurs étapes pendant la
-             fraction de seconde qui précède le verdict KYC. */
-          <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          /* Évite de montrer le formulaire pendant la fraction de seconde
+             qui précède le verdict KYC. */
+          <div className="flex flex-1 items-center justify-center">
             <DialogTitle className="sr-only">Chargement</DialogTitle>
-            <div className="w-10 h-10 rounded-full border-[3px] border-border border-t-primary animate-spin" />
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-border border-t-primary" />
           </div>
         ) : kycState === 'required' ? (
-          <div className="flex-1 flex flex-col">
-            <div className="flex justify-end px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">{closeButton}</div>
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-5 px-6 pb-10">
-              <div className="w-20 h-20 rounded-[28px] bg-primary/10 text-primary-ink flex items-center justify-center">
-                <EganyeIcon name="shield" size={36} />
-              </div>
-
+          <div className="flex flex-1 flex-col">
+            <div className="flex justify-end px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">{closeButton}</div>
+            <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-10 text-center">
+              <ShieldCheck className="h-10 w-10 text-muted-foreground" />
               <div className="space-y-2">
-                <DialogTitle className="font-serif text-2xl font-bold text-foreground">
-                  Vérification d'identité requise
-                </DialogTitle>
-                <p className="text-[15px] leading-relaxed text-muted-foreground max-w-sm">
-                  Pour créer un cercle et gérer de l'argent réel, ton identité doit d'abord être vérifiée.
+                <DialogTitle className="text-xl font-bold text-foreground">Vérification d'identité requise</DialogTitle>
+                <p className="max-w-sm text-[15px] leading-relaxed text-muted-foreground">
+                  Pour créer un cercle, votre identité doit d'abord être vérifiée.
                 </p>
               </div>
-
               <Button
-                size="lg"
                 onClick={() => {
                   setOpen(false);
                   onNavigateToVerification?.();
                 }}
-                className="w-full max-w-sm rounded-full gradient-sunset text-white gap-2"
+                className="h-12 w-full max-w-sm cursor-pointer rounded-xl font-bold"
               >
                 Vérifier mon identité
-                <EganyeIcon name="chevron-right" size={18} />
               </Button>
             </div>
           </div>
         ) : (
-          /* ── CAS 2 : UN ÉCRAN PAR QUESTION ── */
-          <form onSubmit={onFormSubmit} className="flex-1 min-h-0 flex flex-col">
-            {/* En-tête : retour, progression, fermer */}
-            <div className="shrink-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 space-y-3">
-              <div className="flex items-center gap-2">
+          <form onSubmit={onFormSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 space-y-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
+              <div className="flex items-center gap-1">
                 {step > 1 ? (
                   <button
                     type="button"
                     onClick={handlePrevStep}
                     aria-label="Étape précédente"
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-foreground hover:bg-muted cursor-pointer shrink-0"
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors duration-150 hover:bg-muted"
                   >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ChevronLeft className="h-6 w-6" />
                   </button>
                 ) : (
-                  <span className="w-10 h-10 shrink-0" />
+                  <span className="h-11 w-11 shrink-0" />
                 )}
                 <p className="flex-1 text-center text-[13px] font-bold text-muted-foreground">
                   Étape {step} sur {TOTAL_STEPS}
@@ -639,16 +619,13 @@ export function CreateGroupDialog({
                 {STEPS.map((_, i) => (
                   <div
                     key={i}
-                    className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                      i < step ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`h-1 flex-1 rounded-full transition-colors duration-200 ${i < step ? 'bg-primary' : 'bg-muted'}`}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Contenu de l'écran courant, qui glisse latéralement */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
               <AnimatePresence mode="wait" initial={false} custom={direction}>
                 <motion.div
                   key={step}
@@ -657,269 +634,212 @@ export function CreateGroupDialog({
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="px-5 pt-4 pb-6 space-y-6"
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className="space-y-6 px-5 pt-3 pb-6 motion-reduce:!transform-none"
                 >
-                  <div className="space-y-1.5">
-                    <DialogTitle className="font-serif text-[26px] leading-tight font-bold text-foreground tracking-tight">
-                      {STEPS[step - 1].title}
-                    </DialogTitle>
-                    <p className="text-[15px] text-muted-foreground">{STEPS[step - 1].subtitle}</p>
-                  </div>
+                  <DialogTitle className="text-2xl font-bold text-foreground">{STEPS[step - 1].title}</DialogTitle>
 
-                  {/* ── 1. Nom ── */}
+                  {/* ── 1. Le cercle ── */}
                   {step === 1 && (
-                    <div className="space-y-5">
-                      <div className="space-y-1.5">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-sm font-bold text-foreground">Nom du cercle</Label>
                         <Input
                           id="name"
                           placeholder="Ex : Tontine Famille 2026"
                           {...register('name')}
-                          className="rounded-2xl h-14 text-base font-semibold bg-card"
+                          className="h-12 rounded-xl bg-card text-base"
                           autoFocus
                         />
-                        {errors.name && <p className="text-[13px] text-danger font-medium">{errors.name.message}</p>}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[13px] font-bold text-muted-foreground">Ou choisis une idée</Label>
-                        <div className="space-y-2">
+                        {errors.name && <p className="text-[13px] font-medium text-danger">{errors.name.message}</p>}
+                        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-none">
                           {PRESET_THEMES.map((theme) => (
-                            <OptionCard
-                              key={theme.label}
-                              selected={groupName === theme.label}
-                              onClick={() => {
-                                setValue('name', theme.label, { shouldValidate: true });
-                                setValue('description', theme.desc);
-                              }}
-                              title={theme.label}
-                              hint={theme.desc}
-                              icon={theme.icon}
-                            />
+                            <div key={theme.label} className="shrink-0">
+                              <Pill
+                                selected={groupName === theme.label}
+                                onClick={() => {
+                                  setValue('name', theme.label, { shouldValidate: true });
+                                  setValue('description', theme.desc);
+                                }}
+                              >
+                                {theme.label}
+                              </Pill>
+                            </div>
                           ))}
                         </div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="description" className="text-[13px] font-bold text-muted-foreground">
-                          Objectif du cercle (facultatif)
-                        </Label>
-                        <Textarea
-                          id="description"
-                          placeholder="L'esprit du groupe ou l'objectif commun…"
-                          className="resize-none rounded-2xl h-24 text-sm bg-card"
-                          {...register('description')}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── 2. Cotisation ── */}
-                  {step === 2 && (
-                    <div className="space-y-5">
-                      <div className="rounded-2xl bg-card border border-border p-5 text-center space-y-1">
-                        <div className="flex items-baseline justify-center gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="contributionAmount" className="text-sm font-bold text-foreground">Cotisation par membre</Label>
+                        <div className="flex items-center gap-2">
                           <Input
                             id="contributionAmount"
                             type="number"
                             inputMode="numeric"
                             min={500}
                             step={500}
-                            aria-label="Cotisation par participant en FCFA"
                             {...register('contributionAmount', { valueAsNumber: true })}
-                            className="h-auto w-full max-w-[220px] border-0 bg-transparent p-0 text-center text-4xl font-serif font-bold shadow-none focus-visible:ring-0"
+                            className="h-12 rounded-xl bg-card text-lg font-bold tabular-nums"
                           />
-                          <span className="text-lg font-bold text-muted-foreground">FCFA</span>
+                          <span className="shrink-0 text-sm font-bold text-muted-foreground">FCFA</span>
                         </div>
-                        <p className="text-[13px] text-muted-foreground">par membre et par tour</p>
+                        {errors.contributionAmount && (
+                          <p className="text-[13px] font-medium text-danger">{errors.contributionAmount.message}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {PRESET_AMOUNTS.map((amt) => (
+                            <Pill
+                              key={amt}
+                              selected={contributionAmount === amt}
+                              onClick={() => setValue('contributionAmount', amt, { shouldValidate: true })}
+                            >
+                              {amt.toLocaleString()}
+                            </Pill>
+                          ))}
+                        </div>
                       </div>
-                      {errors.contributionAmount && (
-                        <p className="text-[13px] text-danger font-medium">{errors.contributionAmount.message}</p>
-                      )}
 
-                      <div className="grid grid-cols-3 gap-2">
-                        {PRESET_AMOUNTS.map((amt) => (
+                      <div className="space-y-2">
+                        <Label htmlFor="maxMembers" className="text-sm font-bold text-foreground">Participants, vous compris</Label>
+                        <div className="flex items-center gap-3">
                           <button
-                            key={amt}
                             type="button"
-                            onClick={() => setValue('contributionAmount', amt, { shouldValidate: true })}
-                            className={`h-12 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
-                              contributionAmount === amt
-                                ? 'border-primary bg-primary/10 text-primary-ink'
-                                : 'border-border bg-card text-foreground hover:bg-muted/60'
-                            }`}
+                            onClick={() => setMembers(maxMembers - 1)}
+                            aria-label="Un participant de moins"
+                            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-muted text-foreground"
                           >
-                            {amt.toLocaleString()}
+                            <Minus className="h-5 w-5" />
                           </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── 3. Participants ── */}
-                  {step === 3 && (
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between gap-4 rounded-2xl bg-card border border-border p-4">
-                        <button
-                          type="button"
-                          onClick={() => setMembers(maxMembers - 1)}
-                          aria-label="Un participant de moins"
-                          className="w-14 h-14 rounded-2xl bg-muted text-foreground flex items-center justify-center hover:bg-muted/70 cursor-pointer shrink-0"
-                        >
-                          <Minus className="w-6 h-6" />
-                        </button>
-                        <div className="text-center">
                           <Input
                             id="maxMembers"
                             type="number"
                             inputMode="numeric"
                             min={2}
                             max={100}
-                            aria-label={t('cgd_participants_label')}
                             {...register('maxMembers', { valueAsNumber: true })}
-                            className="h-auto w-24 border-0 bg-transparent p-0 text-center text-5xl font-serif font-bold shadow-none focus-visible:ring-0"
+                            className="h-12 rounded-xl bg-card text-center text-lg font-bold tabular-nums"
                           />
-                          <p className="text-[13px] text-muted-foreground">participants</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setMembers(maxMembers + 1)}
-                          aria-label="Un participant de plus"
-                          className="w-14 h-14 rounded-2xl bg-muted text-foreground flex items-center justify-center hover:bg-muted/70 cursor-pointer shrink-0"
-                        >
-                          <Plus className="w-6 h-6" />
-                        </button>
-                      </div>
-                      {errors.maxMembers && (
-                        <p className="text-[13px] text-danger font-medium">{errors.maxMembers.message}</p>
-                      )}
-
-                      <div className="grid grid-cols-4 gap-2">
-                        {PRESET_MEMBERS.map((n) => (
                           <button
-                            key={n}
                             type="button"
-                            onClick={() => setMembers(n)}
-                            className={`h-11 rounded-2xl text-sm font-bold border-2 transition-colors cursor-pointer ${
-                              maxMembers === n
-                                ? 'border-secondary bg-success-soft text-secondary'
-                                : 'border-border bg-card text-foreground hover:bg-muted/60'
-                            }`}
+                            onClick={() => setMembers(maxMembers + 1)}
+                            aria-label="Un participant de plus"
+                            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-muted text-foreground"
                           >
-                            {n}
+                            <Plus className="h-5 w-5" />
                           </button>
-                        ))}
+                        </div>
+                        {errors.maxMembers && (
+                          <p className="text-[13px] font-medium text-danger">{errors.maxMembers.message}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {PRESET_MEMBERS.map((n) => (
+                            <Pill key={n} selected={maxMembers === n} onClick={() => setMembers(n)}>{n}</Pill>
+                          ))}
+                        </div>
                       </div>
 
-                      {/* La cagnotte se calcule sous les yeux : l'intérêt du cercle */}
-                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-2xl p-5 border border-primary/30 space-y-1 text-center">
-                        <span className="text-[13px] font-bold text-primary-ink">
-                          Cagnotte par tour
-                        </span>
-                        <p className="text-3xl font-serif font-bold text-foreground">
-                          {totalPot.toLocaleString()} FCFA
-                        </p>
-                        <p className="text-[13px] text-muted-foreground">
-                          {contributionAmount.toLocaleString()} FCFA × {maxMembers} participants. À chaque tour, un membre reçoit tout.
-                        </p>
-                      </div>
+                      <p className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
+                        Cagnotte par tour : <span className="font-bold tabular-nums">{totalPot.toLocaleString()} FCFA</span>
+                      </p>
                     </div>
                   )}
 
-                  {/* ── 4. Rythme ── */}
-                  {step === 4 && (
-                    <div className="space-y-5">
+                  {/* ── 2. Rythme et règles ── */}
+                  {step === 2 && (
+                    <div className="space-y-6">
                       <div className="space-y-2">
-                        {FREQUENCY_OPTIONS.map((opt) => (
-                          <OptionCard
-                            key={opt.value}
-                            selected={frequency === opt.value}
-                            onClick={() => setValue('frequency', opt.value, { shouldValidate: true })}
-                            title={opt.label}
-                            hint={opt.hint}
-                          />
-                        ))}
+                        <p className="text-sm font-bold text-foreground">Fréquence</p>
+                        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+                          {FREQUENCY_OPTIONS.map((opt) => (
+                            <ChoiceRow
+                              key={opt.value}
+                              selected={frequency === opt.value}
+                              onClick={() => setValue('frequency', opt.value, { shouldValidate: true })}
+                              title={opt.label}
+                            />
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="startDate" className="text-[13px] font-bold text-muted-foreground">
-                          Date du 1er tour
-                        </Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate" className="text-sm font-bold text-foreground">Date du 1er tour</Label>
                         <Input
                           id="startDate"
                           type="date"
                           min={new Date().toISOString().slice(0, 10)}
                           {...register('startDate')}
-                          className="rounded-2xl h-14 text-base font-semibold bg-card"
+                          className="h-12 rounded-xl bg-card text-base"
                         />
                         {errors.startDate && (
-                          <p className="text-[13px] text-danger font-medium">{errors.startDate.message}</p>
+                          <p className="text-[13px] font-medium text-danger">{errors.startDate.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold text-foreground">Qui reçoit la cagnotte ?</p>
+                        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+                          <ChoiceRow
+                            selected={distributionMethod === 'draw'}
+                            onClick={() => setValue('distributionMethod', 'draw')}
+                            title="Tirage au sort"
+                            hint="Le hasard désigne le bénéficiaire à chaque tour."
+                          />
+                          <ChoiceRow
+                            selected={distributionMethod === 'sequential'}
+                            onClick={() => setValue('distributionMethod', 'sequential')}
+                            title="Ordre convenu"
+                            hint="Selon l'ordre d'inscription ou un accord entre membres."
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setShowOptions((value) => !value)}
+                          aria-expanded={showOptions}
+                          className="flex min-h-11 w-full cursor-pointer items-center justify-between text-sm font-bold text-foreground"
+                        >
+                          Options
+                          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none ${showOptions ? 'rotate-180' : ''}`} />
+                        </button>
+                        {showOptions && (
+                          <div className="mt-2 space-y-3">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="description" className="text-[13px] font-bold text-muted-foreground">Objectif du cercle</Label>
+                              <Textarea
+                                id="description"
+                                placeholder="L'esprit du groupe ou l'objectif commun"
+                                className="h-20 resize-none rounded-xl bg-card text-base"
+                                {...register('description')}
+                              />
+                            </div>
+                            <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+                              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                                <div>
+                                  <Label htmlFor="isPrivate" className="cursor-pointer text-sm font-bold text-foreground">Cercle privé</Label>
+                                  <p className="text-[13px] leading-snug text-muted-foreground">On ne rejoint qu'avec votre code.</p>
+                                </div>
+                                <Switch id="isPrivate" checked={isPrivate} onCheckedChange={(checked) => setValue('isPrivate', checked)} />
+                              </div>
+                              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                                <div>
+                                  <Label htmlFor="penaltiesEnabled" className="cursor-pointer text-sm font-bold text-foreground">Pénalité de retard</Label>
+                                  <p className="text-[13px] leading-snug text-muted-foreground">1 000 FCFA après 2 jours de retard.</p>
+                                </div>
+                                <Switch id="penaltiesEnabled" checked={penaltiesEnabled} onCheckedChange={(checked) => setValue('penaltiesEnabled', checked)} />
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
                   )}
 
-                  {/* ── 5. Règles ── */}
-                  {step === 5 && (
+                  {/* ── 3. Récapitulatif, engagement et signature ── */}
+                  {step === 3 && (
                     <div className="space-y-5">
-                      <div className="space-y-2">
-                        <Label className="text-[13px] font-bold text-muted-foreground">Qui reçoit la cagnotte ?</Label>
-                        <OptionCard
-                          selected={distributionMethod === 'draw'}
-                          onClick={() => setValue('distributionMethod', 'draw')}
-                          title="Tirage au sort"
-                          hint="Le hasard désigne équitablement le bénéficiaire à chaque tour."
-                          icon="shuffle"
-                        />
-                        <OptionCard
-                          selected={distributionMethod === 'sequential'}
-                          onClick={() => setValue('distributionMethod', 'sequential')}
-                          title="Ordre convenu"
-                          hint="Selon l'ordre d'inscription ou un accord entre membres."
-                          icon="list"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-border">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="isPrivate" className="text-[15px] font-bold text-foreground cursor-pointer">
-                              Cercle privé (recommandé)
-                            </Label>
-                            <p className="text-[13px] text-muted-foreground leading-snug">
-                              On ne rejoint qu'avec ton code d'invitation.
-                            </p>
-                          </div>
-                          <Switch
-                            id="isPrivate"
-                            checked={isPrivate}
-                            onCheckedChange={(checked) => setValue('isPrivate', checked)}
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-border">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="penaltiesEnabled" className="text-[15px] font-bold text-foreground cursor-pointer">
-                              Pénalité de retard (1 000 FCFA)
-                            </Label>
-                            <p className="text-[13px] text-muted-foreground leading-snug">
-                              Encourage chacun à respecter les échéances.
-                            </p>
-                          </div>
-                          <Switch
-                            id="penaltiesEnabled"
-                            checked={penaltiesEnabled}
-                            onCheckedChange={(checked) => setValue('penaltiesEnabled', checked)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── 6. Récapitulatif, engagement et signature ── */}
-                  {step === 6 && (
-                    <div className="space-y-5">
-                      <div className="rounded-2xl bg-card border border-border divide-y divide-border">
+                      <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
                         {[
                           ['Cercle', groupName],
                           ['Cotisation', `${contributionAmount.toLocaleString()} FCFA ${frequencyLabel(frequency)}`],
@@ -927,48 +847,47 @@ export function CreateGroupDialog({
                           ['Cagnotte par tour', `${totalPot.toLocaleString()} FCFA`],
                           ['1er tour', startDateLabel],
                           ['Attribution', distributionMethod === 'draw' ? 'Tirage au sort' : 'Ordre convenu'],
+                          ['Accès', isPrivate ? 'Privé' : 'Public'],
+                          ['Pénalité de retard', penaltiesEnabled ? '1 000 FCFA' : 'Aucune'],
                         ].map(([label, value]) => (
                           <div key={label} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className="font-bold text-foreground text-right truncate">{value}</span>
+                            <dt className="text-muted-foreground">{label}</dt>
+                            <dd className="truncate text-right font-bold text-foreground">{value}</dd>
                           </div>
                         ))}
-                      </div>
+                      </dl>
 
-                      <div className="flex items-start gap-3 p-4 rounded-2xl bg-card border border-border">
+                      <div className="flex items-start gap-3">
                         <input
                           type="checkbox"
                           id="terms"
                           {...register('termsAccepted')}
-                          className="mt-0.5 w-5 h-5 shrink-0 rounded border-border text-primary-ink focus:ring-primary/50 cursor-pointer"
+                          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-border accent-[var(--primary)]"
                         />
                         <div className="space-y-1">
-                          <Label htmlFor="terms" className="text-[15px] font-bold text-foreground cursor-pointer">
-                            Engagement de solidarité Eganyé
+                          <Label htmlFor="terms" className="cursor-pointer text-sm font-normal leading-relaxed text-foreground">
+                            Je m'engage sur l'honneur à faire mes versements et à respecter la confiance des membres.
                           </Label>
-                          <p className="text-[13px] text-muted-foreground leading-relaxed">
-                            Je m'engage sur l'honneur à honorer mes versements et à respecter la confiance accordée par les membres de ce cercle.{' '}
-                            <button
-                              type="button"
-                              onClick={() => setShowReglement(true)}
-                              className="font-bold text-primary-ink hover:underline cursor-pointer"
-                            >
-                              Lire le règlement des cercles
-                            </button>
-                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setShowReglement(true)}
+                            className="block min-h-11 cursor-pointer text-[13px] font-bold text-primary-ink underline underline-offset-2"
+                          >
+                            Lire le règlement des cercles
+                          </button>
                           {errors.termsAccepted && (
-                            <span className="text-[13px] text-danger font-medium block">{errors.termsAccepted.message}</span>
+                            <span className="block text-[13px] font-medium text-danger">{errors.termsAccepted.message}</span>
                           )}
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-[13px] font-bold text-muted-foreground">Ta signature</Label>
+                        <Label className="text-sm font-bold text-foreground">Votre signature</Label>
                         <SignaturePad
                           onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })}
                         />
                         {errors.signature && (
-                          <span className="text-[13px] text-danger font-medium block">{errors.signature.message}</span>
+                          <span className="block text-[13px] font-medium text-danger">{errors.signature.message}</span>
                         )}
                       </div>
                     </div>
@@ -980,22 +899,11 @@ export function CreateGroupDialog({
             {/* Bouton principal toujours au même endroit, sous le pouce */}
             <div className="shrink-0 border-t border-border bg-background px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
               {step < TOTAL_STEPS ? (
-                <Button
-                  type="button"
-                  size="lg"
-                  onClick={handleNextStep}
-                  className="w-full rounded-full gradient-sunset text-white font-bold gap-2 cursor-pointer"
-                >
+                <Button type="button" onClick={handleNextStep} className="h-12 w-full cursor-pointer rounded-xl font-bold">
                   Continuer
-                  <ArrowRight className="w-5 h-5" />
                 </Button>
               ) : (
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isSubmitting}
-                  className="w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
-                >
+                <Button type="submit" disabled={isSubmitting} className="h-12 w-full cursor-pointer rounded-xl font-bold">
                   {isSubmitting ? 'Création en cours…' : 'Créer mon cercle'}
                 </Button>
               )}

@@ -1,14 +1,11 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Group, UserProfile } from '@/types';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Group } from '@/types';
 import {
-  ArrowLeft, Clock, CheckCircle, MessageSquare, Loader2, QrCode, Copy, ExternalLink, Check,
-  Shuffle, Gift, Trophy, RotateCcw, Landmark, Circle, ChevronRight, Users, FileText, Settings,
-  CalendarDays,
+  CalendarDays, Check, ChevronDown, ChevronRight, Copy, FileText, HandCoins, Loader2, MessageSquare, QrCode, Settings, Users,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -17,21 +14,21 @@ import { DocumentsManager } from './DocumentsManager';
 import { Chat } from './Chat';
 import { ContributionsManager } from './ContributionsManager';
 import { CalendarView } from './CalendarView';
+import { CircleHealth } from './CircleHealth';
 import { AmountDisplay } from './ui/AmountDisplay';
 import { supabase } from '@/lib/supabase';
 import { fetchMemberProfiles } from '@/lib/members';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
+import { calculateNextPayoutDate, executePayoutDisbursement, drawPayoutBeneficiary } from '@/lib/disbursements';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
-import { MemberCard } from './ui/MemberCard';
-import { StatusBadge } from './ui/StatusBadge';
-import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
+import { ScreenBar } from './ui/ScreenBar';
 import QRCode from 'qrcode';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBackHandler } from '@/hooks/useBackHandler';
 import { SettingsGroup, SettingsRow } from './ui/SettingsList';
 import { EditGroupDialog } from './EditGroupDialog';
+import type { UserProfile } from '@/types';
 
 interface GroupDetailsProps {
   group: Group;
@@ -41,38 +38,71 @@ interface GroupDetailsProps {
 
 type Section = 'cotisations' | 'membres' | 'calendrier' | 'discussion' | 'documents' | 'parametres';
 
+function NavRow({ icon: Icon, label, value, onClick }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value?: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-14 w-full cursor-pointer items-center gap-3.5 px-4 text-left transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 active:bg-muted"
+    >
+      <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+      <span className="flex-1 text-[15px] font-bold text-foreground">{label}</span>
+      {value !== undefined && <span className="text-sm tabular-nums text-muted-foreground">{value}</span>}
+      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+    </button>
+  );
+}
+
 export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupDetailsProps) {
   const { profile } = useAuthContext();
   const { t } = useLanguage();
   const [section, setSection] = React.useState<Section | null>(null);
+  // Arrivée par « Cotiser » : la déclaration s'ouvre directement.
+  const [payNow, setPayNow] = React.useState(false);
+  const [showMore, setShowMore] = React.useState(false);
+  const [inviteOpen, setInviteOpen] = React.useState(false);
   const [isCompleting, setIsCompleting] = React.useState(false);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
 
-  // Conformité Android / Capacitor : le retour matériel ferme d'abord la sous-section
+  // Conformité Android / Capacitor : le retour matériel ferme d'abord le niveau du dessus.
   useBackHandler(
     React.useCallback(() => {
+      if (inviteOpen) {
+        setInviteOpen(false);
+        return true;
+      }
       if (section !== null) {
         setSection(null);
+        setPayNow(false);
         return true;
       }
       onBack();
       return true;
-    }, [section, onBack]),
+    }, [inviteOpen, section, onBack]),
     true
   );
+
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
   const [members, setMembers] = React.useState<Record<string, UserProfile>>({});
   const [isDrawing, setIsDrawing] = React.useState(false);
   const [isDistributing, setIsDistributing] = React.useState(false);
   const [isConfirmDistributeOpen, setIsConfirmDistributeOpen] = React.useState(false);
+  const [distributeError, setDistributeError] = React.useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = React.useState(0);
   const [auctionDiscount, setAuctionDiscount] = React.useState('');
   const [treasuryBalance, setTreasuryBalance] = React.useState<number | null>(null);
+  const [walletFundsEstimate, setWalletFundsEstimate] = React.useState(0);
   const [myContributed, setMyContributed] = React.useState<number | null>(null);
   const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
   // De l'argent a-t-il déjà circulé ? Décide si le cercle se modifie en entier
   // et se supprime, ou seulement son nom (même règle que la migration 0029).
   const [moneyMoved, setMoneyMoved] = React.useState(true);
-  const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
@@ -94,34 +124,30 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     fetchMembers();
   }, [group.members]);
 
-  // Caisse réelle = cotisations payées - montants déjà distribués, calculée
-  // de la même façon que ContributionsManager.tsx (évite d'afficher deux
-  // chiffres différents pour "l'argent dans la caisse" selon l'écran).
+  // Lecture pour l'affichage seulement : le pot qui compte est celui du grand livre,
+  // que le serveur vérifie au moment de distribuer (migration 0038).
   React.useEffect(() => {
     const fetchTreasury = async () => {
       const [{ data: contribRows, error: contribError }, { data: payoutRows, error: payoutError }] = await Promise.all([
-        supabase.from('contributions').select('amount, status').eq('group_id', group.id),
+        supabase.from('contributions').select('amount, status, payment_method').eq('group_id', group.id),
         supabase.from('payouts').select('amount').eq('group_id', group.id),
       ]);
       // Échec de lecture : on garde les chiffres précédents plutôt que de
       // conclure à tort que « aucun argent n'a circulé ».
       if (contribError || payoutError) return;
-      const collected = (contribRows ?? [])
-        .filter((c) => c.status === 'paid')
-        .reduce((sum, c) => sum + Number(c.amount), 0);
+      const paid = (contribRows ?? []).filter((c) => c.status === 'paid');
+      const collected = paid.reduce((sum, c) => sum + Number(c.amount), 0);
+      const fromWallets = paid.filter((c) => c.payment_method !== 'cash').reduce((sum, c) => sum + Number(c.amount), 0);
       const distributed = (payoutRows ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
       setTreasuryBalance(collected - distributed);
-      setMoneyMoved(
-        (contribRows ?? []).some((c) => c.status === 'paid') || (payoutRows ?? []).length > 0
-      );
+      setWalletFundsEstimate(Math.max(0, fromWallets - distributed));
+      setMoneyMoved(paid.length > 0 || (payoutRows ?? []).length > 0);
     };
     fetchTreasury();
     // Relu au retour sur l'accueil de la fiche : un paiement ou une
     // distribution fait dans une sous-section change ces chiffres.
-  }, [group.id, section]);
+  }, [group.id, section, refreshKey]);
 
-  // "Ma situation" — ce que CETTE personne a cotisé dans CE cercle, pour la
-  // carte résumé de l'accueil de la fiche (brief : "35 000 FCFA cotisés").
   React.useEffect(() => {
     if (!profile) return;
     const fetchMine = async () => {
@@ -146,7 +172,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     QRCode.toDataURL(`${window.location.origin}/?join=${group.joinCode}`, {
       width: 180,
       margin: 1,
-      color: { dark: '#4B2E05', light: '#00000000' },
+      color: { dark: '#2B2622', light: '#00000000' },
     })
       .then(setQrDataUrl)
       .catch((err) => console.error('QR code generation failed:', err));
@@ -157,6 +183,12 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   const scheduledBeneficiaryId = group.payoutOrder[group.currentPayoutIndex];
   const totalPot = group.contributionAmount * group.members.length;
   const myPositionIdx = profile ? group.payoutOrder.indexOf(profile.uid) : -1;
+
+  const collected = Math.max(0, treasuryBalance ?? 0);
+  const potMissing = Math.max(0, totalPot - collected);
+  const potProgress = totalPot > 0 ? Math.min(100, Math.round((collected / totalPot) * 100)) : 0;
+  // Comme le serveur : la part en espèces est ce que les portefeuilles ne couvrent pas.
+  const cashPart = potMissing === 0 ? Math.max(0, totalPot - walletFundsEstimate) : 0;
 
   const handleDraw = async () => {
     if (!navigator.onLine) {
@@ -185,6 +217,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       return;
     }
     setIsDistributing(true);
+    setDistributeError(null);
     try {
       const result = await executePayoutDisbursement({
         groupId: group.id,
@@ -196,10 +229,16 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         throw new Error(result.message);
       }
       toast.success(result.message);
+      const handedInCash = Number((result as { cashPart?: number }).cashPart ?? 0);
+      if (handedInCash > 0) {
+        toast.info(`${handedInCash.toLocaleString()} ${group.currency} ${t('cir_pot_cash_suffix')}`);
+      }
       setAuctionDiscount('');
+      setRefreshKey((key) => key + 1);
     } catch (error: any) {
       console.error('Distribution error:', error);
-      toast.error(error.message || t('gd_distribute_error_generic'));
+      // Le message du serveur reste affiché : il dit ce qui manque.
+      setDistributeError(error.message || t('gd_distribute_error_generic'));
     } finally {
       setIsDistributing(false);
       setIsConfirmDistributeOpen(false);
@@ -240,96 +279,113 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     }
   };
 
-  /* -------------------------------------------------------------------- */
-  /* Sous-écrans — un lien secondaire = un composant existant, pas de      */
-  /* nouvelle logique métier. */
-  /* -------------------------------------------------------------------- */
+  const closeSection = () => {
+    setSection(null);
+    setPayNow(false);
+  };
 
-  const sectionHeader = (title: string) => (
-    <div className="flex items-center gap-3 mb-1">
-      <Button variant="ghost" size="icon" onClick={() => setSection(null)} className="rounded-xl shrink-0 cursor-pointer">
-        <ArrowLeft className="w-4 h-4" />
-      </Button>
-      <h2 className="text-lg font-serif font-bold text-foreground">{title}</h2>
-    </div>
-  );
-
-  if (section === 'cotisations') {
+  /* -------------------------------------------------------------------- */
+  /* Discussion : tout l'écran, par-dessus les barres de navigation.        */
+  /* -------------------------------------------------------------------- */
+  if (section === 'discussion') {
     return (
-      <div className="space-y-5">
-        {sectionHeader(t('gd_nav_cotisations'))}
+      <div className="fixed inset-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top)]">
+        <div className="shrink-0 border-b border-border bg-card px-4 py-1">
+          <ScreenBar title={group.name} onBack={closeSection} />
+        </div>
+        {profile && (
+          <Chat
+            groupId={group.id}
+            user={profile}
+            groupName={group.name}
+            creatorId={group.creatorId}
+          />
+        )}
+      </div>
+    );
+  }
 
-        {/* La caisse en quatre lignes lisibles, au lieu d'une grille de chiffres */}
-        <SettingsGroup title={t('gd_soft_cash_title')}>
-          <SettingsRow
-            icon="vault"
-            tone="brand"
-            label={t('gd_soft_in_cash')}
-            hint={t('gd_soft_in_cash_hint')}
-            value={`${treasuryBalance !== null ? treasuryBalance.toLocaleString() : '…'} ${group.currency}`}
-          />
-          <SettingsRow
-            icon="cotisation"
-            tone="sage"
-            label={t('gd_soft_per_member')}
-            value={`${group.contributionAmount.toLocaleString()} ${group.currency}`}
-          />
-          <SettingsRow
-            icon="members"
-            tone="sand"
-            label={t('gd_soft_members')}
-            value={group.members.length}
-          />
-          <SettingsRow
-            icon="gift"
-            tone="gold"
-            label={t('gd_soft_pot')}
-            hint={t('gd_soft_pot_hint')}
-            value={`${totalPot.toLocaleString()} ${group.currency}`}
-          />
-        </SettingsGroup>
+  /* -------------------------------------------------------------------- */
+  /* Cotisations et tours                                                   */
+  /* -------------------------------------------------------------------- */
+  if (section === 'cotisations') {
+    // Les dates à venir se déduisent du prochain versement et du rythme.
+    const turnDates: string[] = [];
+    let cursor = group.nextPayoutDate;
+    for (let idx = group.currentPayoutIndex; idx < group.payoutOrder.length; idx += 1) {
+      turnDates[idx] = cursor;
+      cursor = calculateNextPayoutDate(cursor, group.frequency);
+    }
 
-        {/* Qui reçoit quand ? */}
-        <Card className="glass-card rounded-2xl overflow-hidden border border-border/80 shadow-soft">
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center gap-3">
-              <CardTitle className="text-base font-serif font-bold">
-                {t('gd_soft_who_receives')}
-              </CardTitle>
-              <span className="text-[13px] font-bold text-muted-foreground shrink-0">
-                {t('gd_tour_word')} {group.currentPayoutIndex + 1} / {group.members.length}
-              </span>
+    const contributionsList = profile && (
+      <ContributionsManager
+        group={group}
+        user={profile}
+        onBack={closeSection}
+        onNavigateToVerification={onNavigateToVerification}
+        embedded
+        autoDeclare={payNow}
+      />
+    );
+
+    const turns = (
+      <section className="space-y-2">
+        <h2 className="px-1 text-sm font-bold text-foreground">{t('gd_soft_who_receives')}</h2>
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {/* Le pot du tour en cours : réuni ou non, en espèces ou non, avant le bouton. */}
+          <div className="space-y-3 p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[13px] text-muted-foreground">
+                {t('cir_pot_title')} · {t('gd_tour_word')} {group.currentPayoutIndex + 1} / {group.members.length}
+              </p>
+              <p className="text-[15px] font-bold tabular-nums text-foreground">{totalPot.toLocaleString()} {group.currency}</p>
             </div>
-          </CardHeader>
-          <CardContent className="p-5 pt-0 space-y-4">
-            {beneficiaryToDistribute ? (
-              <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="space-y-0.5">
-                  <span className="text-[13px] font-bold text-white/80 flex items-center gap-1">
-                    <Trophy className="w-3 h-3" /> {t('gd_next_beneficiary_label')} ({t('gd_tour_word')} {group.currentPayoutIndex + 1})
-                  </span>
-                  <h4 className="text-lg font-serif font-bold">{memberName(beneficiaryToDistribute)}</h4>
-                  <p className="text-xs text-white/90">
-                    {t('gd_date_label')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-[13px] font-bold text-white/80">{t('gd_net_amount_label')}</span>
-                  <AmountDisplay amount={totalPot} currency={group.currency} size="lg" className="text-white" currencyClassName="text-white/80" />
-                </div>
+
+            <div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={potProgress} aria-valuemin={0} aria-valuemax={100} aria-label={t('cir_pot_collected')}>
+                <div className="h-full rounded-full bg-secondary transition-[width] duration-200 motion-reduce:transition-none" style={{ width: `${potProgress}%` }} />
               </div>
-            ) : (
-              <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="space-y-0.5">
-                  <span className="text-[13px] font-bold text-muted-foreground">
-                    {t('gd_tour_word')} {group.currentPayoutIndex + 1}
-                  </span>
-                  <h4 className="text-sm font-bold text-foreground">{t('gd_draw_required_title')}</h4>
-                  <p className="text-xs text-muted-foreground">{t('gd_no_beneficiary_desc')}</p>
-                </div>
+              <p className="mt-1.5 text-[13px] text-foreground">
+                {t('cir_pot_collected')} : <span className="font-bold tabular-nums">{collected.toLocaleString()} {group.currency}</span>
+                {potMissing > 0 && <> · {t('cir_pot_missing')} <span className="font-bold tabular-nums">{potMissing.toLocaleString()} {group.currency}</span></>}
+              </p>
+              {potMissing > 0 && <p className="text-[13px] text-muted-foreground">{t('cir_pot_missing_hint')}</p>}
+              {cashPart > 0 && (
+                <p className="text-[13px] text-muted-foreground">
+                  {t('cir_pot_cash_prefix')} {cashPart.toLocaleString()} {group.currency} {t('cir_pot_cash_suffix')}
+                </p>
+              )}
+            </div>
+
+            {distributeError && (
+              <p role="alert" className="rounded-xl bg-danger-soft px-3 py-2 text-[13px] font-bold text-danger">{distributeError}</p>
+            )}
+
+            {group.distributionMethod === 'auction' && canManage && group.status === 'active' && beneficiaryToDistribute && (
+              <div className="space-y-1.5">
+                <Label htmlFor="auction_discount" className="text-[13px] font-bold text-foreground">
+                  {t('gd_auction_discount_label')}
+                </Label>
+                <Input
+                  id="auction_discount"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="0"
+                  value={auctionDiscount}
+                  onChange={(e) => setAuctionDiscount(e.target.value)}
+                  className="h-11 rounded-xl text-base"
+                />
+                <p className="text-[13px] text-muted-foreground">{t('gd_auction_discount_desc')}</p>
+              </div>
+            )}
+
+            {!beneficiaryToDistribute && (
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-foreground">{t('gd_draw_required_title')}</p>
+                <p className="text-[13px] text-muted-foreground">{t('gd_no_beneficiary_desc')}</p>
                 {canManage && (
-                  <Button onClick={handleDraw} disabled={isDrawing} className="shrink-0 rounded-xl cursor-pointer">
-                    <Shuffle className="w-4 h-4 mr-2" />
+                  <Button onClick={handleDraw} disabled={isDrawing} className="h-12 w-full cursor-pointer rounded-xl font-bold">
                     {isDrawing ? t('gd_drawing_in_progress') : t('gd_draw_button')}
                   </Button>
                 )}
@@ -337,96 +393,45 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             )}
 
             {canManage && group.status === 'active' && beneficiaryToDistribute && (
-              <div className="bg-card p-4 rounded-2xl border border-border space-y-3">
-                {group.distributionMethod === 'auction' && (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="auction_discount" className="text-xs font-bold text-foreground">
-                      {t('gd_auction_discount_label')}
-                    </Label>
-                    <Input
-                      id="auction_discount"
-                      type="number" inputMode="numeric"
-                      min={0}
-                      placeholder="0"
-                      value={auctionDiscount}
-                      onChange={(e) => setAuctionDiscount(e.target.value)}
-                      className="rounded-xl h-11"
-                    />
-                    <p className="text-[13px] text-muted-foreground">{t('gd_auction_discount_desc')}</p>
-                  </div>
-                )}
-                <Button
-                  onClick={() => setIsConfirmDistributeOpen(true)}
-                  className="w-full gradient-sunset text-white font-bold rounded-xl h-11 cursor-pointer"
-                >
-                  <Gift className="w-4 h-4 mr-2" />
-                  {t('gd_distribute_funds_button')}
-                </Button>
-              </div>
+              <Button
+                onClick={() => setIsConfirmDistributeOpen(true)}
+                className="h-12 w-full cursor-pointer rounded-xl font-bold"
+              >
+                {t('gd_distribute_funds_button')}
+              </Button>
             )}
+          </div>
 
-            <div className="space-y-2 pt-2">
-              {group.payoutOrder.map((memberId, idx) => {
-                const isPast = idx < group.currentPayoutIndex;
-                const isCurrent = idx === group.currentPayoutIndex;
-                return (
-                  <div
-                    key={memberId}
-                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                      isCurrent
-                        ? 'bg-primary/10 border-primary/40 shadow-xs'
-                        : isPast
-                        ? 'bg-muted/30 border-border/40 opacity-70'
-                        : 'bg-card border-border/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isCurrent
-                          ? 'bg-primary text-primary-foreground'
-                          : isPast
-                          ? 'bg-success-soft text-secondary'
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        #{idx + 1}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                          {memberName(memberId)}
-                          {isCurrent && <Badge className="bg-primary text-white text-[13px] px-1.5 py-0">{t('status_active')}</Badge>}
-                        </p>
-                        <p className="text-[13px] text-muted-foreground">
-                          {isPast ? t('gd_payout_done_label') : isCurrent ? t('gd_current_turn_label') : t('gd_upcoming_label')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-foreground">
-                        {totalPot.toLocaleString()} {group.currency}
-                      </span>
-                      <span className={`flex items-center justify-end gap-1 text-[13px] font-bold ${
-                        isPast ? 'text-secondary' : isCurrent ? 'text-primary-ink' : 'text-muted-foreground'
-                      }`}>
-                        {isPast ? <CheckCircle className="w-3 h-3" /> : isCurrent ? <Clock className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                        {isPast ? t('status_paid') : isCurrent ? t('gd_next_short_label') : t('gd_waiting_short_label')}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+          <ul className="divide-y divide-border">
+            {group.payoutOrder.map((memberId, idx) => {
+              const isPast = idx < group.currentPayoutIndex;
+              const isCurrent = idx === group.currentPayoutIndex;
+              return (
+                <li key={memberId} className="flex min-h-12 items-center gap-3 px-4 py-2.5">
+                  <span className={`w-6 shrink-0 text-center text-[13px] font-bold tabular-nums ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {idx + 1}
+                  </span>
+                  <span className={`min-w-0 flex-1 truncate text-sm ${isCurrent ? 'font-bold text-foreground' : isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
+                    {memberName(memberId)}
+                  </span>
+                  <span className={`shrink-0 text-[13px] font-bold ${isPast ? 'text-secondary' : isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {isPast
+                      ? t('cir_turn_received')
+                      : turnDates[idx] ? format(new Date(turnDates[idx]), 'd MMM yyyy', { locale: fr }) : ''}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    );
 
-        {profile && (
-          <ContributionsManager
-            group={group}
-            user={profile}
-            onBack={() => setSection(null)}
-            onNavigateToVerification={onNavigateToVerification}
-            embedded
-          />
-        )}
+    return (
+      <div className="space-y-5">
+        <ScreenBar title={t('gd_nav_cotisations')} onBack={closeSection} />
+
+        {canManage ? <>{turns}{contributionsList}</> : <>{contributionsList}{turns}</>}
 
         <ConfirmationBottomSheet
           isOpen={isConfirmDistributeOpen}
@@ -443,107 +448,87 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
     );
   }
 
+  /* -------------------------------------------------------------------- */
+  /* Membres                                                                */
+  /* -------------------------------------------------------------------- */
   if (section === 'membres') {
+    const inviteUrl = `${window.location.origin}/?join=${group.joinCode}`;
     return (
       <div className="space-y-5">
-        {sectionHeader(t('gd_nav_membres'))}
+        <ScreenBar title={t('gd_nav_membres')} onBack={closeSection} />
 
-        {/* Inviter : le code, WhatsApp, le lien, et le QR code sur demande */}
-        <div className="bg-card rounded-2xl border border-border shadow-soft p-5 space-y-4">
-          <div className="space-y-1">
-            <h3 className="font-serif text-lg font-bold text-foreground">{t('gd_soft_invite_title')}</h3>
-            <p className="text-[13px] text-muted-foreground">{t('gd_soft_invite_desc')}</p>
-          </div>
+        {profile && <MemberManagement group={group} currentUserId={profile.uid} canManage={canManage} />}
 
-          <button
-            type="button"
-            onClick={() => {
-              if (!group.joinCode) return;
-              navigator.clipboard.writeText(group.joinCode);
-              setCopiedCode(true);
-              toast.success(t('gd_code_copied_toast'));
-              setTimeout(() => setCopiedCode(false), 2000);
-            }}
-            className="w-full flex items-center justify-between gap-3 rounded-2xl bg-muted/50 border border-border px-4 py-3 cursor-pointer hover:bg-muted transition-colors"
-            title={t('gd_copy_code_title')}
-          >
-            <span className="text-left">
-              <span className="block text-[13px] text-muted-foreground">{t('gd_unique_code_label')}</span>
-              <span className="block font-mono text-2xl font-bold tracking-[0.2em] text-foreground">{group.joinCode}</span>
-            </span>
-            {copiedCode ? <Check className="w-5 h-5 text-secondary shrink-0" /> : <Copy className="w-5 h-5 text-muted-foreground shrink-0" />}
-          </button>
+        <Button onClick={() => setInviteOpen(true)} className="h-12 w-full cursor-pointer rounded-xl font-bold">
+          {t('cir_invite')}
+        </Button>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              className="h-12 rounded-full bg-[#25D366] hover:bg-[#20BE5B] text-white font-bold cursor-pointer"
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogContent className="gap-3">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">{t('gd_soft_invite_title')}</DialogTitle>
+              <DialogDescription>{t('gd_soft_invite_desc')}</DialogDescription>
+            </DialogHeader>
+
+            <button
+              type="button"
               onClick={() => {
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t('gd_whatsapp_share_text')} ${window.location.origin}/?join=${group.joinCode}`)}`, '_blank');
+                if (!group.joinCode) return;
+                navigator.clipboard.writeText(group.joinCode);
+                setCopiedCode(true);
+                toast.success(t('gd_code_copied_toast'));
+                setTimeout(() => setCopiedCode(false), 2000);
+              }}
+              aria-label={t('gd_copy_code_title')}
+              className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 text-left transition-colors duration-150 hover:bg-muted/70"
+            >
+              <span>
+                <span className="block text-[13px] text-muted-foreground">{t('gd_unique_code_label')}</span>
+                <span className="block font-mono text-2xl font-bold tracking-[0.2em] text-foreground">{group.joinCode}</span>
+              </span>
+              {copiedCode ? <Check className="h-5 w-5 shrink-0 text-secondary" /> : <Copy className="h-5 w-5 shrink-0 text-muted-foreground" />}
+            </button>
+
+            <Button
+              className="h-12 w-full cursor-pointer rounded-xl font-bold"
+              onClick={() => {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t('gd_whatsapp_share_text')} ${inviteUrl}`)}`, '_blank');
               }}
             >
               WhatsApp
             </Button>
             <Button
               variant="outline"
-              className="h-12 rounded-full font-bold cursor-pointer"
+              className="h-12 w-full cursor-pointer gap-2 rounded-xl font-bold"
               onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/?join=${group.joinCode}`);
+                navigator.clipboard.writeText(inviteUrl);
                 setCopiedLink(true);
                 toast.success(t('gd_invite_link_copied_toast'));
                 setTimeout(() => setCopiedLink(false), 2000);
               }}
             >
-              {copiedLink ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+              {copiedLink ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
               {copiedLink ? t('gd_copied_label') : t('gd_soft_copy_link')}
             </Button>
-          </div>
 
-          <details className="group/qr">
-            <summary className="list-none flex items-center justify-center gap-1.5 text-[13px] font-bold text-muted-foreground cursor-pointer hover:text-foreground">
-              <QrCode className="w-4 h-4" />
-              {t('gd_soft_show_qr')}
-            </summary>
-            <div className="flex flex-col items-center gap-2 pt-4">
-              {qrDataUrl ? (
-                <img src={qrDataUrl} alt={t('gd_qr_code_alt')} className="w-40 h-40 rounded-xl border border-border bg-white p-2" />
-              ) : (
-                <div className="w-40 h-40 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                </div>
-              )}
-              <span className="text-[13px] text-muted-foreground">{t('gd_scan_to_join')}</span>
-            </div>
-          </details>
-        </div>
-
-        {group.members.length > 1 && (
-          <Card className="glass-card rounded-2xl overflow-hidden shadow-soft">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-serif">
-                {t('gd_soft_reliability_title')}
-              </CardTitle>
-              <CardDescription>{t('gd_soft_reliability_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {[...group.members]
-                .sort((a, b) => (members[b]?.reputationScore || 0) - (members[a]?.reputationScore || 0))
-                .map((uid, index) => (
-                  <div key={uid} className="flex items-center gap-2">
-                    <span className={`w-6 shrink-0 text-center text-xs font-bold ${index === 0 ? 'text-brand' : 'text-muted-foreground'}`}>#{index + 1}</span>
-                    <MemberCard
-                      className="flex-1"
-                      avatarUrl={members[uid]?.photoURL}
-                      name={memberName(uid)}
-                      subtitle={uid === profile?.uid ? <StatusBadge tone="info" label={t('gd_you_badge')} /> : undefined}
-                      trailing={<StatusBadge tone={index === 0 ? 'warning' : 'neutral'} label={`${members[uid]?.reputationScore ?? '-'} / 100`} />}
-                    />
+            <details>
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-1.5 text-[13px] font-bold text-muted-foreground">
+                <QrCode className="h-4 w-4" />
+                {t('gd_soft_show_qr')}
+              </summary>
+              <div className="flex flex-col items-center gap-2 pt-2">
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt={t('gd_qr_code_alt')} className="h-40 w-40 rounded-xl bg-white p-2" />
+                ) : (
+                  <div className="flex h-40 w-40 items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
-                ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {canManage && profile && <MemberManagement group={group} currentUserId={profile.uid} />}
+                )}
+                <span className="text-[13px] text-muted-foreground">{t('gd_scan_to_join')}</span>
+              </div>
+            </details>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -551,24 +536,8 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   if (section === 'calendrier') {
     return (
       <div className="space-y-5">
-        {sectionHeader(t('calendar'))}
+        <ScreenBar title={t('calendar')} onBack={closeSection} />
         <CalendarView groups={[group]} onSelectGroup={() => {}} />
-      </div>
-    );
-  }
-
-  if (section === 'discussion') {
-    return (
-      <div className="space-y-5">
-        {sectionHeader(t('gd_nav_discussion'))}
-        {profile && (
-          <Chat
-            groupId={group.id}
-            user={profile}
-            groupName={group.name}
-            creatorId={group.creatorId}
-          />
-        )}
       </div>
     );
   }
@@ -576,7 +545,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   if (section === 'documents') {
     return (
       <div className="space-y-5">
-        {sectionHeader(t('gd_nav_documents'))}
+        <ScreenBar title={t('gd_nav_documents')} onBack={closeSection} />
         {profile && <DocumentsManager group={group} user={profile} />}
       </div>
     );
@@ -585,7 +554,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   if (section === 'parametres') {
     return (
       <div className="space-y-5">
-        {sectionHeader(t('gd_nav_parametres'))}
+        <ScreenBar title={t('gd_nav_parametres')} onBack={closeSection} />
 
         <SettingsGroup title={t('gd_soft_rules_title')}>
           <SettingsRow
@@ -610,9 +579,10 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
           />
         </SettingsGroup>
 
-        {group.rules && (
+        {(group.description || group.rules) && (
           <SettingsGroup title={t('gd_circle_rules_title')}>
-            <p className="px-4 py-3.5 text-sm text-muted-foreground whitespace-pre-line">{group.rules}</p>
+            {group.description && <p className="px-4 py-3.5 text-sm text-muted-foreground">{group.description}</p>}
+            {group.rules && <p className="whitespace-pre-line px-4 py-3.5 text-sm text-muted-foreground">{group.rules}</p>}
           </SettingsGroup>
         )}
 
@@ -667,149 +637,67 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
   }
 
   /* -------------------------------------------------------------------- */
-  /* Écran principal — en-tête + prochaine cotisation + ma situation, puis  */
-  /* les 6 accès secondaires. Plus de tout empilé et développé d'un coup.  */
+  /* Écran principal : combien, quand, mon tour. Le reste à un toucher.     */
   /* -------------------------------------------------------------------- */
-
   const daysRemaining = Math.max(0, Math.ceil((new Date(group.nextPayoutDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
-  const links: { id: Section; label: string; icon: EganyeIconName; bg: string; text: string }[] = [
-    { id: 'cotisations', label: t('gd_nav_cotisations') || 'Cotisations', icon: 'cotisation', bg: 'bg-success-soft', text: 'text-secondary' },
-    { id: 'membres', label: t('gd_nav_membres') || 'Membres', icon: 'members', bg: 'bg-[#F4EFE6]', text: 'text-[#3E2F24]' },
-    { id: 'calendrier', label: t('calendar') || 'Calendrier', icon: 'calendar-finance', bg: 'bg-[#FEF6E9]', text: 'text-[#C49A55]' },
-    { id: 'discussion', label: t('gd_nav_discussion') || 'Discussion', icon: 'chat', bg: 'bg-info-soft', text: 'text-info' },
-    { id: 'documents', label: t('gd_nav_documents') || 'Documents', icon: 'document', bg: 'bg-[#FFF2E8]', text: 'text-primary-ink' },
-    { id: 'parametres', label: t('gd_nav_parametres') || 'Paramètres', icon: 'settings', bg: 'bg-muted', text: 'text-muted-foreground' },
-  ];
-
   return (
-    <div className="space-y-4 sm:space-y-5 pb-16">
-      {/* Bouton Retour */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer -ml-2 text-xs font-bold">
-          <EganyeIcon name="chevron-left" size={16} className="mr-1" />
-          <span>{t('gd_back') || 'Retour'}</span>
-        </Button>
-      </div>
+    <div className="space-y-5 pb-16">
+      <ScreenBar title={group.name} onBack={onBack} />
 
-      {/* 1. Header du Cercle */}
-      <div className="flex items-center gap-3.5 bg-card p-4 rounded-2xl border border-border shadow-soft">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-xl border border-[#EFE2D0]">
-          {group.name.slice(0, 2).toUpperCase()}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl font-serif font-bold tracking-tight text-foreground truncate">
-              {group.name}
-            </h1>
-            <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-success-soft text-secondary shrink-0">
-              {group.status === 'active' ? t('dash_active_badge') : t('gd_status_finished')}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground font-medium mt-0.5">
-            {group.members.length} {group.members.length > 1 ? t('gd_participating_members') : t('gd_participating_member')}
+      <CircleHealth groupId={group.id} />
+
+      {group.status === 'active' ? (
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[13px] text-muted-foreground">
+            {t('gd_next_contribution')} · {t('gd_in_prefix')} {daysRemaining} {daysRemaining > 1 ? t('gd_days') : t('gd_day')}
           </p>
-          {group.description && (
-            <p className="text-xs text-muted-foreground/80 line-clamp-1 mt-0.5">
-              {group.description}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Bloc Principal : Prochaine Cotisation */}
-      <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-primary-ink flex items-center gap-1.5">
-            <EganyeIcon name="pending" size={14} />
-            <span>{t('gd_next_contribution')}</span>
-          </span>
-          <span className="text-xs font-bold text-muted-foreground">
-            {t('gd_in_prefix')} {daysRemaining} {daysRemaining > 1 ? t('gd_days') : t('gd_day')}
-          </span>
-        </div>
-
-        <div className="flex items-baseline justify-between">
           <div>
             <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="lg" />
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               {t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
             </p>
           </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setSection('cotisations')}
-          className="gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
-        >
-          <span>{t('dash_contribute_cta')} — {group.contributionAmount.toLocaleString()} {group.currency}</span>
-        </button>
-      </div>
-
-      {/* Bannière de vérification progressive (Juste-à-temps) */}
-      {profile && (profile.kycLevel ?? 1) < 2 && (
-        <div className="bg-[#FFF8F2] dark:bg-card border border-primary/25 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0">
-              <EganyeIcon name="shield" size={16} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-xs text-foreground truncate">{t('gd_kyc_banner_title')}</p>
-              <p className="text-[13px] text-muted-foreground truncate">{t('gd_kyc_banner_desc')}</p>
-            </div>
-          </div>
-          {onNavigateToVerification && (
-            <Button
-              size="sm"
-              onClick={onNavigateToVerification}
-              className="bg-primary hover:bg-[#B8623E] text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0 cursor-pointer"
-            >
-              {t('gd_kyc_banner_cta')}
-            </Button>
-          )}
-        </div>
+          <Button
+            onClick={() => {
+              setPayNow(true);
+              setSection('cotisations');
+            }}
+            className="h-12 w-full cursor-pointer rounded-xl font-bold"
+          >
+            {t('dash_contribute_cta')}
+          </Button>
+        </section>
+      ) : (
+        <p className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-bold text-foreground">{t('gd_status_finished')}</p>
       )}
 
-      {/* 3. Ma Situation */}
-      <div className="bg-card rounded-2xl p-4 shadow-soft border border-border grid grid-cols-2 gap-3">
-        <div>
-          <span className="text-[13px] font-bold text-muted-foreground block">{t('gd_my_total')}</span>
-          <p className="text-base font-serif font-bold text-foreground mt-0.5">
-            {myContributed !== null ? myContributed.toLocaleString() : '0'} {group.currency}
-          </p>
-        </div>
-        <div className="text-right">
-          <span className="text-[13px] font-bold text-muted-foreground block">{t('gd_cycle_position')}</span>
-          <p className="text-base font-serif font-bold text-secondary mt-0.5">
-            {myPositionIdx >= 0 ? `#${myPositionIdx + 1} ${t('gd_out_of')} ${group.members.length}` : '-'}
-          </p>
-        </div>
-      </div>
+      <p className="px-1 text-sm text-foreground">
+        {t('gd_my_total')} : <span className="font-bold tabular-nums">{(myContributed ?? 0).toLocaleString()} {group.currency}</span>
+        {myPositionIdx >= 0 && <> · {t('gd_cycle_position')} : <span className="font-bold tabular-nums">{myPositionIdx + 1} {t('gd_out_of')} {group.members.length}</span></>}
+      </p>
 
-      {/* 4. Sections Secondaires (6 accès nets) */}
-      <div className="space-y-2 pt-1">
-        <h3 className="font-serif font-bold text-sm text-foreground px-1">
-          {t('gd_management_space')}
-        </h3>
-        <div className="bg-card rounded-2xl shadow-soft border border-border overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-          {links.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => setSection(link.id)}
-              className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left hover:bg-muted/40 active:bg-muted transition-colors cursor-pointer group"
-            >
-              <div className={`w-9 h-9 rounded-xl ${link.bg} ${link.text} flex items-center justify-center shrink-0`}>
-                <EganyeIcon name={link.icon} size={18} />
-              </div>
-              <span className="flex-1 font-bold text-sm text-foreground group-hover:text-primary-ink transition-colors">
-                {link.label}
-              </span>
-              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary-ink transition-colors" />
-            </button>
-          ))}
-        </div>
-      </div>
+      <nav className="divide-y divide-border rounded-2xl border border-border bg-card" aria-label={group.name}>
+        <NavRow icon={HandCoins} label={t('gd_nav_cotisations')} onClick={() => setSection('cotisations')} />
+        <NavRow icon={Users} label={t('gd_nav_membres')} value={group.members.length} onClick={() => setSection('membres')} />
+        <NavRow icon={MessageSquare} label={t('gd_nav_discussion')} onClick={() => setSection('discussion')} />
+        <button
+          type="button"
+          onClick={() => setShowMore((value) => !value)}
+          aria-expanded={showMore}
+          className="flex min-h-12 w-full cursor-pointer items-center justify-between px-4 text-left text-[13px] font-bold text-muted-foreground last:rounded-b-2xl"
+        >
+          {t('cir_more')}
+          <ChevronDown className={`h-5 w-5 transition-transform duration-200 motion-reduce:transition-none ${showMore ? 'rotate-180' : ''}`} />
+        </button>
+        {showMore && (
+          <>
+            <NavRow icon={CalendarDays} label={t('calendar')} onClick={() => setSection('calendrier')} />
+            <NavRow icon={FileText} label={t('gd_nav_documents')} onClick={() => setSection('documents')} />
+            <NavRow icon={Settings} label={t('gd_nav_parametres')} onClick={() => setSection('parametres')} />
+          </>
+        )}
+      </nav>
     </div>
   );
 }

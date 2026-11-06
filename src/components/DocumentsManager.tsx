@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Check, Download, Loader2, Trash2, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapGroupDocumentRow } from '@/lib/mappers';
 import { Group, GroupDocument, UserProfile } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
-import { FileText, Upload, Loader2, Trash2, Download, File } from 'lucide-react';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface DocumentsManagerProps {
   group: Group;
@@ -31,11 +31,21 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
 
   const [documents, setDocuments] = useState<GroupDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  // Le fichier choisi attend sa catégorie : on la demande après, pas avant.
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [category, setCategory] = useState<GroupDocument['category']>('autre');
   const [uploading, setUploading] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<GroupDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  useBackHandler(
+    React.useCallback(() => {
+      setPendingFile(null);
+      return true;
+    }, []),
+    pendingFile !== null
+  );
 
   const fetchDocuments = useCallback(async () => {
     const { data, error } = await supabase
@@ -60,14 +70,21 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
     return () => { supabase.removeChannel(channel); };
   }, [group.id, fetchDocuments]);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = '';
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
       toast.error(t('doc_file_too_large_error'));
       return;
     }
+    setCategory('autre');
+    setPendingFile(file);
+  };
 
+  const handleUpload = async () => {
+    const file = pendingFile;
+    if (!file) return;
     setUploading(true);
     try {
       const storagePath = `${group.id}/${Date.now()}_${file.name}`;
@@ -87,12 +104,12 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
       if (insertError) throw insertError;
 
       toast.success(t('doc_shared_success'));
+      setPendingFile(null);
     } catch (error) {
       console.error('Error uploading document:', error);
       toast.error(t('doc_upload_error'));
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -129,67 +146,76 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
   };
 
   return (
-    <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-4">
-      <div>
-        <h2 className="text-base font-serif font-bold text-foreground flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary-ink" />
-          {t('doc_section_title')}
-        </h2>
-        <p className="text-[13px] text-muted-foreground mt-0.5">{t('doc_section_desc')}</p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={category} onValueChange={(v) => setCategory(v as GroupDocument['category'])}>
-          <SelectTrigger className="sm:w-[180px] rounded-xl">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(categoryLabels) as GroupDocument['category'][]).map((key) => (
-              <SelectItem key={key} value={key}>{categoryLabels[key]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
-        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="sm:w-auto rounded-xl gap-1.5 cursor-pointer">
-          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-          {t('doc_share_button')}
-        </Button>
-      </div>
-
+    <div className="space-y-4">
       {loading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary-ink" /></div>
+        <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : documents.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-6">{t('doc_empty_state')}</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t('doc_empty_state')}</p>
       ) : (
-        <div className="space-y-2">
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
           {documents.map((document) => (
-            <div key={document.id} className="flex items-center justify-between p-3 rounded-2xl border border-border/70">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                  <File className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{document.name}</p>
-                  <p className="text-[13px] text-muted-foreground">
-                    {categoryLabels[document.category]} • {formatSize(document.size)} • {t('doc_uploaded_by_prefix')} {document.uploaderName} • {format(new Date(document.uploadedAt), 'dd/MM/yyyy')}
-                  </p>
-                </div>
+            <li key={document.id} className="flex items-center gap-1 py-1 pl-4 pr-1">
+              <div className="min-w-0 flex-1 py-1.5">
+                <p className="truncate text-sm font-bold text-foreground">{document.name}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {categoryLabels[document.category]} · {formatSize(document.size)} · {document.uploaderName} · {format(new Date(document.uploadedAt), 'dd/MM/yyyy')}
+                </p>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Badge variant="outline" className="hidden sm:inline-flex text-[13px] rounded-full">{categoryLabels[document.category]}</Badge>
-                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => handleDownload(document)} title={t('doc_download_title')}>
-                  <Download className="w-4 h-4" />
-                </Button>
-                {(document.uploaderId === user.uid || user.uid === group.creatorId || user.role === 'admin') && (
-                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl text-danger cursor-pointer" onClick={() => setPendingDelete(document)} title={t('bank_delete_cta')}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+              <button
+                type="button"
+                onClick={() => handleDownload(document)}
+                aria-label={t('doc_download_title')}
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+              {(document.uploaderId === user.uid || user.uid === group.creatorId || user.role === 'admin') && (
+                <button
+                  type="button"
+                  onClick={() => setPendingDelete(document)}
+                  aria-label={t('bank_delete_cta')}
+                  className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-danger"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
+
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+      <Button onClick={() => fileInputRef.current?.click()} className="h-12 w-full cursor-pointer gap-2 rounded-xl font-bold">
+        <Upload className="h-5 w-5" />
+        {t('doc_share_button')}
+      </Button>
+
+      <Dialog open={pendingFile !== null} onOpenChange={(open) => { if (!open && !uploading) setPendingFile(null); }}>
+        <DialogContent className="gap-3">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">{t('cir_doc_choose_category')}</DialogTitle>
+            <DialogDescription className="truncate">{pendingFile?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="divide-y divide-border rounded-2xl border border-border">
+            {(Object.keys(categoryLabels) as GroupDocument['category'][]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setCategory(key)}
+                aria-pressed={category === key}
+                className="flex min-h-12 w-full cursor-pointer items-center justify-between px-4 text-left text-sm font-bold text-foreground transition-colors duration-150 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50"
+              >
+                {categoryLabels[key]}
+                {category === key && <Check className="h-5 w-5 text-primary-ink" />}
+              </button>
+            ))}
+          </div>
+          <Button onClick={handleUpload} disabled={uploading} className="h-12 w-full cursor-pointer gap-2 rounded-xl font-bold">
+            {uploading && <Loader2 className="h-5 w-5 animate-spin" />}
+            {t('doc_share_button')}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmationBottomSheet
         isOpen={!!pendingDelete}

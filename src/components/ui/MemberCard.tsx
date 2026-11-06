@@ -6,31 +6,24 @@ interface MemberCardProps {
   name: string;
   subtitle?: React.ReactNode;
   trailing?: React.ReactNode;
-  tone?: 'default' | 'pending';
   className?: string;
 }
 
 /**
- * Ligne « personne » — avatar + nom + ligne de contexte + zone d'action —
- * réutilisée partout où l'app montre un membre : gestion des membres,
- * classement de fiabilité, appel de cotisation. Même design, où qu'elle
- * apparaisse (règle de cohérence).
+ * Ligne « personne » : avatar, nom, contexte, action. À placer dans une liste séparée
+ * par des filets, sans cadre propre.
  */
-export function MemberCard({ avatarUrl, name, subtitle, trailing, tone = 'default', className = '' }: MemberCardProps) {
+export function MemberCard({ avatarUrl, name, subtitle, trailing, className = '' }: MemberCardProps) {
   return (
-    <div
-      className={`flex items-center justify-between gap-2 p-2.5 rounded-2xl border ${
-        tone === 'pending' ? 'bg-brand/10 border-brand/20' : 'border-border/70 bg-card'
-      } ${className}`}
-    >
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className={`flex min-h-14 items-center justify-between gap-3 px-4 py-2.5 ${className}`}>
+      <div className="flex min-w-0 items-center gap-3">
         <CustomAvatar photoURL={avatarUrl} name={name} size={36} />
         <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground truncate">{name}</p>
-          {subtitle && <div className="text-[13px] text-muted-foreground truncate">{subtitle}</div>}
+          <p className="truncate text-sm font-bold text-foreground">{name}</p>
+          {subtitle && <div className="truncate text-[13px] text-muted-foreground">{subtitle}</div>}
         </div>
       </div>
-      {trailing && <div className="flex items-center gap-1.5 shrink-0">{trailing}</div>}
+      {trailing && <div className="flex shrink-0 items-center gap-1.5">{trailing}</div>}
     </div>
   );
 }

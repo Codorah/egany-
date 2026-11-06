@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/lib/supabase';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
+import { useBackHandler } from '@/hooks/useBackHandler';
 import type { Frequency, Group } from '@/types';
 
 const FREQUENCIES: { value: Frequency; label: string }[] = [
@@ -35,7 +36,7 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
   return (
     <section className="space-y-2">
       <h3 className="text-[13px] font-bold text-muted-foreground px-3">{title}</h3>
-      <div className="bg-card rounded-2xl border border-border shadow-soft divide-y divide-border">{children}</div>
+      <div className="bg-card rounded-2xl border border-border divide-y divide-border">{children}</div>
     </section>
   );
 }
@@ -67,6 +68,15 @@ export function EditGroupDialog({
   const [penalties, setPenalties] = useState((group.penaltyAmount ?? 0) > 0 || (group.penaltyRate ?? 0) > 0);
   const [saving, setSaving] = useState(false);
 
+  // Retour Android : ferme cet écran, sans changer celui du dessous.
+  useBackHandler(
+    React.useCallback(() => {
+      onOpenChange(false);
+      return true;
+    }, [onOpenChange]),
+    open
+  );
+
   // Repartir des valeurs actuelles à chaque ouverture.
   useEffect(() => {
     if (!open) return;
@@ -89,7 +99,7 @@ export function EditGroupDialog({
 
     const patch: Record<string, unknown> = {
       name: trimmedName,
-      description: description.trim() || 'Tontine collective et solidaire Eganyé',
+      description: description.trim() || 'Tontine collective et solidaire eganyé',
       is_private: isPrivate,
     };
 
@@ -269,7 +279,7 @@ export function EditGroupDialog({
             size="lg"
             onClick={save}
             disabled={saving}
-            className="w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
+            className="w-full h-12 rounded-xl gradient-sunset text-white font-bold cursor-pointer"
           >
             {saving ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
