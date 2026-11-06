@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { EganyeIcon } from './EganyeIcon';
-import { BrandVisual } from './BrandVisual';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED } from '@/lib/links';
 import { isInstalledApp, isIos, promptInstall, useCanPromptInstall } from '@/lib/pwaInstall';
@@ -19,6 +17,9 @@ const DISMISSED_KEY = 'eganye_pwa_prompt_dismissed_at';
 const INSTALLED_KEY = 'eganye_pwa_installed';
 // Un refus se respecte : on ne repropose pas avant deux semaines.
 const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+const FIRST_SEEN_KEY = 'eganye_pwa_first_seen_at';
+// Pas à la première visite : la personne vient d'arriver, elle a autre chose à faire.
+const FIRST_VISIT_MS = 24 * 60 * 60 * 1000;
 // Laisse l'écran se charger avant d'interrompre : une modale qui saute au
 // visage à la première frame donne envie de la fermer sans la lire.
 const APPEAR_DELAY_MS = 4000;
@@ -38,6 +39,19 @@ function wasDismissedRecently(): boolean {
   }
 }
 
+function isFirstVisit(): boolean {
+  try {
+    const raw = localStorage.getItem(FIRST_SEEN_KEY);
+    if (!raw) {
+      localStorage.setItem(FIRST_SEEN_KEY, String(Date.now()));
+      return true;
+    }
+    return Date.now() - Number(raw) < FIRST_VISIT_MS;
+  } catch {
+    return false;
+  }
+}
+
 function remember(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
@@ -51,11 +65,12 @@ export function InstallPrompt() {
   const canPrompt = useCanPromptInstall();
   const [visible, setVisible] = useState(false);
   const [iosHint, setIosHint] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   // L'événement d'installation est capté dès le chargement par pwaInstall ;
   // ici on décide seulement quand proposer la fenêtre.
   useEffect(() => {
-    if (isInstalledApp() || wasDismissedRecently()) return;
+    if (isInstalledApp() || wasDismissedRecently() || isFirstVisit()) return;
     if (!canPrompt && !isIos()) return;
     // iOS ne déclenche jamais beforeinstallprompt : on bascule sur le mode
     // « explique le geste » au lieu de ne rien proposer du tout.
@@ -82,98 +97,64 @@ export function InstallPrompt() {
   return (
     <AnimatePresence>
       {visible && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={dismiss}
-            className="fixed inset-0 z-[60] bg-[#3E2F24]/45-[2px]"
-            aria-hidden="true"
-          />
+        <motion.div
+          role="dialog"
+          aria-labelledby="install-prompt-title"
+          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-30 mx-auto max-w-sm rounded-2xl bg-card p-4 shadow-elevated md:bottom-6"
+        >
+          <h2 id="install-prompt-title" className="text-[15px] font-bold leading-tight text-foreground">
+            {t('install_title')}
+          </h2>
+          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+            {iosHint ? t('install_ios_hint') : t('install_desc')}
+          </p>
 
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="install-prompt-title"
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="fixed inset-x-3 bottom-3 z-[61] mx-auto max-w-sm rounded-2xl border border-[#EFE2D0] dark:border-border bg-card p-5 shadow-soft sm:inset-x-0 sm:bottom-6"
-          >
-            <button
-              type="button"
-              onClick={dismiss}
-              aria-label={t('install_close')}
-              className="absolute right-3.5 top-3.5 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
-            >
-              <EganyeIcon name="close" size={16} />
-            </button>
-
-            <div className="flex items-start gap-3.5">
-              {/* Le personnage présente une tablette : c'est exactement le
-                  geste que la modale propose, mettre l'app sur un appareil. */}
-              <BrandVisual name="tablet" height={92} className="-my-1 shrink-0" alt="" />
-              <div className="min-w-0 pr-6">
-                <h2
-                  id="install-prompt-title"
-                  className="font-serif text-base font-bold leading-tight text-foreground"
-                >
-                  {t('install_title')}
-                </h2>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {iosHint
-                    ? t('install_ios_hint')
-                    : t('install_desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2">
-              {iosHint ? (
+          <div className="mt-3 flex items-center gap-2">
+            {iosHint ? (
+              <button
+                type="button"
+                onClick={dismiss}
+                className="h-11 flex-1 rounded-xl bg-primary text-[15px] font-bold text-primary-foreground cursor-pointer"
+              >
+                {t('install_got_it')}
+              </button>
+            ) : (
+              <>
                 <button
                   type="button"
                   onClick={dismiss}
-                  className="gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer"
+                  className="h-11 rounded-xl px-4 text-[15px] font-bold text-muted-foreground cursor-pointer"
                 >
-                  {t('install_got_it')}
+                  {t('install_later')}
                 </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={dismiss}
-                    className="h-11 rounded-2xl px-4 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-                  >
-                    {t('install_later')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={install}
-                    className="gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer inline-flex items-center justify-center gap-2"
-                  >
-                    <EganyeIcon name="download" size={16} />
-                    <span>{t('install_cta')}</span>
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Android hors Play Store : l'APK signé du site, pour qui préfère
-                une vraie app à l'installation par le navigateur. */}
-            {!iosHint && !PLAY_STORE_PUBLISHED && (
-              <a
-                href={APK_DOWNLOAD_URL}
-                download="eganye.apk"
-                onClick={dismiss}
-                className="mt-3 block text-center text-xs font-bold text-muted-foreground underline underline-offset-2 hover:text-foreground"
-              >
-                {t('install_apk_link')}
-              </a>
+                <button
+                  type="button"
+                  onClick={install}
+                  className="h-11 flex-1 rounded-xl bg-primary text-[15px] font-bold text-primary-foreground cursor-pointer"
+                >
+                  {t('install_cta')}
+                </button>
+              </>
             )}
-          </motion.div>
-        </>
+          </div>
+
+          {/* Android hors Play Store : l'APK signé du site, pour qui préfère
+              une vraie app à l'installation par le navigateur. */}
+          {!iosHint && !PLAY_STORE_PUBLISHED && (
+            <a
+              href={APK_DOWNLOAD_URL}
+              download="eganye.apk"
+              onClick={dismiss}
+              className="mt-1 flex min-h-11 items-center justify-center text-[13px] font-bold text-muted-foreground underline underline-offset-2"
+            >
+              {t('install_apk_link')}
+            </a>
+          )}
+        </motion.div>
       )}
     </AnimatePresence>
   );

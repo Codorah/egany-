@@ -38,10 +38,10 @@ function Reveal({ children, delay = 0, className = '' }: { children: React.React
   return (
     <motion.div
       className={className}
-      initial={reduce ? false : { opacity: 0, y: 28 }}
+      initial={reduce ? false : { opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.7, delay, ease }}
+      transition={{ duration: 0.25, delay: Math.min(delay, 0.1), ease }}
     >
       {children}
     </motion.div>
@@ -92,19 +92,19 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             className="col-span-6 space-y-8"
             initial={reduce ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease }}
+            transition={{ duration: 0.25, ease }}
           >
             <h1 className="text-5xl xl:text-6xl font-heading font-bold tracking-tight leading-[1.05] text-balance">
               Vos tontines, enfin dans votre poche.
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-[46ch]">
-              Créez votre cercle d'épargne, cotisez par Flooz ou Mixx et suivez chaque franc, en toute transparence.
+              Créez votre cercle d'épargne, cotisez par Flooz ou Mixx et suivez chaque franc. Un assistant vous prévient avant un retard et vous explique votre score.
             </p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={onStart}
-                className="h-14 px-8 rounded-full text-base font-bold text-white gradient-sunset glow-orange hover:brightness-105 active:scale-[0.98] transition flex items-center gap-2 cursor-pointer"
+                className="h-14 px-8 rounded-full text-base font-bold text-white gradient-sunset hover:brightness-105 active:scale-[0.98] transition flex items-center gap-2 cursor-pointer"
               >
                 Commencer <ArrowRight className="w-5 h-5" />
               </button>
@@ -119,7 +119,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                   href={PLAY_STORE_URL}
                   target="_blank"
                   rel="noopener"
-                  className="h-14 px-7 rounded-full text-base font-bold border-2 border-border bg-card hover:bg-muted transition flex items-center gap-2"
+                  className="h-14 px-2 inline-flex items-center gap-2 text-base font-bold text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Smartphone className="w-5 h-5" /> Télécharger l'app
                 </a>
@@ -127,7 +127,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 <a
                   href={APK_DOWNLOAD_URL}
                   download="eganye.apk"
-                  className="h-14 px-7 rounded-full text-base font-bold border-2 border-border bg-card hover:bg-muted transition flex items-center gap-2"
+                  className="h-14 px-2 inline-flex items-center gap-2 text-base font-bold text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Smartphone className="w-5 h-5" /> App Android (APK)
                 </a>
@@ -141,7 +141,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.1, ease }}
           >
-            <div className="relative ml-auto w-[88%] aspect-[4/5] rounded-[2rem] overflow-hidden shadow-[0_40px_80px_-30px_rgba(169,86,54,0.45)]">
+            <div className="relative ml-auto w-[88%] aspect-[4/5] rounded-2xl overflow-hidden">
               <img
                 src="/onboarding/mamas.webp"
                 alt="Commerçantes sur un marché ouest-africain"
@@ -149,7 +149,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 fetchPriority="high"
               />
             </div>
-            <div className="absolute -left-2 bottom-12 w-[46%] aspect-square rounded-[2rem] overflow-hidden border-[6px] border-background shadow-xl">
+            <div className="absolute -left-2 bottom-12 w-[46%] aspect-square rounded-2xl overflow-hidden border-[6px] border-background shadow-xl">
               <img
                 src="/onboarding/young-savers.webp"
                 alt="Deux jeunes femmes regardant un téléphone en souriant"
@@ -165,12 +165,12 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-10">
           <Reveal>
             <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight text-center">
-              eganyé en moins de deux minutes.
+              eganyé en vidéo.
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
             <video
-              className="w-full aspect-video rounded-[2rem] bg-foreground shadow-[0_40px_80px_-30px_rgba(169,86,54,0.45)]"
+              className="w-full aspect-video rounded-2xl bg-foreground"
               src="/video/eganye-presentation.mp4"
               poster="/video/eganye-presentation.jpg"
               controls
@@ -186,7 +186,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         <section id="fonctionnement" className="scroll-mt-20 bg-card border-y border-border">
           <div className="max-w-7xl mx-auto px-8 py-24 grid grid-cols-12 gap-16 items-center">
             <Reveal className="col-span-5">
-              <div className="aspect-[3/4] rounded-[2rem] overflow-hidden">
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden">
                 <img src="/onboarding/vendor.webp" alt="Commerçante souriante tenant un téléphone dans sa boutique" className="w-full h-full object-cover" loading="lazy" />
               </div>
             </Reveal>
@@ -228,7 +228,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
           </Reveal>
           <div className="grid grid-cols-6 auto-rows-[220px] gap-5">
             <Reveal className="col-span-4 row-span-2">
-              <div className="h-full rounded-[2rem] gradient-sunset text-white p-10 flex flex-col justify-between overflow-hidden relative">
+              <div className="h-full rounded-2xl gradient-sunset text-white p-10 flex flex-col justify-between overflow-hidden relative">
                 <img
                   src="/onboarding/mamas.webp"
                   alt=""
@@ -243,7 +243,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               </div>
             </Reveal>
             <Reveal className="col-span-2" delay={0.06}>
-              <div className="h-full rounded-[2rem] bg-card border border-border p-7 flex flex-col justify-between">
+              <div className="h-full rounded-2xl bg-card border border-border p-7 flex flex-col justify-between">
                 <PiggyBank className="w-8 h-8 text-brand" />
                 <div className="space-y-1.5">
                   <h3 className="text-lg font-heading font-bold">Mon Épargne</h3>
@@ -252,7 +252,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               </div>
             </Reveal>
             <Reveal className="col-span-2" delay={0.12}>
-              <div className="h-full rounded-[2rem] bg-secondary/12 border border-secondary/20 p-7 flex flex-col justify-between">
+              <div className="h-full rounded-2xl bg-secondary/12 border border-secondary/20 p-7 flex flex-col justify-between">
                 <BellRing className="w-8 h-8 text-secondary" />
                 <div className="space-y-1.5">
                   <h3 className="text-lg font-heading font-bold">Rappels avant chaque échéance</h3>
@@ -261,7 +261,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               </div>
             </Reveal>
             <Reveal className="col-span-3" delay={0.06}>
-              <div className="h-full rounded-[2rem] bg-card border border-border p-7 flex items-end gap-6">
+              <div className="h-full rounded-2xl bg-card border border-border p-7 flex items-end gap-6">
                 <div className="space-y-1.5 flex-1">
                   <MessagesSquare className="w-8 h-8 text-brand mb-4" />
                   <h3 className="text-lg font-heading font-bold">Discussion et calendrier du cercle</h3>
@@ -271,7 +271,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               </div>
             </Reveal>
             <Reveal className="col-span-3" delay={0.12}>
-              <div className="h-full rounded-[2rem] overflow-hidden relative">
+              <div className="h-full rounded-2xl overflow-hidden relative">
                 <img src="/onboarding/young-savers.webp" alt="" className="absolute inset-0 w-full h-full object-cover object-[50%_40%]" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 p-7 space-y-1.5 text-white">
@@ -285,7 +285,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
 
         {/* ------------------------------------- Argent pour son activité */}
         <section id="argent" className="scroll-mt-20 max-w-7xl mx-auto px-8 pb-24">
-          <div className="rounded-[2.5rem] bg-brand/[0.07] border border-brand/15 px-14 py-16 space-y-12">
+          <div className="space-y-8">
             <Reveal>
               <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight max-w-[24ch]">
                 Besoin d'argent pour votre activité ?
@@ -293,7 +293,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             </Reveal>
             <div className="max-w-2xl">
               <Reveal delay={0.08}>
-                <article className="h-full rounded-[2rem] bg-card border border-border overflow-hidden flex flex-col">
+                <article className="h-full rounded-2xl bg-card border border-border overflow-hidden flex flex-col">
                   <div className="h-56 w-full relative overflow-hidden">
                     <img
                       src="/onboarding/credit-merchant.webp"
@@ -302,7 +302,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-4 left-6 w-12 h-12 rounded-2xl bg-secondary text-white flex items-center justify-center shadow-elevated">
+                    <div className="absolute bottom-4 left-6 w-12 h-12 rounded-2xl bg-secondary text-white flex items-center justify-center">
                       <HandCoins className="w-6 h-6" />
                     </div>
                   </div>
@@ -353,9 +353,9 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         {/* ------------------------------------------------- Appel final */}
         <section className="max-w-7xl mx-auto px-8 py-24">
           <Reveal>
-            <div className="rounded-[2.5rem] gradient-sunset text-white px-16 py-16 flex items-center justify-between gap-10">
+            <div className="rounded-2xl gradient-sunset text-white px-16 py-16 flex items-center justify-between gap-10">
               <div className="space-y-3">
-                <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight">Votre premier cercle en deux minutes.</h2>
+                <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight">Créez votre premier cercle.</h2>
                 <p className="text-white/85 text-lg">Gratuit à l'inscription, sur téléphone comme sur ordinateur.</p>
               </div>
               <button

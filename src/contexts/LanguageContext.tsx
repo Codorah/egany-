@@ -12,6 +12,179 @@ export interface LanguageContextType {
 }
 
 const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
+  // Cercles : fiche, cotisations, membres
+  cir_more: {
+    fr: 'Plus',
+    en: 'More'
+  },
+  cir_pot_title: {
+    fr: 'Pot de ce tour',
+    en: 'Pot for this turn'
+  },
+  cir_pot_collected: {
+    fr: 'Réuni',
+    en: 'Collected'
+  },
+  cir_pot_missing: {
+    fr: 'il manque',
+    en: 'missing'
+  },
+  cir_pot_missing_hint: {
+    fr: 'Tous les membres doivent avoir cotisé avant la distribution.',
+    en: 'All members must have contributed before the payout.'
+  },
+  cir_pot_cash_prefix: {
+    fr: 'Dont',
+    en: 'Including'
+  },
+  cir_pot_cash_suffix: {
+    fr: 'en espèces, remis en main propre par l’organisateur. Cette part n’arrive pas sur le portefeuille.',
+    en: 'in cash, handed over by the organizer. This part does not reach the wallet.'
+  },
+  cir_turn_received: {
+    fr: 'Reçu',
+    en: 'Received'
+  },
+  cir_invite: {
+    fr: 'Inviter',
+    en: 'Invite'
+  },
+  cir_role_title: {
+    fr: 'Rôle dans le cercle',
+    en: 'Role in the circle'
+  },
+  cir_my_contribution: {
+    fr: 'Ma cotisation',
+    en: 'My contribution'
+  },
+  cir_nothing_to_pay: {
+    fr: 'Aucune cotisation à régler pour le moment.',
+    en: 'Nothing to pay for now.'
+  },
+  cir_auto_debit: {
+    fr: 'Prélevée automatiquement dès que votre solde suffit. Déjà payée autrement ? Déclarez-la.',
+    en: 'Debited automatically once your balance is enough. Already paid another way? Declare it.'
+  },
+  cir_to_validate: {
+    fr: 'À valider',
+    en: 'To approve'
+  },
+  cir_history: {
+    fr: 'Historique',
+    en: 'History'
+  },
+  cir_export: {
+    fr: 'Exporter',
+    en: 'Export'
+  },
+  cir_validate: {
+    fr: 'Valider',
+    en: 'Approve'
+  },
+  cir_not_called: {
+    fr: 'Pas encore appelée',
+    en: 'Not requested yet'
+  },
+  cir_call_action: {
+    fr: 'Appeler la cotisation',
+    en: 'Request the contribution'
+  },
+  cir_cash_action: {
+    fr: 'Encaisser en espèces',
+    en: 'Record a cash payment'
+  },
+  cir_set_status: {
+    fr: 'Marquer',
+    en: 'Mark as'
+  },
+  cir_doc_choose_category: {
+    fr: 'Quelle catégorie ?',
+    en: 'Which category?'
+  },
+  nav_assistant: {
+    fr: 'Assistant',
+    en: 'Assistant'
+  },
+  nav_profile_short: {
+    fr: 'Profil',
+    en: 'Profile'
+  },
+  nav_wallet: {
+    fr: 'Portefeuille',
+    en: 'Wallet'
+  },
+  dash_to_pay: {
+    fr: 'À payer',
+    en: 'To pay'
+  },
+  dash_to_pay_late: {
+    fr: 'À payer, en retard',
+    en: 'To pay, overdue'
+  },
+  dash_others_to_pay: {
+    fr: 'autre(s) à payer',
+    en: 'more to pay'
+  },
+  dash_nothing_to_pay: {
+    fr: 'Aucune cotisation à payer',
+    en: 'No contribution to pay'
+  },
+  dash_awaiting_approval: {
+    fr: 'Votre paiement attend la validation de l’organisateur',
+    en: 'Your payment is awaiting the organizer’s approval'
+  },
+  dash_total_contributed: {
+    fr: 'Cotisé au total',
+    en: 'Total contributed'
+  },
+  cir_status_to_pay: {
+    fr: 'À payer',
+    en: 'To pay'
+  },
+  cir_status_completed: {
+    fr: 'Terminé',
+    en: 'Completed'
+  },
+  cir_add_aria: {
+    fr: 'Ajouter un cercle',
+    en: 'Add a circle'
+  },
+  cir_add_title: {
+    fr: 'Ajouter un cercle',
+    en: 'Add a circle'
+  },
+  act_empty_title: {
+    fr: 'Rien pour le moment',
+    en: 'Nothing yet'
+  },
+  act_empty_desc: {
+    fr: 'Vos paiements et les nouvelles de vos cercles arriveront ici.',
+    en: 'Your payments and circle news will appear here.'
+  },
+  act_empty_cta: {
+    fr: 'Voir les cercles',
+    en: 'See circles'
+  },
+  act_status_failed: {
+    fr: 'Échec',
+    en: 'Failed'
+  },
+  act_unread: {
+    fr: 'Non lu',
+    en: 'Unread'
+  },
+  act_delete_notification: {
+    fr: 'Supprimer cette notification',
+    en: 'Delete this notification'
+  },
+  cal_prev_month: {
+    fr: 'Mois précédent',
+    en: 'Previous month'
+  },
+  cal_next_month: {
+    fr: 'Mois suivant',
+    en: 'Next month'
+  },
   // Navigation / App Layout
   app_name: {
     fr: 'Eganyé',
@@ -2806,7 +2979,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Man liidiye kpou'
   },
   my_bank_subtitle: {
-    fr: 'Bloquez votre épargne le temps qu\'il faut, pas le temps que vous voulez.',
+    fr: "De l'argent de côté pour vos projets.",
     en: 'Lock your savings for as long as it takes, not as long as you want.',
     ee: 'Do gaxɔ wò gadzraɖo teƒe si wòhiã, menye teƒe si nèdi o.',
     kbp: 'Ha ño-marali alɩwaatʋ ŋga kɩ-pɔzʋʋ yɔ, pɩ-tɩɩ kɛ ŋga n-sɔɔlɩ yɔ.'
@@ -4456,9 +4629,45 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: 'Womate ŋu agaɖo kod la ɖa o :',
     kbp: 'Pɩ-fɛyɩ ɖeu se pa-tasɩ tiyu kɩlɩzɩ :'
   },
+  onb_welcome_title: {
+    fr: "Vos tontines, dans votre poche.",
+    en: "Your savings circles, in your pocket."
+  },
+  onb_welcome_assistant: {
+    fr: "Un assistant vous prévient avant un retard et vous explique votre score.",
+    en: "An assistant warns you before a late payment and explains your score."
+  },
+  onb_code_received_prefix: {
+    fr: "Entrez le code reçu à",
+    en: "Enter the code sent to"
+  },
+  onb_pw_missing: {
+    fr: "Il manque :",
+    en: "Still needed:"
+  },
+  onb_terms_prefix: {
+    fr: "En créant un compte, vous acceptez les",
+    en: "By creating an account, you accept the"
+  },
+  onb_terms_link: {
+    fr: "conditions d'utilisation",
+    en: "terms of use"
+  },
+  onb_terms_and: {
+    fr: "et la",
+    en: "and the"
+  },
+  onb_privacy_link: {
+    fr: "politique de confidentialité",
+    en: "privacy policy"
+  },
+  onb_intent_later: {
+    fr: "Plus tard",
+    en: "Later"
+  },
   onb_welcome_desc: {
-    fr: "Gérez vos cercles d'épargne africains avec simplicité, automatisez vos cotisations via Flooz, Mixx, et augmentez votre score financier.",
-    en: 'Manage your African savings circles with ease, automate your contributions via Flooz, Mixx, and boost your financial score.',
+    fr: "Épargnez à plusieurs. Cotisez par Flooz ou Mixx. Suivez chaque franc.",
+    en: "Save together. Pay in with Flooz or Mixx. Follow every franc.",
     ee: 'Kpɔ wò Afrika gadzraɖo habɔbɔwo dzi bɔbɔe, wɔ wò gaxexlẽwo automatique to Flooz, Mixx dzi, eye nàdo wò ga xexlẽme ɖe edzi.',
     kbp: 'Ñɩɩ ño-Afrika marali tontinaa pɩ-bɔbɔ, la ño-liidiye haʋ ɖɔɖɔyɔ Flooz, Mixx yɔɔ, nɛ tasɩ ño-liidiye kɩlaʋ yɔɔ.'
   },
@@ -4469,7 +4678,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Nyɩ eganyé'
   },
   onb_intent_title: {
-    fr: 'Que veux-tu faire ?',
+    fr: "Que voulez-vous faire ?",
     en: 'What do you want to do?',
     ee: 'Que veux-tu faire ?',
     kbp: 'Que veux-tu faire ?'
@@ -4487,8 +4696,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Créer une tontine'
   },
   onb_intent_create_desc: {
-    fr: 'Invite tes proches et épargnez ensemble.',
-    en: 'Invite your circle and save together.',
+    fr: "Invitez vos proches.",
+    en: "Invite the people you trust.",
     ee: 'Invite tes proches et épargnez ensemble.',
     kbp: 'Invite tes proches et épargnez ensemble.'
   },
@@ -4571,7 +4780,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Les données peuvent être anciennes. Recharge, retrait, cotisation et création/adhésion de cercle sont désactivés.'
   },
   onb_already_have_account: {
-    fr: "J'ai déjà un compte, me connecter",
+    fr: "J'ai déjà un compte",
     en: 'I already have an account, log me in',
     ee: 'Akɔnta le asinye xoxo, na mage ɖe eme',
     kbp: 'Man-wɛnɩ kalɩyɛ, ha-m ɩ-kpɛndɩ'
@@ -4595,14 +4804,14 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Kɩ-tɔŋ'
   },
   onb_login_title: {
-    fr: 'Connectez-vous',
+    fr: "Connexion",
     en: 'Log in',
     ee: 'Ge Ɖe Eme',
     kbp: 'Kpɛndɩ'
   },
   onb_signup_title: {
-    fr: 'Créez votre Compte',
-    en: 'Create your Account',
+    fr: "Créer un compte",
+    en: "Create an account",
     ee: 'Wɔ Wò Akɔnta',
     kbp: 'Ma ño-kalɩyɛ'
   },
@@ -4703,8 +4912,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Ka malʋʋ...'
   },
   onb_create_account_cta: {
-    fr: 'Créer mon Compte eganyé !',
-    en: 'Create my eganyé Account!',
+    fr: "Créer mon compte",
+    en: "Create my account",
     ee: 'Wɔ Nye eganyé Akɔnta!',
     kbp: 'Ma man eganyé kalɩyɛ!'
   },
@@ -4826,8 +5035,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Mot de passe oublié ?'
   },
   onb_forgot_desc: {
-    fr: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code.",
-    en: "No worries. Enter your email and we'll send you a code.",
+    fr: "Entrez votre email. Nous vous envoyons un code.",
+    en: "Enter your email. We'll send you a code.",
     ee: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code.",
     kbp: "Pas d'inquiétude. Entrez votre email et nous vous enverrons un code."
   },
@@ -5910,8 +6119,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Sécurité biométrique eganyé'
   },
   biom_register_title: {
-    fr: 'Associer votre biométrie',
-    en: 'Link your biometrics',
+    fr: "Activer l'empreinte",
+    en: "Turn on fingerprint",
     ee: 'Associer votre biométrie',
     kbp: 'Associer votre biométrie'
   },
@@ -5922,8 +6131,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Connexion sécurisée'
   },
   biom_register_desc_prefix: {
-    fr: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte",
-    en: 'Enable ultra-fast fingerprint or face access for your account',
+    fr: "Ouvrez eganyé plus vite, sur le compte de",
+    en: "Open eganyé faster, on the account of",
     ee: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte",
     kbp: "Activez l'accès ultra-rapide par empreinte ou reconnaissance faciale pour votre compte"
   },
@@ -6710,7 +6919,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     kbp: 'Tasɩ ɖʋʋ'
   },
   mkt_header_subtitle: {
-    fr: "Profitez de votre score de réputation pour accéder à des services financiers exclusifs au Togo et en Afrique de l'Ouest.",
+    fr: "Des services selon votre fiabilité.",
     en: 'Use your reputation score to access exclusive financial services in Togo and West Africa.',
     ee: 'Zã wò ŋkɔ nyui xexlẽme dze wò gadɔwɔna tɔxɛwo si li le Togo kple Afrika Ɣetoɖoƒe la me.',
     kbp: 'Tɩŋɩɣnɩ ño-ñɩm hɩɖɛ kɩlaʋ yɔɔ nɛ ŋ-kpaɣ liidiye lɩmaɣza ŋgʋ kɩ-fɛyɩ Togo nɛ Afrika ɖɩsɩ hɔɔlʋʋ taa yɔ.'
@@ -6880,16 +7089,16 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Close'
   },
   install_title: {
-    fr: 'Installer Eganyé sur votre téléphone',
-    en: 'Install Eganyé on your phone'
+    fr: "Installer eganyé",
+    en: "Install eganyé",
   },
   install_ios_hint: {
     fr: 'Ouvrez le menu Partager de Safari, puis choisissez « Sur l’écran d’accueil ».',
     en: 'Open Safari’s Share menu, then choose “Add to Home Screen”.'
   },
   install_desc: {
-    fr: 'Accédez à vos cercles en un tap, même hors connexion, sans passer par le navigateur.',
-    en: 'Reach your circles in one tap, even offline, without going through the browser.'
+    fr: "Ouvrez eganyé en un geste.",
+    en: "Open eganyé in one tap.",
   },
   install_got_it: {
     fr: 'J’ai compris',
@@ -6956,8 +7165,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Go back to my initials'
   },
   avw_privacy_note: {
-    fr: 'Votre photo est visible uniquement par les membres de vos cercles d’épargne.',
-    en: 'Your photo is only visible to members of your savings circles.'
+    fr: "Visible par les membres de vos cercles.",
+    en: "Visible to members of your circles.",
   },
   cgd_participants_label: {
     fr: 'Participants',
@@ -7177,8 +7386,28 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'En attente de confirmation',
     en: 'Waiting for confirmation'
   },
+  pay_timeout_title: {
+    fr: "Paiement pas encore confirmé",
+    en: 'Payment not confirmed yet'
+  },
+  pay_timeout_desc_prefix: {
+    fr: "Nous n'avons pas encore de réponse de",
+    en: 'No answer yet from'
+  },
+  pay_timeout_retry: {
+    fr: "Je n'ai pas payé, recommencer",
+    en: "I didn't pay, start again"
+  },
+  pay_failed_title: {
+    fr: "Paiement non abouti",
+    en: 'Payment failed'
+  },
+  pay_failed_desc: {
+    fr: "Rien n'a été crédité. Vous pouvez réessayer.",
+    en: 'Nothing was credited. You can try again.'
+  },
   pay_can_leave: {
-    fr: 'Vous pouvez quitter cet écran : le portefeuille sera crédité dès la confirmation de l\'opérateur.',
+    fr: "Vous pouvez quitter cet écran.",
     en: 'You can leave this screen: the wallet will be credited as soon as the operator confirms.'
   },
   pay_close: {
@@ -7234,7 +7463,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Secure transaction: checked by the server and recorded in the ledger.'
   },
   cbs_cancel: {
-    fr: 'Annuler l\'opération',
+    fr: "Annuler",
     en: 'Cancel'
   },
   cbs_processing: {
@@ -7377,7 +7606,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Reserved money (savings discipline)'
   },
   mb_reserved_desc: {
-    fr: 'Pour vous aider à ne pas dépenser vos économies sur un coup de tête, les fonds restent verrouillés jusqu\'à la date de déblocage. En cas d\'urgence absolue, un déblocage anticipé reste possible avec confirmation.',
+    fr: "Bloqué jusqu'à cette date. En cas d'urgence, vous pourrez retirer avant.",
     en: 'To help you avoid spending your savings on impulse, the funds stay locked until the unlock date. In an absolute emergency, an early unlock is still possible with confirmation.'
   },
   mb_status_label: {
@@ -7441,7 +7670,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Early unlock'
   },
   mb_early_unlock_desc: {
-    fr: 'Cet argent est réservé pour votre objectif. Le débloquer avant terme interrompt votre discipline d\'épargne. Confirmez-vous le retrait vers votre solde disponible ?',
+    fr: "Retirer avant la date ? L'argent ira sur votre solde.",
     en: 'This money is set aside for your goal. Unlocking it early breaks your savings discipline. Do you confirm the withdrawal to your available balance?'
   },
   mb_keep: {

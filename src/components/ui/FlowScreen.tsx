@@ -51,26 +51,31 @@ export function FlowScreen({ onBack, title, step, totalSteps, hero, heading, des
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full h-full md:h-[min(820px,calc(100dvh-3rem))] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background flex flex-col overflow-hidden"
+        className="relative w-full h-full md:h-[min(820px,calc(100dvh-3rem))] md:max-w-[440px] md:rounded-2xl bg-background flex flex-col overflow-hidden"
       >
-        <header className="shrink-0 pt-[env(safe-area-inset-top)] bg-background/95 border-b border-border/60">
+        <header className="shrink-0 pt-[env(safe-area-inset-top)] bg-background border-b border-border">
           <div className="h-14 px-2 flex items-center gap-1">
             <button
               type="button"
               onClick={onBack}
               aria-label="Retour"
-              className="w-11 h-11 rounded-2xl flex items-center justify-center text-foreground hover:bg-muted cursor-pointer shrink-0"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-foreground hover:bg-muted cursor-pointer shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <p className="flex-1 text-center text-[15px] font-bold text-foreground truncate">{title}</p>
-            <div className="w-11 shrink-0 text-right pr-2 text-[13px] font-bold text-muted-foreground tabular-nums">
-              {step && totalSteps ? `${step}/${totalSteps}` : ''}
-            </div>
+            <div className="w-11 shrink-0" />
           </div>
           {progress !== null && (
-            <div className="h-1 bg-muted">
-              <div className="h-full gradient-sunset transition-[width] duration-300 ease-out" style={{ width: `${progress}%` }} />
+            <div
+              role="progressbar"
+              aria-label={`Étape ${step} sur ${totalSteps}`}
+              aria-valuemin={0}
+              aria-valuemax={totalSteps}
+              aria-valuenow={step}
+              className="h-1 bg-muted"
+            >
+              <div className="h-full bg-primary transition-[width] duration-200 ease-out" style={{ width: `${progress}%` }} />
             </div>
           )}
         </header>
@@ -91,7 +96,7 @@ export function FlowScreen({ onBack, title, step, totalSteps, hero, heading, des
         </div>
 
         {footer && (
-          <footer className="shrink-0 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] border-t border-border/60 bg-background space-y-2">
+          <footer className="shrink-0 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] border-t border-border bg-background space-y-2">
             {footer}
           </footer>
         )}
@@ -109,7 +114,7 @@ export function FlowRow({ label, value, strong, onEdit }: { label: string; value
       <span className="flex items-center gap-2 min-w-0">
         <span className="font-bold text-foreground text-right truncate">{value}</span>
         {onEdit && (
-          <button type="button" onClick={onEdit} className="text-[13px] font-bold text-brand underline cursor-pointer shrink-0">
+          <button type="button" onClick={onEdit} className="min-h-11 -my-3 px-1 inline-flex items-center text-[13px] font-bold text-primary-ink underline cursor-pointer shrink-0">
             Modifier
           </button>
         )}
@@ -149,7 +154,7 @@ export function AmountField({ value, onChange, suggestions, max, autoFocus }: {
   const shown = value ? Number(value).toLocaleString('fr-FR') : '';
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border-2 border-border focus-within:border-brand transition-colors px-4 py-6 text-center bg-card">
+      <div className="rounded-2xl border-2 border-border focus-within:border-primary transition-colors px-4 py-6 text-center bg-card">
         <input
           type="text"
           inputMode="numeric"
@@ -171,7 +176,7 @@ export function AmountField({ value, onChange, suggestions, max, autoFocus }: {
               type="button"
               onClick={() => onChange(String(s))}
               className={`h-11 rounded-2xl border text-sm font-bold cursor-pointer transition-colors ${
-                value === String(s) ? 'border-brand bg-brand/10 text-brand' : 'border-border text-foreground hover:bg-muted/60'
+                value === String(s) ? 'border-primary bg-primary/10 text-primary-ink' : 'border-border text-foreground hover:bg-muted/60'
               }`}
             >
               {s.toLocaleString('fr-FR')} F
@@ -186,12 +191,12 @@ export function AmountField({ value, onChange, suggestions, max, autoFocus }: {
 /** Case à cocher large, facile à toucher. */
 export function FlowCheckbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
-    <label className="flex items-start gap-3 p-4 rounded-2xl border border-border cursor-pointer has-[:checked]:border-brand has-[:checked]:bg-brand/5">
+    <label className="flex items-start gap-3 p-4 rounded-2xl border border-border cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 w-5 h-5 rounded border-border accent-[#C96F4A] cursor-pointer shrink-0"
+        className="mt-0.5 w-5 h-5 rounded border-border accent-primary cursor-pointer shrink-0"
       />
       <span className="text-sm text-foreground leading-relaxed">{children}</span>
     </label>

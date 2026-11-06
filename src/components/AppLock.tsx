@@ -128,11 +128,11 @@ export function AppLock({
       className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
     >
       <div className="w-full max-w-sm flex flex-col items-center text-center gap-6">
-        <CustomAvatar photoURL={photoURL} name={displayName} size={80} className="shadow-soft" />
+        <CustomAvatar photoURL={photoURL} name={displayName} size={80} />
         <div className="space-y-1">
           <h1 className="font-serif text-2xl font-bold text-foreground">Bonjour {displayName}</h1>
           <p className="text-[15px] text-muted-foreground">
-            {mode === 'biometric' ? 'Déverrouillez Eganyé avec votre empreinte.' : 'Entrez votre mot de passe pour continuer.'}
+            {mode === 'biometric' ? 'Déverrouillez eganyé avec votre empreinte.' : 'Entrez votre mot de passe pour continuer.'}
           </p>
         </div>
 
@@ -143,14 +143,14 @@ export function AppLock({
               onClick={unlockWithBiometrics}
               disabled={busy}
               aria-label="Déverrouiller avec l'empreinte"
-              className="mx-auto w-24 h-24 rounded-full border-2 border-secondary/40 bg-secondary/5 text-secondary flex items-center justify-center cursor-pointer disabled:opacity-60"
+              className="mx-auto w-24 h-24 rounded-full bg-muted text-foreground flex items-center justify-center cursor-pointer disabled:opacity-60"
             >
               {busy ? <Loader2 className="w-9 h-9 animate-spin" /> : <Fingerprint className="w-12 h-12" />}
             </button>
             <button
               type="button"
               onClick={() => setMode('password')}
-              className="w-full text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
+              className="w-full min-h-11 text-[15px] font-bold text-primary-ink cursor-pointer"
             >
               Utiliser mon mot de passe
             </button>
@@ -165,13 +165,13 @@ export function AppLock({
                 placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-14 rounded-2xl bg-card pr-12 text-[15px]"
+                className="h-12 rounded-xl bg-card pr-12 text-base"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground cursor-pointer"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -180,7 +180,7 @@ export function AppLock({
               type="submit"
               size="lg"
               disabled={busy || !password}
-              className="w-full rounded-full gradient-sunset text-white font-bold"
+              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold"
             >
               {busy ? 'Vérification…' : 'Déverrouiller'}
             </Button>
@@ -190,7 +190,7 @@ export function AppLock({
                 setMode('biometric');
                 unlockWithBiometrics();
               }}
-              className="w-full text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
+              className="w-full min-h-11 text-[15px] font-bold text-primary-ink cursor-pointer"
             >
               Utiliser mon empreinte
             </button>
@@ -200,7 +200,7 @@ export function AppLock({
         <button
           type="button"
           onClick={onLogout}
-          className="text-[13px] font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+          className="min-h-11 inline-flex items-center text-[13px] font-bold text-muted-foreground hover:text-foreground cursor-pointer"
         >
           Ce n'est pas moi : me déconnecter
         </button>

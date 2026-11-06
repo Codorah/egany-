@@ -1,15 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  Fingerprint,
-  ScanFace,
-  ShieldCheck,
-  Lock,
-  X,
-  Check,
-  Smartphone,
-  Sparkles
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Check, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBiometrics } from '@/hooks/useBiometrics';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -36,7 +26,6 @@ export function BiometricPrompt({
   const displayName = username || t('biom_default_username');
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [authType, setAuthType] = useState<'fingerprint' | 'faceid'>('fingerprint');
   const { registerBiometrics, authenticate } = useBiometrics();
 
   useEffect(() => {
@@ -69,230 +58,66 @@ export function BiometricPrompt({
 
   if (!isOpen) return null;
 
+  const busy = scanState === 'scanning' || scanState === 'success';
+
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3E2F24]/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="biometric-title"
+        className="w-full max-w-sm bg-card rounded-2xl p-6 text-center"
+      >
+        <h3 id="biometric-title" className="text-lg font-bold text-foreground leading-tight">
+          {mode === 'register' ? t('biom_register_title') : t('biom_auth_title')}
+        </h3>
+        <p className="mt-1.5 text-[15px] text-muted-foreground leading-relaxed">
+          {mode === 'register'
+            ? `${t('biom_register_desc_prefix')} ${displayName}.`
+            : t('biom_auth_desc')}
+        </p>
 
-        {/* Animated Card Container */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="w-full max-w-sm bg-card rounded-2xl border border-border shadow-2xl p-6 relative overflow-hidden"
+        <div
+          className={`mx-auto mt-6 w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-200 ${
+            scanState === 'success'
+              ? 'bg-secondary text-secondary-foreground'
+              : scanState === 'error'
+              ? 'bg-danger-soft text-danger'
+              : 'bg-muted text-foreground'
+          }`}
         >
-          {/* Subtle gold decoration */}
-          <div className="absolute top-[-10%] left-[-10%] w-24 h-24 bg-brand/5 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-24 h-24 bg-secondary/5 rounded-full blur-xl pointer-events-none" />
+          {scanState === 'success' ? <Check className="w-9 h-9" /> : <Fingerprint className="w-10 h-10" />}
+        </div>
 
-          {/* Close button */}
-          <button
+        <p
+          aria-live="polite"
+          className={`mt-3 min-h-5 text-[13px] font-bold ${
+            scanState === 'error' ? 'text-danger' : scanState === 'success' ? 'text-secondary' : 'text-muted-foreground'
+          }`}
+        >
+          {scanState === 'scanning' && t('biom_scanning')}
+          {scanState === 'success' && t('biom_success')}
+          {scanState === 'error' && (errorMessage || t('biom_error_generic'))}
+          {scanState === 'idle' && t('biom_idle_cta')}
+        </p>
+
+        <div className="mt-5 flex gap-2">
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-muted hover:bg-border text-muted-foreground transition-colors cursor-pointer"
+            className="flex-1 h-12 rounded-xl border-border text-foreground font-bold text-[15px] cursor-pointer"
           >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="text-center space-y-6 pt-2">
-
-            {/* Logo/Icon Header */}
-            <div className="flex justify-center gap-1.5 items-center text-brand">
-              <Lock className="w-4 h-4 text-secondary" />
-              <span className="text-[13px] font-bold text-muted-foreground">
-                {t('biom_header_label')}
-              </span>
-            </div>
-
-            {/* Main Descriptive text */}
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-foreground leading-tight">
-                {mode === 'register' ? t('biom_register_title') : t('biom_auth_title')}
-              </h3>
-              <p className="text-xs text-muted-foreground px-4 leading-relaxed">
-                {mode === 'register'
-                  ? `${t('biom_register_desc_prefix')} ${displayName}.`
-                  : t('biom_auth_desc')
-                }
-              </p>
-            </div>
-
-            {/* Toggle choice between fingerprint & Face ID */}
-            <div className="flex justify-center gap-2 bg-muted p-1 rounded-2xl w-fit mx-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthType('fingerprint');
-                  if (scanState === 'idle') handleStartScan();
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  authType === 'fingerprint'
-                    ? 'bg-secondary text-white shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Fingerprint className="w-3.5 h-3.5" />
-                {t('biom_fingerprint_label')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthType('faceid');
-                  if (scanState === 'idle') handleStartScan();
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  authType === 'faceid'
-                    ? 'bg-secondary text-white shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <ScanFace className="w-3.5 h-3.5" />
-                {t('biom_faceid_label')}
-              </button>
-            </div>
-
-            {/* Central Animated Biometric Scanner Zone */}
-            <div className="relative flex flex-col items-center justify-center py-6 h-40">
-
-              {/* Outer Pulsing ripples */}
-              <AnimatePresence>
-                {scanState === 'scanning' && (
-                  <>
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0.5 }}
-                      animate={{ scale: 1.4, opacity: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ repeat: Infinity, duration: 1.8, ease: "easeOut" }}
-                      className="absolute w-24 h-24 rounded-full border border-secondary/30"
-                    />
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0.5 }}
-                      animate={{ scale: 1.7, opacity: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ repeat: Infinity, duration: 1.8, ease: "easeOut", delay: 0.6 }}
-                      className="absolute w-24 h-24 rounded-full border border-brand/20"
-                    />
-                  </>
-                )}
-              </AnimatePresence>
-
-              {/* Central Circle Shield or sensor button */}
-              <button
-                type="button"
-                onClick={handleStartScan}
-                disabled={scanState === 'scanning' || scanState === 'success'}
-                className={`w-24 h-24 rounded-full flex items-center justify-center border-3 relative shadow-lg transition-all cursor-pointer focus:outline-none ${
-                  scanState === 'scanning'
-                    ? 'border-secondary bg-secondary/5'
-                    : scanState === 'success'
-                    ? 'border-secondary bg-secondary'
-                    : scanState === 'error'
-                    ? 'border-danger bg-danger-soft'
-                    : 'border-eganye-gold bg-card hover:scale-105'
-                }`}
-              >
-                {/* Horizontal scanner light bar sliding down the icon */}
-                {scanState === 'scanning' && (
-                  <motion.div
-                    initial={{ top: '15%' }}
-                    animate={{ top: '80%' }}
-                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", repeatType: "reverse" }}
-                    className="absolute left-1/2 -translate-x-1/2 w-[60%] h-0.5 bg-secondary shadow-[0_0_10px_var(--secondary)] rounded-full z-10"
-                  />
-                )}
-
-                {/* Main sensor icon */}
-                <AnimatePresence mode="wait">
-                  {scanState === 'success' ? (
-                    <motion.div
-                      key="success-icon"
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-white"
-                    >
-                      <Check className="w-10 h-10 stroke-[3]" />
-                    </motion.div>
-                  ) : authType === 'fingerprint' ? (
-                    <motion.div
-                      key="fingerprint-icon"
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      className={
-                        scanState === 'scanning'
-                          ? 'text-secondary'
-                          : scanState === 'error'
-                          ? 'text-danger'
-                          : 'text-foreground'
-                      }
-                    >
-                      <Fingerprint className="w-12 h-12" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="faceid-icon"
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      className={
-                        scanState === 'scanning'
-                          ? 'text-secondary'
-                          : scanState === 'error'
-                          ? 'text-danger'
-                          : 'text-foreground'
-                      }
-                    >
-                      <ScanFace className="w-12 h-12" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-
-              {/* Scanning details / feedback text */}
-              <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className={`text-[13px] font-bold transition-colors duration-300 ${
-                  scanState === 'scanning'
-                    ? 'text-secondary animate-pulse'
-                    : scanState === 'success'
-                    ? 'text-secondary'
-                    : scanState === 'error'
-                    ? 'text-danger'
-                    : 'text-muted-foreground'
-                }`}>
-                  {scanState === 'scanning' && t('biom_scanning')}
-                  {scanState === 'success' && t('biom_success')}
-                  {scanState === 'error' && (errorMessage || t('biom_error_generic'))}
-                  {scanState === 'idle' && t('biom_idle_cta')}
-                </span>
-              </div>
-
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="pt-2 flex gap-2">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 rounded-2xl h-10 border-border text-foreground font-bold text-xs cursor-pointer"
-              >
-                {t('biom_skip')}
-              </Button>
-              <Button
-                onClick={handleStartScan}
-                disabled={scanState === 'scanning' || scanState === 'success'}
-                className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold rounded-2xl h-10 text-xs cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                {t('biom_start')}
-              </Button>
-            </div>
-
-            {/* Footnote */}
-            <p className="text-[13px] text-muted-foreground italic max-w-xs mx-auto leading-normal">
-              {t('biom_footnote')}
-            </p>
-
-          </div>
-        </motion.div>
+            {t('biom_skip')}
+          </Button>
+          <Button
+            onClick={handleStartScan}
+            disabled={busy}
+            className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-[15px] cursor-pointer"
+          >
+            {t('biom_start')}
+          </Button>
+        </div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 }

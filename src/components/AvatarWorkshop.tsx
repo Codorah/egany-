@@ -94,20 +94,7 @@ export function AvatarWorkshop({
     <div className="flex flex-col items-center text-center space-y-5 py-3">
       {/* Aperçu en direct — cliquable pour importer directement une vraie photo */}
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => allowPhotoUpload && fileInputRef.current?.click()}
-          disabled={!allowPhotoUpload || isUploading}
-          className="relative ring-4 ring-primary/20 dark:ring-primary/20 rounded-full p-1 bg-card shadow-soft cursor-pointer group"
-          aria-label={hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}
-        >
-          <CustomAvatar photoURL={value} name={name} size={108} />
-          {allowPhotoUpload && (
-            <span className="absolute bottom-1 right-1 w-9 h-9 rounded-full gradient-sunset text-white flex items-center justify-center shadow-elevated ring-2 ring-background group-hover:scale-105 transition-transform">
-              <EganyeIcon name="camera" size={16} />
-            </span>
-          )}
-        </button>
+        <CustomAvatar photoURL={value} name={name} size={108} />
         {isUploading && (
           <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
             <EganyeIcon name="loading" size={28} className="text-white animate-spin" />
@@ -116,7 +103,7 @@ export function AvatarWorkshop({
       </div>
 
       <div>
-        <h3 className="text-base font-serif font-bold text-foreground">
+        <h3 className="text-base font-bold text-foreground">
           {name}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
@@ -139,7 +126,7 @@ export function AvatarWorkshop({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="w-full rounded-2xl h-11 bg-primary hover:bg-[#B85C36] text-white font-bold text-xs gap-2 shadow-xs cursor-pointer"
+            className="w-full rounded-xl h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[15px] gap-2 cursor-pointer"
           >
             <EganyeIcon name="camera" size={16} />
             <span>{hasCustomPhoto ? t('avw_change_photo') : t('avw_import_photo')}</span>
@@ -151,7 +138,7 @@ export function AvatarWorkshop({
               variant="outline"
               onClick={handleUseInitials}
               disabled={isUploading}
-              className="w-full rounded-2xl h-10 border-[#EFE2D0] dark:border-border text-xs font-semibold text-muted-foreground hover:text-danger cursor-pointer"
+              className="w-full rounded-xl h-11 border-border text-[13px] font-bold text-muted-foreground hover:text-danger cursor-pointer"
             >
               <EganyeIcon name="trash" size={14} className="mr-1.5" />
               <span>{t('avw_back_to_initials')}</span>
@@ -171,8 +158,8 @@ export function AvatarWorkshop({
         <p className="text-[13px] font-bold text-muted-foreground text-left">
           {t('avw_choose_emoji')}
         </p>
-        <div className="grid grid-cols-8 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
-          {EGANYE_EMOJIS.map((emoji) => {
+        <div className="grid grid-cols-6 gap-1.5">
+          {(selectedEmoji && !EGANYE_EMOJIS.slice(0, 18).includes(selectedEmoji) ? [selectedEmoji, ...EGANYE_EMOJIS.slice(0, 17)] : EGANYE_EMOJIS.slice(0, 18)).map((emoji) => {
             const selected = selectedEmoji === emoji;
             return (
               <button
@@ -181,7 +168,7 @@ export function AvatarWorkshop({
                 onClick={() => handleSelectEmoji(emoji)}
                 aria-label={`${t('avw_choose_emoji_aria')} ${emoji}`}
                 aria-pressed={selected}
-                className={`aspect-square rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
+                className={`aspect-square min-h-11 rounded-xl flex items-center justify-center text-xl cursor-pointer transition-colors duration-150 ${
                   selected
                     ? 'bg-primary/15 ring-2 ring-primary'
                     : 'bg-muted/60 hover:bg-muted ring-1 ring-transparent'
@@ -195,10 +182,7 @@ export function AvatarWorkshop({
       </div>
 
       {/* Note de réassurance */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 text-[13px] text-muted-foreground max-w-xs">
-        <EganyeIcon name="shield" size={14} className="text-secondary shrink-0" />
-        <span>{t('avw_privacy_note')}</span>
-      </div>
+      <p className="text-[13px] text-muted-foreground max-w-xs">{t('avw_privacy_note')}</p>
     </div>
   );
 }
