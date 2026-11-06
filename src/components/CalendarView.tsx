@@ -1,20 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { Group } from '@/types';
 import { calculateNextPayoutDate } from '@/lib/disbursements';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, CalendarDays, Gift } from 'lucide-react';
+import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
-  isSameMonth, isSameDay, isToday, format, addMonths, subMonths, parseISO, isAfter, isBefore
+  isSameMonth, isToday, format, addMonths, subMonths, parseISO, isAfter, isBefore
 } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CalendarEvent {
   date: Date;
   groupId: string;
   groupName: string;
+  /** Ma cotisation pour cette échéance, pas la cagnotte du cercle. */
   amount: number;
   currency: string;
 }
@@ -27,7 +26,8 @@ interface CalendarViewProps {
 const PROJECTED_CYCLES = 6;
 
 export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === 'en' ? enUS : fr;
   const WEEKDAY_LABELS = [
     t('cal_weekday_mon'),
     t('cal_weekday_tue'),
@@ -49,8 +49,8 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
           date: parseISO(date),
           groupId: group.id,
           groupName: group.name,
-          amount: group.contributionAmount * group.members.length,
-          currency: group.currency
+          amount: group.contributionAmount,
+          currency: group.currency,
         });
         if (group.endDate && isAfter(parseISO(date), parseISO(group.endDate))) break;
         date = calculateNextPayoutDate(date, group.frequency);
@@ -71,97 +71,82 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-  const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
+  const days = eachDayOfInterval({
+    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+  });
 
   const upcoming = useMemo(
     () => events.filter((e) => !isBefore(e.date, new Date(new Date().setHours(0, 0, 0, 0)))).slice(0, 10),
     [events]
   );
 
+  const monthButton = 'w-11 h-11 rounded-xl flex items-center justify-center text-foreground cursor-pointer transition-colors duration-150 hover:bg-muted';
+
   return (
-    <div className="space-y-4 sm:space-y-5 pb-20">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2">
-          <CalendarDays className="w-5 h-5 text-primary-ink" />
-          {t('cal_page_title')}
-        </h1>
-        <p className="text-[13px] text-muted-foreground font-medium">{t('cal_page_subtitle')}</p>
-      </div>
-
-      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-serif font-bold text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 rounded-xl text-[13px] font-bold cursor-pointer" onClick={() => setCurrentMonth(new Date())}>
-              {t('cal_today_short')}
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground mb-1">
-          {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day) => {
-            const key = format(day, 'yyyy-MM-dd');
-            const dayEvents = eventsByDay.get(key) || [];
-            const inMonth = isSameMonth(day, currentMonth);
-            return (
-              <div
-                key={key}
-                className={`aspect-square rounded-xl border p-1 flex flex-col items-center justify-start text-xs transition-colors ${
-                  inMonth ? 'bg-card border-border/70' : 'bg-transparent border-transparent text-muted-foreground/60'
-                } ${isToday(day) ? 'border-primary border-2' : ''}`}
-              >
-                <span className={`font-bold ${isToday(day) ? 'text-primary-ink' : ''}`}>{format(day, 'd')}</span>
-                {dayEvents.length > 0 && (
-                  <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
-                    {dayEvents.slice(0, 3).map((_, i) => (
-                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-brand" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-2">
-        <h2 className="text-base font-serif font-bold text-foreground">{t('cal_upcoming_title')}</h2>
+    <div className="space-y-6 pb-4 max-w-lg mx-auto">
+      {/* La question de cet écran : quelle est la prochaine date, et combien ? */}
+      <section className="space-y-2">
+        <h2 className="text-base font-bold text-foreground">{t('cal_upcoming_title')}</h2>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">{t('cal_no_upcoming')}</p>
+          <p className="text-sm text-muted-foreground py-4">{t('cal_no_upcoming')}</p>
         ) : (
-          <div className="space-y-2">
+          <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
             {upcoming.map((event, i) => (
-              <div
+              <button
                 key={`${event.groupId}-${i}`}
+                type="button"
                 onClick={() => onSelectGroup(event.groupId)}
-                className="flex items-center justify-between p-3 rounded-2xl border border-border/70 hover:border-brand/40 hover:bg-muted/50 cursor-pointer transition-all active:scale-[0.99]"
+                className="w-full min-h-[60px] px-4 py-3 flex items-center justify-between gap-3 text-left cursor-pointer transition-colors duration-150 active:bg-muted"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-                    <Gift className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{event.groupName}</p>
-                    <p className="text-[13px] text-muted-foreground capitalize">{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="rounded-full shrink-0">{event.amount.toLocaleString()} {event.currency}</Badge>
-              </div>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-foreground capitalize">{format(event.date, 'EEEE d MMMM', { locale })}</span>
+                  <span className="block text-[13px] text-muted-foreground truncate">{event.groupName}</span>
+                </span>
+                <span className="text-sm font-bold text-foreground tabular-nums shrink-0">
+                  {event.amount.toLocaleString('fr-FR')} {event.currency}
+                </span>
+              </button>
             ))}
           </div>
         )}
-      </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale })}</h2>
+          <div className="flex items-center -mr-2">
+            <button type="button" className={monthButton} onClick={() => setCurrentMonth((m) => subMonths(m, 1))} aria-label={t('cal_prev_month')}>
+              <EganyeIcon name="chevron-left" size={20} />
+            </button>
+            <button type="button" className="h-11 px-2 text-[13px] font-bold text-primary-ink cursor-pointer" onClick={() => setCurrentMonth(new Date())}>
+              {t('cal_today_short')}
+            </button>
+            <button type="button" className={monthButton} onClick={() => setCurrentMonth((m) => addMonths(m, 1))} aria-label={t('cal_next_month')}>
+              <EganyeIcon name="chevron-right" size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-card border border-border p-2">
+          <div className="grid grid-cols-7 text-center text-[13px] font-semibold text-muted-foreground mb-1">
+            {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
+          </div>
+          <div className="grid grid-cols-7">
+            {days.map((day) => {
+              const key = format(day, 'yyyy-MM-dd');
+              const dayEvents = eventsByDay.get(key) || [];
+              const inMonth = isSameMonth(day, currentMonth);
+              return (
+                <div key={key} className={`h-11 flex flex-col items-center justify-center text-[13px] ${inMonth ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                  <span className={isToday(day) ? 'font-bold text-primary-ink' : ''}>{format(day, 'd')}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${dayEvents.length > 0 ? 'bg-primary' : 'bg-transparent'}`} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

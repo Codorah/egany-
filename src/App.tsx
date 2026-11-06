@@ -10,8 +10,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { AppLock } from '@/components/AppLock';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { WifiOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiUrl } from '@/lib/apiBase';
@@ -49,8 +47,11 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { runBackHandlers } from '@/hooks/useBackHandler';
 
-// Écrans qui affichent déjà leur propre bouton Retour (pas de doublon).
+// Écrans qui ont leur propre barre sur téléphone : pas de seconde barre.
 const VIEWS_WITH_OWN_BACK = new Set<string>(['search-groups', 'cotiser', 'contributions', 'join', 'group-details', 'support']);
+
+// Onglets de la navigation principale : pas de retour.
+const ROOT_VIEWS = new Set<string>(['dashboard', 'my-circles', 'ai-assistant', 'my-bank', 'profile']);
 
 type View = 'dashboard' | 'profile' | 'group-details' | 'join' | 'admin' | 'contributions' | 'search-groups' | 'my-circles' | 'wallet-savings' | 'wallet-recharge' | 'wallet-withdraw' | 'calendar' | 'support' | 'marketplace' | 'ai-assistant' | 'my-bank' | 'cotiser' | 'activity';
 
@@ -145,6 +146,32 @@ export default function App() {
     });
     return () => { listenerPromise.then((l) => l.remove()); };
   }, [goBack]);
+
+  // Même chose dans une PWA installée, où le retour Android passe par l'historique du
+  // navigateur : une entrée de garde reste au sommet, et chaque retour revient ici. Sans
+  // elle, le premier appui ferme l'application, quel que soit l'écran ouvert.
+  React.useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    const pushGuard = () => window.history.pushState({ eganyeGuard: true }, '', window.location.pathname);
+    pushGuard();
+    const onPopState = () => {
+      if (runBackHandlers()) {
+        pushGuard();
+      } else if (viewRef.current !== 'dashboard') {
+        goBack();
+        pushGuard();
+      } else {
+        window.history.back();
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [goBack]);
+
+  // Un nouvel écran commence en haut, sans hériter du défilement du précédent.
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
   const [profileTab, setProfileTab] = useState<string>('contributions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState<string | null>(null);
@@ -247,6 +274,11 @@ export default function App() {
     // L'intention choisie sur "Que veux-tu faire ?" évite un accueil vide :
     // un cercle mène à l'onglet Cercle (le + et le champ code), un besoin
     // d'argent ouvre directement le Coup de pouce ou le crédit.
+    // Arrivé par un lien d'invitation : c'est ce cercle qu'on venait rejoindre.
+    if (joinCode) {
+      setView('join');
+      return;
+    }
     if (intent === 'aid' || intent === 'credit') {
       setMarketplaceIntent(intent);
       setView('marketplace');
@@ -257,6 +289,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await logout();
+    setJoinCode(null);
     setView('dashboard');
   };
 
@@ -335,6 +368,7 @@ export default function App() {
               setProfileTab(tab);
               setView('profile');
             }}
+            onNavigate={(v) => setView(v as View)}
           />
         );
       case 'wallet-savings':
@@ -381,10 +415,14 @@ export default function App() {
             joinCode={joinCode} 
             user={activeProfile} 
             onJoined={(id) => {
+              setJoinCode(null);
               setSelectedGroupId(id);
               setView('group-details');
             }}
-            onCancel={goBack}
+            onCancel={() => {
+              setJoinCode(null);
+              goBack();
+            }}
           />
         ) : <Dashboard user={activeProfile} groups={groups} onSelectGroup={handleSelectGroup} onManageContributions={handleManageContributions} />;
       case 'group-details':
@@ -477,8 +515,28 @@ export default function App() {
     );
   }
 
+  const firstName = activeProfile.displayName?.split(' ')[0] || '';
+  const barTitles: Partial<Record<View, string>> = {
+    dashboard: firstName ? `${t('dashboard_greeting')} ${firstName}` : 'eganyé',
+    'my-circles': t('nav_circles'),
+    'ai-assistant': t('nav_assistant'),
+    'my-bank': t('my_bank'),
+    profile: t('profile'),
+    activity: t('nav_activity'),
+    calendar: t('calendar'),
+    marketplace: t('marketplace'),
+    admin: t('admin_panel'),
+    'wallet-savings': t('nav_wallet'),
+    'wallet-recharge': t('recharge'),
+    'wallet-withdraw': t('withdraw'),
+  };
+
   return (
     <Layout
+      title={barTitles[view]}
+      onBack={ROOT_VIEWS.has(view) ? undefined : goBack}
+      showLogo={view === 'dashboard'}
+      hideBarOnMobile={VIEWS_WITH_OWN_BACK.has(view)}
       user={{
         uid: activeProfile.uid,
         displayName: activeProfile.displayName,
@@ -491,8 +549,8 @@ export default function App() {
       onLogout={handleLogout}
     >
       {!isOnline && (
-        <div className="bg-warning-soft border-b border-warning/30 text-warning text-xs font-bold text-center py-2 px-4 flex items-center justify-center gap-1.5">
-          <WifiOff className="w-3.5 h-3.5 shrink-0" />
+        <div className="bg-warning-soft border-b border-warning/30 text-warning text-[13px] font-bold text-center py-2 px-4 flex items-center justify-center gap-1.5">
+          <EganyeIcon name="warning" size={14} className="shrink-0" />
           <span>
             {t('offline_banner_title')} — {t('offline_banner_desc')}
             {(() => {
@@ -504,14 +562,6 @@ export default function App() {
                 : '';
             })()}
           </span>
-        </div>
-      )}
-      {view !== 'dashboard' && !VIEWS_WITH_OWN_BACK.has(view) && (
-        <div className="flex items-center mb-2">
-          <Button variant="ghost" onClick={goBack} className="rounded-xl shrink-0 cursor-pointer -ml-2 text-xs font-bold">
-            <EganyeIcon name="chevron-left" size={16} className="mr-1" />
-            <span>{t('gd_back') || 'Retour'}</span>
-          </Button>
         </div>
       )}
       <Suspense fallback={<LoadingScreen fullScreen={false} />}>

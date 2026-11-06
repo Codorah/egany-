@@ -4,7 +4,7 @@ import { Group, UserProfile } from '@/types';
 import { requestToJoinGroup, hydrateGroups } from '@/lib/groups';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, Loader2, Send } from 'lucide-react';
+import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import { EganyeSearch } from './ui/EganyeSearch';
 import { EmptyState } from './ui/EmptyState';
 import { AmountDisplay } from './ui/AmountDisplay';
@@ -74,8 +74,8 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
   return (
     <div className="space-y-4 sm:space-y-5 pb-20">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0 cursor-pointer">
-          <ArrowLeft className="w-4 h-4" />
+        <Button variant="ghost" size="icon" onClick={onBack} className="w-11 h-11 -ml-2 rounded-xl shrink-0 cursor-pointer">
+          <EganyeIcon name="chevron-left" size={16} />
         </Button>
         <div>
           <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground">{t('sg_page_title')}</h1>
@@ -133,9 +133,9 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                   onClick={() => handleRequest(group)}
                 >
                   {requestingId === group.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <EganyeIcon name="loading" size={16} className="animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <EganyeIcon name="send" size={16} />
                   )}
                   {isPending ? t('sg_request_sent_label') : t('jg_request_to_join_cta')}
                 </Button>

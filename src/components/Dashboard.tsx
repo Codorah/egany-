@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion, Variants } from 'motion/react';
 import { SettingsGroup, SettingsRow } from './ui/SettingsList';
 import { EganyeIcon, type EganyeIconName } from '@/components/ui/EganyeIcon';
 import { Group, UserProfile, WalletTransaction } from '@/types';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
-import { CustomAvatar } from './CustomAvatar';
 import { AmountDisplay } from './ui/AmountDisplay';
-import { EganyeProgress } from './ui/EganyeProgress';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CircleMotion } from './ui/CircleMotion';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useMyDues } from '@/hooks/useMyDues';
 import { supabase, createChannel } from '@/lib/supabase';
 import { mapWalletTransactionRow } from '@/lib/mappers';
 import { format, formatDistanceToNowStrict, isToday } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
+import { AssistantInsight } from './AssistantInsight';
 
 interface DashboardProps {
   user: UserProfile;
@@ -25,29 +22,8 @@ interface DashboardProps {
   onNavigate?: (view: string) => void;
 }
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.02,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { y: 12, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 140,
-      damping: 18,
-    },
-  },
-};
+const SECTION_TITLE = 'text-base font-bold text-foreground';
+const SECTION_LINK = 'h-11 -my-2 -mr-2 px-2 inline-flex items-center gap-0.5 text-[13px] font-bold text-primary-ink cursor-pointer';
 
 export function Dashboard({
   user,
@@ -58,30 +34,17 @@ export function Dashboard({
   onNavigate,
 }: DashboardProps) {
   const { t, language } = useLanguage();
+  const locale = language === 'en' ? enUS : fr;
   const [showBalance, setShowBalance] = useState(true);
-  const { unreadCount } = useNotifications(user.uid);
+  const { dues, loading: duesLoading } = useMyDues(user.uid, groups);
 
-  // Financial calculations
-  const availableBalance = user.walletBalance || 0;
-  const totalSaved = user.totalSaved ?? 0;
-  const savingsGoal = 500000;
-  const savingsPercent = Math.min(100, Math.round((totalSaved / savingsGoal) * 100));
+  const payable = dues.filter((d) => !d.awaitingApproval);
+  const awaiting = dues.filter((d) => d.awaitingApproval);
+  const nextDue = payable[0] ?? null;
 
-  // Find next upcoming contribution
-  const activeGroups = groups.filter((g) => g.status === 'active');
-  const nextGroupToPay =
-    [...activeGroups].sort(
-      (a, b) => new Date(a.nextPayoutDate).getTime() - new Date(b.nextPayoutDate).getTime()
-    )[0] || null;
-
-  // Activité récente — les VRAIES opérations du portefeuille.
-  //
-  // Cet écran affichait jusqu'ici trois lignes écrites en dur (« Recharge
-  // portefeuille +100 000 FCFA », « Cotisation enregistrée +50 000 FCFA »),
-  // identiques pour tout le monde et sans aucun rapport avec le compte. Sur
-  // un produit d'épargne, montrer des mouvements d'argent inventés sur
-  // l'écran d'accueil ne relève pas du décor : on y lit son solde, on croit
-  // ce qu'on y voit.
+  // Activité récente — les VRAIES opérations du portefeuille. Le solde se met à
+  // jour tout seul (temps réel de `profiles`) : sans ce canal, la liste juste en
+  // dessous resterait figée et les deux se contrediraient à l'écran.
   const [recentActivities, setRecentActivities] = useState<WalletTransaction[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
 
@@ -103,9 +66,6 @@ export function Dashboard({
 
     loadActivities();
 
-    // Le solde se met à jour tout seul (canal temps réel de `profiles`) ; sans
-    // ça, la liste juste en dessous resterait figée et les deux se
-    // contrediraient à l'écran.
     const channel = createChannel(`dashboard-tx-${user.uid}`)
       .on(
         'postgres_changes',
@@ -117,11 +77,7 @@ export function Dashboard({
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [user.uid]);
 
-  /**
-   * « 09:24 » aujourd'hui, « il y a 3 j » ensuite. Une heure précise n'a de
-   * sens que pour ce qui vient d'arriver ; passé la journée, c'est l'ancienneté
-   * qui renseigne.
-   */
+  /** « 09:24 » aujourd'hui, « il y a 3 j » ensuite. */
   const formatRelativeDate = (iso: string): string => {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return '';
@@ -131,215 +87,123 @@ export function Dashboard({
       : `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
   };
 
-  /** Icône et teinte selon la nature du mouvement. */
-  const activityLook = (tx: WalletTransaction): { icon: EganyeIconName; bg: string } => {
+  const activityIcon = (tx: WalletTransaction): EganyeIconName => {
     switch (tx.type) {
-      case 'recharge':
-        return { icon: 'wallet', bg: 'bg-[#FFF2E8] text-primary-ink' };
-      case 'contribution_debit':
-        return { icon: 'cotisation', bg: 'bg-success-soft text-secondary' };
-      case 'payout_credit':
-        return { icon: 'distribution', bg: 'bg-success-soft text-secondary' };
-      case 'withdraw':
-        return { icon: 'withdraw', bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
-      default:
-        return { icon: 'money', bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
+      case 'recharge': return 'deposit';
+      case 'contribution_debit': return 'cotisation';
+      case 'payout_credit': return 'distribution';
+      case 'withdraw': return 'withdraw';
+      default: return 'money';
     }
   };
 
+  /** Ce que le cercle attend de la personne, s'il attend quelque chose. */
+  const circleStatus = (group: Group): { label: string; tone: string } | null => {
+    if (dues.some((d) => d.groupId === group.id && !d.awaitingApproval)) {
+      return { label: t('cir_status_to_pay'), tone: 'text-primary-ink' };
+    }
+    if (group.status === 'active' && group.payoutOrder.indexOf(user.uid) === group.currentPayoutIndex) {
+      return { label: t('cir_your_turn'), tone: 'text-secondary' };
+    }
+    return null;
+  };
+
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-4 sm:space-y-5 pb-20"
-    >
-      {/* ── 1. HEADER : Avatar + Bonjour [Prénom] 👋 + Notifications + Emblème ── */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="space-y-7 pb-4 max-w-lg mx-auto">
+      {/* ── Solde : la première réponse de cet écran ── */}
+      <section className="space-y-4" aria-label={t('available_balance')}>
+        <div>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-semibold text-muted-foreground">{t('available_balance')}</span>
+            <button
+              type="button"
+              onClick={() => setShowBalance(!showBalance)}
+              className="w-11 h-11 -my-3 flex items-center justify-center rounded-full text-muted-foreground cursor-pointer"
+              aria-label={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
+            >
+              <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={18} />
+            </button>
+          </div>
+          <AmountDisplay amount={user.walletBalance || 0} hidden={!showBalance} size="xl" className="text-foreground" currencyClassName="text-muted-foreground" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
           <button
-            onClick={() => onNavigate?.('profile')}
-            className="cursor-pointer shrink-0 transition-transform active:scale-95"
-            title={t('profile')}
+            type="button"
+            onClick={() => onNavigate?.('wallet-recharge')}
+            className="h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-opacity duration-150 active:opacity-85"
           >
-            <CustomAvatar
-              photoURL={user.photoURL}
-              name={user.displayName || 'Eganyé'}
-              size={46}
-              className="border-2 border-[#EFE2D0] dark:border-border shadow-xs"
-            />
+            <EganyeIcon name="plus" size={18} />
+            <span>{t('recharge')}</span>
           </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-tight truncate flex items-center gap-1.5">
-              <span>{t('dashboard_greeting')}</span>
-              <span className="text-primary-ink">
-                {user.displayName?.split(' ')[0] || user.displayName || t('dash_friend_fallback')}
-              </span>
-              <span>👋</span>
-            </h1>
-            <p className="text-xs sm:text-[13px] text-muted-foreground font-medium truncate">
-              {t('dashboard_subtitle') || 'Prends soin de ton argent, ensemble.'}
+          <button
+            type="button"
+            onClick={() => onNavigate?.('wallet-withdraw')}
+            className="h-12 rounded-xl border border-input bg-card text-foreground font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors duration-150 active:bg-muted"
+          >
+            <EganyeIcon name="withdraw" size={18} />
+            <span>{t('withdraw')}</span>
+          </button>
+        </div>
+      </section>
+
+      <AssistantInsight user={user} groups={groups} onNavigate={onNavigate} />
+
+      {/* ── À payer : lu dans les cotisations réelles ── */}
+      {duesLoading ? (
+        <div className="h-24 rounded-2xl bg-muted animate-pulse" aria-hidden="true" />
+      ) : nextDue ? (
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-3" aria-label={t('dash_to_pay')}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className={`text-[13px] font-bold ${nextDue.isLate ? 'text-danger' : 'text-muted-foreground'}`}>
+                {nextDue.isLate ? t('dash_to_pay_late') : t('dash_to_pay')}
+              </p>
+              <h2 className="text-base font-bold text-foreground truncate mt-0.5">{nextDue.groupName}</h2>
+              <p className="text-[13px] text-muted-foreground mt-0.5">
+                {t('dash_due_prefix')} {format(new Date(nextDue.dueDate), 'd MMMM', { locale })}
+              </p>
+            </div>
+            <p className="text-lg font-bold text-foreground tabular-nums shrink-0">
+              {nextDue.amount.toLocaleString('fr-FR')} {nextDue.currency}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Notification bell with badge */}
           <button
-            onClick={() => onNavigate?.('activity')}
-            className="relative w-10 h-10 rounded-2xl bg-card border border-border shadow-soft flex items-center justify-center text-foreground hover:text-primary-ink transition-colors cursor-pointer"
-            aria-label={t('dash_notifications_aria')}
+            type="button"
+            onClick={() => onManageContributions(nextDue.groupId)}
+            className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm cursor-pointer transition-opacity duration-150 active:opacity-85"
           >
-            <EganyeIcon name="bell" size={18} />
-            {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-white dark:ring-card" />
-            )}
+            {t('dash_contribute_cta')}
           </button>
-
-          {/* L'emblème qui se trouvait ici doublonnait avec le logo du
-              header, placé juste au-dessus : deux fois la même marque à
-              trois centimètres d'écart, pour aucune information. */}
-        </div>
-      </motion.div>
-
-      {/* ── 2. MON DISPONIBLE (Solde Portefeuille) ── */}
-      <motion.div variants={itemVariants}>
-        <div className="gradient-sunset-hero relative overflow-hidden rounded-[26px] p-5 sm:p-6 text-white shadow-soft">
-          <div className="relative z-10 space-y-4">
-            {/* Top row: Label & Visibility Toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-[13px] font-medium text-white/90">
-                  {t('available_balance') || 'Mon disponible'}
-                </span>
-                <button
-                  onClick={() => setShowBalance(!showBalance)}
-                  className="p-3 -m-2 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
-                  aria-label={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
-                  title={showBalance ? t('dash_hide_balance') : t('dash_show_balance')}
-                >
-                  <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={15} />
-                </button>
-              </div>
-
-            </div>
-
-            {/* Big Main Balance */}
-            <div>
-              <AmountDisplay
-                amount={availableBalance}
-                hidden={!showBalance}
-                size="xl"
-                className="text-white"
-                currencyClassName="text-white/80"
-              />
-            </div>
-
-            {/* Actions: Recharger & Retirer */}
-            <div className="flex items-center gap-2.5 pt-1">
-              <button
-                onClick={() => onNavigate?.('wallet-recharge')}
-                className="bg-white text-primary-ink hover:bg-white/95 px-5 py-2.5 rounded-full font-bold text-sm shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
-              >
-                <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
-                <span>{t('recharge') || 'Recharger'}</span>
-              </button>
-
-              <button
-                onClick={() => onNavigate?.('wallet-withdraw')}
-                className="bg-white/15 hover:bg-white/25 text-white border border-white/30 px-5 py-2.5 rounded-full font-bold text-sm shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
-              >
-                <EganyeIcon name="withdraw" size={13} strokeWidth={2} />
-                <span>{t('withdraw') || 'Retirer'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Decorative background glow */}
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-black/10 rounded-full blur-xl pointer-events-none" />
-        </div>
-      </motion.div>
-
-      {/* ── 3. ACTION PRIORITAIRE ("À faire maintenant") ── */}
-      <motion.div variants={itemVariants}>
-        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-soft">
-          {nextGroupToPay ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-primary-ink flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>{t('dash_todo_now')}</span>
-                </span>
-                <span className="text-[13px] font-bold text-muted-foreground">
-                  {t('dash_due_prefix')} {format(new Date(nextGroupToPay.nextPayoutDate), 'dd MMMM', { locale: fr })}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="font-serif font-bold text-base text-foreground truncate">
-                    {nextGroupToPay.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t('dash_contribution_expected')}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-lg font-serif font-bold text-foreground">
-                    {nextGroupToPay.contributionAmount.toLocaleString()} FCFA
-                  </span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onManageContributions(nextGroupToPay.id)}
-                className="gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
-              >
-                <span>{t('dash_contribute_cta')} — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-success-soft text-secondary flex items-center justify-center shrink-0">
-                  <EganyeIcon name="check" size={18} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="font-serif font-bold text-sm text-foreground">
-                    {t('dash_all_caught_up_title') || 'Tout est à jour !'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t('dash_no_pending_contribution')}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => onNavigate?.('my-circles')}
-                className="text-xs font-bold text-primary-ink hover:underline shrink-0 cursor-pointer"
-              >
-                {t('dash_discover')}
-              </button>
-            </div>
+          {payable.length > 1 && (
+            <button
+              type="button"
+              onClick={() => onNavigate?.('cotiser')}
+              className="w-full h-11 -mb-2 text-[13px] font-bold text-primary-ink cursor-pointer"
+            >
+              {payable.length - 1} {t('dash_others_to_pay')}
+            </button>
           )}
-        </div>
-      </motion.div>
+        </section>
+      ) : groups.length > 0 ? (
+        <section className="flex items-center gap-3 px-1" aria-label={t('dash_to_pay')}>
+          <EganyeIcon name="check" size={20} className="text-secondary shrink-0" />
+          <p className="text-sm font-semibold text-foreground">
+            {awaiting.length > 0 ? t('dash_awaiting_approval') : t('dash_nothing_to_pay')}
+          </p>
+        </section>
+      ) : null}
 
-      {/* ── 4. MES CERCLES (Épargne collective) ── */}
-      <motion.div variants={itemVariants} className="space-y-3 pt-1">
+      {/* ── Mes cercles ── */}
+      <section className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
-              {t('active_circles') || 'Mes cercles'}
-            </h2>
-          </div>
-          <button
-            onClick={() => onNavigate?.('my-circles')}
-            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
-          >
-            <span>{t('view_all') || 'Voir tout'}</span>
-            <EganyeIcon name="chevron-right" size={13} />
-          </button>
+          <h2 className={SECTION_TITLE}>{t('active_circles')}</h2>
+          {groups.length > 0 && (
+            <button type="button" onClick={() => onNavigate?.('my-circles')} className={SECTION_LINK}>
+              <span>{t('view_all')}</span>
+              <EganyeIcon name="chevron-right" size={14} />
+            </button>
+          )}
         </div>
 
         {groups.length === 0 ? (
@@ -348,7 +212,6 @@ export function Dashboard({
             trigger={
               <div>
                 <EmptyState
-                  visual={<CircleMotion />}
                   illustration="no-circles"
                   title={t('no_circle_title')}
                   description={t('no_circle_desc')}
@@ -359,196 +222,102 @@ export function Dashboard({
             }
           />
         ) : (
-          <div className="space-y-2.5">
-            {groups.slice(0, 3).map((group) => (
-              <div
-                key={group.id}
-                onClick={() => onSelectGroup(group.id)}
-                className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-[#F0E6D8] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-base">
-                    {group.name.slice(0, 2).toUpperCase()}
-                  </div>
+          <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
+            {groups.slice(0, 3).map((group) => {
+              const status = circleStatus(group);
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => onSelectGroup(group.id)}
+                  className="w-full min-h-[60px] px-4 py-3 flex items-center justify-between gap-3 text-left cursor-pointer transition-colors duration-150 active:bg-muted"
+                >
                   <div className="min-w-0">
-                    <h4 className="font-bold text-foreground text-sm truncate group-hover:text-primary-ink transition-colors">
-                      {group.name}
-                    </h4>
-                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                      {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString()} FCFA
-                    </p>
-                    <p className="text-[13px] text-muted-foreground/80 mt-0.5">
-                      {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}
+                    <p className="font-bold text-foreground text-sm truncate">{group.name}</p>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">
+                      {group.contributionAmount.toLocaleString('fr-FR')} {group.currency} · {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'd MMM', { locale })}
                     </p>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <EganyeIcon
-                    name="chevron-right"
-                    size={16}
-                    className="text-muted-foreground group-hover:text-primary-ink transition-colors"
-                  />
-                </div>
-              </div>
-            ))}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {status && <span className={`text-[13px] font-bold ${status.tone}`}>{status.label}</span>}
+                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground" />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
-      </motion.div>
+      </section>
 
-      {/* ── 5. MON ÉPARGNE — APERÇU (coffres personnels) ── */}
-      <motion.div variants={itemVariants} className="space-y-3 pt-1">
+      {/* ── Derniers mouvements ── */}
+      <section className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
-            {t('dash_my_savings')}
-          </h2>
-          <button
-            onClick={() => onNavigate?.('my-bank')}
-            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
-          >
-            <span>{t('dash_view_my_savings')}</span>
-            <EganyeIcon name="chevron-right" size={13} />
-          </button>
-        </div>
-
-        <div className="bg-card rounded-2xl p-4 sm:p-5 border border-border shadow-soft space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-secondary shrink-0">
-                <EganyeIcon name="savings" size={20} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">{t('dash_total_savings')}</p>
-                <p className="text-lg sm:text-xl font-serif font-bold text-foreground">
-                  {totalSaved.toLocaleString()} FCFA
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="space-y-1 pt-1">
-            <EganyeProgress value={totalSaved} max={savingsGoal} variant="bar" tone="secondary" />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{t('dash_goal_prefix')} {savingsGoal.toLocaleString()} FCFA</span>
-              <span className="font-bold text-secondary">{savingsPercent}%</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── 5 bis. SERVICES ANNEXES (microcrédit, assurance, équipement) ──
-          Le lien avait disparu avec la refonte de septembre : l'écran existait
-          toujours mais plus rien n'y menait. */}
-      <motion.div variants={itemVariants} className="pt-1">
-        <SettingsGroup>
-          <SettingsRow
-            icon="investment"
-            tone="brand"
-            label={t('marketplace')}
-            hint={t('dash_services_card_subtitle')}
-            onClick={() => onNavigate?.('marketplace')}
-          />
-          <SettingsRow
-            icon="chat"
-            tone="sage"
-            label={t('ai_assistant')}
-            hint={t('dash_ai_card_subtitle')}
-            onClick={() => onNavigate?.('ai-assistant')}
-          />
-        </SettingsGroup>
-      </motion.div>
-
-      {/* ── 6. ACTIVITÉ RÉCENTE (3 Derniers Flux) ── */}
-      <motion.div variants={itemVariants} className="space-y-3 pt-1">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
-            {t('dash_recent_activity')}
-          </h2>
-          <button
-            onClick={() => onNavigate?.('activity')}
-            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
-          >
+          <h2 className={SECTION_TITLE}>{t('dash_recent_activity')}</h2>
+          <button type="button" onClick={() => onNavigate?.('activity')} className={SECTION_LINK}>
             <span>{t('dash_view_all_activity')}</span>
-            <EganyeIcon name="chevron-right" size={13} />
+            <EganyeIcon name="chevron-right" size={14} />
           </button>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-3 shadow-soft divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
-          {activitiesLoading ? (
-            // Trois lignes grises plutôt qu'un vide : l'écran garde sa hauteur
-            // et ne sursaute pas quand les données arrivent.
-            <div className="space-y-3 py-1" aria-hidden="true">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-3 px-2">
-                  <div className="w-9 h-9 rounded-xl bg-muted animate-pulse shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="h-3 w-2/5 rounded bg-muted animate-pulse" />
-                    <div className="h-2.5 w-1/4 rounded bg-muted animate-pulse" />
-                  </div>
-                  <div className="h-3 w-16 rounded bg-muted animate-pulse" />
-                </div>
-              ))}
-            </div>
-          ) : recentActivities.length === 0 ? (
-            <div className="py-7 px-3 text-center space-y-1.5">
-              <div className="w-11 h-11 rounded-2xl bg-[#FFF2E8] text-primary-ink flex items-center justify-center mx-auto">
-                <EganyeIcon name="wallet" size={20} />
-              </div>
-              <p className="font-bold text-foreground text-sm pt-1">{t('dash_no_operation_title')}</p>
-              <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[15rem] mx-auto">
-                {t('dash_no_operation_desc')}
-              </p>
-              <button
-                type="button"
-                onClick={() => onNavigate?.('wallet-recharge')}
-                className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity pt-1 cursor-pointer"
-              >
-                {t('dash_recharge_my_wallet')}
-              </button>
-            </div>
-          ) : (
-            recentActivities.map((act) => {
-              const look = activityLook(act);
-              // Le montant est signé en base : le signe porte le sens, la
-              // couleur ne fait que le souligner.
+        {activitiesLoading ? (
+          <div className="h-32 rounded-2xl bg-muted animate-pulse" aria-hidden="true" />
+        ) : recentActivities.length === 0 ? (
+          <div className="rounded-2xl bg-card border border-border px-4 py-5 text-center">
+            <p className="font-bold text-foreground text-sm">{t('dash_no_operation_title')}</p>
+            <p className="text-[13px] text-muted-foreground leading-relaxed mt-1">{t('dash_no_operation_desc')}</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
+            {recentActivities.map((act) => {
               const positive = act.amount >= 0;
               return (
-                <div
+                <button
                   key={act.id}
+                  type="button"
                   onClick={() => onNavigate?.('activity')}
-                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-xl cursor-pointer"
+                  className="w-full min-h-[60px] px-4 py-3 flex items-center gap-3 text-left cursor-pointer transition-colors duration-150 active:bg-muted"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl ${look.bg} flex items-center justify-center shrink-0`}>
-                      <EganyeIcon name={look.icon} size={17} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-foreground text-xs sm:text-sm truncate">
-                        {act.description || t('dash_operation_fallback')}
-                      </p>
-                      <p className="text-[13px] text-muted-foreground truncate">
-                        {act.status === 'pending' ? t('status_pending') : formatRelativeDate(act.date)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <p
-                      className={`font-serif font-bold text-xs sm:text-sm tabular-nums ${
-                        positive ? 'text-secondary' : 'text-primary-ink'
-                      }`}
-                    >
-                      {positive ? '+' : '−'}{Math.abs(act.amount).toLocaleString()} FCFA
+                  <EganyeIcon name={activityIcon(act)} size={20} className="text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground text-sm truncate">{act.description || t('dash_operation_fallback')}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">
+                      {act.status === 'pending' ? t('status_pending') : formatRelativeDate(act.date)}
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{formatRelativeDate(act.date)}</p>
                   </div>
-                </div>
+                  {/* Le signe porte le sens, la couleur ne fait que le souligner. */}
+                  <p className={`font-bold text-sm tabular-nums shrink-0 ${positive ? 'text-secondary' : 'text-foreground'}`}>
+                    {positive ? '+' : '−'}{Math.abs(act.amount).toLocaleString('fr-FR')} F
+                  </p>
+                </button>
               );
-            })
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ── Le reste, en une ligne chacun ── */}
+      <SettingsGroup>
+        <SettingsRow
+          icon="vault"
+          tone="muted"
+          label={t('my_bank')}
+          hint={`${t('dash_total_contributed')} : ${(user.totalSaved ?? 0).toLocaleString('fr-FR')} FCFA`}
+          onClick={() => onNavigate?.('my-bank')}
+        />
+        <SettingsRow
+          icon="calendar-finance"
+          tone="muted"
+          label={t('calendar')}
+          onClick={() => onNavigate?.('calendar')}
+        />
+        <SettingsRow
+          icon="investment"
+          tone="muted"
+          label={t('marketplace')}
+          hint={t('dash_services_card_subtitle')}
+          onClick={() => onNavigate?.('marketplace')}
+        />
+      </SettingsGroup>
+    </div>
   );
 }

@@ -35,7 +35,8 @@ export type EganyeIconName =
   // Extra
   | 'search' | 'close' | 'chevron-right' | 'chevron-left' | 'plus' | 'arrow-up' | 'arrow-down'
   | 'eye' | 'eye-off' | 'refresh' | 'star' | 'shield' | 'check' | 'loading'
-  | 'send' | 'camera' | 'trash' | 'copy' | 'shuffle' | 'list' | 'key' | 'fingerprint' | 'globe';
+  | 'send' | 'camera' | 'trash' | 'copy' | 'shuffle' | 'list' | 'key' | 'fingerprint' | 'globe'
+  | 'sun' | 'moon' | 'sparkle' | 'edit';
 
 interface EganyeIconProps {
   name: EganyeIconName;
@@ -61,30 +62,40 @@ function getPath(name: EganyeIconName, sw: number): React.ReactNode {
     // ═══════════════════════════════════════════
     // NAVIGATION
     // ═══════════════════════════════════════════
-    // Les cinq icônes de la navigation principale sont dessinées en masses
-    // pleines, et non au trait comme le reste du jeu. À 20 px — leur taille
-    // réelle dans la barre du bas — un tracé de 1,8 px réparti sur quatre ou
-    // neuf formes distinctes ne se lit plus : il ne reste qu'une poussière de
-    // points gris, impossible à identifier d'un coup d'œil. Une silhouette
-    // pleine garde sa signature à n'importe quelle taille.
+    // Navigation au trait, comme tout le jeu : une seule famille d'icônes.
     case 'home':
       return (
-        <path
-          d="M11.3 2.6a1.1 1.1 0 011.4 0l8.2 6.9c.3.2.4.5.4.9V20a1.8 1.8 0 01-1.8 1.8h-4.2a.6.6 0 01-.6-.6v-5a1 1 0 00-1-1h-3.2a1 1 0 00-1 1v5a.6.6 0 01-.6.6H4.5A1.8 1.8 0 012.7 20v-9.6c0-.4.1-.7.4-.9l8.2-6.9z"
-          fill="currentColor"
-        />
+        <>
+          <path d="M4 10.5L12 4l8 6.5" {...p} />
+          <path d="M6 9v10.5a.5.5 0 00.5.5H10v-6h4v6h3.5a.5.5 0 00.5-.5V9" {...p} />
+        </>
+      );
+    case 'edit':
+      return <path d="M4 20h4L19 9a2.1 2.1 0 00-3-3L5 17l-1 3z" {...p} />;
+    case 'sun':
+      return (
+        <>
+          <circle cx="12" cy="12" r="4" {...p} />
+          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4" {...p} />
+        </>
+      );
+    case 'moon':
+      return <path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" {...p} />;
+    case 'sparkle':
+      return (
+        <>
+          <path d="M11 4l1.7 4.8a2 2 0 001.2 1.2L18.8 11.7l-4.9 1.7a2 2 0 00-1.2 1.2L11 19.5l-1.7-4.9a2 2 0 00-1.2-1.2l-4.9-1.7 4.9-1.7a2 2 0 001.2-1.2L11 4z" {...p} />
+          <path d="M18.5 3.5v3M17 5h3" {...p} />
+        </>
       );
     // Le cercle de tontine : l'anneau, et les membres placés autour.
     case 'circle':
       return (
         <>
-          <path
-            d="M12 2.8a9.2 9.2 0 100 18.4 9.2 9.2 0 000-18.4zm0 2.6a6.6 6.6 0 110 13.2 6.6 6.6 0 010-13.2z"
-            fill="currentColor"
-          />
-          <circle cx="12" cy="3.6" r="2.4" fill="currentColor" />
-          <circle cx="4.7" cy="16.8" r="2.4" fill="currentColor" />
-          <circle cx="19.3" cy="16.8" r="2.4" fill="currentColor" />
+          <circle cx="12" cy="12" r="6.5" {...p} />
+          <circle cx="12" cy="5.5" r="2" {...p} />
+          <circle cx="6.4" cy="15.3" r="2" {...p} />
+          <circle cx="17.6" cy="15.3" r="2" {...p} />
         </>
       );
     // L'ancien tracé était un soleil à huit rayons autour d'un cercle : neuf
@@ -114,11 +125,8 @@ function getPath(name: EganyeIconName, sw: number): React.ReactNode {
     case 'profile':
       return (
         <>
-          <circle cx="12" cy="7.6" r="4.4" fill="currentColor" />
-          <path
-            d="M12 13.6c-4.4 0-7.9 2.6-7.9 6.3 0 .8.6 1.3 1.4 1.3h13c.8 0 1.4-.5 1.4-1.3 0-3.7-3.5-6.3-7.9-6.3z"
-            fill="currentColor"
-          />
+          <circle cx="12" cy="8" r="4" {...p} />
+          <path d="M4.5 20.5c1-3.6 4-5.5 7.5-5.5s6.5 1.9 7.5 5.5" {...p} />
         </>
       );
 

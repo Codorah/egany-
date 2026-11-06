@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { EganyeIcon, type EganyeIconName } from '@/components/ui/EganyeIcon';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -16,10 +15,9 @@ interface BottomNavProps {
 }
 
 /**
- * Navigation principale mobile Eganyé — Style Fintech Haute Couture.
- * Dispose d'un orbe dynamique animé (spring physics) qui glisse et enveloppe
- * l'onglet actif avec un dégradé chaleureux Terracotta / Or Solaire.
- * 5 piliers : Accueil | Cercle | Activités | Mon Épargne | Profil
+ * Navigation principale mobile : Accueil, Cercles, Assistant, Épargne, Profil.
+ * L'onglet actif se reconnaît à sa couleur, rien ne bouge. L'activité s'ouvre
+ * depuis la cloche de la barre du haut.
  */
 export function BottomNav({
   user,
@@ -31,37 +29,22 @@ export function BottomNav({
 
   if (!user) return null;
 
-  const handleNav = (view: string) => {
-    // Micro-haptic tactile feedback si disponible
-    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate?.(10);
-      } catch {
-        // Safe fallback
-      }
-    }
-    onNavigate?.(view);
-  };
-
   const isActive = (id: string) => {
-    if (id === 'dashboard') return currentView === 'dashboard';
     if (id === 'my-circles') {
-      return ['my-circles', 'search-groups', 'group-details', 'cotiser', 'contributions'].includes(currentView);
+      return ['my-circles', 'search-groups', 'group-details', 'cotiser', 'contributions', 'join'].includes(currentView);
     }
-    if (id === 'activity') return currentView === 'activity';
     if (id === 'my-bank') {
       return ['my-bank', 'wallet-savings', 'wallet-recharge', 'wallet-withdraw'].includes(currentView);
     }
-    if (id === 'profile') return currentView === 'profile';
-    return false;
+    return currentView === id;
   };
 
   const items: { id: string; label: string; icon: EganyeIconName }[] = [
-    { id: 'dashboard', label: t('nav_home') || 'Accueil', icon: 'home' },
-    { id: 'my-circles', label: t('nav_circles') || 'Cercle', icon: 'circle' },
-    { id: 'activity', label: t('nav_activity') || 'Activités', icon: 'activity' },
-    { id: 'my-bank', label: t('my_bank') || 'Mon Épargne', icon: 'bank' },
-    { id: 'profile', label: t('profile') || 'Profil', icon: 'profile' },
+    { id: 'dashboard', label: t('nav_home'), icon: 'home' },
+    { id: 'my-circles', label: t('nav_circles'), icon: 'circle' },
+    { id: 'ai-assistant', label: t('nav_assistant'), icon: 'sparkle' },
+    { id: 'my-bank', label: t('nav_savings'), icon: 'vault' },
+    { id: 'profile', label: t('nav_profile_short'), icon: 'profile' },
   ];
 
   const containerClasses = isSimulated
@@ -69,73 +52,25 @@ export function BottomNav({
     : 'fixed bottom-0 left-0 right-0 z-40 md:hidden';
 
   return (
-    <nav
-      className={containerClasses}
-      role="navigation"
-      aria-label="Navigation principale"
-    >
-      <div className="relative pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] px-3 bg-card border-t border-border shadow-[0_-4px_24px_rgba(45,31,23,0.06)]">
-        <div className="max-w-md mx-auto flex items-center justify-around relative">
+    <nav className={containerClasses} aria-label="Navigation principale">
+      <div className="bg-card border-t border-border pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-md mx-auto flex items-stretch">
           {items.map((item) => {
             const active = isActive(item.id);
-
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => handleNav(item.id)}
+                onClick={() => onNavigate?.(item.id)}
                 aria-current={active ? 'page' : undefined}
-                className="relative flex-1 flex flex-col items-center justify-center py-1.5 px-1 cursor-pointer select-none group"
+                className={`flex-1 min-w-0 h-14 flex flex-col items-center justify-center gap-0.5 cursor-pointer select-none transition-colors duration-150 ${
+                  active ? 'text-primary-ink' : 'text-muted-foreground'
+                }`}
               >
-                {/* ── ORBE ANIMÉ ACTIF (GLISSE AVEC SPRING PHYSICS) ── */}
-                {active && (
-                  <motion.div
-                    layoutId="bottom-nav-active-pill"
-                    transition={{
-                      type: 'spring',
-                      stiffness: 400,
-                      damping: 32,
-                    }}
-                    className="gradient-sunset absolute -top-1 w-11 h-11 rounded-2xl shadow-soft z-0"
-                  />
-                )}
-
-                {/* ── ICÔNE AVEC REBOND TACTILE ── */}
-                <div className="relative z-10 flex items-center justify-center w-9 h-9">
-                  <motion.div
-                    animate={{
-                      scale: active ? 1.15 : 1,
-                      y: active ? -2 : 0,
-                    }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    className="flex items-center justify-center"
-                  >
-                    <EganyeIcon
-                      name={item.icon}
-                      size={20}
-                      className={`transition-colors duration-200 ${
-                        active
-                          ? 'text-white drop-shadow-xs'
-                          : 'text-muted-foreground group-hover:text-primary-ink'
-                      }`}
-                    />
-                  </motion.div>
-                </div>
-
-                {/* ── LIBELLÉ TEXTUEL ── */}
-                <motion.span
-                  animate={{
-                    opacity: active ? 1 : 0.8,
-                    scale: active ? 1.05 : 0.95,
-                  }}
-                  className={`relative z-10 text-[13px]  font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
-                    active
-                      ? 'font-bold text-primary-ink'
-                      : 'font-bold text-muted-foreground group-hover:text-foreground'
-                  }`}
-                >
+                <EganyeIcon name={item.icon} size={22} />
+                <span className={`text-[13px] leading-none truncate max-w-full px-0.5 ${active ? 'font-bold' : 'font-semibold'}`}>
                   {item.label}
-                </motion.span>
+                </span>
               </button>
             );
           })}

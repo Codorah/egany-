@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { motion, Variants } from 'motion/react';
 import { Group, UserProfile } from '@/types';
-import { EganyeIcon } from '@/components/ui/EganyeIcon';
+import { EganyeIcon, type EganyeIconName } from '@/components/ui/EganyeIcon';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import { EmptyState } from './ui/EmptyState';
+import { TopBarAction } from './ui/TopBarAction';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CircleMotion } from './ui/CircleMotion';
+import { useMyDues } from '@/hooks/useMyDues';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS, fr } from 'date-fns/locale';
 
 interface CircleHubProps {
   user: UserProfile;
@@ -19,15 +20,7 @@ interface CircleHubProps {
   onJoinByCode: (code: string) => void;
 }
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.02 } },
-};
-
-const itemVariants: Variants = {
-  hidden: { y: 12, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 140, damping: 18 } },
-};
+const CREATE_TRIGGER_ID = 'circle-hub-create-trigger';
 
 export function CircleHub({
   user,
@@ -37,221 +30,157 @@ export function CircleHub({
   onSearch,
   onJoinByCode,
 }: CircleHubProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === 'en' ? enUS : fr;
+  const { dues } = useMyDues(user.uid, groups);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [askCode, setAskCode] = useState(false);
   const [joinCode, setJoinCode] = useState('');
-  const [showJoinPanel, setShowJoinPanel] = useState(false);
+
+  const closeSheet = () => {
+    setSheetOpen(false);
+    setAskCode(false);
+  };
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const code = joinCode.trim();
     if (!code) {
-      toast.error(t('cir_join_empty_code_error') || 'Veuillez saisir un code d’invitation valide.');
+      toast.error(t('cir_join_empty_code_error'));
       return;
     }
+    closeSheet();
     onJoinByCode(code);
   };
 
-  return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-4 sm:space-y-5 pb-20"
+  // Le formulaire de création vit hors de la feuille : il doit rester monté une fois celle-ci fermée.
+  const openCreate = () => {
+    closeSheet();
+    document.getElementById(CREATE_TRIGGER_ID)?.click();
+  };
+
+  /** Ce que le cercle attend de la personne : c'est l'information de cet écran. */
+  const circleStatus = (group: Group): { label: string; tone: string } | null => {
+    if (group.status === 'completed') return { label: t('cir_status_completed'), tone: 'text-muted-foreground' };
+    if (group.status !== 'active') return { label: t('status_pending'), tone: 'text-muted-foreground' };
+    if (dues.some((d) => d.groupId === group.id && !d.awaitingApproval)) {
+      return { label: t('cir_status_to_pay'), tone: 'text-primary-ink' };
+    }
+    if (group.payoutOrder.indexOf(user.uid) === group.currentPayoutIndex) {
+      return { label: t('cir_your_turn'), tone: 'text-secondary' };
+    }
+    return null;
+  };
+
+  const sheetRow = (icon: EganyeIconName, label: string, onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full min-h-14 flex items-center gap-3 text-left cursor-pointer transition-colors duration-150 active:bg-muted rounded-xl px-1"
     >
-      {/* ── 1. HEADER : Mes cercles + Créer un cercle ── */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
-            {t('nav_circles') || 'Mes cercles'}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-            {t('cir_page_subtitle') || 'Épargne collective, solidarité et tontines.'}
-          </p>
-        </div>
+      <EganyeIcon name={icon} size={22} className="text-muted-foreground shrink-0" />
+      <span className="flex-1 text-base font-semibold text-foreground">{label}</span>
+      <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
+    </button>
+  );
 
-        <CreateGroupDialog
-          onNavigateToVerification={onNavigateToVerification}
-          triggerIsNativeButton
-          trigger={
-            <button
-              type="button"
-              className="gradient-sunset text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
-            >
-              <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
-              <span>{t('cir_create_circle_cta')}</span>
-            </button>
-          }
-        />
-      </motion.div>
-
-      {/* ── 2. ACTIONS BAR : Recherche & Rejoindre ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 gap-2.5">
+  return (
+    <div className="pb-4 max-w-lg mx-auto">
+      <TopBarAction>
         <button
           type="button"
-          onClick={onSearch}
-          className="bg-card border border-border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
+          onClick={() => setSheetOpen(true)}
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-primary-ink cursor-pointer transition-colors duration-150 hover:bg-muted"
+          aria-label={t('cir_add_aria')}
         >
-          <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-primary-ink flex items-center justify-center shrink-0">
-            <EganyeIcon name="search" size={17} />
-          </div>
-          <div className="min-w-0">
-            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary-ink transition-colors truncate">
-              {t('cir_search_title')}
-            </p>
-            <p className="text-[13px] text-muted-foreground truncate">
-              {t('cir_search_desc')}
-            </p>
-          </div>
+          <EganyeIcon name="plus" size={24} />
         </button>
+      </TopBarAction>
 
-        <button
-          type="button"
-          onClick={() => setShowJoinPanel(!showJoinPanel)}
-          className={`bg-card border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left transition-colors cursor-pointer group ${
-            showJoinPanel ? 'border-primary ring-2 ring-primary/15' : 'border-border hover:border-primary/40'
-          }`}
-        >
-          <div className="w-9 h-9 rounded-xl bg-success-soft text-secondary flex items-center justify-center shrink-0">
-            <EganyeIcon name="qr-code" size={17} />
-          </div>
-          <div className="min-w-0">
-            <p className="font-bold text-xs sm:text-sm text-foreground group-hover:text-secondary transition-colors truncate">
-              {t('cir_join_title')}
-            </p>
-            <p className="text-[13px] text-muted-foreground truncate">
-              {t('cir_join_desc')}
-            </p>
-          </div>
-        </button>
-      </motion.div>
-
-      {/* ── 3. PANNEAU DE SAISIE DE CODE ── */}
-      {showJoinPanel && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="bg-card border border-primary/30 rounded-2xl p-4 shadow-soft space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="font-serif font-bold text-sm text-foreground flex items-center gap-2">
-              <EganyeIcon name="code" size={16} className="text-primary-ink" />
-              <span>{t('cir_join_section_title') || 'Rejoindre un cercle'}</span>
-            </h3>
-            <button
-              type="button"
-              onClick={() => setShowJoinPanel(false)}
-              className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              {t('cir_close')}
-            </button>
-          </div>
-          <form onSubmit={handleJoinSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder={t('cir_code_placeholder')}
-              className="flex-1 h-11 px-3.5 rounded-xl border border-border bg-card text-foreground text-base font-mono focus:outline-none focus:ring-2 focus:ring-primary/30"
-              aria-label="Code d'invitation"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              spellCheck={false}
-              autoComplete="off"
-              autoFocus
-            />
-            <button
-              type="submit"
-              className="gradient-sunset h-11 px-4 rounded-xl text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
-            >
-              {t('cir_validate')}
-            </button>
-          </form>
-          <p className="text-[13px] text-muted-foreground">
-            {t('cir_join_hint')}
-          </p>
-        </motion.div>
-      )}
-
-      {/* ── 4. LISTE DES CERCLES ── */}
-      <motion.div variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between px-0.5">
-          <h2 className="font-serif font-bold text-base sm:text-lg text-foreground tracking-tight">
-            {t('active_circles') || 'Cercles actifs'} ({groups.length})
-          </h2>
-        </div>
-
-        {groups.length === 0 ? (
-          <CreateGroupDialog
-            onNavigateToVerification={onNavigateToVerification}
-            trigger={
-              <div>
-                <EmptyState
-                  visual={<CircleMotion />}
-                  illustration="no-circles"
-                  title={t('no_circle_title') || 'Aucun cercle pour le moment'}
-                  description={t('no_circle_desc') || 'Créez votre première tontine pour épargner à plusieurs ou rejoignez un groupe existant.'}
-                  actionText={t('create_first_circle') || 'Créer mon premier cercle'}
-                  onAction={() => {}}
-                />
-              </div>
-            }
-          />
-        ) : (
-          <div className="space-y-2.5">
-            {groups.map((group) => {
-              const myPosition = group.payoutOrder.indexOf(user.uid);
-              const isMyTurnNext = myPosition === group.currentPayoutIndex;
-
-              return (
-                <div
-                  key={group.id}
-                  onClick={() => onSelectGroup(group.id)}
-                  className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-base border border-[#EFE2D0]">
-                      {group.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-foreground text-sm sm:text-base truncate group-hover:text-primary-ink transition-colors">
-                          {group.name}
-                        </h3>
-                        {group.isPrivate && (
-                          <span className="text-[13px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            {t('cir_private_badge')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                        {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString()} FCFA / {group.frequency === 'monthly' ? t('cir_per_month') : t('cir_per_cycle')}
-                      </p>
-                      <p className="text-[13px] text-muted-foreground/80 mt-0.5 flex items-center gap-1.5">
-                        <span>{t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMM yyyy', { locale: fr })}</span>
-                        {isMyTurnNext && (
-                          <span className="text-secondary font-bold">{t('cir_your_turn')}</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="px-2.5 py-1 rounded-full text-[13px] font-bold bg-success-soft text-secondary border border-secondary/25">
-                      {t('dash_active_badge')}
-                    </span>
-                    <EganyeIcon
-                      name="chevron-right"
-                      size={16}
-                      className="text-muted-foreground group-hover:text-primary-ink transition-colors"
-                    />
-                  </div>
+      <Dialog open={sheetOpen} onOpenChange={(open) => { if (open) setSheetOpen(true); else closeSheet(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle className="text-lg font-bold text-foreground">{t('cir_add_title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('cir_add_title')}</DialogDescription>
+          <div className="divide-y divide-border">
+            {sheetRow('plus', t('cir_create_circle_cta'), openCreate)}
+            {sheetRow('qr-code', t('cir_join_title'), () => setAskCode((v) => !v))}
+            {askCode && (
+              <form onSubmit={handleJoinSubmit} className="py-3 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder={t('cir_code_placeholder')}
+                    className="flex-1 min-w-0 h-12 px-3.5 rounded-xl border border-input bg-card text-foreground text-base font-mono outline-none focus:border-primary-ink"
+                    aria-label={t('cir_join_section_title')}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="off"
+                    enterKeyHint="go"
+                    autoFocus
+                  />
+                  <button type="submit" className="h-12 px-5 rounded-xl bg-primary text-primary-foreground font-bold text-sm cursor-pointer">
+                    {t('cir_validate')}
+                  </button>
                 </div>
-              );
-            })}
+                <p className="text-[13px] text-muted-foreground">{t('cir_join_hint')}</p>
+              </form>
+            )}
+            {sheetRow('search', t('cir_search_title'), () => { closeSheet(); onSearch(); })}
           </div>
-        )}
-      </motion.div>
-    </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      <CreateGroupDialog
+        onNavigateToVerification={onNavigateToVerification}
+        triggerIsNativeButton
+        trigger={<button id={CREATE_TRIGGER_ID} type="button" className="hidden" tabIndex={-1} aria-hidden="true" />}
+      />
+
+      {groups.length === 0 ? (
+        <div>
+          <EmptyState
+            illustration="no-circles"
+            title={t('no_circle_title')}
+            description={t('no_circle_desc')}
+            actionText={t('cir_add_title')}
+            onAction={() => setSheetOpen(true)}
+          />
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
+          {groups.map((group) => {
+            const status = circleStatus(group);
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => onSelectGroup(group.id)}
+                className="w-full min-h-[68px] px-4 py-3 flex items-center justify-between gap-3 text-left cursor-pointer transition-colors duration-150 active:bg-muted"
+              >
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground text-[15px] truncate">
+                    {group.name}
+                    {group.isPrivate && <span className="ml-2 text-[13px] font-semibold text-muted-foreground">{t('cir_private_badge')}</span>}
+                  </p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
+                    {group.members.length} {t('dash_members_word')} · {group.contributionAmount.toLocaleString('fr-FR')} {group.currency} / {group.frequency === 'monthly' ? t('cir_per_month') : t('cir_per_cycle')}
+                  </p>
+                  <p className="text-[13px] text-muted-foreground">
+                    {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'd MMM yyyy', { locale })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {status && <span className={`text-[13px] font-bold ${status.tone}`}>{status.label}</span>}
+                  <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

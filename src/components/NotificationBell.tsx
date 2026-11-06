@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Bell, Check, Trash2, Clock, MessageCircle, DollarSign, Info } from 'lucide-react';
+import { EganyeIcon } from '@/components/ui/EganyeIcon';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,13 +26,13 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const getIcon = (type: string) => {
     switch (type) {
       case 'reminder':
-        return <Clock className="w-4 h-4 text-brand" />;
+        return <EganyeIcon name="pending" size={16} className="text-brand" />;
       case 'chat':
-        return <MessageCircle className="w-4 h-4 text-primary-ink" />;
+        return <EganyeIcon name="chat" size={16} className="text-primary-ink" />;
       case 'payout':
-        return <DollarSign className="w-4 h-4 text-secondary" />;
+        return <EganyeIcon name="money" size={16} className="text-secondary" />;
       default:
-        return <Info className="w-4 h-4 text-eganye-gold" />;
+        return <EganyeIcon name="info" size={16} className="text-eganye-gold" />;
     }
   };
 
@@ -40,7 +40,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     <DropdownMenu>
       <DropdownMenuTrigger render={
         <Button variant="ghost" size="icon" className="relative group cursor-pointer hover:bg-chip/30">
-          <Bell className="w-5 h-5 text-foreground group-hover:scale-110 transition-transform" />
+          <EganyeIcon name="bell" size={20} className="text-foreground" />
           {unreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-danger text-white font-bold text-[13px] rounded-full animate-pulse border-2 border-card">
               {unreadCount}
@@ -61,7 +61,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <ScrollArea className="h-[350px]">
           {notifications.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
-              <Bell className="w-8 h-8 opacity-25 text-foreground" />
+              <EganyeIcon name="bell" size={32} className="opacity-25 text-foreground" />
               <p className="font-medium text-xs">{t('nb_empty_state')}</p>
             </div>
           ) : (
@@ -95,7 +95,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                             className="h-6 w-6 rounded-full hover:bg-success-soft text-secondary cursor-pointer"
                             onClick={() => markAsRead(notification.id)}
                           >
-                            <Check className="w-3.5 h-3.5" />
+                            <EganyeIcon name="check" size={14} />
                           </Button>
                         )}
                         <Button
@@ -104,7 +104,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                           className="h-6 w-6 rounded-full hover:bg-danger-soft text-danger cursor-pointer"
                           onClick={() => deleteNotification(notification.id)}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <EganyeIcon name="trash" size={14} />
                         </Button>
                       </div>
                     </div>
