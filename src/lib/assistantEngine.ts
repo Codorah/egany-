@@ -1,4 +1,4 @@
-import type { ReadyReliability, Reliability, ReliabilityFactor } from './reliability';
+import type { CircleHealth, ReadyReliability, Reliability, ReliabilityFactor } from './reliability';
 import { reliabilityLevel } from './reliability';
 
 /**
@@ -28,6 +28,8 @@ export interface AssistantCircle {
   currency: string;
   /** La personne reçoit-elle le prochain versement ? */
   isNextBeneficiary: boolean;
+  /** Estimation agrégée du modèle, si elle a été chargée. */
+  health?: CircleHealth;
 }
 
 export interface AssistantContext {
@@ -43,6 +45,8 @@ export type AssistantIntent =
   | 'score_explain'
   | 'score_improve'
   | 'score_privacy'
+  | 'ai_about'
+  | 'circle_health'
   | 'next_payment'
   | 'late'
   | 'balance'
@@ -67,6 +71,8 @@ export function normalize(text: string): string {
 
 // Ordre important : le plus précis d'abord.
 const RULES: [AssistantIntent, RegExp][] = [
+  ['ai_about', /\b(l ia|ia|intelligence artificielle|le modele)\b/],
+  ['circle_health', /sante.*cercle|cercle.*(sante|risque|va bien)|risque.*(cercle|tour)|mon cercle va/],
   ['score_privacy', /(qui|est ce qu).*(voit|voir|acces).*(score)|score.*(prive|confidentiel|voit)|mes donnees|donnees personnelles|discrimin|equitable/],
   ['score_change', /(pourquoi|comment).*(score|note).*(baiss|mont|bouge|change|chut|augment|diminu)|(score|note).*(baiss|bouge|change|chut|monte|augment|diminu)/],
   ['score_improve', /(ameliorer|augmenter|remonter|monter|faire monter|gagner).*(score|note|fiabilite)|(score|note|fiabilite).*(ameliorer|remonter)/],
@@ -168,6 +174,55 @@ function nextPayment(ctx: AssistantContext): string {
     : `${head} Votre solde suffit, le prélèvement se fera tout seul.`;
 }
 
+const HEALTH_LABEL = { low: 'risque de retard faible', medium: 'risque de retard moyen', high: 'risque de retard élevé' } as const;
+
+function circleHealth(ctx: AssistantContext): string {
+  if (ctx.circles.length === 0) return 'Vous n’êtes dans aucun cercle actif pour le moment.';
+  const lines = ctx.circles.map((circle) => {
+    const health = circle.health;
+    if (health?.status === 'ok') return `• ${circle.name} : ${HEALTH_LABEL[health.level]}.`;
+    if (health?.status === 'not_enough') return `• ${circle.name} : pas encore assez de membres avec un score.`;
+    return `• ${circle.name} : estimation indisponible.`;
+  });
+  return `${lines.join('\n')}\nC’est une estimation pour tout le cercle, sans nom ni score individuel. Elle ne dit pas qui sera en retard.`;
+}
+
+const AI_ABOUT = 'L’IA d’eganyé est un modèle de fiabilité. À partir de vos seules cotisations, il estime le risque d’un prochain retard, pour vous prévenir à temps. Il peut vous envoyer un rappel de plus si votre score passe sous 60, donner une estimation pour tout un cercle, et aider notre équipe à savoir qui contacter d’abord.\nIl ne décide rien : il ne refuse aucune demande et n’applique aucune pénalité. Il a appris sur des données simulées, pas encore sur de vrais membres, et il peut se tromper. Moi, je suis l’assistant : je réponds avec des règles écrites, à partir de vos données.';
+
+/**
+ * La phrase la plus utile du moment, ou null s'il n'y a rien d'utile à dire.
+ * Dans l'ordre : ce qui coûte déjà, ce qui va coûter, ce qui a changé, puis ce qui va bien.
+ */
+export function momentInsight(ctx: AssistantContext, now: Date = new Date()): string | null {
+  const today = now.toISOString().slice(0, 10);
+  const byDate = [...ctx.contributions].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  const late = byDate.filter((c) => c.dueDate.slice(0, 10) < today);
+  if (late.length > 0) {
+    const total = late.reduce((sum, c) => sum + c.amount + c.penalty, 0);
+    const where = late.length === 1 ? ` pour ${late[0].groupName}` : '';
+    return `Vous avez ${fcfa(total, late[0].currency)} de retard${where}. Réglez-les d’abord : c’est ce qui pèse le plus sur votre score.`;
+  }
+
+  const inAWeek = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10);
+  const soon = byDate.find((c) => c.dueDate.slice(0, 10) <= inAWeek);
+  if (soon) {
+    const missing = soon.amount + soon.penalty - ctx.walletBalance;
+    if (missing > 0) {
+      return `Il manque ${fcfa(missing, soon.currency)} pour votre cotisation ${soon.groupName} du ${dateFr(soon.dueDate)}. Rechargez à temps et elle partira toute seule.`;
+    }
+  }
+
+  const r = ctx.reliability;
+  if (r?.status === 'ready') {
+    if (r.previousScore !== null && r.previousScore !== r.score) return explainChange(r);
+    if (r.openLate === 0 && r.recentLate === 0) {
+      return `Aucun retard récent : votre score de fiabilité est de ${r.score}/100.`;
+    }
+  }
+  return null;
+}
+
 export function answer(text: string, ctx: AssistantContext): { intent: AssistantIntent; text: string } {
   const intent = detectIntent(text);
   const r = ctx.reliability;
@@ -187,6 +242,10 @@ export function answer(text: string, ctx: AssistantContext): { intent: Assistant
       return reply(ready ? improveScore(ready) : 'Payez vos cotisations à l’heure : votre score apparaîtra après 3 cotisations échues.');
     case 'score_privacy':
       return reply('Votre score n’est visible que par vous et par l’équipe eganyé, jamais par les membres de vos cercles. Il n’utilise ni votre solde, ni les montants, ni votre genre, votre âge ou votre lieu. Il ne refuse rien tout seul : une personne décide toujours. Vous pouvez demander une vérification au support.');
+    case 'ai_about':
+      return reply(AI_ABOUT);
+    case 'circle_health':
+      return reply(circleHealth(ctx));
     case 'next_payment':
       return reply(nextPayment(ctx));
     case 'late': {
@@ -209,7 +268,7 @@ export function answer(text: string, ctx: AssistantContext): { intent: Assistant
     case 'greeting':
       return reply(`Bonjour ${ctx.firstName} ! Je peux vous expliquer votre score, vous dire votre prochaine cotisation ou votre solde.`);
     case 'help':
-      return reply('Je peux vous expliquer votre score et ses variations, vous dire comment le faire monter, votre prochaine cotisation, vos retards, votre solde et votre prochain tour.');
+      return reply('Je peux vous expliquer votre score et ses variations, vous dire comment le faire monter, votre prochaine cotisation, vos retards, votre solde, votre prochain tour et l’estimation de vos cercles.');
     default:
       return reply('Je n’ai pas compris. Je sais répondre sur votre score, vos cotisations, vos retards, votre solde et votre tour. Essayez une des questions proposées.');
   }

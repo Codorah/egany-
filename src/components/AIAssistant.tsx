@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { Group, UserProfile } from '@/types';
-import { answer, explainChange, type AssistantContext, type AssistantContribution } from '@/lib/assistantEngine';
-import { fetchMyReliability, reliabilityLevel, type Reliability } from '@/lib/reliability';
+import { answer, momentInsight, type AssistantContext } from '@/lib/assistantEngine';
+import { loadAssistantContext } from '@/lib/assistantContext';
+import { reliabilityLevel, type Reliability } from '@/lib/reliability';
 
 interface AIAssistantProps {
   user: UserProfile;
@@ -20,81 +20,59 @@ const SUGGESTIONS = [
   'Pourquoi mon score a bougé ?',
   'Comment faire monter mon score ?',
   'Ma prochaine cotisation ?',
+  'La santé de mon cercle',
+  'Que fait l’IA ?',
   'Qui voit mon score ?',
 ];
 
 export function AIAssistant({ user, groups }: AIAssistantProps) {
-  const [reliability, setReliability] = useState<Reliability | null>(null);
-  const [contributions, setContributions] = useState<AssistantContribution[]>([]);
+  const [context, setContext] = useState<AssistantContext | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
   const nextId = useRef(1);
+  const greeted = useRef(false);
+  const reliability: Reliability | null = context?.reliability ?? null;
 
   useEffect(() => {
     let cancelled = false;
-    fetchMyReliability().then((value) => {
-      if (!cancelled) setReliability(value);
+    loadAssistantContext(user, groups, { withCircleHealth: true }).then((value) => {
+      if (cancelled) return;
+      setContext(value);
+      setLoaded(true);
+      // L'assistant parle en premier, une seule fois, avec l'analyse du moment.
+      if (value && !greeted.current) {
+        greeted.current = true;
+        const opening = momentInsight(value);
+        setMessages((prev) => [
+          { id: nextId.current++, sender: 'assistant', text: opening ?? 'Rien à signaler pour le moment. Posez-moi une question sur votre score, vos cotisations ou vos cercles.' },
+          ...prev,
+        ]);
+      }
     });
     return () => { cancelled = true; };
-  }, [user.uid]);
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from('contributions')
-      .select('group_id, amount, date, status, penalty_applied, penalty_status')
-      .eq('user_id', user.uid)
-      .in('status', ['pending', 'late'])
-      .then(({ data }) => {
-        if (cancelled || !data) return;
-        setContributions(data.map((row: any) => {
-          const group = groups.find((g) => g.id === row.group_id);
-          return {
-            groupName: group?.name || 'Cercle',
-            amount: Number(row.amount),
-            penalty: row.penalty_status === 'pending' ? Number(row.penalty_applied ?? 0) : 0,
-            currency: group?.currency || 'FCFA',
-            dueDate: row.date,
-            status: row.status,
-          };
-        }));
-      });
-    return () => { cancelled = true; };
-  }, [user.uid, groups]);
+  }, [user.uid, user.walletBalance, groups]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages]);
 
-  const buildContext = (): AssistantContext => ({
-    firstName: user.firstName || user.displayName.split(' ')[0] || '',
-    walletBalance: user.walletBalance || 0,
-    contributions,
-    reliability,
-    circles: groups.filter((g) => g.status === 'active').map((g) => ({
-      name: g.name,
-      nextPayoutDate: g.nextPayoutDate,
-      potAmount: g.contributionAmount * g.members.length,
-      currency: g.currency,
-      isNextBeneficiary: g.payoutOrder[g.currentPayoutIndex] === user.uid,
-    })),
-  });
-
   const send = (raw: string) => {
     const question = raw.trim();
     if (!question) return;
-    const reply = answer(question, buildContext());
+    const replyText = context
+      ? answer(question, context).text
+      : 'Je n’arrive pas à lire vos données pour le moment. Réessayez dans un instant.';
     setMessages((prev) => [
       ...prev,
       { id: nextId.current++, sender: 'user', text: question },
-      { id: nextId.current++, sender: 'assistant', text: reply.text },
+      { id: nextId.current++, sender: 'assistant', text: replyText },
     ]);
     setInput('');
   };
 
   const ready = reliability?.status === 'ready' ? reliability : null;
-  const moved = ready && ready.previousScore !== null && ready.previousScore !== ready.score;
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-2xl flex-col">
@@ -109,7 +87,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
               <span className="text-4xl font-bold tabular-nums text-foreground">{ready.score}</span>
               <span className="text-sm text-muted-foreground">/ 100 · {reliabilityLevel(ready.score)}</span>
             </p>
-            {moved && <p className="mt-2 text-sm leading-relaxed text-foreground">{explainChange(ready)}</p>}
+            <p className="mt-1 text-[13px] leading-snug text-muted-foreground">Estimé par l’IA d’eganyé à partir de vos cotisations. Le modèle peut se tromper et ne décide rien.</p>
           </>
         ) : reliability?.status === 'building' ? (
           <>
@@ -118,7 +96,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
               Pas encore de score : il faut {reliability.needed} cotisations échues, vous en avez {reliability.dueCount}.
             </p>
           </>
-        ) : reliability?.status === 'error' ? (
+        ) : loaded ? (
           <p className="text-sm text-muted-foreground">Score indisponible pour le moment.</p>
         ) : (
           <div className="h-16 animate-pulse rounded-xl bg-muted" />
@@ -126,9 +104,9 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       </section>
 
       <div className="flex-1 space-y-3 py-4" aria-live="polite">
-        {messages.length === 0 && (
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Posez une question sur votre score, vos cotisations ou votre solde. Je réponds uniquement à partir de vos données, et ce que vous écrivez reste sur votre téléphone.
+        {loaded && (
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            Je réponds uniquement à partir de vos données, et ce que vous écrivez reste sur votre téléphone.
           </p>
         )}
         {messages.map((m) => (

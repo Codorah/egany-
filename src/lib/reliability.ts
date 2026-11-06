@@ -48,6 +48,37 @@ export async function fetchMemberReliability(userId: string): Promise<Reliabilit
   return data as Reliability;
 }
 
+export type CircleHealthLevel = 'low' | 'medium' | 'high';
+
+export type CircleHealth =
+  | { status: 'ok'; level: CircleHealthLevel }
+  | { status: 'not_enough' }
+  | { status: 'error'; message?: string };
+
+/** Estimation agrégée, sans score ni nom (migration 0040). */
+export async function fetchCircleHealth(groupId: string): Promise<CircleHealth> {
+  const { data, error } = await supabase.rpc('get_circle_health', { p_group_id: groupId });
+  if (error) return { status: 'error', message: error.message };
+  return data as CircleHealth;
+}
+
+export interface MemberToContact {
+  userId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  score: number;
+  openLate: number;
+}
+
+/** Admin : personnes à contacter d'abord. Une aide à l'équipe, pas une décision. */
+export async function fetchReliabilityOverview(): Promise<MemberToContact[] | null> {
+  const { data, error } = await supabase.rpc('admin_reliability_overview');
+  if (error) return null;
+  const result = data as { status: string; members?: MemberToContact[] };
+  return result?.status === 'ok' ? result.members ?? [] : null;
+}
+
 export function reliabilityLevel(score: number): string {
   if (score >= 80) return 'Très régulier';
   if (score >= 60) return 'Régulier';

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { fetchBalancesOverview, memberTotal, type BalancesOverview, type MemberBalance } from '@/lib/adminBalances';
+import { fetchReliabilityOverview, type MemberToContact } from '@/lib/reliability';
 
 const PAGE = 50;
 
@@ -82,6 +83,44 @@ function MemberRow({ member }: { member: MemberBalance }) {
   );
 }
 
+/** Personnes à contacter d'abord, selon le modèle. N'agit sur rien, n'envoie rien. */
+function MembersToContact() {
+  const [members, setMembers] = useState<MemberToContact[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReliabilityOverview().then((value) => {
+      if (!cancelled) setMembers(value);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!members || members.length === 0) return null;
+
+  return (
+    <section className="p-4 sm:p-5 border-b border-border space-y-2" aria-label="Membres à contacter">
+      <div>
+        <h3 className="text-sm font-bold text-foreground">Membres à contacter ({members.length})</h3>
+        <p className="text-[13px] text-muted-foreground">Estimation, pas une décision. Le modèle peut se tromper : vérifiez avant d'agir.</p>
+      </div>
+      <ul className="divide-y divide-border">
+        {members.map((m) => (
+          <li key={m.userId} className="flex items-start justify-between gap-3 py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-foreground truncate">{m.name}</p>
+              <p className="text-[13px] text-muted-foreground truncate">{m.phone || m.email || 'Pas de contact'}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold tabular-nums text-foreground">{m.score}/100</p>
+              {m.openLate > 0 && <p className="text-[13px] text-danger">{m.openLate} en retard</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** Vue en lecture seule de l'argent des membres. Rien ici ne modifie un solde. */
 export function AdminBalances() {
   const [overview, setOverview] = useState<BalancesOverview | null>(null);
@@ -151,6 +190,7 @@ export function AdminBalances() {
 
         {overview && (
           <>
+            <MembersToContact />
             <div className="p-4 sm:p-5 border-b border-border space-y-4">
               <div>
                 <p className="text-[13px] text-muted-foreground">Argent détenu pour les membres</p>
