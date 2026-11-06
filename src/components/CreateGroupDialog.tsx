@@ -904,7 +904,7 @@ export function CreateGroupDialog({
                 </Button>
               ) : (
                 <Button type="submit" disabled={isSubmitting} className="h-12 w-full cursor-pointer rounded-xl font-bold">
-                  {isSubmitting ? 'Création en cours…' : 'Créer mon cercle'}
+                  {isSubmitting ? '…' : t('cgd_create_mine')}
                 </Button>
               )}
             </div>
