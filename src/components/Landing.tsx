@@ -34,6 +34,9 @@ interface LandingProps {
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+// À passer à true une fois le tutoriel rendu dans public/video.
+const TUTORIAL_READY = false;
+
 // Les vidéos existent en français et en anglais. Les autres langues reçoivent le français.
 function LandingVideos() {
   const { language } = useLanguage();
@@ -43,10 +46,10 @@ function LandingVideos() {
       name: en ? 'eganye-presentation-en' : 'eganye-presentation-fr',
       title: en ? 'eganyé on video.' : 'eganyé en vidéo.',
     },
-    {
+    ...(TUTORIAL_READY ? [{
       name: en ? 'eganye-how-it-works-en' : 'eganye-comment-ca-marche-fr',
       title: en ? 'How it works, screen by screen.' : 'Comment ça marche, écran par écran.',
-    },
+    }] : []),
   ];
   return (
     <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-16">
