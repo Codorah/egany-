@@ -91,8 +91,8 @@
         <div data-a="slam" data-d="${B(2)}" data-du=".3" style="color:var(--terra)">${T.make[1]}</div>
       </div>
       <div class="abs" style="left:96px;top:620px;font-size:40px;font-weight:700;color:var(--muted)" data-a="rise" data-d="${B(2) + BEAT}" data-du=".3">${T.makeSub}</div>
-      ${phone('create-1', { x: 610, y: 150, h: 760, d: 0.05 })}
-      ${phone('create-2', { x: 1020, y: 150, h: 760, d: B(1) })}
+      ${phone('create-1', { x: 610, y: 150, h: 760, d: 0.05, note: T.note })}
+      ${phone('create-2', { x: 1020, y: 150, h: 760, d: B(1), note: T.note })}
       ${phone('invite', { x: 1430, y: 150, h: 760, d: B(2), note: T.note })}`),
 
     // 4. Le pot
@@ -105,7 +105,7 @@
         <div class="pill" style="background:#fff;color:var(--terra)" data-a="pop" data-d="${BEAT * 2}" data-du=".3" data-ease="var(--back)">Mixx</div>
       </div>
       <div class="abs big" style="left:116px;top:680px;width:1000px;font-size:96px">${words(T.seen, { d: B(1.5), step: BEAT })}</div>
-      ${phone('pot-partial', { x: 1240, y: 110, h: 830, note: '' })}
+      ${phone('pot-partial', { x: 1240, y: 110, h: 830, note: T.note })}
       ${phone('pot-full', { x: 1240, y: 110, h: 830, a: 'swap', d: B(2), du: 0.22, note: T.note })}`),
 
     // 5a. L'IA : le score
@@ -130,7 +130,7 @@
       ${aiTag}
       <div class="abs big" style="left:96px;top:260px;width:900px;font-size:112px">${words(T.ai2, { d: 0, step: BEAT / 1.4 })}</div>
       <div class="callout" style="left:100px;top:700px;width:800px" data-a="slam" data-d="${BEAT * 3}" data-du=".3"><small>${T.ai2Tag}</small>${T.ai2Call}</div>
-      ${phone('home-alert', { x: 1220, y: 100, h: 850, a: 'phoneR', note: '' })}`),
+      ${phone('home-alert', { x: 1220, y: 100, h: 850, a: 'phoneR', note: T.note })}`),
 
     // 5c. Le risque du tour
     scene(16.5, 18.25, 'bg-night', `
@@ -138,7 +138,7 @@
       <div class="abs big" style="left:96px;top:230px;width:980px;font-size:112px">${words(T.ai3, { d: 0, step: BEAT / 1.6 })}</div>
       <div class="abs" style="left:100px;top:600px;font-size:54px;font-weight:800;color:#DD8760" data-a="rise" data-d="${BEAT * 3}" data-du=".3">${T.ai3Sub}</div>
       <div class="callout" style="left:100px;top:710px;width:640px" data-a="slam" data-d="${BEAT * 4}" data-du=".3"><small>${T.ai3Tag}</small>${T.ai3Call}</div>
-      ${phone('circle', { x: 1220, y: 100, h: 850, a: 'phoneR', note: '' })}`),
+      ${phone('circle', { x: 1220, y: 100, h: 850, a: 'phoneR', note: T.note })}`),
 
     // 5d. Elle ne décide pas
     scene(18.25, 19.75, 'bg-night', `
@@ -157,7 +157,7 @@
         <div data-a="slam" data-d="0" data-du=".3">${T.save[0]}</div>
         <div data-a="slam" data-d="${B(0.75)}" data-du=".3" style="color:var(--terra)">${T.save[1]}</div>
       </div>
-      ${phone('savings', { x: 880, y: 130, h: 780, d: 0 })}
+      ${phone('savings', { x: 880, y: 130, h: 780, d: 0, note: T.note })}
       ${phone('withdraw-4', { x: 1320, y: 130, h: 780, d: B(0.75), note: T.note })}`),
 
     // 8. Fin

@@ -21,6 +21,7 @@ body { font-family: 'Nunito', system-ui, sans-serif; color: var(--ink); -webkit-
 
 .phone { position: absolute; padding: 10px; border-radius: 52px; background: #1A1410; }
 .phone img { display: block; border-radius: 42px; }
+.bg-night .phone { box-shadow: 0 0 0 2px rgba(255, 255, 255, .22); }
 .note { position: absolute; left: 0; right: 0; bottom: -38px; text-align: center; font-size: 19px; font-weight: 600; opacity: .62; }
 
 .pill { display: inline-flex; align-items: center; gap: 12px; height: 62px; padding: 0 28px; border-radius: 999px; font-weight: 800; font-size: 28px; }

@@ -223,7 +223,7 @@ if (lines.length) {
   graph += ';' + lines.map((l, i) => `[${i + 2}:a]aresample=${SR},aformat=channel_layouts=stereo,adelay=${Math.round(l.t * 1000)}:all=1[v${i}]`).join(';');
   graph += `;${lines.map((_, i) => `[v${i}]`).join('')}amix=inputs=${lines.length}:normalize=0,volume=2.0,apad=whole_dur=${DUR}[voix]`;
   graph += `;[voix]asplit[vo][sc];[mus][sc]sidechaincompress=threshold=0.03:ratio=${VIDEO === 'presentation' ? 3.5 : 5}:attack=25:release=350[fond]`;
-  graph += ';[fond][vo]amix=inputs=2:normalize=0,alimiter=limit=0.94[a]';
+  graph += ';[fond][vo]amix=inputs=2:normalize=0,alimiter=limit=0.85:level=disabled[a]';
 } else {
   graph += ';[mus]anull[a]';
 }

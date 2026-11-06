@@ -22,7 +22,7 @@ export const OUTPUT = {
   presentation: { fr: 'eganye-presentation-fr', en: 'eganye-presentation-en' },
   tutorial: { fr: 'eganye-comment-ca-marche-fr', en: 'eganye-how-it-works-en' },
 };
-const POSTER_T = { presentation: 12, tutorial: 22 };
+const POSTER_T = { presentation: 25.5, tutorial: 22 };
 
 const args = process.argv.slice(2);
 const video = args[0] === 'tutorial' ? 'tutorial' : 'presentation';
@@ -62,7 +62,7 @@ if (stillsArg) {
   const out = path.join(outDir, `${name}.mp4`);
   const ff = spawn('ffmpeg', [
     '-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', video === 'tutorial' ? '26' : '24', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out,
+    '-vf', 'scale=out_range=tv:out_color_matrix=bt709,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', video === 'tutorial' ? '24' : '21', '-color_range', 'tv', '-movflags', '+faststart', out,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
   const frames = Math.round(duration * FPS);
   const started = Date.now();
