@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { EganyeLogo } from './ui/EganyeLogo';
 import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED, PLAY_STORE_URL } from '@/lib/links';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * Page d'accueil du site, pour les visiteurs sur ordinateur.
@@ -32,6 +33,46 @@ interface LandingProps {
 }
 
 const ease = [0.16, 1, 0.3, 1] as const;
+
+// Les vidéos existent en français et en anglais. Les autres langues reçoivent le français.
+function LandingVideos() {
+  const { language } = useLanguage();
+  const en = language === 'en';
+  const videos = [
+    {
+      name: en ? 'eganye-presentation-en' : 'eganye-presentation-fr',
+      title: en ? 'eganyé on video.' : 'eganyé en vidéo.',
+    },
+    {
+      name: en ? 'eganye-how-it-works-en' : 'eganye-comment-ca-marche-fr',
+      title: en ? 'How it works, screen by screen.' : 'Comment ça marche, écran par écran.',
+    },
+  ];
+  return (
+    <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-16">
+      {videos.map((video, i) => (
+        <div key={video.name} className="space-y-8">
+          <Reveal>
+            <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight text-center">{video.title}</h2>
+          </Reveal>
+          <Reveal delay={i === 0 ? 0.08 : 0}>
+            <video
+              key={video.name}
+              className="w-full aspect-video rounded-2xl bg-foreground"
+              src={`/video/${video.name}.mp4`}
+              poster={`/video/${video.name}.jpg`}
+              controls
+              playsInline
+              preload="none"
+            >
+              {en ? 'Your browser cannot play this video.' : 'Votre navigateur ne lit pas cette vidéo.'}
+            </video>
+          </Reveal>
+        </div>
+      ))}
+    </section>
+  );
+}
 
 function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const reduce = useReducedMotion();
@@ -161,26 +202,8 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         </section>
 
         {/* ------------------------------------------------------ Vidéo */}
-        {/* Composition et rendu : video/promo.html, video/render.mjs. */}
-        <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-10">
-          <Reveal>
-            <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight text-center">
-              eganyé en vidéo.
-            </h2>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <video
-              className="w-full aspect-video rounded-2xl bg-foreground"
-              src="/video/eganye-presentation.mp4"
-              poster="/video/eganye-presentation.jpg"
-              controls
-              playsInline
-              preload="none"
-            >
-              Votre navigateur ne lit pas cette vidéo.
-            </video>
-          </Reveal>
-        </section>
+        {/* Composition et rendu : video/presentation.html, video/tutorial.html, video/render.mjs. */}
+        <LandingVideos />
 
         {/* ---------------------------------------------- Comment ça marche */}
         <section id="fonctionnement" className="scroll-mt-20 bg-card border-y border-border">
