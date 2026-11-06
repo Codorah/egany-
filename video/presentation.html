@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>eganyé : présentation</title>
+<!--
+  Vidéo de présentation, environ 48 s à 124 battements par minute. Chaque changement de scène
+  tombe sur une mesure, et la musique de build-audio.mjs suit le même tempo.
+  node video/render.mjs presentation fr   (ou en).  Dans un navigateur : presentation.html?lang=en&t=24
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=block" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage"></div>
+<script src="engine.js"></script>
+<script>
+(function () {
+  const { lang, hooks, $, prog, easeOut, fmt, words, start, phone } = V;
+  const BAR = (60 / 124) * 4; const BEAT = BAR / 4;
+  const B = (n) => +(n * BAR).toFixed(3);
+
+  const T = {
+    fr: {
+      tag: 'La tontine, sur votre téléphone.', note: 'Données fictives',
+      lost: 'Le cahier qui se perd.', who: 'Qui a payé ?', miss: 'Qui manque ?',
+      all: ['Vos cercles.', 'Votre argent.', 'Tout est là.'],
+      make: ['Créez.', 'Invitez.'], makeSub: 'Par lien ou par code.',
+      pot: 'Le pot du cercle', cur: 'FCFA', seen: 'Chaque franc se voit.',
+      aiTag: 'IA eganyé', ai1: 'Au cœur d’eganyé, une IA.', ai1Sub: 'Elle estime. Elle explique.',
+      scoreLbl: 'Score de fiabilité', why: 'Passé de 85 à 70 : des retards sur vos 3 dernières cotisations.',
+      ai2: 'Elle prévient avant un retard.', ai2Tag: 'Assistant eganyé', ai2Call: 'Il manque 2 500 FCFA pour votre prochaine cotisation.',
+      ai3: 'Elle estime le risque du tour.', ai3Sub: 'Sans nommer personne.', ai3Tag: 'Ce tour', ai3Call: 'Risque de retard faible',
+      ai4: 'Elle ne décide jamais à votre place.',
+      turn: 'À votre tour.', wallet: 'Le pot arrive sur votre portefeuille.',
+      save: ['Vos coffres.', 'Votre code PIN.'],
+      end: 'Épargnons ensemble.',
+    },
+    en: {
+      tag: 'Your tontine, on your phone.', note: 'Sample data',
+      lost: 'Lost notebooks.', who: 'Who paid?', miss: 'Who’s missing?',
+      all: ['Your circles.', 'Your money.', 'All in one place.'],
+      make: ['Start.', 'Invite.'], makeSub: 'By link or by code.',
+      pot: 'The circle’s pot', cur: 'FCFA', seen: 'Every franc is visible.',
+      aiTag: 'eganyé AI', ai1: 'At the heart of eganyé: AI.', ai1Sub: 'It estimates. It explains.',
+      scoreLbl: 'Reliability score', why: 'Down from 85 to 70: late payments on your last 3 contributions.',
+      ai2: 'It warns you before you’re late.', ai2Tag: 'eganyé assistant', ai2Call: '2,500 FCFA short for your next contribution.',
+      ai3: 'It estimates the risk for each round.', ai3Sub: 'Without naming anyone.', ai3Tag: 'This round', ai3Call: 'Low risk of delay',
+      ai4: 'It never decides for you.',
+      turn: 'Your turn.', wallet: 'The pot lands in your wallet.',
+      save: ['Your vaults.', 'Your PIN.'],
+      end: 'Let’s save together.',
+    },
+  }[lang];
+
+  const scene = (a, b, cls, html) => `<section class="scene ${cls}" data-start="${B(a)}" data-end="${B(b)}">${html}</section>`;
+  const LOGO = '../public/brand-visuals/logo-coin.webp';
+  const SPARK = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
+  const aiTag = `<div class="pill abs" style="left:96px;top:72px;background:rgba(255,255,255,.1);color:#F3EAD9">${SPARK}${T.aiTag}</div>`;
+
+  const html = [
+    // 0. Ouverture
+    scene(0, 2, 'bg-terra', `
+      <div class="abs" style="left:50%;top:400px;width:260px;height:260px;border:6px solid #fff;border-radius:50%;margin:-130px 0 0 -130px" data-a="ring" data-d="0" data-du="${B(1)}"></div>
+      <div class="abs center" style="inset:0 0 160px 0"><img src="${LOGO}" style="width:230px" data-a="pop" data-d="0" data-du=".4" data-ease="var(--back)"></div>
+      <div class="abs big" style="left:0;right:0;top:600px;text-align:center;font-size:150px" data-a="slam" data-d="${BEAT}" data-du=".36">eganyé</div>
+      <div class="abs big" style="left:0;right:0;top:790px;text-align:center;font-size:62px;font-weight:800">${words(T.tag, { d: B(1), step: BEAT / 2 })}</div>`),
+
+    // 1. Le problème
+    scene(2, 4, 'bg-night', `
+      <div class="abs big" style="left:140px;top:210px;font-size:112px;white-space:nowrap">
+        <span style="position:relative;display:inline-block" data-a="slam" data-d="0" data-du=".3">${T.lost}
+          <span class="abs" style="left:-8px;right:-8px;top:54%;height:10px;background:#DD8760;transform-origin:left" data-a="strike" data-d="${BEAT * 2}" data-du=".28"></span>
+        </span>
+      </div>
+      <div class="abs big" style="left:140px;top:430px;font-size:170px" data-a="slam" data-d="${BEAT * 3}" data-du=".3">${T.who}</div>
+      <div class="abs big" style="left:140px;top:650px;font-size:170px;color:#DD8760" data-a="slam" data-d="${BEAT * 5}" data-du=".3">${T.miss}</div>`),
+
+    // 2. L'accueil
+    scene(4, 6, 'bg-paper', `
+      <div class="abs big" style="left:130px;top:280px;font-size:112px">
+        ${T.all.map((l, i) => `<div data-a="slam" data-d="${BEAT * (i * 2)}" data-du=".32" style="${i === 2 ? 'color:var(--terra)' : ''}">${l}</div>`).join('')}
+      </div>
+      ${phone('home', { x: 1200, y: 90, h: 860, note: T.note })}`),
+
+    // 3. Créer, inviter
+    scene(6, 9, 'bg-paper', `
+      <div class="abs big" style="left:90px;top:330px;font-size:120px">
+        <div data-a="slam" data-d="0" data-du=".3">${T.make[0]}</div>
+        <div data-a="slam" data-d="${B(2)}" data-du=".3" style="color:var(--terra)">${T.make[1]}</div>
+      </div>
+      <div class="abs" style="left:96px;top:620px;font-size:40px;font-weight:700;color:var(--muted)" data-a="rise" data-d="${B(2) + BEAT}" data-du=".3">${T.makeSub}</div>
+      ${phone('create-1', { x: 610, y: 150, h: 760, d: 0.05 })}
+      ${phone('create-2', { x: 1020, y: 150, h: 760, d: B(1) })}
+      ${phone('invite', { x: 1430, y: 150, h: 760, d: B(2), note: T.note })}`),
+
+    // 4. Le pot
+    scene(9, 12, 'bg-terra', `
+      <div class="abs" style="left:120px;top:190px;font-size:44px;font-weight:800;opacity:.9" data-a="rise" data-d="0" data-du=".3">${T.pot}</div>
+      <div class="abs big" style="left:116px;top:250px;font-size:190px;font-variant-numeric:tabular-nums;white-space:nowrap"><span id="pot">0</span> <span style="font-size:70px">${T.cur}</span></div>
+      <div class="abs" style="left:120px;top:490px;width:880px;height:22px;border-radius:11px;background:rgba(255,255,255,.25)"><div id="potbar" style="height:100%;width:0;border-radius:11px;background:#fff"></div></div>
+      <div class="abs" style="left:120px;top:548px;display:flex;gap:16px">
+        <div class="pill" style="background:#fff;color:var(--terra)" data-a="pop" data-d="${BEAT}" data-du=".3" data-ease="var(--back)">Flooz</div>
+        <div class="pill" style="background:#fff;color:var(--terra)" data-a="pop" data-d="${BEAT * 2}" data-du=".3" data-ease="var(--back)">Mixx</div>
+      </div>
+      <div class="abs big" style="left:116px;top:680px;width:1000px;font-size:96px">${words(T.seen, { d: B(1.5), step: BEAT })}</div>
+      ${phone('pot-partial', { x: 1240, y: 110, h: 830, note: '' })}
+      ${phone('pot-full', { x: 1240, y: 110, h: 830, a: 'swap', d: B(2), du: 0.22, note: T.note })}`),
+
+    // 5a. L'IA : le score
+    scene(12, 14.75, 'bg-night', `
+      ${aiTag}
+      <div class="abs big" style="left:96px;top:230px;width:980px;font-size:112px">${words(T.ai1, { d: 0.1, step: BEAT })}</div>
+      <div class="abs" style="left:100px;top:690px;font-size:50px;font-weight:800;color:#DD8760" data-a="rise" data-d="${B(1.25)}" data-du=".3">${T.ai1Sub}</div>
+      <div class="abs" style="left:1140px;top:170px;width:640px;height:640px">
+        <svg width="640" height="640" viewBox="0 0 640 640" style="transform:rotate(-90deg)">
+          <circle cx="320" cy="320" r="270" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="34"/>
+          <circle id="ring" cx="320" cy="320" r="270" fill="none" stroke="#DD8760" stroke-width="34" stroke-linecap="round" stroke-dasharray="1696.5" stroke-dashoffset="1696.5"/>
+        </svg>
+        <div class="abs center" style="inset:0;flex-direction:column">
+          <div id="score" class="big" style="font-size:210px;font-variant-numeric:tabular-nums">0</div>
+          <div style="font-size:34px;font-weight:700;opacity:.8">${T.scoreLbl}</div>
+        </div>
+      </div>
+      <div class="callout" style="left:1040px;top:830px;width:800px" data-a="slam" data-d="${B(1.5)}" data-du=".3">${T.why}</div>`),
+
+    // 5b. L'alerte
+    scene(14.75, 16.5, 'bg-night', `
+      ${aiTag}
+      <div class="abs big" style="left:96px;top:260px;width:900px;font-size:112px">${words(T.ai2, { d: 0, step: BEAT / 1.4 })}</div>
+      <div class="callout" style="left:100px;top:700px;width:800px" data-a="slam" data-d="${BEAT * 3}" data-du=".3"><small>${T.ai2Tag}</small>${T.ai2Call}</div>
+      ${phone('home-alert', { x: 1220, y: 100, h: 850, a: 'phoneR', note: '' })}`),
+
+    // 5c. Le risque du tour
+    scene(16.5, 18.25, 'bg-night', `
+      ${aiTag}
+      <div class="abs big" style="left:96px;top:230px;width:980px;font-size:112px">${words(T.ai3, { d: 0, step: BEAT / 1.6 })}</div>
+      <div class="abs" style="left:100px;top:600px;font-size:54px;font-weight:800;color:#DD8760" data-a="rise" data-d="${BEAT * 3}" data-du=".3">${T.ai3Sub}</div>
+      <div class="callout" style="left:100px;top:710px;width:640px" data-a="slam" data-d="${BEAT * 4}" data-du=".3"><small>${T.ai3Tag}</small>${T.ai3Call}</div>
+      ${phone('circle', { x: 1220, y: 100, h: 850, a: 'phoneR', note: '' })}`),
+
+    // 5d. Elle ne décide pas
+    scene(18.25, 19.75, 'bg-night', `
+      <div class="abs big center" style="inset:0 160px;text-align:center;font-size:138px;display:block;padding-top:330px">${words(T.ai4, { d: 0, step: BEAT / 1.5 })}</div>`),
+
+    // 6. Le versement
+    scene(19.75, 21.5, 'bg-olive', `
+      <div class="abs big" style="left:116px;top:210px;font-size:96px" data-a="slam" data-d="0" data-du=".3">${T.turn}</div>
+      <div class="abs big" style="left:110px;top:340px;font-size:200px;font-variant-numeric:tabular-nums;white-space:nowrap">+<span id="got">0</span> <span style="font-size:70px">${T.cur}</span></div>
+      <div class="abs" style="left:120px;top:610px;width:900px;font-size:58px;font-weight:800;line-height:1.2" data-a="rise" data-d="${BEAT * 3}" data-du=".3">${T.wallet}</div>
+      ${phone('received', { x: 1240, y: 110, h: 830, a: 'phoneR', note: T.note })}`),
+
+    // 7. Épargne et retrait
+    scene(21.5, 23.25, 'bg-paper', `
+      <div class="abs big" style="left:110px;top:360px;font-size:104px">
+        <div data-a="slam" data-d="0" data-du=".3">${T.save[0]}</div>
+        <div data-a="slam" data-d="${B(0.75)}" data-du=".3" style="color:var(--terra)">${T.save[1]}</div>
+      </div>
+      ${phone('savings', { x: 880, y: 130, h: 780, d: 0 })}
+      ${phone('withdraw-4', { x: 1320, y: 130, h: 780, d: B(0.75), note: T.note })}`),
+
+    // 8. Fin
+    scene(23.25, 26, 'bg-terra', `
+      <div class="abs center" style="inset:0 0 240px 0"><img src="${LOGO}" style="width:210px" data-a="pop" data-d="0" data-du=".35" data-ease="var(--back)"></div>
+      <div class="abs big" style="left:0;right:0;top:530px;text-align:center;font-size:150px" data-a="slam" data-d="${BEAT}" data-du=".3">eganyé</div>
+      <div class="abs big" style="left:0;right:0;top:710px;text-align:center;font-size:72px;font-weight:800">${words(T.end, { d: BEAT * 3, step: BEAT })}</div>
+      <div class="abs" style="left:0;right:0;top:850px;text-align:center;font-size:36px;font-weight:700;opacity:.92" data-a="fade" data-d="${B(1.5)}" data-du=".4">eganye.codorah.com</div>`),
+  ];
+  $('#stage').innerHTML = html.join('');
+
+  // Volets francs, un sur chaque changement de scène.
+  const cuts = [[2, '#1E1713'], [4, '#A95636'], [6, '#55704D'], [9, '#2B2622'], [12, '#DD8760'], [19.75, '#F8F6F3'], [21.5, '#A95636'], [23.25, '#F8F6F3']];
+  $('#stage').insertAdjacentHTML('beforeend', `<section class="scene" data-start="0" data-end="1000" style="pointer-events:none;z-index:10">${cuts.map(([b, c]) =>
+    `<div class="abs" style="inset:0;background:${c};transform:translateX(-101%)" data-a="wipeIn" data-d="${(B(b) - 0.14).toFixed(3)}" data-du=".28" data-ease="cubic-bezier(.76,0,.24,1)"></div>`).join('')}</section>`);
+
+  hooks.push((t) => {
+    // le pot monte d'un membre par battement, à partir de la 2e mesure de la scène
+    const r = t - B(9);
+    const steps = Math.min(6, Math.max(0, Math.floor((r - BAR * 0.5) / (BEAT * 1.5)) + 1));
+    $('#pot').textContent = fmt(steps * 10000);
+    $('#potbar').style.width = (steps / 6) * 100 + '%';
+
+    const s = t - B(12);
+    const up = easeOut(prog(s, 0.2, 1.3));
+    const down = easeOut(prog(s, B(1.25), B(1.25) + 0.9));
+    const value = 85 * up - 15 * down;
+    $('#score').textContent = Math.round(value);
+    $('#ring').style.strokeDashoffset = 1696.5 * (1 - value / 100);
+    $('#ring').style.stroke = down > 0.05 ? '#E9B04A' : '#DD8760';
+
+    $('#got').textContent = fmt(easeOut(prog(t - B(19.75), BEAT, BEAT * 3)) * 60000);
+  });
+
+  start(+(25.2 * BAR).toFixed(3));
+})();
+</script>
+</body>
+</html>

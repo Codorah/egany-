@@ -1,26 +1,31 @@
-// Bande-son de la vidéo de présentation, entièrement synthétisée, puis
-// collée sur public/video/eganye-presentation.mp4 (l'image n'est pas recodée).
+// Bande-son des vidéos, entièrement synthétisée, puis collée sur le MP4 (l'image n'est pas recodée).
 //
-//   node video/build-audio.mjs
+//   node video/build-audio.mjs presentation fr <durée en secondes>
 //
-// Musique : boucle afro-pop à 112 BPM (kalimba, nappe, basse, percussions),
-// I–vi–IV–V en do. À 112 BPM une mesure dure 2,143 s : la 7e mesure tombe
-// pile sur la scène « Bienvenue » (15 s), où entre la batterie.
-// Bruitages calés sur promo.html : volets de transition, pièce qui se pose,
-// cotisations qui tombent dans le pot, « Cercle créé ».
+// Présentation : afro-pop énergique à 124 BPM. Chaque changement de scène de presentation.html
+// tombe sur une mesure, avec un impact et un souffle : les coupes sont dans la musique.
+// Tutoriel : nappe et kalimba à 96 BPM, sans batterie, pour laisser la voix en avant.
+// Dans les deux cas la musique s'efface sous la voix (compression en sidechain).
 import { writeFileSync, renameSync, mkdtempSync, existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+const VIDEO = process.argv[2] === 'tutorial' ? 'tutorial' : 'presentation';
+const LANG = process.argv[3] === 'en' ? 'en' : 'fr';
+const DUR = parseFloat(process.argv[4]) || 50;
+const FILES = {
+  presentation: { fr: 'eganye-presentation-fr', en: 'eganye-presentation-en' },
+  tutorial: { fr: 'eganye-comment-ca-marche-fr', en: 'eganye-how-it-works-en' },
+};
+
 const SR = 44100;
-const DUR = 100.5;
 const N = Math.ceil(DUR * SR);
 const L = new Float32Array(N);
 const R = new Float32Array(N);
 
-const BEAT = 60 / 112;
+const BEAT = 60 / (VIDEO === 'presentation' ? 124 : 96);
 const BAR = BEAT * 4;
 const TAU = Math.PI * 2;
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -105,34 +110,39 @@ const CHORDS = [
   { bass: 43, pad: [55, 59, 62, 67], arp: [71, 74, 79, 83] }, // G
 ];
 const ARP = [0, 2, 1, 3, 2, 1, 3, 2];
-const FINAL_BAR = 46; // 98,57 s : accord final
-for (let b = 0; b < FINAL_BAR; b++) {
-  const t0 = b * BAR; const c = CHORDS[b % 4];
-  const calm = b >= 39 && b < 43;          // scène Sécurité : on respire
-  const drums = (b >= 7 && b < 39) || b >= 43;
-  const intro = b < 3;
-  pad(t0, c.pad, BAR, intro ? 0.018 + b * 0.006 : 0.03);
-  ARP.forEach((k, i) => {
-    if (intro && b === 0 && i < 4) return;
-    kalimba(t0 + i * BEAT / 2, c.arp[k], calm ? 0.05 : 0.075, (i % 2 ? 0.35 : -0.35));
-  });
-  if (b >= 3) [0, 1.5, 2, 3.5].forEach((p, i) => bass(t0 + p * BEAT, c.bass - (i === 3 ? 0 : 12) + 12, drums ? 0.2 : 0.12));
-  if (b >= 3) for (let s = 0; s < 16; s++) {
-    const sw = s % 2 ? BEAT * 0.06 : 0;
-    shaker(t0 + s * BEAT / 4 + sw, (s % 4 === 2 ? 0.07 : 0.04) * (calm ? 0.6 : 1), s % 2 ? 0.4 : -0.2);
+const bars = Math.ceil(DUR / BAR);
+
+if (VIDEO === 'presentation') {
+  const LAST = 25; // mesure de l'accord final
+  for (let b = 0; b < Math.min(bars, LAST); b++) {
+    const t0 = b * BAR; const c = CHORDS[b % 4];
+    const breakdown = b >= 18 && b < 19.75;     // « elle ne décide jamais » : on respire
+    const drums = b >= 2 && !breakdown;
+    pad(t0, c.pad, BAR, 0.026);
+    ARP.forEach((k, i) => {
+      if (b === 0 && i < 2) return;
+      kalimba(t0 + i * BEAT / 2, c.arp[k], breakdown ? 0.05 : 0.08, i % 2 ? 0.4 : -0.4);
+    });
+    if (b >= 1) [0, 0.75, 1.5, 2, 2.75, 3.5].forEach((p, i) => bass(t0 + p * BEAT, c.bass + (i === 4 ? 12 : 0), breakdown ? 0.14 : 0.3));
+    if (b >= 1) for (let s = 0; s < 16; s++) {
+      shaker(t0 + s * BEAT / 4 + (s % 2 ? BEAT * 0.05 : 0), (s % 4 === 2 ? 0.09 : 0.05) * (breakdown ? 0.5 : 1), s % 2 ? 0.4 : -0.2);
+    }
+    if (drums) {
+      [0, 1, 2, 3].forEach((p) => kick(t0 + p * BEAT, p % 2 ? 0.42 : 0.58));
+      kick(t0 + 3.5 * BEAT, 0.28);
+      clap(t0 + BEAT, 0.24); clap(t0 + 3 * BEAT, 0.28);
+    }
   }
-  if (drums) {
-    kick(t0, 0.55); kick(t0 + 2 * BEAT, 0.5); kick(t0 + 2.75 * BEAT, 0.3);
-    clap(t0 + BEAT, 0.22); clap(t0 + 3 * BEAT, 0.22);
-  } else if (calm) {
-    kick(t0, 0.35);
+  const t = LAST * BAR;
+  kick(t, 0.6); pad(t, [48, 60, 64, 67, 72], 0.6, 0.03);
+} else {
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * BAR; const c = CHORDS[b % 4];
+    pad(t0, c.pad, BAR, 0.024);
+    [0, 2, 3, 5, 6].forEach((i) => kalimba(t0 + i * BEAT / 2, c.arp[ARP[i]], 0.038, i % 2 ? 0.35 : -0.35));
+    bass(t0, c.bass, 0.11); bass(t0 + 2.5 * BEAT, c.bass, 0.07);
+    for (let s = 0; s < 8; s++) shaker(t0 + s * BEAT / 2, 0.016, s % 2 ? 0.3 : -0.3);
   }
-}
-// accord final qui résonne
-{
-  const t = FINAL_BAR * BAR;
-  kick(t, 0.6); pad(t, [48, 60, 64, 67, 72], 1.2, 0.035);
-  [72, 76, 79, 84].forEach((m, i) => kalimba(t + i * 0.06, m, 0.09, i * 0.3 - 0.45, 1.9));
 }
 
 // ---------------------------------------------------------------- bruitages
@@ -164,30 +174,26 @@ const ding = (t, g, pan) => {
   [2093, 3136, 4186].forEach((f, i) => add(t, 0.7, g * [1, 0.5, 0.25][i], pan, (x) => Math.sin(TAU * f * x) * Math.exp(-x * (6 + i * 4)) * Math.min(1, x / 0.002)));
 };
 
-// ouverture : la pièce tourne puis se pose (~1,75 s), le mot apparaît (3 s)
-riser(0.1, 1.65, 0.12);
-impact(1.75, 0.6);
-ding(1.75, 0.08, 0);
-[0, 1, 2, 3, 4, 5].forEach((i) => kalimba(3.0 + i * 0.07, [72, 76, 79, 84, 88, 91][i], 0.05, -0.5 + i * 0.2, 0.8));
-// volets de transition
-[7, 15, 24, 37, 49, 59, 71, 83, 92].forEach((b) => whoosh(b, 0.32));
-// les problèmes barrés
-[8.3, 9.6, 10.9].forEach((t) => whoosh(t + 0.4, 0.08));
-// « Cercle créé ! »
-[84, 88, 91, 96].forEach((m, i) => kalimba(28.4 + i * 0.08, m, 0.07, 0.3, 1));
-// cotisations qui tombent dans le pot (scène 5 : 37 + 2,6 + i × 0,85)
-for (let i = 0; i < 8; i++) ding(37 + 2.6 + i * 0.85, 0.07, 0.3);
-// roue du tirage qui s'arrête, puis « Ama reçoit le pot »
-ding(55.0, 0.08, 0);
-// pièce finale
-riser(92.2, 1.2, 0.08);
-impact(93.4, 0.45);
+if (VIDEO === 'presentation') {
+  impact(0, 0.42); ding(0, 0.06, 0);
+  // coupes : un impact et un souffle sur chaque changement de scène
+  [2, 4, 6, 9, 12, 14.75, 16.5, 18.25, 19.75, 21.5, 23.25].forEach((b) => { whoosh(b * BAR, 0.22); impact(b * BAR, 0.26); });
+  // un petit son par membre qui cotise (scène du pot)
+  for (let i = 0; i < 6; i++) ding(9 * BAR + BAR * 0.5 + i * BEAT * 1.5, 0.07, 0.3);
+  // le pot qui arrive
+  [84, 88, 91, 96].forEach((m, i) => kalimba(19.75 * BAR + BEAT + i * 0.09, m, 0.07, 0.3, 1));
+  riser(22.2 * BAR, BAR, 0.05);
+} else {
+  // un souffle discret à chaque étape
+  const lines = JSON.parse(readFileSync(fileURLToPath(new URL(`./voix/tutorial-${LANG}/repliques.json`, import.meta.url)), 'utf8'));
+  lines.slice(1).forEach((l) => whoosh(l.t, 0.03));
+}
 
 // --------------------------------------------------------------- mixage
-const fadeOut = (DUR - 1.6) * SR;
+const fadeOut = (DUR - 1.4) * SR;
 let peak = 0;
 for (let k = 0; k < N; k++) {
-  const f = Math.min(1, k / (0.05 * SR)) * (k > fadeOut ? Math.max(0, 1 - (k - fadeOut) / (1.6 * SR)) : 1);
+  const f = Math.min(1, k / (0.05 * SR)) * (k > fadeOut ? Math.max(0, 1 - (k - fadeOut) / (1.4 * SR)) : 1);
   L[k] = Math.tanh(L[k] * 1.3) * f; R[k] = Math.tanh(R[k] * 1.3) * f;
   peak = Math.max(peak, Math.abs(L[k]), Math.abs(R[k]));
 }
@@ -205,24 +211,24 @@ const wav = path.join(tmp, 'bande-son.wav');
 writeFileSync(wav, buf);
 
 // ------------------------------------------------- collage sur la vidéo
-const mp4 = fileURLToPath(new URL('../public/video/eganye-presentation.mp4', import.meta.url));
+const mp4 = fileURLToPath(new URL(`../public/video/${FILES[VIDEO][LANG]}.mp4`, import.meta.url));
 const out = path.join(tmp, 'avec-son.mp4');
 // Voix off (video/voix, voir build-voice.mjs) : chaque réplique est posée à
 // son instant, et la musique s'efface sous la voix (compression en sidechain).
-const voixDir = fileURLToPath(new URL('./voix/', import.meta.url));
+const voixDir = fileURLToPath(new URL(`./voix/${VIDEO}-${LANG}/`, import.meta.url));
 const lines = existsSync(path.join(voixDir, 'repliques.json')) ? JSON.parse(readFileSync(path.join(voixDir, 'repliques.json'), 'utf8')) : [];
 const inputs = ['-i', mp4, '-i', wav, ...lines.flatMap((l) => ['-i', path.join(voixDir, l.file)])];
-let graph = '[1:a]volume=0.7[mus]';
+let graph = `[1:a]volume=${VIDEO === 'presentation' ? 0.8 : 0.42}[mus]`;
 if (lines.length) {
   graph += ';' + lines.map((l, i) => `[${i + 2}:a]aresample=${SR},aformat=channel_layouts=stereo,adelay=${Math.round(l.t * 1000)}:all=1[v${i}]`).join(';');
-  graph += `;${lines.map((_, i) => `[v${i}]`).join('')}amix=inputs=${lines.length}:normalize=0,volume=2.2,apad=whole_dur=${DUR}[voix]`;
-  graph += ';[voix]asplit[vo][sc];[mus][sc]sidechaincompress=threshold=0.02:ratio=5:attack=30:release=500[fond]';
+  graph += `;${lines.map((_, i) => `[v${i}]`).join('')}amix=inputs=${lines.length}:normalize=0,volume=2.0,apad=whole_dur=${DUR}[voix]`;
+  graph += `;[voix]asplit[vo][sc];[mus][sc]sidechaincompress=threshold=0.03:ratio=${VIDEO === 'presentation' ? 3.5 : 5}:attack=25:release=350[fond]`;
   graph += ';[fond][vo]amix=inputs=2:normalize=0,alimiter=limit=0.94[a]';
 } else {
   graph += ';[mus]anull[a]';
 }
 const r = spawnSync('ffmpeg', ['-y', '-v', 'error', ...inputs, '-filter_complex', graph, '-map', '0:v', '-map', '[a]', '-c:v', 'copy',
-  '-c:a', 'aac', '-b:a', '160k', '-t', String(DUR), '-movflags', '+faststart', out], { stdio: 'inherit' });
+  '-c:a', 'aac', '-b:a', '128k', '-t', String(DUR), '-movflags', '+faststart', out], { stdio: 'inherit' });
 if (r.status) process.exit(r.status);
 renameSync(out, mp4);
 console.log('bande-son ajoutée :', mp4, '(wav :', wav + ')');

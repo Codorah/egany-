@@ -1,0 +1,170 @@
+[
+ {
+  "t": 0.6,
+  "text": "Ouvrez eganyé, et touchez Créer un compte.",
+  "file": "01.mp3",
+  "duree": 2.76,
+  "step": 0
+ },
+ {
+  "t": 4.21,
+  "text": "Entrez votre nom, votre e-mail et un mot de passe.",
+  "file": "02.mp3",
+  "duree": 2.856,
+  "step": 1
+ },
+ {
+  "t": 7.916,
+  "text": "Vous recevez un code par e-mail. Entrez-le ici.",
+  "file": "03.mp3",
+  "duree": 3.168,
+  "step": 2
+ },
+ {
+  "t": 11.934,
+  "text": "Dites ce que vous voulez faire. Ici : créer une tontine.",
+  "file": "04.mp3",
+  "duree": 3.696,
+  "step": 3
+ },
+ {
+  "t": 16.48,
+  "text": "Voici votre accueil : votre solde, vos cercles, vos derniers mouvements.",
+  "file": "05.mp3",
+  "duree": 4.416,
+  "step": 4
+ },
+ {
+  "t": 21.746,
+  "text": "L’assistant vous dit ce qui compte aujourd’hui. Par exemple, pourquoi votre score a bougé.",
+  "file": "06.mp3",
+  "duree": 4.752,
+  "step": 5
+ },
+ {
+  "t": 27.348,
+  "text": "Posez-lui vos questions : il répond à partir de vos cotisations.",
+  "file": "07.mp3",
+  "duree": 3.504,
+  "step": 6
+ },
+ {
+  "t": 31.702,
+  "text": "Dans Cercles, touchez le plus, puis Créer un cercle.",
+  "file": "08.mp3",
+  "duree": 3.432,
+  "step": 7
+ },
+ {
+  "t": 35.984,
+  "text": "Donnez un nom au cercle, le montant de la cotisation et le nombre de participants.",
+  "file": "09.mp3",
+  "duree": 4.152,
+  "step": 8
+ },
+ {
+  "t": 40.986,
+  "text": "Choisissez le rythme, la date de départ, et comment désigner qui reçoit le pot.",
+  "file": "10.mp3",
+  "duree": 4.368,
+  "step": 9
+ },
+ {
+  "t": 46.204,
+  "text": "Relisez le récapitulatif, acceptez, et signez.",
+  "file": "11.mp3",
+  "duree": 3.816,
+  "step": 10
+ },
+ {
+  "t": 50.87,
+  "text": "Votre cercle est prêt. Partagez le code, ou invitez vos proches sur WhatsApp.",
+  "file": "12.mp3",
+  "duree": 4.656,
+  "step": 11
+ },
+ {
+  "t": 56.376,
+  "text": "Quand vient le moment de cotiser, ouvrez votre cercle et touchez Cotiser.",
+  "file": "13.mp3",
+  "duree": 3.696,
+  "step": 12
+ },
+ {
+  "t": 60.922,
+  "text": "L’IA estime aussi le risque de retard du tour, sans nommer personne.",
+  "file": "14.mp3",
+  "duree": 3.624,
+  "step": 13
+ },
+ {
+  "t": 65.396,
+  "text": "Le pot se remplit à chaque cotisation, et chacun peut le voir.",
+  "file": "15.mp3",
+  "duree": 3.48,
+  "step": 14
+ },
+ {
+  "t": 69.726,
+  "text": "Quand tout le monde a cotisé, l’organisateur distribue le pot.",
+  "file": "16.mp3",
+  "duree": 3.408,
+  "step": 15
+ },
+ {
+  "t": 73.984,
+  "text": "À votre tour, l’argent arrive sur votre portefeuille.",
+  "file": "17.mp3",
+  "duree": 3.192,
+  "step": 16
+ },
+ {
+  "t": 78.026,
+  "text": "Pour recharger, choisissez le montant.",
+  "file": "18.mp3",
+  "duree": 2.472,
+  "step": 17
+ },
+ {
+  "t": 81.348,
+  "text": "Vérifiez les frais, payez, puis confirmez sur votre téléphone.",
+  "file": "19.mp3",
+  "duree": 3.96,
+  "step": 18
+ },
+ {
+  "t": 86.158,
+  "text": "Pour retirer, choisissez le montant.",
+  "file": "20.mp3",
+  "duree": 2.352,
+  "step": 19
+ },
+ {
+  "t": 89.36,
+  "text": "Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé.",
+  "file": "21.mp3",
+  "duree": 3.792,
+  "step": 20
+ },
+ {
+  "t": 94.002,
+  "text": "Relisez le récapitulatif.",
+  "file": "22.mp3",
+  "duree": 2.088,
+  "step": 21
+ },
+ {
+  "t": 96.94,
+  "text": "Entrez votre code PIN, et c’est parti.",
+  "file": "23.mp3",
+  "duree": 2.424,
+  "step": 22
+ },
+ {
+  "t": 100.214,
+  "text": "Vous savez tout. Bienvenue sur eganyé.",
+  "file": "24.mp3",
+  "duree": 2.736,
+  "step": 23
+ }
+]

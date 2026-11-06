@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>eganyé : comment ça marche</title>
+<!--
+  Tutoriel : un écran réel par étape, la phrase de la voix off en sous-titre, un repère sur ce
+  qu'il faut toucher. Le rythme vient de la voix : voir scripts.mjs et build-voice.mjs.
+  node video/render.mjs tutorial fr   (ou en).  Dans un navigateur : tutorial.html?lang=en&t=30
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=block" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .chap { position: absolute; left: 120px; top: 150px; font-size: 34px; font-weight: 800; color: var(--terra); }
+  .num { position: absolute; left: 120px; top: 92px; font-size: 26px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .say { position: absolute; left: 120px; top: 250px; width: 880px; font-size: 74px; font-weight: 800; line-height: 1.16; letter-spacing: -0.015em; }
+  .track { position: absolute; left: 120px; bottom: 96px; display: flex; gap: 10px; }
+  .track i { display: block; width: 92px; height: 8px; border-radius: 4px; background: var(--line); }
+  .track i.on { background: var(--terra); }
+  .foot { position: absolute; left: 120px; bottom: 44px; font-size: 21px; font-weight: 600; color: var(--muted); }
+  .tap { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 6px solid var(--terra); background: rgba(169, 86, 54, .16); }
+  .tapr { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 5px solid var(--terra); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="engine.js"></script>
+<script>
+// Écrit la page une fois les répliques chargées (voix/tutorial-<langue>/repliques.js).
+const lang = V.lang;
+document.write(`<script src="voix/tutorial-${lang}/repliques.js"><\/script><script src="tutorial-steps.js"><\/script><script src="tutorial-main.js"><\/script>`);
+</script>
+</body>
+</html>

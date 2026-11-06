@@ -1,0 +1,170 @@
+[
+ {
+  "t": 0.6,
+  "text": "Open eganyé and tap Create an account.",
+  "file": "01.mp3",
+  "duree": 3.024,
+  "step": 0
+ },
+ {
+  "t": 4.474,
+  "text": "Enter your name, your email and a password.",
+  "file": "02.mp3",
+  "duree": 3.288,
+  "step": 1
+ },
+ {
+  "t": 8.612,
+  "text": "You get a code by email. Type it in here.",
+  "file": "03.mp3",
+  "duree": 3.072,
+  "step": 2
+ },
+ {
+  "t": 12.534,
+  "text": "Choose what you want to do. Here, start a tontine.",
+  "file": "04.mp3",
+  "duree": 3.216,
+  "step": 3
+ },
+ {
+  "t": 16.6,
+  "text": "This is your home screen: your balance, your circles, your latest activity.",
+  "file": "05.mp3",
+  "duree": 4.776,
+  "step": 4
+ },
+ {
+  "t": 22.226,
+  "text": "The assistant tells you what matters today. For example, why your score moved.",
+  "file": "06.mp3",
+  "duree": 5.112,
+  "step": 5
+ },
+ {
+  "t": 28.188,
+  "text": "Ask it your questions: it answers from your own contributions.",
+  "file": "07.mp3",
+  "duree": 4.44,
+  "step": 6
+ },
+ {
+  "t": 33.478,
+  "text": "In Circles, tap the plus, then Create a circle.",
+  "file": "08.mp3",
+  "duree": 3.552,
+  "step": 7
+ },
+ {
+  "t": 37.88,
+  "text": "Name your circle, then set the contribution and the number of members.",
+  "file": "09.mp3",
+  "duree": 4.344,
+  "step": 8
+ },
+ {
+  "t": 43.074,
+  "text": "Pick how often you pay, the start date, and how to choose who gets the pot.",
+  "file": "10.mp3",
+  "duree": 4.608,
+  "step": 9
+ },
+ {
+  "t": 48.532,
+  "text": "Check the summary, accept, and sign.",
+  "file": "11.mp3",
+  "duree": 2.928,
+  "step": 10
+ },
+ {
+  "t": 52.31,
+  "text": "Your circle is ready. Share the code, or invite your people on WhatsApp.",
+  "file": "12.mp3",
+  "duree": 4.896,
+  "step": 11
+ },
+ {
+  "t": 58.056,
+  "text": "When it’s time to pay in, open your circle and tap Contribute.",
+  "file": "13.mp3",
+  "duree": 4.032,
+  "step": 12
+ },
+ {
+  "t": 62.938,
+  "text": "The AI also estimates the risk of delay for the round, without naming anyone.",
+  "file": "14.mp3",
+  "duree": 5.16,
+  "step": 13
+ },
+ {
+  "t": 68.948,
+  "text": "The pot fills up with every contribution, and everyone can see it.",
+  "file": "15.mp3",
+  "duree": 4.2,
+  "step": 14
+ },
+ {
+  "t": 73.998,
+  "text": "Once everyone has paid in, the organizer distributes the pot.",
+  "file": "16.mp3",
+  "duree": 3.96,
+  "step": 15
+ },
+ {
+  "t": 78.808,
+  "text": "When it’s your turn, the money lands in your wallet.",
+  "file": "17.mp3",
+  "duree": 3.144,
+  "step": 16
+ },
+ {
+  "t": 82.802,
+  "text": "To top up, choose the amount.",
+  "file": "18.mp3",
+  "duree": 2.208,
+  "step": 17
+ },
+ {
+  "t": 85.86,
+  "text": "Check the fees, pay, then confirm on your phone.",
+  "file": "19.mp3",
+  "duree": 3.576,
+  "step": 18
+ },
+ {
+  "t": 90.286,
+  "text": "To withdraw, choose the amount.",
+  "file": "20.mp3",
+  "duree": 2.376,
+  "step": 19
+ },
+ {
+  "t": 93.512,
+  "text": "Double-check the number: a completed transfer can’t be reversed.",
+  "file": "21.mp3",
+  "duree": 3.984,
+  "step": 20
+ },
+ {
+  "t": 98.346,
+  "text": "Check the summary.",
+  "file": "22.mp3",
+  "duree": 1.872,
+  "step": 21
+ },
+ {
+  "t": 101.068,
+  "text": "Enter your PIN, and you’re done.",
+  "file": "23.mp3",
+  "duree": 1.896,
+  "step": 22
+ },
+ {
+  "t": 103.814,
+  "text": "That’s all you need. Welcome to eganyé.",
+  "file": "24.mp3",
+  "duree": 3.312,
+  "step": 23
+ }
+]
