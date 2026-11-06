@@ -53,7 +53,7 @@ export function FlowScreen({ onBack, title, step, totalSteps, hero, heading, des
         aria-label={title}
         className="relative w-full h-full md:h-[min(820px,calc(100dvh-3rem))] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background flex flex-col overflow-hidden"
       >
-        <header className="shrink-0 pt-[env(safe-area-inset-top)] bg-background/95 backdrop-blur-md border-b border-border/60">
+        <header className="shrink-0 pt-[env(safe-area-inset-top)] bg-background/95 border-b border-border/60">
           <div className="h-14 px-2 flex items-center gap-1">
             <button
               type="button"
@@ -149,7 +149,7 @@ export function AmountField({ value, onChange, suggestions, max, autoFocus }: {
   const shown = value ? Number(value).toLocaleString('fr-FR') : '';
   return (
     <div className="space-y-4">
-      <div className="rounded-3xl border-2 border-border focus-within:border-brand transition-colors px-4 py-6 text-center bg-card">
+      <div className="rounded-2xl border-2 border-border focus-within:border-brand transition-colors px-4 py-6 text-center bg-card">
         <input
           type="text"
           inputMode="numeric"
@@ -159,7 +159,7 @@ export function AmountField({ value, onChange, suggestions, max, autoFocus }: {
           placeholder="0"
           value={shown}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12))}
-          className="w-full bg-transparent text-center text-[40px] leading-none font-black text-foreground tabular-nums outline-none placeholder:text-muted-foreground/40"
+          className="w-full bg-transparent text-center text-[40px] leading-none font-bold text-foreground tabular-nums outline-none placeholder:text-muted-foreground/40"
         />
         <p className="mt-2 text-sm font-bold text-muted-foreground">FCFA</p>
       </div>

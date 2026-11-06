@@ -155,7 +155,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
   const stepNumber = STEPS.indexOf(step as (typeof STEPS)[number]) + 1;
   const common = { onBack: goBack, title: service.title, ...(stepNumber > 0 ? { step: stepNumber, totalSteps: STEPS.length } : {}) };
   const nextButton = (enabled: boolean, label = 'Suivant') => (
-    <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>{label}</Button>
+    <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>{label}</Button>
   );
 
   if (step === 'done') {
@@ -204,7 +204,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
 
         {service.requirements && service.requirements.length > 0 && (
           <div className="space-y-2.5">
-            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">Conditions</p>
+            <p className="text-[13px] font-bold text-muted-foreground">Conditions</p>
             {service.requirements.map((req, idx) => (
               <div key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
                 <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
@@ -294,7 +294,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
       heading="Vérifiez votre demande"
       desc="Touchez « Modifier » pour corriger une réponse."
       footer={
-        <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || submitting}>
+        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || submitting}>
           {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la demande…</> : 'Envoyer ma demande'}
         </Button>
       }
@@ -394,15 +394,15 @@ function OfferAnswer({ app, service, onChanged, onShowTerms, onClose }: CreditFl
           <Button variant="outline" className="h-13 rounded-2xl font-bold" onClick={() => answer('decline')} disabled={busy !== null}>
             {busy === 'decline' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Refuser'}
           </Button>
-          <Button className="btn-shine h-13 rounded-2xl font-bold text-base" onClick={() => answer('accept')} disabled={busy !== null || !agreed}>
+          <Button className="h-13 rounded-2xl font-bold text-base" onClick={() => answer('accept')} disabled={busy !== null || !agreed}>
             {busy === 'accept' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Accepter l’offre'}
           </Button>
         </div>
       }
     >
-      <div className="rounded-3xl bg-success-soft border border-success/20 p-5 text-center">
+      <div className="rounded-2xl bg-success-soft border border-success/20 p-5 text-center">
         <p className="text-[13px] font-bold text-muted-foreground">Vous recevez</p>
-        <p className="text-[34px] font-black text-foreground tabular-nums leading-tight">{fcfa(app.offeredAmount ?? 0)}</p>
+        <p className="text-[34px] font-bold text-foreground tabular-nums leading-tight">{fcfa(app.offeredAmount ?? 0)}</p>
       </div>
 
       <div className="rounded-2xl border border-border px-4 divide-y divide-border">
@@ -462,15 +462,15 @@ function ActiveCredit({ app, user, service, onChanged, onClose }: CreditFlowProp
       onBack={onClose}
       title={service.title}
       footer={
-        <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={repay} disabled={busy || !amount}>
+        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={repay} disabled={busy || !amount}>
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wallet className="w-4 h-4 mr-2" />}
           Rembourser {amount ? fcfa(Number(amount)) : ''}
         </Button>
       }
     >
-      <div className="rounded-3xl gradient-sunset p-5 text-white">
+      <div className="rounded-2xl gradient-sunset p-5 text-white">
         <p className="text-[13px] font-bold opacity-90">{app.projectTitle} · reste à rembourser</p>
-        <p className="text-[34px] font-black tabular-nums leading-tight">{fcfa(remaining)}</p>
+        <p className="text-[34px] font-bold tabular-nums leading-tight">{fcfa(remaining)}</p>
         {next && (
           <p className="mt-2 flex items-center gap-1.5 text-[13px] font-medium opacity-95">
             <CalendarClock className="w-4 h-4" />
@@ -485,7 +485,7 @@ function ActiveCredit({ app, user, service, onChanged, onClose }: CreditFlowProp
       </div>
 
       <div className="space-y-2">
-        <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">Échéancier</p>
+        <p className="text-[13px] font-bold text-muted-foreground">Échéancier</p>
         <ul className="divide-y divide-border rounded-2xl border border-border">
           {app.installments.map((inst) => (
             <li key={inst.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">

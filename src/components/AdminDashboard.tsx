@@ -594,7 +594,7 @@ export function AdminDashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-3 text-muted-foreground">
         <Loader2 className="w-10 h-10 animate-spin text-brand" />
-        <p className="text-xs font-bold tracking-wider uppercase">{t('admin_loading')}</p>
+        <p className="text-xs font-bold">{t('admin_loading')}</p>
       </div>
     );
   }
@@ -610,17 +610,17 @@ export function AdminDashboard() {
       <AdminServerHealth />
 
       {/* Header and Branding section */}
-      <div className="bg-[#4B2E05] text-white p-6 md:p-8 rounded-3xl border border-border shadow-xl relative overflow-hidden">
+      <div className="bg-[#4B2E05] text-white p-6 md:p-8 rounded-2xl border border-border shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="bg-brand text-primary-foreground text-[13px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full">
+              <span className="bg-brand text-primary-foreground text-[13px] font-bold px-2.5 py-1 rounded-full">
                 {t('admin_super_admin_space')}
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-serif font-black tracking-tight text-[#F5E6D3]">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold tracking-tight text-[#F5E6D3]">
               {t('admin_panel_title')}
             </h1>
             <p className="text-xs text-[#F5E6D3]/75 mt-1 font-medium max-w-xl leading-relaxed">
@@ -649,8 +649,8 @@ export function AdminDashboard() {
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
           <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
-              <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_registered_members')}</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-foreground block">{totalUsers}</span>
+              <span className="text-[13px] font-bold text-muted-foreground block">{t('admin_registered_members')}</span>
+              <span className="text-2xl sm:text-3xl font-serif font-bold text-foreground block">{totalUsers}</span>
               <span className="text-[13px] text-muted-foreground font-medium block">
                 {standardUsersCount} {t('admin_users_word')} • {adminCount} {t('admin_admins_word')}
               </span>
@@ -665,8 +665,8 @@ export function AdminDashboard() {
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
           <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
-              <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_tontine_circles')}</span>
-              <span className="text-2xl sm:text-3xl font-serif font-black text-foreground block">{totalGroupsCount}</span>
+              <span className="text-[13px] font-bold text-muted-foreground block">{t('admin_tontine_circles')}</span>
+              <span className="text-2xl sm:text-3xl font-serif font-bold text-foreground block">{totalGroupsCount}</span>
               <span className="text-[13px] text-muted-foreground font-medium block">
                 {activeGroupsCount} {t('admin_active_word')} • {pendingGroupsCount} {t('status_pending')}
               </span>
@@ -681,8 +681,8 @@ export function AdminDashboard() {
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
           <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1">
-              <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_cumulative_volume')}</span>
-              <span className="text-xl font-serif font-black text-foreground block truncate max-w-[160px]">
+              <span className="text-[13px] font-bold text-muted-foreground block">{t('admin_cumulative_volume')}</span>
+              <span className="text-xl font-serif font-bold text-foreground block truncate max-w-[160px]">
                 {totalPlatformVolume.toLocaleString()} F CFA
               </span>
               <span className="text-[13px] text-muted-foreground font-medium block">
@@ -699,10 +699,10 @@ export function AdminDashboard() {
         <Card className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
           <CardContent className="p-4 sm:p-5 flex flex-col-reverse items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
             <div className="space-y-1 w-full">
-              <span className="text-[13px] uppercase font-bold text-muted-foreground block tracking-wide">{t('admin_reputation_health')}</span>
+              <span className="text-[13px] font-bold text-muted-foreground block">{t('admin_reputation_health')}</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-serif font-black text-foreground">{averageReputation}</span>
-                <span className="text-xs font-black text-secondary">/ 100</span>
+                <span className="text-3xl font-serif font-bold text-foreground">{averageReputation}</span>
+                <span className="text-xs font-bold text-secondary">/ 100</span>
               </div>
 
               {/* Micro visual progress bar */}
@@ -731,10 +731,10 @@ export function AdminDashboard() {
             exit={{ opacity: 0, scale: 0.98, y: -10 }}
             className="scroll-mt-4 p-1"
           >
-            <Card className="border-2 border-brand bg-muted rounded-3xl overflow-hidden shadow-md">
+            <Card className="border-2 border-brand bg-muted rounded-2xl overflow-hidden shadow-md">
               <CardHeader className="bg-brand/5 p-5 border-b border-border flex flex-row items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs text-brand font-black uppercase tracking-wide">
+                  <div className="flex items-center gap-1.5 text-xs text-brand font-bold">
                     <Sliders className="w-4 h-4" />
                     {t('admin_member_config_console')}
                   </div>
@@ -754,7 +754,7 @@ export function AdminDashboard() {
               <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 {/* Field 1: Reputation Score */}
                 <div className="space-y-2">
-                  <label className="text-[13px] font-black uppercase text-foreground flex items-center gap-1">
+                  <label className="text-[13px] font-bold text-foreground flex items-center gap-1">
                     <Award className="w-3.5 h-3.5 text-brand" />
                     {t('admin_reputation_score_range')}
                   </label>
@@ -767,7 +767,7 @@ export function AdminDashboard() {
                       onChange={(e) => setReputationInput(Number(e.target.value))}
                       className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-brand"
                     />
-                    <span className="text-sm font-serif font-black px-2.5 py-1 bg-card border border-border rounded-xl text-foreground w-12 text-center">
+                    <span className="text-sm font-serif font-bold px-2.5 py-1 bg-card border border-border rounded-xl text-foreground w-12 text-center">
                       {reputationInput}
                     </span>
                   </div>
@@ -775,7 +775,7 @@ export function AdminDashboard() {
 
                 {/* Field 2: Solde Portefeuille */}
                 <div className="space-y-2">
-                  <label className="text-[13px] font-black uppercase text-foreground flex items-center gap-1">
+                  <label className="text-[13px] font-bold text-foreground flex items-center gap-1">
                     <Coins className="w-3.5 h-3.5 text-secondary" />
                     {t('admin_virtual_wallet_balance')}
                   </label>
@@ -784,7 +784,7 @@ export function AdminDashboard() {
                       type="number"
                       value={walletInput}
                       onChange={(e) => setWalletInput(Math.max(0, Number(e.target.value)))}
-                      className="bg-card border-border focus-visible:ring-primary rounded-xl pl-9 font-serif font-black"
+                      className="bg-card border-border focus-visible:ring-primary rounded-xl pl-9 font-serif font-bold"
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-serif text-sm">FCFA</span>
                   </div>
@@ -795,7 +795,7 @@ export function AdminDashboard() {
                   <Button
                     onClick={handleSaveUserTuning}
                     disabled={isSavingUserChanges}
-                    className="flex-1 bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider py-5 hover:bg-primary/90 rounded-xl cursor-pointer disabled:opacity-50"
+                    className="flex-1 bg-primary text-primary-foreground font-bold text-xs py-5 hover:bg-primary/90 rounded-xl cursor-pointer disabled:opacity-50"
                   >
                     {isSavingUserChanges ? (
                       <>
@@ -895,7 +895,7 @@ export function AdminDashboard() {
 
         {/* TAB 1: USER MANAGEMENT */}
         <TabsContent value="users" className="mt-6 space-y-4">
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
               <CardHeader className="pb-4 bg-muted/30 border-b border-border">
                 <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                   <Trash2 className="w-5 h-5 text-danger" />
@@ -960,7 +960,7 @@ export function AdminDashboard() {
             </Card>
 
 
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-serif font-bold text-foreground">
@@ -1022,7 +1022,7 @@ export function AdminDashboard() {
                           <p className="truncate text-sm font-bold text-foreground">{u.displayName}</p>
                           <p className="truncate text-[13px] text-muted-foreground">{u.email}</p>
                         </div>
-                        <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold uppercase ${
+                        <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold ${
                           u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground'
                         }`}>
                           {u.role === 'admin' ? t('admin_administrator') : t('member')}
@@ -1031,25 +1031,25 @@ export function AdminDashboard() {
 
                       <div className="flex items-center gap-4 rounded-xl bg-muted/50 px-3 py-2">
                         <div className="min-w-0">
-                          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <p className="text-[13px] font-bold text-muted-foreground">
                             {t('admin_reputation_col')}
                           </p>
-                          <p className={`font-serif text-sm font-black ${
+                          <p className={`font-serif text-sm font-bold ${
                             u.reputationScore >= 85 ? 'text-secondary'
                               : u.reputationScore >= 70 ? 'text-sage'
                               : u.reputationScore >= 50 ? 'text-brand' : 'text-danger'
                           }`}>
                             {u.reputationScore}
-                            <span className="ml-1 text-[13px] font-bold uppercase text-muted-foreground">
+                            <span className="ml-1 text-[13px] font-bold text-muted-foreground">
                               {u.reputationScore >= 85 ? 'S-Tier' : u.reputationScore >= 70 ? 'A-Tier' : u.reputationScore >= 50 ? 'B-Tier' : 'C-Tier'}
                             </span>
                           </p>
                         </div>
                         <div className="ml-auto text-right">
-                          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <p className="text-[13px] font-bold text-muted-foreground">
                             {t('admin_wallet_col')}
                           </p>
-                          <p className="font-serif text-sm font-black text-foreground">
+                          <p className="font-serif text-sm font-bold text-foreground">
                             {(u.walletBalance || 0).toLocaleString()} F CFA
                           </p>
                         </div>
@@ -1060,7 +1060,7 @@ export function AdminDashboard() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleSelectUserToEdit(u)}
-                          className="h-10 flex-1 rounded-xl text-[13px] font-black uppercase text-brand"
+                          className="h-10 flex-1 rounded-xl text-[13px] font-bold text-brand"
                         >
                           {t('admin_adjust')}
                         </Button>
@@ -1092,12 +1092,12 @@ export function AdminDashboard() {
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider pl-6">{t('admin_profil_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">Email</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_role_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('admin_reputation_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right">{t('admin_wallet_col')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] pl-6">{t('admin_profil_col')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px]">Email</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px]">{t('admin_role_col')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-center">{t('admin_reputation_col')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-right">{t('admin_wallet_col')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-right pr-6">{t('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1122,7 +1122,7 @@ export function AdminDashboard() {
                           <TableCell className="text-xs text-muted-foreground">{u.email}</TableCell>
                           
                           <TableCell>
-                            <Badge className={`text-[13px] font-bold px-2 py-0.5 border-none uppercase ${
+                            <Badge className={`text-[13px] font-bold px-2 py-0.5 border-none ${
                               u.role === 'admin' 
                                 ? 'bg-brand/10 text-brand' 
                                 : 'bg-muted text-muted-foreground'
@@ -1133,7 +1133,7 @@ export function AdminDashboard() {
                           
                           <TableCell className="text-center">
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-xs font-serif font-black ${
+                              <span className={`text-xs font-serif font-bold ${
                                 u.reputationScore >= 85 
                                   ? 'text-secondary' 
                                   : u.reputationScore >= 70 
@@ -1144,13 +1144,13 @@ export function AdminDashboard() {
                               }`}>
                                 {u.reputationScore}
                               </span>
-                              <span className="text-[13px] uppercase tracking-wider font-bold text-muted-foreground">
+                              <span className="text-[13px] font-bold text-muted-foreground">
                                 {u.reputationScore >= 85 ? 'S-Tier' : u.reputationScore >= 70 ? 'A-Tier' : u.reputationScore >= 50 ? 'B-Tier' : 'C-Tier'}
                               </span>
                             </div>
                           </TableCell>
                           
-                          <TableCell className="text-right font-serif font-black text-xs text-foreground">
+                          <TableCell className="text-right font-serif font-bold text-xs text-foreground">
                             {(u.walletBalance || 0).toLocaleString()} F CFA
                           </TableCell>
                           
@@ -1160,7 +1160,7 @@ export function AdminDashboard() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleSelectUserToEdit(u)}
-                                className="h-8 px-2.5 text-[13px] font-black uppercase text-brand hover:bg-brand/10 hover:text-brand rounded-lg cursor-pointer"
+                                className="h-8 px-2.5 text-[13px] font-bold text-brand hover:bg-brand/10 hover:text-brand rounded-lg cursor-pointer"
                               >
                                 {t('admin_adjust')}
                               </Button>
@@ -1200,7 +1200,7 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="groups" className="mt-6">
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-serif font-bold text-foreground">
@@ -1272,7 +1272,7 @@ export function AdminDashboard() {
                               {t('admin_invite_code')} : {g.joinCode || t('admin_none_word')}
                             </p>
                           </div>
-                          <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold uppercase ${
+                          <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold ${
                             g.status === 'active' ? 'bg-secondary/10 text-secondary'
                               : g.status === 'pending' ? 'bg-brand/10 text-brand'
                               : 'bg-muted text-muted-foreground'
@@ -1283,21 +1283,21 @@ export function AdminDashboard() {
 
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-muted/50 px-3 py-2">
                           <div>
-                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold text-muted-foreground">
                               {t('admin_installment_amount')}
                             </p>
-                            <p className="font-serif text-sm font-black text-foreground">
+                            <p className="font-serif text-sm font-bold text-foreground">
                               {g.contributionAmount.toLocaleString()} {g.currency || 'XOF'}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold text-muted-foreground">
                               {t('members')}
                             </p>
                             <p className="text-sm font-bold text-foreground">{g.members?.length || 0}</p>
                           </div>
                           <div>
-                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold text-muted-foreground">
                               {t('admin_payout_cycle')}
                             </p>
                             <p className="text-sm font-bold text-foreground">
@@ -1305,7 +1305,7 @@ export function AdminDashboard() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <p className="text-[13px] font-bold text-muted-foreground">
                               {t('frequency')}
                             </p>
                             <p className="text-sm font-bold capitalize text-foreground">
@@ -1333,13 +1333,13 @@ export function AdminDashboard() {
                 <Table>
                   <TableHeader className="bg-muted/70 border-b">
                     <TableRow>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider pl-6">{t('admin_circle_name')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('members')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_installment_amount')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('admin_payout_cycle')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-center">{t('frequency')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider">{t('status')}</TableHead>
-                      <TableHead className="text-muted-foreground uppercase font-black text-[13px] tracking-wider text-right pr-6">{t('actions')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] pl-6">{t('admin_circle_name')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-center">{t('members')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px]">{t('admin_installment_amount')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px]">{t('admin_payout_cycle')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-center">{t('frequency')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px]">{t('status')}</TableHead>
+                      <TableHead className="text-muted-foreground font-bold text-[13px] text-right pr-6">{t('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1369,7 +1369,7 @@ export function AdminDashboard() {
                               {g.members?.length || 0}
                             </TableCell>
                             
-                            <TableCell className="text-xs font-serif font-black text-foreground">
+                            <TableCell className="text-xs font-serif font-bold text-foreground">
                               {g.contributionAmount.toLocaleString()} {g.currency || 'XOF'}
                             </TableCell>
                             
@@ -1388,7 +1388,7 @@ export function AdminDashboard() {
                             </TableCell>
                             
                             <TableCell>
-                              <Badge className={`text-[13px] font-bold uppercase border-none px-2 py-0.5 ${
+                              <Badge className={`text-[13px] font-bold border-none px-2 py-0.5 ${
                                 g.status === 'active' 
                                   ? 'bg-secondary/10 text-secondary' 
                                   : g.status === 'pending'
@@ -1423,7 +1423,7 @@ export function AdminDashboard() {
 
         {/* TAB 3: KYC IDENTITY VERIFICATION QUEUE */}
         <TabsContent value="kyc" className="mt-6">
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground">
                 File d'attente de vérification d'identité
@@ -1463,7 +1463,7 @@ export function AdminDashboard() {
                           size="sm"
                           onClick={() => handleReviewKyc(sub.id, true)}
                           disabled={reviewingKycId === sub.id}
-                          className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                          className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                         >
                           <Check className="w-3.5 h-3.5 mr-1.5" />
                           Valider
@@ -1491,7 +1491,7 @@ export function AdminDashboard() {
         <TabsContent value="marketplace" className="mt-6">
           <AdminAidReview onPendingCountChange={setPendingAidCount} />
           <AdminCreditReview onPendingCountChange={setPendingCreditCount} />
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground">
                 Demandes de services partenaires
@@ -1531,7 +1531,7 @@ export function AdminDashboard() {
                               size="sm"
                               onClick={() => handleReviewMarketplaceRequest(req.id, 'approved', req.userId, req.serviceTitle)}
                               disabled={reviewingRequestId === req.id}
-                              className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                              className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                             >
                               <Check className="w-3.5 h-3.5 mr-1.5" />
                               Approuver
@@ -1558,7 +1558,7 @@ export function AdminDashboard() {
 
         {/* TAB 4: PLATFORM SETTINGS */}
         <TabsContent value="settings" className="mt-6">
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground">
                 {t('admin_global_settings')}
@@ -2058,7 +2058,7 @@ export function AdminDashboard() {
 
         {/* TAB 5: DOUBLE-ENTRY LEDGER & AUDIT LOGS */}
         <TabsContent value="ledger" className="mt-6 space-y-6">
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                 <ArrowUpRight className="w-5 h-5 text-brand" />
@@ -2079,7 +2079,7 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-0.5">
                         <p className="text-sm font-bold text-foreground">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-black text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-bold text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
                         {w.fee > 0 && (
                           <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
                         )}
@@ -2123,7 +2123,7 @@ export function AdminDashboard() {
                             size="sm"
                             onClick={() => handleSendViaPaydunya(w)}
                             disabled={processingWithdrawalId === w.id}
-                            className="btn-shine h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
+                            className="h-9 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white"
                           >
                             <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
                             Envoyer via PayDunya
@@ -2157,7 +2157,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
                 <Clock className="w-5 h-5 text-muted-foreground" />
@@ -2176,7 +2176,7 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex items-start justify-between gap-4">
                       <div className="space-y-0.5 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-black text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-bold text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
                         {w.fee > 0 && (
                           <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
                         )}
@@ -2202,11 +2202,11 @@ export function AdminDashboard() {
 
             {/* Left side: Reconciliation control */}
             <div className="lg:col-span-4 space-y-6">
-              <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+              <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
                 <CardHeader className="pb-4 bg-muted/30 border-b border-border">
                   <div className="flex items-center gap-2 text-secondary">
                     <ShieldCheck className="w-5 h-5 text-secondary" />
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    <CardTitle className="text-sm font-bold text-muted-foreground">
                       {t('admin_integrity_report')}
                     </CardTitle>
                   </div>
@@ -2221,7 +2221,7 @@ export function AdminDashboard() {
                           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-2">
                             <Clock className="w-6 h-6" />
                           </div>
-                          <span className="text-xs font-black text-muted-foreground uppercase tracking-wide">
+                          <span className="text-xs font-bold text-muted-foreground">
                             Aucune vérification effectuée
                           </span>
                           <p className="text-[13px] text-muted-foreground mt-1 max-w-xs leading-normal">
@@ -2235,7 +2235,7 @@ export function AdminDashboard() {
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${hasDiscrepancy ? 'bg-danger/15 text-danger' : 'bg-success-soft text-secondary'}`}>
                           {hasDiscrepancy ? <AlertTriangle className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
                         </div>
-                        <span className={`text-xs font-black uppercase tracking-wide ${hasDiscrepancy ? 'text-danger' : 'text-secondary'}`}>
+                        <span className={`text-xs font-bold ${hasDiscrepancy ? 'text-danger' : 'text-secondary'}`}>
                           {hasDiscrepancy ? 'Écart détecté' : t('admin_ledger_reconciled')}
                         </span>
                         <p className="text-[13px] text-muted-foreground mt-1 max-w-xs leading-normal">
@@ -2277,7 +2277,7 @@ export function AdminDashboard() {
                   </div>
 
                   <Button
-                    className="btn-shine w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-11 text-xs"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-11 text-xs"
                     onClick={handleTriggerReconciliation}
                     disabled={isReconciling}
                   >
@@ -2297,9 +2297,9 @@ export function AdminDashboard() {
               </Card>
 
               {/* History of reconciliation reports */}
-              <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+              <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
                 <CardHeader className="pb-3 bg-muted/30 border-b border-border">
-                  <CardTitle className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <CardTitle className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                     <History className="w-4 h-4 text-muted-foreground" />
                     {t('admin_reports_history')}
                   </CardTitle>
@@ -2312,7 +2312,7 @@ export function AdminDashboard() {
                       <div key={report.id} className="p-2.5 rounded-xl border border-border bg-muted/50 flex flex-col gap-1 text-[13px]">
                         <div className="flex justify-between font-bold">
                           <span className="text-foreground">{t('admin_report_word')} {report.id.substring(0, 8)}</span>
-                          <span className="text-secondary font-bold uppercase text-[13px] bg-success-soft px-1 border border-secondary/20">{t('admin_success_upper')}</span>
+                          <span className="text-secondary font-bold text-[13px] bg-success-soft px-1 border border-secondary/20">{t('admin_success_upper')}</span>
                         </div>
                         <div className="flex justify-between text-muted-foreground text-[13px]">
                           <span>{new Date(report.timestamp).toLocaleString()}</span>
@@ -2342,7 +2342,7 @@ export function AdminDashboard() {
                 </TabsList>
 
                 <TabsContent value="ledger-entries">
-                  <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+                  <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
                     {/* Mobile : le journal comptable est la liste la plus
                         dense de l'admin ; en tableau elle n'était lisible
                         qu'en balayant de côté. */}
@@ -2360,9 +2360,9 @@ export function AdminDashboard() {
                               </span>
                               <div className="flex items-center gap-2">
                                 {entry.type === 'credit' ? (
-                                  <Badge className="h-4 rounded-sm border border-secondary/20 bg-success-soft px-1 text-[13px] font-black uppercase tracking-wider text-secondary">{t('admin_credit')}</Badge>
+                                  <Badge className="h-4 rounded-sm border border-secondary/20 bg-success-soft px-1 text-[13px] font-bold text-secondary">{t('admin_credit')}</Badge>
                                 ) : (
-                                  <Badge className="h-4 rounded-sm border border-danger/20 bg-danger-soft px-1 text-[13px] font-black uppercase tracking-wider text-danger">{t('admin_debit')}</Badge>
+                                  <Badge className="h-4 rounded-sm border border-danger/20 bg-danger-soft px-1 text-[13px] font-bold text-danger">{t('admin_debit')}</Badge>
                                 )}
                                 <span className={`font-bold text-sm ${entry.type === 'credit' ? 'text-secondary' : 'text-danger'}`}>
                                   {entry.type === 'credit' ? '+' : '-'}{entry.amount.toLocaleString()} {entry.currency}
@@ -2390,11 +2390,11 @@ export function AdminDashboard() {
                       <Table>
                         <TableHeader className="bg-muted">
                           <TableRow>
-                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('date')}</TableHead>
-                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_account_col')}</TableHead>
-                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider text-center">{t('admin_type_col')}</TableHead>
-                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider text-right">{t('amount')}</TableHead>
-                            <TableHead className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">{t('admin_counterparty_col')}</TableHead>
+                            <TableHead className="text-[13px] font-bold text-muted-foreground">{t('date')}</TableHead>
+                            <TableHead className="text-[13px] font-bold text-muted-foreground">{t('admin_account_col')}</TableHead>
+                            <TableHead className="text-[13px] font-bold text-muted-foreground text-center">{t('admin_type_col')}</TableHead>
+                            <TableHead className="text-[13px] font-bold text-muted-foreground text-right">{t('amount')}</TableHead>
+                            <TableHead className="text-[13px] font-bold text-muted-foreground">{t('admin_counterparty_col')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody className="text-[13px]">
@@ -2421,9 +2421,9 @@ export function AdminDashboard() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   {entry.type === 'credit' ? (
-                                    <Badge className="bg-success-soft text-secondary border border-secondary/20 text-[13px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_credit')}</Badge>
+                                    <Badge className="bg-success-soft text-secondary border border-secondary/20 text-[13px] h-4 px-1 rounded-sm font-bold">{t('admin_credit')}</Badge>
                                   ) : (
-                                    <Badge className="bg-danger-soft text-danger border border-danger/20 text-[13px] h-4 px-1 rounded-sm uppercase font-black tracking-wider">{t('admin_debit')}</Badge>
+                                    <Badge className="bg-danger-soft text-danger border border-danger/20 text-[13px] h-4 px-1 rounded-sm font-bold">{t('admin_debit')}</Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${entry.type === 'credit' ? 'text-secondary' : 'text-danger'}`}>
@@ -2464,7 +2464,7 @@ export function AdminDashboard() {
                               </span>
                             </div>
                             <div>
-                              <span className="text-amber-400 uppercase font-black text-[13px]">{log.action}:</span>{' '}
+                              <span className="text-amber-400 font-bold text-[13px]">{log.action}:</span>{' '}
                               <span className="text-slate-200">{log.details}</span>
                             </div>
                             <div className="flex gap-4 text-[13px] text-slate-500 pt-0.5">

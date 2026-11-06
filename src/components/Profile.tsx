@@ -563,13 +563,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       <button
         type="button"
         onClick={() => setActiveSection(null)}
-        className="w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 flex items-center justify-center text-foreground hover:bg-muted cursor-pointer transition-colors shadow-xs shrink-0"
+        className="w-10 h-10 rounded-2xl bg-card border border-border flex items-center justify-center text-foreground hover:bg-muted cursor-pointer transition-colors shadow-xs shrink-0"
         aria-label="Retour"
       >
         <EganyeIcon name="chevron-left" size={18} />
       </button>
       <div>
-        <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-tight">
           {title}
         </h1>
         <p className="text-xs text-muted-foreground">Paramètres Eganyé</p>
@@ -592,7 +592,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             className="space-y-4"
           >
             {/* 1. CARTE PROFIL RÉSUMÉE ÉPURÉE */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FFFBF7] to-[#F8EFE3] dark:from-card dark:to-muted p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFFBF7] to-[#F8EFE3] dark:from-card dark:to-muted p-5 border border-border shadow-soft">
               <div className="flex items-center gap-4">
                 {/* Avatar avec bouton d'atelier */}
                 <div className="relative shrink-0">
@@ -614,7 +614,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
                 {/* Nom, coordonnées & statut KYC */}
                 <div className="min-w-0 flex-1 space-y-1">
-                  <h1 className="text-lg sm:text-xl font-serif font-black text-foreground truncate">
+                  <h1 className="text-lg sm:text-xl font-serif font-bold text-foreground truncate">
                     {user.displayName}
                   </h1>
                   <p className="text-xs text-muted-foreground font-medium truncate">
@@ -642,21 +642,21 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <button
                   type="button"
                   onClick={() => setActiveSection('wallet')}
-                  className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-[#EFE2D0] dark:border-border/80 text-left hover:border-primary/40 transition-colors cursor-pointer"
+                  className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-border text-left hover:border-primary/40 transition-colors cursor-pointer"
                 >
-                  <span className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground block">
+                  <span className="text-[13px] font-bold text-muted-foreground block">
                     Mon solde
                   </span>
-                  <p className="text-sm sm:text-base font-serif font-black text-primary-ink truncate mt-0.5">
+                  <p className="text-sm sm:text-base font-serif font-bold text-primary-ink truncate mt-0.5">
                     {(user.walletBalance || 0).toLocaleString()} FCFA
                   </p>
                 </button>
 
-                <div className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-[#EFE2D0] dark:border-border/80 text-left">
-                  <span className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground block">
+                <div className="bg-white/90 dark:bg-card/90 rounded-2xl p-2.5 border border-border text-left">
+                  <span className="text-[13px] font-bold text-muted-foreground block">
                     Ma fiabilité
                   </span>
-                  <p className="text-sm sm:text-base font-serif font-black text-secondary truncate mt-0.5">
+                  <p className="text-sm sm:text-base font-serif font-bold text-secondary truncate mt-0.5">
                     {user.reputationScore || 100} / 100
                   </p>
                 </div>
@@ -780,7 +780,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <button
                 type="button"
                 onClick={onLogout}
-                className="w-full h-12 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border text-primary-ink hover:bg-warning-soft font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
+                className="w-full h-12 rounded-2xl bg-card border border-[#EFE2D0] dark:border-border text-primary-ink hover:bg-warning-soft font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
               >
                 <EganyeIcon name="withdraw" size={16} />
                 <span>Se déconnecter de l’application</span>
@@ -810,7 +810,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Mes informations')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-foreground">Nom affiché</Label>
                 <Input
@@ -875,7 +875,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
+                className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
@@ -922,7 +922,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               const copy = KYC_STATUS_COPY[kycStatus];
 
               return (
-                <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+                <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
                   {/* Statut actuel */}
                   <div className={`p-4 rounded-2xl border text-xs space-y-1 ${copy.className}`}>
                     <p className="font-bold text-sm flex items-center gap-1.5">
@@ -980,7 +980,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <Button
                     onClick={handleSubmitKyc}
                     disabled={isSubmittingKyc}
-                    className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
+                    className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
                   >
                     {isSubmittingKyc ? 'Envoi…' : 'Envoyer ma pièce'}
                   </Button>
@@ -1005,7 +1005,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Personne de confiance')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
               <p className="text-[15px] text-muted-foreground leading-relaxed">
                 Un proche (conjoint, parent, frère ou sœur) qui peut suivre vos cotisations et recevoir les alertes si vous ne pouvez plus le faire.
               </p>
@@ -1041,7 +1041,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleSaveMandate}
                 disabled={isSavingMandate}
-                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
+                className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingMandate ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
@@ -1062,7 +1062,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Code PIN')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
               <p className="text-[15px] text-muted-foreground leading-relaxed">
                 4 chiffres secrets, demandés à chaque retrait. Ne les donnez à personne.
                 Code oublié ? Choisissez-en un nouveau ici : il suffit de confirmer avec le mot de passe de votre compte.
@@ -1087,7 +1087,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   maxLength={4}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  className="rounded-xl h-12 text-center text-2xl font-mono tracking-widest"
+                  className="rounded-xl h-12 text-center text-2xl font-mono"
                   placeholder="••••"
                 />
               </div>
@@ -1095,7 +1095,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleChangePin}
                 disabled={isSavingPin || newPin.length !== 4}
-                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
+                className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingPin ? 'Enregistrement…' : 'Enregistrer le code'}
               </Button>
@@ -1116,7 +1116,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Mot de passe')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
               <p className="text-[15px] text-muted-foreground leading-relaxed">
                 Au moins 6 caractères. Mélangez lettres, chiffres et un signe pour plus de sécurité.
               </p>
@@ -1136,7 +1136,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <Button
                 onClick={handleChangePassword}
                 disabled={isSavingPassword || newPassword.length < 6}
-                className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
+                className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer mt-2"
               >
                 {isSavingPassword ? 'Enregistrement…' : 'Changer le mot de passe'}
               </Button>
@@ -1158,7 +1158,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             {renderSubHeader('Mon portefeuille')}
 
             {/* Solde card */}
-            <div className="gradient-sunset rounded-3xl p-5 text-white shadow-soft space-y-3">
+            <div className="gradient-sunset rounded-2xl p-5 text-white shadow-soft space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-white/90">Mon solde</span>
                 <button
@@ -1169,7 +1169,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   <EganyeIcon name={showBalance ? 'eye' : 'eye-off'} size={16} />
                 </button>
               </div>
-              <p className="text-3xl font-serif font-black tracking-tight text-white">
+              <p className="text-3xl font-serif font-bold tracking-tight text-white">
                 {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '••••••• FCFA'}
               </p>
             </div>
@@ -1211,7 +1211,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 type="button"
                 onClick={() => setWalletAction('recharge')}
                 className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                  walletAction === 'recharge' ? 'bg-white dark:bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
+                  walletAction === 'recharge' ? 'bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Recharger
@@ -1220,7 +1220,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 type="button"
                 onClick={() => setWalletAction('withdraw')}
                 className={`py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                  walletAction === 'withdraw' ? 'bg-white dark:bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
+                  walletAction === 'withdraw' ? 'bg-card text-primary-ink shadow-xs' : 'text-muted-foreground'
                 }`}
               >
                 Retirer
@@ -1229,7 +1229,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
             {/* Formulaire Recharger */}
             {walletAction === 'recharge' ? (
-              <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+              <div className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-4">
                 {/* Montant en grand, avec des montants rapides */}
                 <div className="space-y-3">
                   <Label className="text-sm font-bold text-foreground">Combien voulez-vous ajouter ?</Label>
@@ -1243,7 +1243,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       aria-label="Montant en FCFA"
                       value={rechargeAmount}
                       onChange={(e) => setRechargeAmount(e.target.value)}
-                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-black shadow-none focus-visible:ring-0"
+                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-bold shadow-none focus-visible:ring-0"
                     />
                     <span className="text-base font-bold text-muted-foreground">FCFA</span>
                   </div>
@@ -1288,7 +1288,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 </div>
 
                 {platformSettings?.depositFeeEnabled && (
-                  <label className="flex items-start gap-3 rounded-2xl border border-[#EFE2D0] dark:border-border/80 p-3.5 cursor-pointer select-none">
+                  <label className="flex items-start gap-3 rounded-2xl border border-border p-3.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={rechargeFeeOnTop}
@@ -1310,7 +1310,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                     après : personne ne doit découvrir le montant réellement
                     débité sur l'écran de son opérateur. */}
                 {depositBreakdown && depositBreakdown.fee > 0 && (
-                  <div className="rounded-2xl border border-[#EFE2D0] dark:border-border/80 bg-muted/50 p-3.5 space-y-2">
+                  <div className="rounded-2xl border border-border bg-muted/50 p-3.5 space-y-2">
                     {/* Frais en plus : reçu + frais = payé. Frais retenus :
                         payé − frais = reçu. On lit toujours de haut en bas. */}
                     <div className="flex items-center justify-between text-xs">
@@ -1325,10 +1325,10 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                         {rechargeFeeOnTop ? '+' : '−'} {depositBreakdown.fee.toLocaleString()} FCFA
                       </span>
                     </div>
-                    <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
+                    <div className="h-px bg-border" />
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-foreground">{rechargeFeeOnTop ? 'Total à payer' : 'Vous recevez'}</span>
-                      <span className="text-sm font-serif font-black text-primary-ink tabular-nums">
+                      <span className="text-sm font-serif font-bold text-primary-ink tabular-nums">
                         {(rechargeFeeOnTop ? depositBreakdown.gross : depositBreakdown.net).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -1338,7 +1338,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <Button
                   onClick={handleRecharge}
                   disabled={isRecharging}
-                  className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
+                  className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
                   {isRecharging
                     ? 'Paiement en cours…'
@@ -1349,7 +1349,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               </div>
             ) : (
               /* Formulaire Retirer */
-              <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+              <div className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-4">
                 <div className="space-y-3">
                   <Label className="text-sm font-bold text-foreground">Combien voulez-vous retirer ?</Label>
                   <div className="flex items-baseline justify-center gap-2 rounded-2xl bg-muted/50 px-4 py-3">
@@ -1362,7 +1362,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                       aria-label="Montant à retirer en FCFA"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-black shadow-none focus-visible:ring-0"
+                      className="h-auto w-full max-w-[200px] border-0 bg-transparent p-0 text-center text-3xl font-serif font-bold shadow-none focus-visible:ring-0"
                     />
                     <span className="text-base font-bold text-muted-foreground">FCFA</span>
                   </div>
@@ -1421,7 +1421,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 </div>
 
                 {withdrawFeeSettings?.withdrawFeeEnabled && (
-                  <label className="flex items-start gap-3 rounded-2xl border border-[#EFE2D0] dark:border-border/80 p-3.5 cursor-pointer select-none">
+                  <label className="flex items-start gap-3 rounded-2xl border border-border p-3.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={withdrawFeeOnTop}
@@ -1441,7 +1441,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
                 {/* Affiché avant de confirmer : personne ne doit découvrir les frais après coup. */}
                 {withdrawBreakdown && withdrawBreakdown.fee > 0 && (
-                  <div className="rounded-2xl border border-[#EFE2D0] dark:border-border/80 bg-muted/50 p-3.5 space-y-2">
+                  <div className="rounded-2xl border border-border bg-muted/50 p-3.5 space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">{withdrawFeeOnTop ? 'Vous recevez' : 'Débité de votre solde'}</span>
                       <span className="font-bold text-foreground tabular-nums">
@@ -1454,10 +1454,10 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                         {withdrawFeeOnTop ? '+' : '−'} {withdrawBreakdown.fee.toLocaleString()} FCFA
                       </span>
                     </div>
-                    <div className="h-px bg-[#EFE2D0] dark:bg-border/80" />
+                    <div className="h-px bg-border" />
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-foreground">{withdrawFeeOnTop ? 'Débité de votre solde' : 'Vous recevez'}</span>
-                      <span className="text-sm font-serif font-black text-primary-ink tabular-nums">
+                      <span className="text-sm font-serif font-bold text-primary-ink tabular-nums">
                         {(withdrawFeeOnTop ? withdrawBreakdown.debit : withdrawBreakdown.net).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -1471,7 +1471,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 <Button
                   onClick={handleWithdrawReview}
                   disabled={isWithdrawing}
-                  className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
+                  className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm cursor-pointer"
                 >
                   {isWithdrawing ? 'Envoi en cours…' : 'Retirer'}
                 </Button>
@@ -1495,12 +1495,12 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Formule Épargne')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 sm:p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-4">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-soft space-y-4">
               <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] border border-primary/25 space-y-2">
-                <span className="text-[13px] font-bold uppercase tracking-wider text-primary-ink">
+                <span className="text-[13px] font-bold text-primary-ink">
                   Votre formule actuelle
                 </span>
-                <p className="text-xl font-serif font-black text-foreground capitalize">
+                <p className="text-xl font-serif font-bold text-foreground capitalize">
                   {user.bankTier && user.bankTier !== 'none' ? `Plan ${user.bankTier}` : 'Accès Standard Gratuit'}
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -1526,7 +1526,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Langue de l’application')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-2">
+            <div className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-2">
               {[
                 { code: 'fr' as LanguageCode, name: 'Français', desc: 'Langue officielle et administrative' },
                 { code: 'en' as LanguageCode, name: 'English', desc: 'Anglais international' },
@@ -1576,7 +1576,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Notifications & Rappels')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-3 divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+            <div className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-3 divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
               <div className="flex items-center justify-between pt-1">
                 <div className="pr-4">
                   <p className="font-bold text-xs sm:text-sm text-foreground">Notifications Push (sur l’écran)</p>
@@ -1637,7 +1637,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           >
             {renderSubHeader('Conditions & Légal')}
 
-            <div className="bg-white dark:bg-card rounded-3xl p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-2">
+            <div className="bg-card rounded-2xl p-5 border border-border shadow-soft space-y-2">
               {LEGAL_DOC_ORDER.map((id) => LEGAL_DOCUMENTS[id]).map((doc) => (
                 <button
                   key={doc.id}
@@ -1662,9 +1662,9 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
       {/* ── MODALE ATELIER D'AVATAR ── */}
       <Dialog open={isAvatarWorkshopOpen} onOpenChange={setIsAvatarWorkshopOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-card border border-border">
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg font-black text-foreground">
+            <DialogTitle className="font-serif text-lg font-bold text-foreground">
               Choisir mon avatar Eganyé
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -1720,7 +1720,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
       {/* ── MODALE SUPPRESSION DE COMPTE ── */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
+        <DialogContent className="max-w-md rounded-2xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-danger">
               Supprimer définitivement mon compte

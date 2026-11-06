@@ -78,7 +78,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground">{t('sg_page_title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground">{t('sg_page_title')}</h1>
           <p className="text-[13px] text-muted-foreground font-medium">{t('sg_page_subtitle')}</p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export function SearchGroups({ user, onBack }: SearchGroupsProps) {
                   <span className="text-foreground">{group.members.length}{group.maxMembers ? ` / ${group.maxMembers}` : ''}</span>
                 </div>
                 <Button
-                  className="btn-shine w-full rounded-xl gap-1.5 cursor-pointer"
+                  className="w-full rounded-xl gap-1.5 cursor-pointer"
                   disabled={isPending || requestingId === group.id}
                   onClick={() => handleRequest(group)}
                 >

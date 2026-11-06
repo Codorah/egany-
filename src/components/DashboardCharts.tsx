@@ -205,7 +205,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
   return (
     <div className="space-y-4">
       {/* BALANCE — its own card, no tabs: always visible, simplest reading order for mobile */}
-      <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden animate-in fade-in duration-300">
         <CardHeader className="pb-3 bg-muted/40 border-b border-border">
           <CardTitle className="font-serif text-base font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="w-4.5 h-4.5 text-secondary" />
@@ -216,15 +216,15 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
         <CardContent className="pt-5">
           <div className="grid grid-cols-3 gap-2 mb-5 text-center">
             <div>
-              <p className="text-[13px] uppercase font-bold text-muted-foreground truncate">{t('chart_wallet_balance')}</p>
-              <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.walletBalance)}</p>
+              <p className="text-[13px] font-bold text-muted-foreground truncate">{t('chart_wallet_balance')}</p>
+              <p className="font-serif font-bold text-sm text-foreground mt-0.5">{formatCurrency(user.walletBalance)}</p>
             </div>
             <div className="border-x border-border">
-              <p className="text-[13px] uppercase font-bold text-muted-foreground truncate">{t('chart_total_saved')}</p>
-              <p className="font-serif font-extrabold text-sm text-foreground mt-0.5">{formatCurrency(user.totalSaved)}</p>
+              <p className="text-[13px] font-bold text-muted-foreground truncate">{t('chart_total_saved')}</p>
+              <p className="font-serif font-bold text-sm text-foreground mt-0.5">{formatCurrency(user.totalSaved)}</p>
             </div>
             <div>
-              <p className="text-[13px] uppercase font-bold text-muted-foreground truncate">{t('chart_last_transaction')}</p>
+              <p className="text-[13px] font-bold text-muted-foreground truncate">{t('chart_last_transaction')}</p>
               <p className="font-serif font-bold text-sm text-foreground mt-0.5">
                 {transactions.length > 0
                   ? new Date(transactions[transactions.length - 1].date).toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })
@@ -286,7 +286,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
       </Card>
 
       {/* COTISATIONS — a separate card of its own, not a tab inside the balance card */}
-      <Card className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden animate-in fade-in duration-300">
         <CardHeader className="pb-3 bg-muted/40 border-b border-border flex flex-row items-center justify-between gap-3">
           <CardTitle className="font-serif text-base font-bold text-foreground flex items-center gap-2">
             <Landmark className="w-4.5 h-4.5 text-brand" />

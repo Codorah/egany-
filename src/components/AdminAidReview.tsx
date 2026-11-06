@@ -44,7 +44,7 @@ export function AdminAidReview({ onPendingCountChange }: AdminAidReviewProps) {
   }, []);
 
   return (
-    <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs mb-6">
+    <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs mb-6">
       <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
@@ -153,7 +153,7 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
               <Input type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-10 rounded-xl bg-card" />
             </div>
             <Textarea rows={2} placeholder="Message pour la personne (facultatif)" value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl bg-card text-xs" />
-            <Button onClick={grant} disabled={busy} className="btn-shine w-full h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white">
+            <Button onClick={grant} disabled={busy} className="w-full h-10 rounded-xl text-xs font-bold bg-secondary hover:bg-secondary/90 text-white">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verser l’aide'}
             </Button>
           </>

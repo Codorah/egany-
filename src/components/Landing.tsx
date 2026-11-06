@@ -54,16 +54,16 @@ export function Landing({ onStart, onLogin }: LandingProps) {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground font-sans">
       {/* ---------------------------------------------------- Navigation */}
-      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border/60">
+      <header className="sticky top-0 z-30 bg-background/85 border-b border-border/60">
         <nav className="max-w-7xl mx-auto px-8 h-[72px] flex items-center gap-10">
           <a href="/" className="flex items-center gap-2.5 shrink-0" aria-label="eganyé, accueil">
             <EganyeLogo size={36} />
-            <span className="text-2xl font-heading font-black lowercase tracking-tight">eganyé</span>
+            <span className="text-2xl font-heading font-bold lowercase tracking-tight">eganyé</span>
           </a>
           <div className="flex items-center gap-8 text-sm font-semibold text-muted-foreground">
             <a href="#fonctionnement" className="hover:text-foreground transition-colors">Comment ça marche</a>
             <a href="#services" className="hover:text-foreground transition-colors">Services</a>
-            <a href="#argent" className="hover:text-foreground transition-colors">Coup de pouce</a>
+            <a href="#argent" className="hover:text-foreground transition-colors">Microcrédit</a>
             <a href="#securite" className="hover:text-foreground transition-colors">Sécurité</a>
           </div>
           <div className="ml-auto flex items-center gap-3">
@@ -94,7 +94,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease }}
           >
-            <h1 className="text-5xl xl:text-6xl font-heading font-black tracking-tight leading-[1.05] text-balance">
+            <h1 className="text-5xl xl:text-6xl font-heading font-bold tracking-tight leading-[1.05] text-balance">
               Vos tontines, enfin dans votre poche.
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-[46ch]">
@@ -164,7 +164,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         {/* Composition et rendu : video/promo.html, video/render.mjs. */}
         <section id="video" className="scroll-mt-20 max-w-6xl mx-auto px-8 pb-24 space-y-10">
           <Reveal>
-            <h2 className="text-4xl font-heading font-black tracking-tight leading-tight text-center">
+            <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight text-center">
               eganyé en moins de deux minutes.
             </h2>
           </Reveal>
@@ -192,7 +192,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             </Reveal>
             <div className="col-span-7 space-y-12">
               <Reveal>
-                <h2 className="text-4xl font-heading font-black tracking-tight leading-tight max-w-[18ch]">
+                <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight max-w-[18ch]">
                   La tontine que vous connaissez, sans le cahier.
                 </h2>
               </Reveal>
@@ -222,7 +222,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         {/* ------------------------------------------------------- Bento */}
         <section id="services" className="scroll-mt-20 max-w-7xl mx-auto px-8 py-24 space-y-12">
           <Reveal>
-            <h2 className="text-4xl font-heading font-black tracking-tight leading-tight max-w-[22ch]">
+            <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight max-w-[22ch]">
               Tout ce qu'il faut pour épargner ensemble.
             </h2>
           </Reveal>
@@ -237,7 +237,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 />
                 <Trophy className="w-10 h-10 opacity-90 relative z-10" />
                 <div className="space-y-3 relative z-10">
-                  <h3 className="text-3xl font-heading font-black leading-tight max-w-[20ch]">Trois façons de choisir qui reçoit le pot</h3>
+                  <h3 className="text-3xl font-heading font-bold leading-tight max-w-[20ch]">Trois façons de choisir qui reçoit le pot</h3>
                   <p className="text-white/90 leading-relaxed max-w-[50ch]">Tour par tour dans l'ordre convenu, tirage au sort équitable, ou enchères pour celles qui en ont besoin plus tôt.</p>
                 </div>
               </div>
@@ -287,36 +287,11 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         <section id="argent" className="scroll-mt-20 max-w-7xl mx-auto px-8 pb-24">
           <div className="rounded-[2.5rem] bg-brand/[0.07] border border-brand/15 px-14 py-16 space-y-12">
             <Reveal>
-              <h2 className="text-4xl font-heading font-black tracking-tight leading-tight max-w-[24ch]">
+              <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight max-w-[24ch]">
                 Besoin d'argent pour votre activité ?
               </h2>
             </Reveal>
-            <div className="grid grid-cols-2 gap-6">
-              <Reveal>
-                <article className="h-full rounded-[2rem] bg-card border border-border overflow-hidden flex flex-col">
-                  <div className="h-56 w-full relative overflow-hidden">
-                    <img
-                      src="/onboarding/aid-shopkeeper.webp"
-                      alt="Commerçante au comptoir de sa boutique"
-                      className="w-full h-full object-cover object-center"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-4 left-6 w-12 h-12 rounded-2xl gradient-sunset text-white flex items-center justify-center shadow-elevated">
-                      <Gift className="w-6 h-6" />
-                    </div>
-                  </div>
-                  <div className="p-8 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-heading font-black">Coup de pouce</h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Dites combien il vous faut et présentez votre activité en vidéo. Notre équipe étudie votre dossier et peut vous offrir le montant : une aide, rien à rembourser.
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-muted-foreground pt-2">Frais d'étude du dossier : 1 000 FCFA.</p>
-                  </div>
-                </article>
-              </Reveal>
+            <div className="max-w-2xl">
               <Reveal delay={0.08}>
                 <article className="h-full rounded-[2rem] bg-card border border-border overflow-hidden flex flex-col">
                   <div className="h-56 w-full relative overflow-hidden">
@@ -333,7 +308,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                   </div>
                   <div className="p-8 space-y-3 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-heading font-black">Microcrédit</h3>
+                      <h3 className="text-2xl font-heading font-bold">Microcrédit</h3>
                       <p className="text-muted-foreground leading-relaxed">
                         Une demande gratuite, une offre claire. Vous remboursez de 3 à 24 mois et voyez le coût total, au franc près, avant d'accepter.
                       </p>
@@ -350,7 +325,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         <section id="securite" className="scroll-mt-20 bg-card border-y border-border">
           <div className="max-w-5xl mx-auto px-8 py-24 space-y-14">
             <Reveal>
-              <h2 className="text-4xl font-heading font-black tracking-tight leading-tight text-center max-w-[22ch] mx-auto">
+              <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight text-center max-w-[22ch] mx-auto">
                 Votre argent est protégé à chaque étape.
               </h2>
             </Reveal>
@@ -380,7 +355,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
           <Reveal>
             <div className="rounded-[2.5rem] gradient-sunset text-white px-16 py-16 flex items-center justify-between gap-10">
               <div className="space-y-3">
-                <h2 className="text-4xl font-heading font-black tracking-tight leading-tight">Votre premier cercle en deux minutes.</h2>
+                <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight">Votre premier cercle en deux minutes.</h2>
                 <p className="text-white/85 text-lg">Gratuit à l'inscription, sur téléphone comme sur ordinateur.</p>
               </div>
               <button
@@ -400,7 +375,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         <div className="max-w-7xl mx-auto px-8 py-10 flex items-center justify-between gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2.5">
             <EganyeLogo size={28} />
-            <span className="font-heading font-black lowercase text-foreground">eganyé</span>
+            <span className="font-heading font-bold lowercase text-foreground">eganyé</span>
             <span>Épargner ensemble, au Togo.</span>
           </div>
           <nav className="flex items-center gap-6">

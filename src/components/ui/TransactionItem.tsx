@@ -20,7 +20,7 @@ export function TransactionItem({ title, subtitle, amount, currency = 'FCFA' }: 
         <p className="text-xs font-bold text-foreground truncate">{title}</p>
         {subtitle && <p className="text-[13px] text-muted-foreground">{subtitle}</p>}
       </div>
-      <span className={`text-xs font-black shrink-0 ${positive ? 'text-secondary' : 'text-danger'}`}>
+      <span className={`text-xs font-bold shrink-0 ${positive ? 'text-secondary' : 'text-danger'}`}>
         {positive ? '+' : ''}{amount.toLocaleString()} {currency}
       </span>
     </div>

@@ -82,14 +82,14 @@ export function ErrorState({
       )}
 
       <div className="space-y-1.5 max-w-xs">
-        <h2 className="text-lg font-serif font-black text-foreground">{resolvedTitle}</h2>
+        <h2 className="text-lg font-serif font-bold text-foreground">{resolvedTitle}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">{resolvedDescription}</p>
       </div>
 
       {onRetry && (
         <Button
           onClick={onRetry}
-          className="btn-shine gradient-sunset text-white font-bold rounded-2xl h-12 px-6 flex items-center gap-2 cursor-pointer"
+          className="gradient-sunset text-white font-bold rounded-2xl h-12 px-6 flex items-center gap-2 cursor-pointer"
         >
           <EganyeIcon name="refresh" size={16} />
           {resolvedRetryLabel}

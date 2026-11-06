@@ -60,7 +60,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
   };
 
   return (
-    <nav className="glass-nav sticky top-0 z-40 transition-all duration-300 border-b border-border/50 backdrop-blur-xl bg-background/80">
+    <nav className="glass-nav sticky top-0 z-40 transition-all duration-300 border-b border-border/50 bg-background/80">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         {/* Brand logo & title */}
         <div 
@@ -75,10 +75,10 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
             className="shrink-0 transition-transform duration-300 group-hover:scale-105"
           />
           <div className="flex flex-col">
-            <span className="text-lg font-serif font-black tracking-tight text-foreground lowercase leading-none">
+            <span className="text-lg font-serif font-bold tracking-tight text-foreground lowercase leading-none">
               eganyé
             </span>
-            <span className="text-[13px] font-bold text-brand uppercase tracking-wider leading-none mt-0.5 hidden sm:block">
+            <span className="text-[13px] font-bold text-brand leading-none mt-0.5 hidden sm:block">
               {t('nav_tagline')}
             </span>
           </div>
@@ -163,7 +163,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
                   </button>
 
                   <div className="px-2.5 pt-1.5 pb-1">
-                    <span className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">
+                    <span className="flex items-center gap-2 text-[13px] font-bold text-muted-foreground">
                       <Languages className="w-3.5 h-3.5" />
                       {t('prof_language_label')}
                     </span>
@@ -227,7 +227,7 @@ export function Navbar({ user, onLogout, onNavigate }: NavbarProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button className="btn-shine gradient-sunset text-white font-bold rounded-xl shadow-xs hover:opacity-95 text-xs h-9 px-3" onClick={() => onNavigate?.('dashboard')}>
+            <Button className="gradient-sunset text-white font-bold rounded-xl shadow-xs hover:opacity-95 text-xs h-9 px-3" onClick={() => onNavigate?.('dashboard')}>
               {t('nav_login')}
             </Button>
           )}

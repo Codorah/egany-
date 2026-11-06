@@ -1,3 +1,4 @@
+import { AID_ENABLED } from '@/lib/features';
 import { setRecoveryInProgress } from '@/lib/recoveryFlag';
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -132,7 +133,7 @@ function AuthLayout({
                 type="button"
                 onClick={onBack}
                 aria-label={backLabel}
-                className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 cursor-pointer"
+                className="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center text-white hover:bg-white/25 cursor-pointer"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -140,7 +141,7 @@ function AuthLayout({
               <div className="w-11 h-11" />
             )}
 
-            <div className="flex items-center gap-2.5 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-soft">
+            <div className="flex items-center gap-2.5 bg-white/15 px-3.5 py-1.5 rounded-full border border-white/20 shadow-soft">
               <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
                 <EganyeLogo size={24} />
               </div>
@@ -309,12 +310,12 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
       image: '/onboarding/vendor.webp',
       badge: 'Flooz & Mixx',
     },
-    {
+    ...(AID_ENABLED ? [{
       title: t('onb_slide4_title'),
       description: t('onb_slide4_desc'),
       image: '/onboarding/aid-shopkeeper.webp',
       badge: 'Coup de pouce · 0 % à rembourser',
-    },
+    }] : []),
     {
       title: t('onb_slide5_title'),
       description: t('onb_slide5_desc'),
@@ -662,7 +663,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   );
 
   const primaryButtonClass =
-    'btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2';
+    'w-full rounded-full gradient-sunset text-white glow-orange gap-2';
 
   /* ---------------- Écrans d'authentification (coque graphique) ------- */
 
@@ -963,12 +964,12 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
               type="button"
               onClick={() => (slideIndex > 0 ? setSlideIndex((prev) => prev - 1) : goTo('welcome'))}
               aria-label={t('a11y_back')}
-              className="w-11 h-11 rounded-2xl text-white bg-black/25 hover:bg-black/40 border border-white/15 backdrop-blur-md flex items-center justify-center cursor-pointer"
+              className="w-11 h-11 rounded-2xl text-white bg-black/25 hover:bg-black/40 border border-white/15 flex items-center justify-center cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
 
-            <div className="flex gap-1.5 items-center bg-black/25 backdrop-blur-md px-3 py-2 rounded-full border border-white/10">
+            <div className="flex gap-1.5 items-center bg-black/25 px-3 py-2 rounded-full border border-white/10">
               {slides.map((_, idx) => (
                 <button
                   key={idx}
@@ -982,7 +983,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
               ))}
             </div>
 
-            <span className="text-xs font-serif font-bold text-white/90 bg-black/25 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10">
+            <span className="text-xs font-serif font-bold text-white/90 bg-black/25 px-2.5 py-1.5 rounded-full border border-white/10">
               {slideIndex + 1}/{slides.length}
             </span>
           </div>
@@ -997,7 +998,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                 transition={{ delay: 0.1, duration: 0.3 }}
                 className="space-y-3"
               >
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-serif font-bold uppercase tracking-wider bg-primary/90 text-white shadow-soft backdrop-blur-sm">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-serif font-bold bg-primary/90 text-white shadow-soft">
                   {currentSlide.badge}
                 </span>
                 <h2 className="text-[28px] sm:text-3xl font-serif font-bold text-white leading-tight drop-shadow-lg text-balance">
@@ -1024,7 +1025,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   if (slideIndex < slides.length - 1) setSlideIndex((prev) => prev + 1);
                   else goTo('intent');
                 }}
-                className="btn-shine flex-1 bg-white hover:bg-white/90 text-brand-deep font-bold rounded-full gap-2 shadow-elevated"
+                className="flex-1 bg-white hover:bg-white/90 text-brand-deep font-bold rounded-full gap-2 shadow-elevated"
               >
                 {slideIndex === slides.length - 1 ? t('onb_got_it') : t('onb_next')}
                 <ArrowRight className="w-5 h-5" />
@@ -1050,7 +1051,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
             <>
               <div className="flex items-center gap-2">
                 <EganyeLogo size={34} />
-                <span className="text-xl font-serif font-black text-foreground lowercase tracking-tight">
+                <span className="text-xl font-serif font-bold text-foreground lowercase tracking-tight">
                   eganyé
                 </span>
               </div>
@@ -1059,7 +1060,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           ) : screen === 'intent' ? (
             <>
               {backButton('welcome')}
-              <span className="text-xs font-serif font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-serif font-bold text-muted-foreground">
                 eganyé
               </span>
               <div className="w-12" />
@@ -1067,7 +1068,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           ) : (
             <>
               {backButton('register')}
-              <span className="text-xs font-serif font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-serif font-bold text-muted-foreground">
                 Profil
               </span>
               <div className="w-12" />
@@ -1116,14 +1117,14 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                         className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
                       />
                     </div>
-                    <span className="text-xs font-serif font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/25">
-                      Tontine · Coup de pouce · Crédit
+                    <span className="text-xs font-serif font-bold text-white bg-white/20 px-3 py-1.5 rounded-full border border-white/25">
+                      Tontine · Épargne · Crédit
                     </span>
                   </div>
                 </motion.div>
 
                 <div className="space-y-2.5 text-center px-1">
-                  <h1 className="text-3xl sm:text-[34px] font-serif font-black text-foreground tracking-tight leading-tight text-balance">
+                  <h1 className="text-3xl sm:text-[34px] font-serif font-bold text-foreground tracking-tight leading-tight text-balance">
                     Vos tontines et projets, en toute confiance.
                   </h1>
                   <p className="text-[15px] leading-relaxed text-muted-foreground font-medium max-w-sm mx-auto">
@@ -1135,7 +1136,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   <Button
                     onClick={() => goTo('slides')}
                     size="lg"
-                    className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
+                    className="w-full rounded-full gradient-sunset text-white glow-orange gap-2"
                   >
                     {t('onb_discover_eganye')}
                     <ArrowRight className="w-5 h-5" />
@@ -1192,7 +1193,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
             {screen === 'intent' && (
               <motion.div key="intent" {...fade} className="w-full space-y-5 py-2">
                 <div className="text-left space-y-1.5">
-                  <h1 className="text-2xl sm:text-[26px] font-serif font-black text-foreground tracking-tight">
+                  <h1 className="text-2xl sm:text-[26px] font-serif font-bold text-foreground tracking-tight">
                     {t('onb_intent_title')}
                   </h1>
                   <p className="text-sm text-muted-foreground">{t('onb_intent_desc')}</p>
@@ -1231,10 +1232,11 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                 </div>
 
                 <div className="space-y-2.5 pt-1">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-left px-1">
+                  <p className="text-xs font-bold text-muted-foreground text-left px-1">
                     {t('onb_intent_money_heading')}
                   </p>
 
+                  {AID_ENABLED && (
                   <button
                     type="button"
                     onClick={() => { setIntent('aid'); goTo('register'); }}
@@ -1251,6 +1253,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     </div>
                     <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
                   </button>
+                  )}
 
                   <button
                     type="button"
@@ -1284,7 +1287,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   onClick={handleFinishOnboarding}
                   disabled={isCreatingAccount || isLoading}
                   size="lg"
-                  className="btn-shine w-full rounded-full gradient-sunset text-white glow-orange gap-2"
+                  className="w-full rounded-full gradient-sunset text-white glow-orange gap-2"
                 >
                   {isCreatingAccount || isLoading ? t('onb_creating_account') : t('onb_create_account_cta')}
                   {!(isCreatingAccount || isLoading) && <ArrowRight className="w-5 h-5" />}

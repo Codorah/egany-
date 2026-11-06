@@ -116,7 +116,7 @@ export function AvatarWorkshop({
       </div>
 
       <div>
-        <h3 className="text-base font-serif font-black text-foreground">
+        <h3 className="text-base font-serif font-bold text-foreground">
           {name}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-xs mx-auto">
@@ -162,13 +162,13 @@ export function AvatarWorkshop({
 
       <div className="flex items-center gap-2 w-full max-w-xs text-muted-foreground/60">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-[13px] font-bold uppercase tracking-wide">ou</span>
+        <span className="text-[13px] font-bold">ou</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
       {/* Sélection optionnelle d'un symbole */}
       <div className="w-full max-w-xs space-y-2">
-        <p className="text-[13px] font-bold text-muted-foreground uppercase tracking-wide text-left">
+        <p className="text-[13px] font-bold text-muted-foreground text-left">
           {t('avw_choose_emoji')}
         </p>
         <div className="grid grid-cols-8 gap-1.5 max-h-36 overflow-y-auto pr-0.5">

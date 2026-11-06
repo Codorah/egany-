@@ -91,7 +91,7 @@ export function Support({ user, onBack }: SupportProps) {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2">
             <LifeBuoy className="w-5 h-5 text-primary-ink" />
             {t('support')}
           </h1>
@@ -99,8 +99,8 @@ export function Support({ user, onBack }: SupportProps) {
         </div>
       </div>
 
-      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
-        <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
+      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+        <h2 className="text-base font-serif font-bold text-foreground flex items-center gap-2">
           <HelpCircle className="w-4 h-4 text-primary-ink" />
           {t('sup_faq_title')}
         </h2>
@@ -111,8 +111,8 @@ export function Support({ user, onBack }: SupportProps) {
         </div>
       </div>
 
-      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-1">
-        <h2 className="text-base font-serif font-black text-foreground">{t('sup_report_problem_title')}</h2>
+      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-1">
+        <h2 className="text-base font-serif font-bold text-foreground">{t('sup_report_problem_title')}</h2>
         <p className="text-[13px] text-muted-foreground">{t('sup_report_problem_desc')}</p>
         <div className="pt-2">
           {submitted ? (
@@ -143,7 +143,7 @@ export function Support({ user, onBack }: SupportProps) {
                   disabled={submitting}
                 />
               </div>
-              <Button type="submit" disabled={submitting} className="btn-shine w-full sm:w-auto rounded-xl gap-1.5 cursor-pointer">
+              <Button type="submit" disabled={submitting} className="w-full sm:w-auto rounded-xl gap-1.5 cursor-pointer">
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {t('sup_send_report_cta')}
               </Button>

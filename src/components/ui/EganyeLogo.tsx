@@ -49,13 +49,13 @@ export function EganyeLogo({
         {mark}
         <div className="flex flex-col select-none">
           <span
-            className="font-black tracking-tight leading-none text-foreground"
+            className="font-bold tracking-tight leading-none text-foreground"
             style={{ fontSize: Math.max(16, size * 0.52), letterSpacing: 0 }}
           >
             EGANYÉ
           </span>
           <span
-            className="font-extrabold uppercase tracking-wider leading-tight text-primary-ink"
+            className="font-bold leading-tight text-primary-ink"
             style={{ fontSize: Math.max(8, size * 0.2) }}
           >
             Tontine & Épargne

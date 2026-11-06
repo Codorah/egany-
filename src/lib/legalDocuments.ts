@@ -408,4 +408,4 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
 };
 
 /** Ordre d'affichage dans la liste « Conditions & Légal » du Profil. */
-export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'reglement', 'credit', 'aide', 'confidentialite', 'mentions'];
+export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'reglement', 'credit', 'confidentialite', 'mentions'];

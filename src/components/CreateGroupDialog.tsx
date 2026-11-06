@@ -479,7 +479,7 @@ export function CreateGroupDialog({
         nativeButton={trigger ? triggerIsNativeButton : true}
         render={
           trigger || (
-            <Button className="btn-shine gradient-sunset flex items-center gap-2 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer">
+            <Button className="gradient-sunset flex items-center gap-2 text-white font-bold rounded-2xl px-4 py-2.5 shadow-md transition-all cursor-pointer">
               <EganyeIcon name="plus" size={18} strokeWidth={2.5} />
               <span>Créer un cercle</span>
             </Button>
@@ -504,7 +504,7 @@ export function CreateGroupDialog({
               </div>
 
               <div className="space-y-1.5">
-                <h2 className="font-serif font-black text-2xl text-foreground tracking-tight">
+                <h2 className="font-serif font-bold text-2xl text-foreground tracking-tight">
                   Cercle créé avec succès ! 🎉
                 </h2>
                 <p className="text-sm text-muted-foreground">
@@ -515,8 +515,8 @@ export function CreateGroupDialog({
               {/* Carte récapitulative du cercle */}
               <div className="bg-gradient-to-br from-[#FFF8F2] to-[#F8EFE3] dark:from-card dark:to-muted rounded-2xl p-4 border border-primary/25 text-left space-y-3">
                 <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cagnotte distribuée</span>
-                  <span className="font-serif font-black text-xl text-primary-ink">
+                  <span className="text-xs font-bold text-muted-foreground">Cagnotte distribuée</span>
+                  <span className="font-serif font-bold text-xl text-primary-ink">
                     {createdGroup.potAmount.toLocaleString()} FCFA
                   </span>
                 </div>
@@ -528,7 +528,7 @@ export function CreateGroupDialog({
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Code d'invitation</span>
-                  <div className="flex items-center gap-1.5 font-mono font-black text-lg text-[#3E2F24] dark:text-foreground">
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-lg text-[#3E2F24] dark:text-foreground">
                     <span>{createdGroup.joinCode}</span>
                     <button
                       type="button"
@@ -605,7 +605,7 @@ export function CreateGroupDialog({
                   setOpen(false);
                   onNavigateToVerification?.();
                 }}
-                className="btn-shine w-full max-w-sm rounded-full gradient-sunset text-white gap-2"
+                className="w-full max-w-sm rounded-full gradient-sunset text-white gap-2"
               >
                 Vérifier mon identité
                 <EganyeIcon name="chevron-right" size={18} />
@@ -661,7 +661,7 @@ export function CreateGroupDialog({
                   className="px-5 pt-4 pb-6 space-y-6"
                 >
                   <div className="space-y-1.5">
-                    <DialogTitle className="font-serif text-[26px] leading-tight font-black text-foreground tracking-tight">
+                    <DialogTitle className="font-serif text-[26px] leading-tight font-bold text-foreground tracking-tight">
                       {STEPS[step - 1].title}
                     </DialogTitle>
                     <p className="text-[15px] text-muted-foreground">{STEPS[step - 1].subtitle}</p>
@@ -717,7 +717,7 @@ export function CreateGroupDialog({
                   {/* ── 2. Cotisation ── */}
                   {step === 2 && (
                     <div className="space-y-5">
-                      <div className="rounded-3xl bg-card border border-border p-5 text-center space-y-1">
+                      <div className="rounded-2xl bg-card border border-border p-5 text-center space-y-1">
                         <div className="flex items-baseline justify-center gap-2">
                           <Input
                             id="contributionAmount"
@@ -727,7 +727,7 @@ export function CreateGroupDialog({
                             step={500}
                             aria-label="Cotisation par participant en FCFA"
                             {...register('contributionAmount', { valueAsNumber: true })}
-                            className="h-auto w-full max-w-[220px] border-0 bg-transparent p-0 text-center text-4xl font-serif font-black shadow-none focus-visible:ring-0"
+                            className="h-auto w-full max-w-[220px] border-0 bg-transparent p-0 text-center text-4xl font-serif font-bold shadow-none focus-visible:ring-0"
                           />
                           <span className="text-lg font-bold text-muted-foreground">FCFA</span>
                         </div>
@@ -759,7 +759,7 @@ export function CreateGroupDialog({
                   {/* ── 3. Participants ── */}
                   {step === 3 && (
                     <div className="space-y-5">
-                      <div className="flex items-center justify-between gap-4 rounded-3xl bg-card border border-border p-4">
+                      <div className="flex items-center justify-between gap-4 rounded-2xl bg-card border border-border p-4">
                         <button
                           type="button"
                           onClick={() => setMembers(maxMembers - 1)}
@@ -777,7 +777,7 @@ export function CreateGroupDialog({
                             max={100}
                             aria-label={t('cgd_participants_label')}
                             {...register('maxMembers', { valueAsNumber: true })}
-                            className="h-auto w-24 border-0 bg-transparent p-0 text-center text-5xl font-serif font-black shadow-none focus-visible:ring-0"
+                            className="h-auto w-24 border-0 bg-transparent p-0 text-center text-5xl font-serif font-bold shadow-none focus-visible:ring-0"
                           />
                           <p className="text-[13px] text-muted-foreground">participants</p>
                         </div>
@@ -812,11 +812,11 @@ export function CreateGroupDialog({
                       </div>
 
                       {/* La cagnotte se calcule sous les yeux : l'intérêt du cercle */}
-                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-3xl p-5 border border-primary/30 space-y-1 text-center">
-                        <span className="text-[13px] font-bold uppercase tracking-wider text-primary-ink">
+                      <div className="bg-gradient-to-br from-[#FFF4EC] to-[#F7ECE0] dark:from-card dark:to-muted rounded-2xl p-5 border border-primary/30 space-y-1 text-center">
+                        <span className="text-[13px] font-bold text-primary-ink">
                           Cagnotte par tour
                         </span>
-                        <p className="text-3xl font-serif font-black text-foreground">
+                        <p className="text-3xl font-serif font-bold text-foreground">
                           {totalPot.toLocaleString()} FCFA
                         </p>
                         <p className="text-[13px] text-muted-foreground">
@@ -919,7 +919,7 @@ export function CreateGroupDialog({
                   {/* ── 6. Récapitulatif, engagement et signature ── */}
                   {step === 6 && (
                     <div className="space-y-5">
-                      <div className="rounded-3xl bg-card border border-border divide-y divide-border">
+                      <div className="rounded-2xl bg-card border border-border divide-y divide-border">
                         {[
                           ['Cercle', groupName],
                           ['Cotisation', `${contributionAmount.toLocaleString()} FCFA ${frequencyLabel(frequency)}`],
@@ -984,7 +984,7 @@ export function CreateGroupDialog({
                   type="button"
                   size="lg"
                   onClick={handleNextStep}
-                  className="btn-shine w-full rounded-full gradient-sunset text-white font-bold gap-2 cursor-pointer"
+                  className="w-full rounded-full gradient-sunset text-white font-bold gap-2 cursor-pointer"
                 >
                   Continuer
                   <ArrowRight className="w-5 h-5" />
@@ -994,7 +994,7 @@ export function CreateGroupDialog({
                   type="submit"
                   size="lg"
                   disabled={isSubmitting}
-                  className="btn-shine w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
+                  className="w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
                 >
                   {isSubmitting ? 'Création en cours…' : 'Créer mon cercle'}
                 </Button>

@@ -88,7 +88,7 @@ export function InstallPrompt() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={dismiss}
-            className="fixed inset-0 z-[60] bg-[#3E2F24]/45 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[60] bg-[#3E2F24]/45-[2px]"
             aria-hidden="true"
           />
 
@@ -100,7 +100,7 @@ export function InstallPrompt() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="fixed inset-x-3 bottom-3 z-[61] mx-auto max-w-sm rounded-3xl border border-[#EFE2D0] dark:border-border bg-card p-5 shadow-soft sm:inset-x-0 sm:bottom-6"
+            className="fixed inset-x-3 bottom-3 z-[61] mx-auto max-w-sm rounded-2xl border border-[#EFE2D0] dark:border-border bg-card p-5 shadow-soft sm:inset-x-0 sm:bottom-6"
           >
             <button
               type="button"
@@ -118,7 +118,7 @@ export function InstallPrompt() {
               <div className="min-w-0 pr-6">
                 <h2
                   id="install-prompt-title"
-                  className="font-serif text-base font-black leading-tight text-foreground"
+                  className="font-serif text-base font-bold leading-tight text-foreground"
                 >
                   {t('install_title')}
                 </h2>
@@ -135,7 +135,7 @@ export function InstallPrompt() {
                 <button
                   type="button"
                   onClick={dismiss}
-                  className="btn-shine gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer"
+                  className="gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer"
                 >
                   {t('install_got_it')}
                 </button>
@@ -151,7 +151,7 @@ export function InstallPrompt() {
                   <button
                     type="button"
                     onClick={install}
-                    className="btn-shine gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer inline-flex items-center justify-center gap-2"
+                    className="gradient-sunset h-11 flex-1 rounded-2xl text-sm font-bold text-white cursor-pointer inline-flex items-center justify-center gap-2"
                   >
                     <EganyeIcon name="download" size={16} />
                     <span>{t('install_cta')}</span>

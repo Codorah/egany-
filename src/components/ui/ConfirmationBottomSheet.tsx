@@ -53,7 +53,7 @@ export function ConfirmationBottomSheet({
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/60 z-50 backdrop-blur-xs"
+            className="fixed inset-0 bg-slate-950/60 z-50"
           />
 
           {/* Bottom Sheet / Modal Container */}
@@ -75,7 +75,7 @@ export function ConfirmationBottomSheet({
                 scale: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0.95
               }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="pointer-events-auto bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border flex flex-col overflow-hidden max-h-[90dvh]"
+              className="pointer-events-auto bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden max-h-[90dvh]"
             >
               {/* Drag/Swipe Indicator for Mobile Bottom Sheet */}
               <div className="flex justify-center py-3 sm:hidden">
@@ -99,10 +99,10 @@ export function ConfirmationBottomSheet({
                     {type === 'generic' && <ShieldAlert className="w-5 h-5" />}
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-foreground tracking-tight">
+                    <h3 className="text-base font-bold text-foreground tracking-tight">
                       {title}
                     </h3>
-                    <p className="text-[13px] text-muted-foreground font-bold uppercase tracking-wider">
+                    <p className="text-[13px] text-muted-foreground font-bold">
                       {type === 'debit' ? t('cbs_type_debit') : type === 'destructive' ? t('cbs_type_destructive') : type === 'recharge' ? t('cbs_type_recharge') : type === 'transfer' ? t('cbs_type_transfer') : t('cbs_type_generic')}
                     </p>
                   </div>
@@ -131,10 +131,10 @@ export function ConfirmationBottomSheet({
                     {/* Amount Highlight */}
                     {amount !== undefined && (
                       <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
-                        <span className="text-[13px] uppercase font-black text-muted-foreground tracking-widest">
+                        <span className="text-[13px] font-bold text-muted-foreground">
                           {t('cbs_amount_label')}
                         </span>
-                        <span className={`text-2xl font-black mt-1 ${
+                        <span className={`text-2xl font-bold mt-1 ${
                           type === 'debit' ? 'text-danger' : 'text-secondary'
                         }`}>
                           {amount.toLocaleString()} {currency}

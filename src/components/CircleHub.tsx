@@ -61,7 +61,7 @@ export function CircleHub({
       {/* ── 1. HEADER : Mes cercles + Créer un cercle ── */}
       <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
             {t('nav_circles') || 'Mes cercles'}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground font-medium">
@@ -75,7 +75,7 @@ export function CircleHub({
           trigger={
             <button
               type="button"
-              className="btn-shine gradient-sunset text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
+              className="gradient-sunset text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-2xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
             >
               <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
               <span>{t('cir_create_circle_cta')}</span>
@@ -89,7 +89,7 @@ export function CircleHub({
         <button
           type="button"
           onClick={onSearch}
-          className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
+          className="bg-card border border-border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
         >
           <div className="w-9 h-9 rounded-xl bg-[#F8F0E4] dark:bg-muted text-primary-ink flex items-center justify-center shrink-0">
             <EganyeIcon name="search" size={17} />
@@ -107,8 +107,8 @@ export function CircleHub({
         <button
           type="button"
           onClick={() => setShowJoinPanel(!showJoinPanel)}
-          className={`bg-white dark:bg-card border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left transition-colors cursor-pointer group ${
-            showJoinPanel ? 'border-primary ring-2 ring-primary/15' : 'border-[#EFE2D0] dark:border-border/80 hover:border-primary/40'
+          className={`bg-card border rounded-2xl p-3 shadow-soft flex items-center gap-2.5 text-left transition-colors cursor-pointer group ${
+            showJoinPanel ? 'border-primary ring-2 ring-primary/15' : 'border-border hover:border-primary/40'
           }`}
         >
           <div className="w-9 h-9 rounded-xl bg-success-soft text-secondary flex items-center justify-center shrink-0">
@@ -131,7 +131,7 @@ export function CircleHub({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="bg-white dark:bg-card border border-primary/30 rounded-2xl p-4 shadow-soft space-y-3"
+          className="bg-card border border-primary/30 rounded-2xl p-4 shadow-soft space-y-3"
         >
           <div className="flex items-center justify-between">
             <h3 className="font-serif font-bold text-sm text-foreground flex items-center gap-2">
@@ -152,7 +152,7 @@ export function CircleHub({
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder={t('cir_code_placeholder')}
-              className="flex-1 h-11 px-3.5 rounded-xl border border-border bg-card text-foreground text-base font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="flex-1 h-11 px-3.5 rounded-xl border border-border bg-card text-foreground text-base font-mono focus:outline-none focus:ring-2 focus:ring-primary/30"
               aria-label="Code d'invitation"
               autoCapitalize="characters"
               autoCorrect="off"
@@ -162,7 +162,7 @@ export function CircleHub({
             />
             <button
               type="submit"
-              className="btn-shine gradient-sunset h-11 px-4 rounded-xl text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
+              className="gradient-sunset h-11 px-4 rounded-xl text-white font-bold text-xs cursor-pointer shadow-sm active:scale-95 transition-transform"
             >
               {t('cir_validate')}
             </button>
@@ -176,7 +176,7 @@ export function CircleHub({
       {/* ── 4. LISTE DES CERCLES ── */}
       <motion.div variants={itemVariants} className="space-y-3">
         <div className="flex items-center justify-between px-0.5">
-          <h2 className="font-serif font-black text-base sm:text-lg text-foreground tracking-tight">
+          <h2 className="font-serif font-bold text-base sm:text-lg text-foreground tracking-tight">
             {t('active_circles') || 'Cercles actifs'} ({groups.length})
           </h2>
         </div>
@@ -207,10 +207,10 @@ export function CircleHub({
                 <div
                   key={group.id}
                   onClick={() => onSelectGroup(group.id)}
-                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
+                  className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-black text-base border border-[#EFE2D0]">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-base border border-[#EFE2D0]">
                       {group.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0">

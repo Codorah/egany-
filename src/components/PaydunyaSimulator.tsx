@@ -64,7 +64,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-center gap-2 mb-6 text-white">
           <div className="bg-brand text-primary-foreground p-1.5 rounded-lg font-bold text-lg">P</div>
-          <span className="text-xl font-black tracking-widest text-brand">PAYDUNYA</span>
+          <span className="text-xl font-bold text-brand">PAYDUNYA</span>
           <Badge className="bg-brand/20 text-brand border-brand/30 text-[13px] ml-1">SANDBOX SIMULATOR</Badge>
         </div>
 
@@ -77,7 +77,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
               </div>
               <div className="text-right">
                 <span className="text-xs text-slate-400 block font-medium">Montant</span>
-                <span className="text-lg font-black text-brand">{amount.toLocaleString()} FCFA</span>
+                <span className="text-lg font-bold text-brand">{amount.toLocaleString()} FCFA</span>
               </div>
             </div>
           </CardHeader>
@@ -210,7 +210,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
                 </div>
 
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Tutoriel Sandbox</p>
+                  <p className="text-xs text-slate-500 font-semibold">Tutoriel Sandbox</p>
                   <p className="text-xs text-slate-300 mt-1">
                     Puisque vous êtes en mode Simulation Sandbox, cliquez simplement sur le bouton ci-dessous pour simuler l'approbation Mobile Money.
                   </p>

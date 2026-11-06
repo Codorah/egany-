@@ -129,9 +129,9 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
   };
 
   return (
-    <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-4">
+    <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-4">
       <div>
-        <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
+        <h2 className="text-base font-serif font-bold text-foreground flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary-ink" />
           {t('doc_section_title')}
         </h2>
@@ -150,7 +150,7 @@ export function DocumentsManager({ group, user }: DocumentsManagerProps) {
           </SelectContent>
         </Select>
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
-        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="btn-shine sm:w-auto rounded-xl gap-1.5 cursor-pointer">
+        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="sm:w-auto rounded-xl gap-1.5 cursor-pointer">
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {t('doc_share_button')}
         </Button>

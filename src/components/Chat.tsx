@@ -108,7 +108,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-13.5rem)] min-h-[460px] -mx-4 sm:mx-0 bg-[#FBF7F0]/40 dark:bg-background/40 rounded-3xl overflow-hidden border border-[#EFE2D0]/80 dark:border-border/60">
+    <div className="flex flex-col h-[calc(100dvh-13.5rem)] min-h-[460px] -mx-4 sm:mx-0 bg-[#FBF7F0]/40 dark:bg-background/40 rounded-2xl overflow-hidden border border-[#EFE2D0]/80 dark:border-border/60">
       {/* ── ZONE DE DÉFILEMENT DES MESSAGES ── */}
       <ScrollArea className="flex-1 px-3 sm:px-4">
         <div className="space-y-3 py-4">
@@ -122,7 +122,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
           ) : messages.length === 0 ? (
             <div className="text-center py-12 px-4 max-w-sm mx-auto space-y-3">
               <EganyeMascot variant="empty" size={90} />
-              <h4 className="text-sm font-serif font-black text-foreground">
+              <h4 className="text-sm font-serif font-bold text-foreground">
                 Discussion de {groupName || 'ce cercle'}
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -147,7 +147,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                   {/* Séparateur temporel épuré */}
                   {showDateSeparator && (
                     <div className="flex justify-center my-3">
-                      <span className="px-3 py-1 rounded-full bg-[#EFE2D0]/60 dark:bg-muted text-[13px] font-bold text-muted-foreground tracking-wide uppercase select-none shadow-2xs">
+                      <span className="px-3 py-1 rounded-full bg-[#EFE2D0]/60 dark:bg-muted text-[13px] font-bold text-muted-foreground select-none shadow-2xs">
                         {formatDaySeparator(msg.createdAt)}
                       </span>
                     </div>
@@ -180,7 +180,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                       {/* En-tête expéditeur (nom + badge créateur) */}
                       {!isMine && !isSameSenderAsPrev && (
                         <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className="text-[13px] font-extrabold text-primary-ink dark:text-primary-ink">
+                          <span className="text-[13px] font-bold text-primary-ink dark:text-primary-ink">
                             {msg.userName}
                           </span>
                           {isCreator && (
@@ -196,7 +196,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
                         className={`relative px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs ${
                           isMine
                             ? 'bg-gradient-to-br from-primary to-[#B85C36] text-white rounded-2xl rounded-br-xs'
-                            : 'bg-white dark:bg-card border border-[#EFE2D0] dark:border-border text-foreground rounded-2xl rounded-bl-xs'
+                            : 'bg-card border border-[#EFE2D0] dark:border-border text-foreground rounded-2xl rounded-bl-xs'
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
@@ -228,7 +228,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
       </ScrollArea>
 
       {/* ── PILLS DE RÉPONSES RAPIDES TONTINE ── */}
-      <div className="px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5 border-t border-[#EFE2D0]/60 dark:border-border/40 bg-white/60 dark:bg-card/60 backdrop-blur-xs">
+      <div className="px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5 border-t border-[#EFE2D0]/60 dark:border-border/40 bg-white/60 dark:bg-card/60">
         {QUICK_TONTINE_CHIPS.map((chip, idx) => (
           <button
             key={idx}
@@ -247,7 +247,7 @@ export function Chat({ groupId, user, groupName, creatorId }: ChatProps) {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="p-3 border-t border-[#EFE2D0] dark:border-border bg-white dark:bg-card flex items-center gap-2 shrink-0"
+        className="p-3 border-t border-[#EFE2D0] dark:border-border bg-card flex items-center gap-2 shrink-0"
       >
         <Input
           placeholder={t('chat_input_placeholder') || 'Écrivez un message au groupe...'}

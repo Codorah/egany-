@@ -121,7 +121,7 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
           </Button>
         </div>
       </div>
-      <p className="text-[13px] text-muted-foreground text-center uppercase tracking-wider font-bold">
+      <p className="text-[13px] text-muted-foreground text-center font-bold">
         {t('sig_instruction')}
       </p>
     </div>

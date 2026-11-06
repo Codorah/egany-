@@ -97,13 +97,13 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
   if (requestSent) {
     return (
       <div className="max-w-md mx-auto py-8 animate-in fade-in duration-300">
-        <Card className="border border-brand/20 shadow-xl rounded-3xl bg-card overflow-hidden">
+        <Card className="border border-brand/20 shadow-xl rounded-2xl bg-card overflow-hidden">
           <CardContent className="flex flex-col items-center text-center gap-4 py-10 px-6">
             <div className="bg-brand/10 w-16 h-16 rounded-full flex items-center justify-center">
               <Clock className="w-8 h-8 text-brand" />
             </div>
             <div>
-              <h3 className="font-serif font-extrabold text-lg text-foreground">{t('jg_request_sent_title')}</h3>
+              <h3 className="font-serif font-bold text-lg text-foreground">{t('jg_request_sent_title')}</h3>
               <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                 {t('jg_request_sent_desc_prefix')}{group.name}{t('jg_request_sent_desc_suffix')}
               </p>
@@ -119,7 +119,7 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
 
   return (
     <div className="max-w-md mx-auto py-8 animate-in fade-in duration-300">
-      <Card className="border border-border shadow-xl rounded-3xl bg-card overflow-hidden">
+      <Card className="border border-border shadow-xl rounded-2xl bg-card overflow-hidden">
         <CardHeader className="text-center pb-4 bg-chip/15">
           <div className="mx-auto bg-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <Users className="w-8 h-8 text-secondary" />
@@ -131,17 +131,17 @@ export function JoinGroup({ joinCode, user, onJoined, onCancel }: JoinGroupProps
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="bg-muted p-5 rounded-2xl border border-border text-center">
-            <h3 className="font-serif font-extrabold text-lg text-foreground">{group.name}</h3>
+            <h3 className="font-serif font-bold text-lg text-foreground">{group.name}</h3>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{group.description}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[13px] uppercase text-muted-foreground font-bold">{t('contribution_label')}</p>
+              <p className="text-[13px] text-muted-foreground font-bold">{t('contribution_label')}</p>
               <p className="font-serif font-bold text-base text-foreground">{group.contributionAmount.toLocaleString()} {group.currency}</p>
             </div>
             <div className="space-y-1 bg-muted/50 p-3 rounded-xl border border-border">
-              <p className="text-[13px] uppercase text-muted-foreground font-bold">{t('frequency')}</p>
+              <p className="text-[13px] text-muted-foreground font-bold">{t('frequency')}</p>
               <p className="font-serif font-bold text-base text-brand capitalize">{t(`freq_${group.frequency}`)}</p>
             </div>
           </div>

@@ -17,11 +17,11 @@ export default function LegalDocumentDialog({ docId, onClose }: LegalDocumentDia
 
   return (
     <Dialog open={doc !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto rounded-3xl p-6 bg-card border border-border">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-card border border-border">
         {doc && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-lg font-serif font-black text-foreground">{doc.title}</DialogTitle>
+              <DialogTitle className="text-lg font-serif font-bold text-foreground">{doc.title}</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
                 {doc.audience} — mis à jour le {LEGAL_LAST_UPDATED}
               </DialogDescription>

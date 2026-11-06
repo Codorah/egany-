@@ -129,9 +129,9 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
   if (group.members.length === 0 && pendingMembers.length === 0) return null;
 
   return (
-    <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-5">
+    <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-5">
       <div>
-        <h2 className="text-base font-serif font-black text-foreground flex items-center gap-2">
+        <h2 className="text-base font-serif font-bold text-foreground flex items-center gap-2">
           <Users className="w-4 h-4 text-primary-ink" />
           {t('mm_management_title')}
         </h2>
@@ -140,7 +140,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
 
       {pendingMembers.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
+          <p className="text-xs font-bold text-muted-foreground">{t('mm_pending_requests_label')} ({pendingMembers.length})</p>
           {pendingMembers.map((uid) => (
             <MemberCard
               key={uid}
@@ -163,7 +163,7 @@ export function MemberManagement({ group, currentUserId }: MemberManagementProps
       )}
 
       <div className="space-y-2">
-        <p className="text-xs font-bold uppercase text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
+        <p className="text-xs font-bold text-muted-foreground">{t('mm_current_members_label')} ({group.members.length})</p>
         {group.members.map((uid) => {
           const isCreatorRow = uid === group.creatorId;
           const role: GroupMemberRole = group.memberRoles?.[uid] || 'member';

@@ -170,7 +170,7 @@ export function Dashboard({
             />
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-serif font-black text-foreground tracking-tight truncate flex items-center gap-1.5">
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-tight truncate flex items-center gap-1.5">
               <span>{t('dashboard_greeting')}</span>
               <span className="text-primary-ink">
                 {user.displayName?.split(' ')[0] || user.displayName || t('dash_friend_fallback')}
@@ -187,7 +187,7 @@ export function Dashboard({
           {/* Notification bell with badge */}
           <button
             onClick={() => onNavigate?.('activity')}
-            className="relative w-10 h-10 rounded-2xl bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft flex items-center justify-center text-foreground hover:text-primary-ink transition-colors cursor-pointer"
+            className="relative w-10 h-10 rounded-2xl bg-card border border-border shadow-soft flex items-center justify-center text-foreground hover:text-primary-ink transition-colors cursor-pointer"
             aria-label={t('dash_notifications_aria')}
           >
             <EganyeIcon name="bell" size={18} />
@@ -263,7 +263,7 @@ export function Dashboard({
 
       {/* ── 3. ACTION PRIORITAIRE ("À faire maintenant") ── */}
       <motion.div variants={itemVariants}>
-        <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 sm:p-5 shadow-soft">
+        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-soft">
           {nextGroupToPay ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -286,7 +286,7 @@ export function Dashboard({
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-lg font-serif font-black text-foreground">
+                  <span className="text-lg font-serif font-bold text-foreground">
                     {nextGroupToPay.contributionAmount.toLocaleString()} FCFA
                   </span>
                 </div>
@@ -294,7 +294,7 @@ export function Dashboard({
 
               <button
                 onClick={() => onManageContributions(nextGroupToPay.id)}
-                className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
+                className="gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <span>{t('dash_contribute_cta')} — {nextGroupToPay.contributionAmount.toLocaleString()} FCFA</span>
               </button>
@@ -329,7 +329,7 @@ export function Dashboard({
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
               {t('active_circles') || 'Mes cercles'}
             </h2>
           </div>
@@ -364,10 +364,10 @@ export function Dashboard({
               <div
                 key={group.id}
                 onClick={() => onSelectGroup(group.id)}
-                className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
+                className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-[#F0E6D8] text-secondary flex items-center justify-center shrink-0 font-serif font-black text-base">
+                  <div className="w-11 h-11 rounded-2xl bg-[#F0E6D8] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-base">
                     {group.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -399,7 +399,7 @@ export function Dashboard({
       {/* ── 5. MON ÉPARGNE — APERÇU (coffres personnels) ── */}
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+          <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
             {t('dash_my_savings')}
           </h2>
           <button
@@ -411,7 +411,7 @@ export function Dashboard({
           </button>
         </div>
 
-        <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-3">
+        <div className="bg-card rounded-2xl p-4 sm:p-5 border border-border shadow-soft space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-secondary shrink-0">
@@ -419,7 +419,7 @@ export function Dashboard({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">{t('dash_total_savings')}</p>
-                <p className="text-lg sm:text-xl font-serif font-black text-foreground">
+                <p className="text-lg sm:text-xl font-serif font-bold text-foreground">
                   {totalSaved.toLocaleString()} FCFA
                 </p>
               </div>
@@ -462,7 +462,7 @@ export function Dashboard({
       {/* ── 6. ACTIVITÉ RÉCENTE (3 Derniers Flux) ── */}
       <motion.div variants={itemVariants} className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-serif font-black text-foreground tracking-tight">
+          <h2 className="text-base sm:text-lg font-serif font-bold text-foreground tracking-tight">
             {t('dash_recent_activity')}
           </h2>
           <button
@@ -474,7 +474,7 @@ export function Dashboard({
           </button>
         </div>
 
-        <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-3 shadow-soft divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+        <div className="bg-card border border-border rounded-2xl p-3 shadow-soft divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
           {activitiesLoading ? (
             // Trois lignes grises plutôt qu'un vide : l'écran garde sa hauteur
             // et ne sursaute pas quand les données arrivent.

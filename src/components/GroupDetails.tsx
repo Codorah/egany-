@@ -250,7 +250,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       <Button variant="ghost" size="icon" onClick={() => setSection(null)} className="rounded-xl shrink-0 cursor-pointer">
         <ArrowLeft className="w-4 h-4" />
       </Button>
-      <h2 className="text-lg font-serif font-black text-foreground">{title}</h2>
+      <h2 className="text-lg font-serif font-bold text-foreground">{title}</h2>
     </div>
   );
 
@@ -290,7 +290,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         </SettingsGroup>
 
         {/* Qui reçoit quand ? */}
-        <Card className="glass-card rounded-3xl overflow-hidden border border-border/80 shadow-soft">
+        <Card className="glass-card rounded-2xl overflow-hidden border border-border/80 shadow-soft">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center gap-3">
               <CardTitle className="text-base font-serif font-bold">
@@ -305,23 +305,23 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             {beneficiaryToDistribute ? (
               <div className="gradient-sunset p-4 rounded-2xl text-white shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="space-y-0.5">
-                  <span className="text-[13px] font-bold uppercase tracking-wider text-white/80 flex items-center gap-1">
+                  <span className="text-[13px] font-bold text-white/80 flex items-center gap-1">
                     <Trophy className="w-3 h-3" /> {t('gd_next_beneficiary_label')} ({t('gd_tour_word')} {group.currentPayoutIndex + 1})
                   </span>
-                  <h4 className="text-lg font-serif font-black">{memberName(beneficiaryToDistribute)}</h4>
+                  <h4 className="text-lg font-serif font-bold">{memberName(beneficiaryToDistribute)}</h4>
                   <p className="text-xs text-white/90">
                     {t('gd_date_label')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-[13px] font-bold uppercase tracking-wider text-white/80">{t('gd_net_amount_label')}</span>
+                  <span className="text-[13px] font-bold text-white/80">{t('gd_net_amount_label')}</span>
                   <AmountDisplay amount={totalPot} currency={group.currency} size="lg" className="text-white" currencyClassName="text-white/80" />
                 </div>
               </div>
             ) : (
               <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="space-y-0.5">
-                  <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[13px] font-bold text-muted-foreground">
                     {t('gd_tour_word')} {group.currentPayoutIndex + 1}
                   </span>
                   <h4 className="text-sm font-bold text-foreground">{t('gd_draw_required_title')}</h4>
@@ -357,7 +357,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                 )}
                 <Button
                   onClick={() => setIsConfirmDistributeOpen(true)}
-                  className="btn-shine w-full gradient-sunset text-white font-bold rounded-xl h-11 cursor-pointer"
+                  className="w-full gradient-sunset text-white font-bold rounded-xl h-11 cursor-pointer"
                 >
                   <Gift className="w-4 h-4 mr-2" />
                   {t('gd_distribute_funds_button')}
@@ -401,7 +401,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-black text-foreground">
+                      <span className="text-xs font-bold text-foreground">
                         {totalPot.toLocaleString()} {group.currency}
                       </span>
                       <span className={`flex items-center justify-end gap-1 text-[13px] font-bold ${
@@ -449,9 +449,9 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         {sectionHeader(t('gd_nav_membres'))}
 
         {/* Inviter : le code, WhatsApp, le lien, et le QR code sur demande */}
-        <div className="bg-white dark:bg-card rounded-3xl border border-[#EFE2D0] dark:border-border/80 shadow-soft p-5 space-y-4">
+        <div className="bg-card rounded-2xl border border-border shadow-soft p-5 space-y-4">
           <div className="space-y-1">
-            <h3 className="font-serif text-lg font-black text-foreground">{t('gd_soft_invite_title')}</h3>
+            <h3 className="font-serif text-lg font-bold text-foreground">{t('gd_soft_invite_title')}</h3>
             <p className="text-[13px] text-muted-foreground">{t('gd_soft_invite_desc')}</p>
           </div>
 
@@ -469,7 +469,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
           >
             <span className="text-left">
               <span className="block text-[13px] text-muted-foreground">{t('gd_unique_code_label')}</span>
-              <span className="block font-mono text-2xl font-black tracking-[0.2em] text-foreground">{group.joinCode}</span>
+              <span className="block font-mono text-2xl font-bold tracking-[0.2em] text-foreground">{group.joinCode}</span>
             </span>
             {copiedCode ? <Check className="w-5 h-5 text-secondary shrink-0" /> : <Copy className="w-5 h-5 text-muted-foreground shrink-0" />}
           </button>
@@ -529,7 +529,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                 .sort((a, b) => (members[b]?.reputationScore || 0) - (members[a]?.reputationScore || 0))
                 .map((uid, index) => (
                   <div key={uid} className="flex items-center gap-2">
-                    <span className={`w-6 shrink-0 text-center text-xs font-black ${index === 0 ? 'text-brand' : 'text-muted-foreground'}`}>#{index + 1}</span>
+                    <span className={`w-6 shrink-0 text-center text-xs font-bold ${index === 0 ? 'text-brand' : 'text-muted-foreground'}`}>#{index + 1}</span>
                     <MemberCard
                       className="flex-1"
                       avatarUrl={members[uid]?.photoURL}
@@ -693,13 +693,13 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       </div>
 
       {/* 1. Header du Cercle */}
-      <div className="flex items-center gap-3.5 bg-white dark:bg-card p-4 rounded-3xl border border-[#EFE2D0] dark:border-border/80 shadow-soft">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-black text-xl border border-[#EFE2D0]">
+      <div className="flex items-center gap-3.5 bg-card p-4 rounded-2xl border border-border shadow-soft">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F0E4] to-[#EFE2D0] text-secondary flex items-center justify-center shrink-0 font-serif font-bold text-xl border border-[#EFE2D0]">
           {group.name.slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl font-serif font-black tracking-tight text-foreground truncate">
+            <h1 className="text-lg sm:text-xl font-serif font-bold tracking-tight text-foreground truncate">
               {group.name}
             </h1>
             <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-success-soft text-secondary shrink-0">
@@ -718,7 +718,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       </div>
 
       {/* 2. Bloc Principal : Prochaine Cotisation */}
-      <div className="bg-white dark:bg-card rounded-3xl p-5 shadow-soft border border-[#EFE2D0] dark:border-border/80 space-y-3.5">
+      <div className="bg-card rounded-2xl p-5 shadow-soft border border-border space-y-3.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-primary-ink flex items-center gap-1.5">
             <EganyeIcon name="pending" size={14} />
@@ -741,7 +741,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
         <button
           type="button"
           onClick={() => setSection('cotisations')}
-          className="btn-shine gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
+          className="gradient-sunset w-full h-11 rounded-xl text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
         >
           <span>{t('dash_contribute_cta')} — {group.contributionAmount.toLocaleString()} {group.currency}</span>
         </button>
@@ -772,16 +772,16 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
       )}
 
       {/* 3. Ma Situation */}
-      <div className="bg-white dark:bg-card rounded-2xl p-4 shadow-soft border border-[#EFE2D0] dark:border-border/80 grid grid-cols-2 gap-3">
+      <div className="bg-card rounded-2xl p-4 shadow-soft border border-border grid grid-cols-2 gap-3">
         <div>
-          <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_my_total')}</span>
-          <p className="text-base font-serif font-black text-foreground mt-0.5">
+          <span className="text-[13px] font-bold text-muted-foreground block">{t('gd_my_total')}</span>
+          <p className="text-base font-serif font-bold text-foreground mt-0.5">
             {myContributed !== null ? myContributed.toLocaleString() : '0'} {group.currency}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-[13px] font-bold uppercase text-muted-foreground block">{t('gd_cycle_position')}</span>
-          <p className="text-base font-serif font-black text-secondary mt-0.5">
+          <span className="text-[13px] font-bold text-muted-foreground block">{t('gd_cycle_position')}</span>
+          <p className="text-base font-serif font-bold text-secondary mt-0.5">
             {myPositionIdx >= 0 ? `#${myPositionIdx + 1} ${t('gd_out_of')} ${group.members.length}` : '-'}
           </p>
         </div>
@@ -789,10 +789,10 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
 
       {/* 4. Sections Secondaires (6 accès nets) */}
       <div className="space-y-2 pt-1">
-        <h3 className="font-serif font-black text-sm text-foreground uppercase tracking-wider px-1">
+        <h3 className="font-serif font-bold text-sm text-foreground px-1">
           {t('gd_management_space')}
         </h3>
-        <div className="bg-white dark:bg-card rounded-2xl shadow-soft border border-[#EFE2D0] dark:border-border/80 overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+        <div className="bg-card rounded-2xl shadow-soft border border-border overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
           {links.map((link) => (
             <button
               key={link.id}

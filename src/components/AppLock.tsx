@@ -130,7 +130,7 @@ export function AppLock({
       <div className="w-full max-w-sm flex flex-col items-center text-center gap-6">
         <CustomAvatar photoURL={photoURL} name={displayName} size={80} className="shadow-soft" />
         <div className="space-y-1">
-          <h1 className="font-serif text-2xl font-black text-foreground">Bonjour {displayName}</h1>
+          <h1 className="font-serif text-2xl font-bold text-foreground">Bonjour {displayName}</h1>
           <p className="text-[15px] text-muted-foreground">
             {mode === 'biometric' ? 'Déverrouillez Eganyé avec votre empreinte.' : 'Entrez votre mot de passe pour continuer.'}
           </p>
@@ -180,7 +180,7 @@ export function AppLock({
               type="submit"
               size="lg"
               disabled={busy || !password}
-              className="btn-shine w-full rounded-full gradient-sunset text-white font-bold"
+              className="w-full rounded-full gradient-sunset text-white font-bold"
             >
               {busy ? 'Vérification…' : 'Déverrouiller'}
             </Button>

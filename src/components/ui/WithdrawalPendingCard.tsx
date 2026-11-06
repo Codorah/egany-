@@ -78,21 +78,21 @@ export function WithdrawalPendingCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-card rounded-3xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
+        className="bg-card rounded-2xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
       >
         <div className="relative flex justify-center">
           <BrandVisual name="success" height={150} alt="" />
           <Celebration />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">Retrait effectué</h3>
+          <h3 className="text-base font-serif font-bold text-foreground">Retrait effectué</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             {amountLabel} ont été envoyés sur votre compte {operatorLabel} (<strong className="text-foreground">{phone}</strong>).
           </p>
         </div>
         <Button
           onClick={onDone}
-          className="btn-shine w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
+          className="w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
         >
           Voir mon portefeuille
         </Button>
@@ -105,13 +105,13 @@ export function WithdrawalPendingCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft text-center space-y-4"
+        className="bg-card rounded-2xl p-6 border border-border shadow-soft text-center space-y-4"
       >
         <div className="flex justify-center">
           <BrandVisual name="failed" height={150} alt="" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">Retrait remboursé</h3>
+          <h3 className="text-base font-serif font-bold text-foreground">Retrait remboursé</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Cet envoi n'a pas pu être fait. {debited.toLocaleString()} FCFA ont été rendus à votre portefeuille.
           </p>
@@ -133,7 +133,7 @@ export function WithdrawalPendingCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-5"
+      className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5"
     >
       <div className="flex justify-center pt-1">
         <div className="relative">
@@ -151,7 +151,7 @@ export function WithdrawalPendingCard({
       </div>
 
       <div className="text-center space-y-1.5" aria-live="polite">
-        <h3 className="text-base font-serif font-black text-foreground">
+        <h3 className="text-base font-serif font-bold text-foreground">
           {isProcessing ? 'Envoi de votre argent' : 'Retrait pris en charge'}
         </h3>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
@@ -161,7 +161,7 @@ export function WithdrawalPendingCard({
         </p>
       </div>
 
-      <div className="rounded-2xl bg-muted/50 border border-[#EFE2D0] dark:border-border/80 p-3.5 space-y-2">
+      <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Débité de votre solde</span>
           <span className="font-bold text-foreground tabular-nums">{debited.toLocaleString()} FCFA</span>
@@ -185,7 +185,7 @@ export function WithdrawalPendingCard({
       </p>
 
       {defaultPin && (
-        <div className="rounded-2xl bg-muted/50 border border-[#EFE2D0] dark:border-border/80 p-3.5 space-y-2 text-center">
+        <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2 text-center">
           <p className="text-[13px] text-foreground leading-relaxed">
             Votre code PIN est encore 0000. Changez-le pour que vos prochains retraits partent tout de suite.
           </p>

@@ -39,7 +39,7 @@ export function AmountDisplay({
   // Le montant « compte » vers sa nouvelle valeur quand il change.
   const shown = useCountUp(amount);
   return (
-    <span className={`font-serif font-black tracking-tight ${SIZE_CLASSES[size]} ${className}`}>
+    <span className={`font-serif font-bold tracking-tight ${SIZE_CLASSES[size]} ${className}`}>
       {hidden ? '••••••' : shown.toLocaleString()}{' '}
       <span className={`font-sans font-bold ${CURRENCY_SIZE_CLASSES[size]} ${currencyClassName}`}>
         {currency}

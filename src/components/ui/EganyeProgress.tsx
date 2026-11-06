@@ -83,7 +83,7 @@ export function EganyeProgress({
         </svg>
         {showLabel && (
           <div className="absolute flex flex-col items-center justify-center">
-            <span className={`font-serif font-black text-sm ${colors.text}`}>
+            <span className={`font-serif font-bold text-sm ${colors.text}`}>
               {label || Math.round(value)}
             </span>
             {!label && (

@@ -416,7 +416,7 @@ export default function App() {
     return (
       <div className="h-dvh w-full flex flex-col items-center justify-center bg-background text-foreground px-6 text-center gap-4">
         <img src="/icons/icon-128.png" alt="eganyé" className="w-16 h-16 rounded-2xl shadow-xl" />
-        <h1 className="text-xl font-serif font-black">Maintenance en cours</h1>
+        <h1 className="text-xl font-serif font-bold">Maintenance en cours</h1>
         <p className="text-sm text-muted-foreground max-w-sm">
           eganyé est temporairement indisponible pour une opération de maintenance. Revenez dans quelques instants.
         </p>

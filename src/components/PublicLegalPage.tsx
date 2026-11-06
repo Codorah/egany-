@@ -64,8 +64,8 @@ export function PublicLegalPage({ docId }: { docId: LegalDocId | 'suppression' }
     <main className="min-h-dvh bg-background text-foreground px-4 py-10">
       <article className="max-w-2xl mx-auto space-y-6">
         <header className="space-y-2">
-          <a href="/" className="text-2xl font-serif font-black lowercase text-brand">eganyé</a>
-          <h1 className="text-3xl font-serif font-black">{doc.title}</h1>
+          <a href="/" className="text-2xl font-serif font-bold lowercase text-brand">eganyé</a>
+          <h1 className="text-3xl font-serif font-bold">{doc.title}</h1>
           <p className="text-sm text-muted-foreground">{doc.audience} — mis à jour le {LEGAL_LAST_UPDATED}</p>
         </header>
         {doc.sections.map((section) => (
@@ -80,7 +80,6 @@ export function PublicLegalPage({ docId }: { docId: LegalDocId | 'suppression' }
           <a href="/confidentialite" className="underline">Confidentialité</a>
           <a href="/conditions" className="underline">Conditions d’utilisation</a>
           <a href="/conditions-credit" className="underline">Microcrédit</a>
-          <a href="/conditions-coup-de-pouce" className="underline">Coup de pouce</a>
           <a href="/suppression-compte" className="underline">Supprimer mon compte</a>
           <a href="/mentions-legales" className="underline">Mentions légales</a>
         </nav>

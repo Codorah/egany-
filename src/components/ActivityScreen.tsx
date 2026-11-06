@@ -151,7 +151,7 @@ export function ActivityScreen({
     <div className="space-y-5 pb-24 max-w-lg mx-auto">
       {/* ── En-tête officiel ── */}
       <div className="space-y-1 pt-1">
-        <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
           Activité
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground font-medium">
@@ -210,7 +210,7 @@ export function ActivityScreen({
       {/* ── Timeline Groupée ── */}
       {groups.length === 0 ? (
         /* État vide conforme à la maquette */
-        <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 glass-card rounded-3xl border border-border/70 shadow-soft">
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 glass-card rounded-2xl border border-border/70 shadow-soft">
           <EganyeIllustration name="no-activity" width={140} />
           <div className="space-y-1">
             <h3 className="font-serif font-bold text-base text-foreground">
@@ -222,7 +222,7 @@ export function ActivityScreen({
           </div>
           <Button
             onClick={() => onNavigate?.('my-circles')}
-            className="btn-shine gradient-sunset text-white font-bold rounded-xl px-5 h-10 text-xs shadow-xs cursor-pointer"
+            className="gradient-sunset text-white font-bold rounded-xl px-5 h-10 text-xs shadow-xs cursor-pointer"
           >
             Découvrir les cercles
           </Button>
@@ -231,7 +231,7 @@ export function ActivityScreen({
         <div className="space-y-5">
           {groups.map((grp) => (
             <div key={grp.period} className="space-y-2.5">
-              <h2 className="text-xs font-serif font-black text-muted-foreground uppercase tracking-wider px-1">
+              <h2 className="text-xs font-serif font-bold text-muted-foreground px-1">
                 {grp.period}
               </h2>
               <div className="space-y-2.5">
@@ -271,7 +271,7 @@ export function ActivityScreen({
                           </span>
                           {hasAmount && (
                             <span
-                              className={`text-xs font-black font-serif block mt-0.5 ${
+                              className={`text-xs font-bold font-serif block mt-0.5 ${
                                 isPositive ? 'text-secondary' : 'text-primary-ink'
                               }`}
                             >

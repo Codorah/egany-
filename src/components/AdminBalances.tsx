@@ -35,7 +35,7 @@ function MemberRow({ member }: { member: MemberBalance }) {
         </div>
         <div className="text-right shrink-0">
           <p className="text-[13px] text-muted-foreground">Total</p>
-          <p className="text-base font-serif font-black text-foreground tabular-nums">{money(memberTotal(member))}</p>
+          <p className="text-base font-serif font-bold text-foreground tabular-nums">{money(memberTotal(member))}</p>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ export function AdminBalances() {
   useEffect(() => { setVisible(PAGE); }, [search, onlyWithMoney]);
 
   return (
-    <Card className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs">
+    <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
       <CardHeader className="pb-4 bg-muted/30 border-b border-border">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -154,7 +154,7 @@ export function AdminBalances() {
             <div className="p-4 sm:p-5 border-b border-border space-y-4">
               <div>
                 <p className="text-[13px] text-muted-foreground">Argent détenu pour les membres</p>
-                <p className="text-2xl font-serif font-black text-foreground tabular-nums">{money(overview.totals.heldForMembers)}</p>
+                <p className="text-2xl font-serif font-bold text-foreground tabular-nums">{money(overview.totals.heldForMembers)}</p>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-4 gap-y-3">
                 <Figure label="Portefeuilles" value={overview.totals.wallets} />

@@ -374,7 +374,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             <EganyeIcon name="chevron-left" size={16} />
           </Button>
           <div>
-            <h1 className="text-lg font-serif font-black text-foreground">{t('bank_create_page_title') || "Créer une réserve d'argent"}</h1>
+            <h1 className="text-lg font-serif font-bold text-foreground">{t('bank_create_page_title') || "Créer une réserve d'argent"}</h1>
             <p className="text-xs text-muted-foreground">Mets de côté à ton rythme en toute sécurité</p>
           </div>
         </div>
@@ -413,12 +413,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               </p>
             </div>
 
-            <div className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-3xl p-5 sm:p-6 shadow-soft space-y-5">
+            <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-soft space-y-5">
               {/* ÉTAPE 1 : Pourquoi épargnes-tu ? */}
               {createStep === 1 && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-base font-serif font-black text-foreground">1. Pourquoi épargnes-tu ?</h2>
+                    <h2 className="text-base font-serif font-bold text-foreground">1. Pourquoi épargnes-tu ?</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">Choisis le thème qui correspond à ton projet.</p>
                   </div>
 
@@ -461,7 +461,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               {createStep === 2 && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-base font-serif font-black text-foreground">2. Combien veux-tu atteindre ?</h2>
+                    <h2 className="text-base font-serif font-bold text-foreground">2. Combien veux-tu atteindre ?</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">Définis ton objectif d'épargne.</p>
                   </div>
 
@@ -474,7 +474,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       value={createAmount}
                       onChange={(e) => setCreateAmount(e.target.value)}
                       placeholder="100 000"
-                      className="rounded-xl h-14 text-2xl font-serif font-black"
+                      className="rounded-xl h-14 text-2xl font-serif font-bold"
                       autoFocus
                     />
                     <div className="flex gap-2 flex-wrap pt-1">
@@ -521,7 +521,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               {createStep === 3 && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-base font-serif font-black text-foreground">3. Jusqu'à quand épargnes-tu ?</h2>
+                    <h2 className="text-base font-serif font-bold text-foreground">3. Jusqu'à quand épargnes-tu ?</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">L'argent sera réservé pour protéger ton projet.</p>
                   </div>
 
@@ -579,7 +579,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               {createStep === 4 && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-base font-serif font-black text-foreground">4. Confirmation de ton épargne</h2>
+                    <h2 className="text-base font-serif font-bold text-foreground">4. Confirmation de ton épargne</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">Vérifie les détails avant d'activer ton coffre.</p>
                   </div>
 
@@ -591,7 +591,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
                     <div className="flex items-center justify-between pb-2 border-b border-border/60">
                       <span className="text-xs text-muted-foreground font-medium">Montant cible</span>
-                      <span className="text-base font-serif font-black text-primary-ink">
+                      <span className="text-base font-serif font-bold text-primary-ink">
                         {(parseFloat(createAmount) || 0).toLocaleString()} FCFA
                       </span>
                     </div>
@@ -637,7 +637,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {createStep < CREATE_TOTAL_STEPS ? (
                   <Button
                     onClick={handleCreateNextStep}
-                    className="btn-shine gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
+                    className="gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
                   >
                     {t('mb_continue')}
                   </Button>
@@ -645,7 +645,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                   <Button
                     onClick={handleCreateVault}
                     disabled={creating}
-                    className="btn-shine gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
+                    className="gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
                   >
                     {creating ? <EganyeIcon name="refresh" size={16} className="animate-spin mr-2" /> : null}
                     {creating ? "Création en cours..." : "Créer mon épargne"}
@@ -664,7 +664,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     <div className="space-y-4 sm:space-y-5 pb-20">
       {/* 1. Header: Mon Épargne */}
       <div className="space-y-0.5 pt-1">
-        <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
           {t('my_bank') || "Mon Épargne"}
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground font-medium">
@@ -680,7 +680,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               {t('bank_wallet_balance_label') || "Mon solde disponible"}
             </p>
             <div className="flex items-center gap-2.5">
-              <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
                 {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '••••••• FCFA'}
               </h2>
               <button
@@ -735,7 +735,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       </div>
 
       {/* 3. Card: Épargne totale */}
-      <div className="bg-white dark:bg-card rounded-2xl p-4 sm:p-5 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-3.5">
+      <div className="bg-card rounded-2xl p-4 sm:p-5 border border-border shadow-soft space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-secondary shrink-0">
@@ -745,7 +745,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
               <p className="text-xs text-muted-foreground font-medium">
                 {t('bank_total_savings') || "Épargne totale"}
               </p>
-              <p className="text-lg sm:text-xl font-serif font-black text-foreground">
+              <p className="text-lg sm:text-xl font-serif font-bold text-foreground">
                 {totalSaved.toLocaleString()} FCFA
               </p>
             </div>
@@ -776,7 +776,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       {/* 4. Section: Mes réservations */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h2 className="font-serif font-black text-lg text-foreground tracking-tight">
+          <h2 className="font-serif font-bold text-lg text-foreground tracking-tight">
             {t('bank_my_reservations') || "Mes réservations"}
           </h2>
           <button
@@ -800,7 +800,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 <div
                   key={vault.id}
                   onClick={() => { setActiveVault(vault); setActionAmount(''); }}
-                  className="bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
+                  className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-11 h-11 rounded-2xl ${info.bg} flex items-center justify-center shrink-0`}>
@@ -854,7 +854,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           type="button"
           onClick={() => openCreateFlow()}
           disabled={!canCreateVault}
-          className="btn-shine gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
           <span>+ Créer une épargne</span>
@@ -891,7 +891,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       {!hasActiveSubscription && (
         <div className="space-y-3 pt-1">
           <div>
-            <h2 className="text-base font-serif font-black text-foreground">{t('bank_upsell_title')}</h2>
+            <h2 className="text-base font-serif font-bold text-foreground">{t('bank_upsell_title')}</h2>
             <p className="text-[13px] text-muted-foreground">{t('bank_upsell_desc')}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -902,13 +902,13 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     <EganyeIcon name="star" size={16} className="text-brand" />
                     <h3 className="font-bold text-foreground">{t(`bank_tier_${tier}`)}</h3>
                   </div>
-                  <p className="text-2xl font-black text-brand mb-1">
+                  <p className="text-2xl font-bold text-brand mb-1">
                     {BANK_TIER_PRICE[tier].toLocaleString()} FCFA
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">{t('bank_per_month')}</p>
                 </div>
                 <Button
-                  className="btn-shine w-full h-11 font-bold rounded-xl cursor-pointer"
+                  className="w-full h-11 font-bold rounded-xl cursor-pointer"
                   onClick={() => handleSubscribe(tier)}
                   disabled={subscribing !== null}
                 >
@@ -925,7 +925,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
       {/* ── DIALOG GESTION COFFRE DÉTAILLÉ ── */}
       <Dialog open={!!activeVault} onOpenChange={(open) => !open && setActiveVault(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-background border border-border">
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-background border border-border">
           {activeVault && (() => {
             const unlocked = isUnlocked(activeVault);
             const info = getVaultIconInfo(activeVault.name, activeVault.description);
@@ -939,7 +939,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                       <EganyeIcon name={info.icon} size={20} />
                     </div>
                     <div>
-                      <DialogTitle className="font-serif text-lg font-black">{activeVault.name}</DialogTitle>
+                      <DialogTitle className="font-serif text-lg font-bold">{activeVault.name}</DialogTitle>
                       <p className="text-xs text-muted-foreground">{activeVault.description || "Épargne personnelle"}</p>
                     </div>
                   </div>
@@ -965,14 +965,14 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 {/* Balances */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[13px] font-bold text-muted-foreground uppercase">Solde du coffre</p>
-                    <p className="text-base font-serif font-black text-foreground mt-0.5">
+                    <p className="text-[13px] font-bold text-muted-foreground">Solde du coffre</p>
+                    <p className="text-base font-serif font-bold text-foreground mt-0.5">
                       {activeVault.balance.toLocaleString()} FCFA
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[13px] font-bold text-muted-foreground uppercase">Mon disponible</p>
-                    <p className="text-base font-serif font-black text-foreground mt-0.5">
+                    <p className="text-[13px] font-bold text-muted-foreground">Mon disponible</p>
+                    <p className="text-base font-serif font-bold text-foreground mt-0.5">
                       {user.walletBalance.toLocaleString()} FCFA
                     </p>
                   </div>
@@ -1016,7 +1016,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Button
                     variant="secondary"
-                    className="btn-shine h-11 font-bold rounded-xl cursor-pointer"
+                    className="h-11 font-bold rounded-xl cursor-pointer"
                     onClick={handleDeposit}
                     disabled={actionBusy}
                   >
@@ -1064,11 +1064,11 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
 
       {/* ── MODAL AVERTISSEMENT DÉBLOCAGE ANTICIPÉ ── */}
       <Dialog open={showEarlyUnlockConfirm} onOpenChange={setShowEarlyUnlockConfirm}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-background border border-border text-center space-y-3">
+        <DialogContent className="max-w-sm rounded-2xl p-6 bg-background border border-border text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning mx-auto flex items-center justify-center">
             <EganyeIcon name="shield" size={24} />
           </div>
-          <DialogTitle className="font-serif text-lg font-black">{t('mb_early_unlock_title')}</DialogTitle>
+          <DialogTitle className="font-serif text-lg font-bold">{t('mb_early_unlock_title')}</DialogTitle>
           <p className="text-xs text-muted-foreground leading-relaxed">
             {t('mb_early_unlock_desc')}
           </p>

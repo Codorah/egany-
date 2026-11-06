@@ -10,7 +10,7 @@ export function SettingsGroup({ title, children }: { title?: string; children: R
   return (
     <section className="space-y-2">
       {title && <h2 className="text-[13px] font-bold text-muted-foreground px-3">{title}</h2>}
-      <div className="bg-white dark:bg-card rounded-2xl border border-[#EFE2D0] dark:border-border/80 shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+      <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
         {children}
       </div>
     </section>

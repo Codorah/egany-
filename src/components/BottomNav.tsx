@@ -74,7 +74,7 @@ export function BottomNav({
       role="navigation"
       aria-label="Navigation principale"
     >
-      <div className="relative pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] px-3 bg-white/92 dark:bg-[#1C140F]/92 backdrop-blur-2xl border-t border-[#EFE2D0] dark:border-border/80 shadow-[0_-4px_24px_rgba(45,31,23,0.06)]">
+      <div className="relative pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] px-3 bg-card border-t border-border shadow-[0_-4px_24px_rgba(45,31,23,0.06)]">
         <div className="max-w-md mx-auto flex items-center justify-around relative">
           {items.map((item) => {
             const active = isActive(item.id);
@@ -130,7 +130,7 @@ export function BottomNav({
                   }}
                   className={`relative z-10 text-[13px]  font-sans tracking-tight mt-0.5 leading-none transition-colors duration-200 ${
                     active
-                      ? 'font-black text-primary-ink'
+                      ? 'font-bold text-primary-ink'
                       : 'font-bold text-muted-foreground group-hover:text-foreground'
                   }`}
                 >

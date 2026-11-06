@@ -95,7 +95,7 @@ export function CustomAvatar({
 
   return (
     <div
-      className={`rounded-full shadow-soft flex items-center justify-center font-serif font-black select-none shrink-0 border border-white/30 dark:border-white/10 ${className}`}
+      className={`rounded-full shadow-soft flex items-center justify-center font-serif font-bold select-none shrink-0 border border-white/30 dark:border-white/10 ${className}`}
       style={{
         width: size,
         height: size,

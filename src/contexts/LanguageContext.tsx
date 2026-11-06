@@ -7061,7 +7061,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Transaction'
   },
   dash_services_card_subtitle: {
-    fr: 'Coup de pouce, microcrédit, assurance, équipement',
+    fr: 'Microcrédit, assurance, équipement',
     en: 'Microcredit, health insurance, retirement savings, solar kit'
   },
   dash_ai_card_subtitle: {

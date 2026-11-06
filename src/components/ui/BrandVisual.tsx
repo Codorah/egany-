@@ -68,7 +68,7 @@ export function BrandVisual({ name, height = 180, className = '', alt = '' }: Br
 
   if (NEEDS_CARD.has(name)) {
     return (
-      <div className={`overflow-hidden rounded-3xl bg-white ${className}`}>{image}</div>
+      <div className={`overflow-hidden rounded-2xl bg-white ${className}`}>{image}</div>
     );
   }
 

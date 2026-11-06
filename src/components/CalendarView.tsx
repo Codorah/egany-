@@ -83,16 +83,16 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
   return (
     <div className="space-y-4 sm:space-y-5 pb-20">
       <div>
-        <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2">
           <CalendarDays className="w-5 h-5 text-primary-ink" />
           {t('cal_page_title')}
         </h1>
         <p className="text-[13px] text-muted-foreground font-medium">{t('cal_page_subtitle')}</p>
       </div>
 
-      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-serif font-black text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
+          <h2 className="text-base font-serif font-bold text-foreground capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
           <div className="flex gap-1.5">
             <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl cursor-pointer" onClick={() => setCurrentMonth((m) => subMonths(m, 1))}>
               <ChevronLeft className="w-4 h-4" />
@@ -106,7 +106,7 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground uppercase tracking-wide mb-1">
+        <div className="grid grid-cols-7 gap-1 text-center text-[13px] font-bold text-muted-foreground mb-1">
           {WEEKDAY_LABELS.map((d) => <div key={d}>{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -135,8 +135,8 @@ export function CalendarView({ groups, onSelectGroup }: CalendarViewProps) {
         </div>
       </div>
 
-      <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-2">
-        <h2 className="text-base font-serif font-black text-foreground">{t('cal_upcoming_title')}</h2>
+      <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-2">
+        <h2 className="text-base font-serif font-bold text-foreground">{t('cal_upcoming_title')}</h2>
         {upcoming.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">{t('cal_no_upcoming')}</p>
         ) : (

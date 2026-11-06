@@ -106,7 +106,7 @@ export function AdminGate({ user, children, onCancel }: AdminGateProps) {
         onSubmit={handleUnlock}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-5"
+        className="w-full max-w-sm bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5"
       >
         <div className="flex justify-center">
           <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary-ink flex items-center justify-center">
@@ -115,7 +115,7 @@ export function AdminGate({ user, children, onCancel }: AdminGateProps) {
         </div>
 
         <div className="text-center space-y-1.5">
-          <h2 className="text-base font-serif font-black text-foreground">Espace d’administration</h2>
+          <h2 className="text-base font-serif font-bold text-foreground">Espace d’administration</h2>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Confirmez votre identité pour continuer.
           </p>
@@ -155,7 +155,7 @@ export function AdminGate({ user, children, onCancel }: AdminGateProps) {
           <Button
             type="submit"
             disabled={busy}
-            className="btn-shine gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
+            className="gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
           >
             {busy ? 'Vérification...' : 'Déverrouiller'}
           </Button>

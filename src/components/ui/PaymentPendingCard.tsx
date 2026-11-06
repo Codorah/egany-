@@ -103,21 +103,21 @@ export function PaymentPendingCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-card rounded-3xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
+        className="bg-card rounded-2xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
       >
         <div className="relative flex justify-center">
           <BrandVisual name="success" height={150} alt="" />
           <Celebration />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">{t('pay_confirmed_title')}</h3>
+          <h3 className="text-base font-serif font-bold text-foreground">{t('pay_confirmed_title')}</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             {netAmount.toLocaleString()} FCFA {t('pay_confirmed_desc')}
           </p>
         </div>
         <Button
           onClick={onDone}
-          className="btn-shine w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
+          className="w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
         >
           {t('pay_view_wallet')}
         </Button>
@@ -130,13 +130,13 @@ export function PaymentPendingCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft text-center space-y-4"
+        className="bg-card rounded-2xl p-6 border border-border shadow-soft text-center space-y-4"
       >
         <div className="flex justify-center">
           <BrandVisual name="failed" height={150} alt="" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-black text-foreground">{t('pay_not_received_title')}</h3>
+          <h3 className="text-base font-serif font-bold text-foreground">{t('pay_not_received_title')}</h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             {t('pay_not_received_desc_1')} {operatorLabel}. {t('pay_not_received_desc_2')}
           </p>
@@ -144,7 +144,7 @@ export function PaymentPendingCard({
         <div className="space-y-2">
           <Button
             onClick={onRetry}
-            className="btn-shine gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
+            className="gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
           >
             {t('pay_retry')}
           </Button>
@@ -164,7 +164,7 @@ export function PaymentPendingCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-card rounded-3xl p-6 border border-[#EFE2D0] dark:border-border/80 shadow-soft space-y-5"
+      className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5"
     >
       {/* Téléphone qui « sonne » : l'anneau pulsé dit qu'on attend un geste de
           l'utilisatrice, pas que l'application charge quelque chose. */}
@@ -182,7 +182,7 @@ export function PaymentPendingCard({
       </div>
 
       <div className="text-center space-y-1.5">
-        <h3 className="text-base font-serif font-black text-foreground">
+        <h3 className="text-base font-serif font-bold text-foreground">
           {t('pay_confirm_on_phone')}
         </h3>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
@@ -191,7 +191,7 @@ export function PaymentPendingCard({
         </p>
       </div>
 
-      <div className="rounded-2xl bg-muted/50 border border-[#EFE2D0] dark:border-border/80 p-3.5 space-y-2">
+      <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{t('pay_amount_debited')}</span>
           <span className="font-bold text-foreground tabular-nums">{grossAmount.toLocaleString()} FCFA</span>

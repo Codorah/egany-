@@ -35,7 +35,7 @@ export const EganyeButton = React.forwardRef<HTMLButtonElement, EganyeButtonProp
     }[size];
 
     const variantStyles = {
-      primary: 'btn-shine gradient-sunset text-white shadow-soft',
+      primary: 'gradient-sunset text-white shadow-soft',
       secondary: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-soft',
       outline: 'border-2 border-[#EFE2D0] dark:border-border text-foreground hover:bg-muted/50',
       ghost: 'text-foreground hover:bg-muted/60',
@@ -72,10 +72,10 @@ export interface EganyeCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function EganyeCard({ variant = 'white', interactive = false, children, className = '', ...props }: EganyeCardProps) {
   const variantStyles = {
-    white: 'bg-white dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft text-foreground',
-    cream: 'bg-[#FDFBF7] dark:bg-card border border-[#EFE2D0] dark:border-border/80 shadow-soft text-foreground',
+    white: 'bg-card border border-border shadow-soft text-foreground',
+    cream: 'bg-[#FDFBF7] dark:bg-card border border-border shadow-soft text-foreground',
     sunset: 'gradient-sunset-hero text-white shadow-soft relative overflow-hidden',
-    glass: 'bg-card/80 backdrop-blur-md border border-border/80 shadow-soft text-foreground',
+    glass: 'bg-card/80 border border-border/80 shadow-soft text-foreground',
   }[variant];
 
   const interactiveStyles = interactive
@@ -83,7 +83,7 @@ export function EganyeCard({ variant = 'white', interactive = false, children, c
     : '';
 
   return (
-    <div className={`rounded-3xl p-5 ${variantStyles} ${interactiveStyles} ${className}`} {...props}>
+    <div className={`rounded-2xl p-5 ${variantStyles} ${interactiveStyles} ${className}`} {...props}>
       {children}
     </div>
   );
@@ -101,7 +101,7 @@ export function EganyeHeader({ title, subtitle, action, className = '' }: Eganye
   return (
     <div className={`flex items-center justify-between gap-3 pt-1 ${className}`}>
       <div className="space-y-0.5 min-w-0 flex-1">
-        <h1 className="text-2xl sm:text-3xl font-serif font-black text-foreground tracking-tight truncate">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight truncate">
           {title}
         </h1>
         {subtitle && (
@@ -128,7 +128,7 @@ export function EganyeSection({ title, actionText, onAction, children, className
   return (
     <section className={`space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
-        <h2 className="font-serif font-black text-base sm:text-lg text-foreground tracking-tight">
+        <h2 className="font-serif font-bold text-base sm:text-lg text-foreground tracking-tight">
           {title}
         </h2>
         {actionText && (

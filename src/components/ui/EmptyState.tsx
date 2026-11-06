@@ -41,7 +41,7 @@ export function EmptyState({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="glass-card p-6 sm:p-8 rounded-3xl border border-[#EFE2D0] dark:border-border text-center flex flex-col items-center justify-center max-w-md mx-auto my-4 space-y-4"
+      className="glass-card p-6 sm:p-8 rounded-2xl border border-[#EFE2D0] dark:border-border text-center flex flex-col items-center justify-center max-w-md mx-auto my-4 space-y-4"
     >
       {visual ? (
         <div className="w-full max-w-[260px]">{visual}</div>
@@ -58,7 +58,7 @@ export function EmptyState({
       )}
 
       <div className="space-y-1">
-        <h3 className="text-base sm:text-lg font-serif font-black text-foreground">{title}</h3>
+        <h3 className="text-base sm:text-lg font-serif font-bold text-foreground">{title}</h3>
         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs">{description}</p>
       </div>
 

@@ -64,10 +64,10 @@ export function ChooseCircleToPay({ groups, onSelect, onBack }: ChooseCircleToPa
               </div>
 
               <div className="text-right shrink-0">
-                <span className="block text-base font-extrabold text-foreground">
+                <span className="block text-base font-bold text-foreground">
                   {group.contributionAmount.toLocaleString()}
                 </span>
-                <span className="block text-[13px] font-bold text-muted-foreground uppercase">
+                <span className="block text-[13px] font-bold text-muted-foreground">
                   {group.currency}
                 </span>
               </div>

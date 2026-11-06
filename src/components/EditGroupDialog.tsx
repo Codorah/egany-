@@ -147,7 +147,7 @@ export function EditGroupDialog({
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <DialogTitle className="flex-1 font-serif text-lg font-black text-foreground">Modifier le cercle</DialogTitle>
+          <DialogTitle className="flex-1 font-serif text-lg font-bold text-foreground">Modifier le cercle</DialogTitle>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6 space-y-5">
@@ -196,7 +196,7 @@ export function EditGroupDialog({
                     >
                       <Minus className="w-5 h-5" />
                     </button>
-                    <span className="text-3xl font-serif font-black text-foreground">{maxMembers}</span>
+                    <span className="text-3xl font-serif font-bold text-foreground">{maxMembers}</span>
                     <button
                       type="button"
                       onClick={() => setMaxMembers((n) => Math.min(100, n + 1))}
@@ -269,7 +269,7 @@ export function EditGroupDialog({
             size="lg"
             onClick={save}
             disabled={saving}
-            className="btn-shine w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
+            className="w-full rounded-full gradient-sunset text-white font-bold cursor-pointer"
           >
             {saving ? 'Enregistrement…' : 'Enregistrer'}
           </Button>

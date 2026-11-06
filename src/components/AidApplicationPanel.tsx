@@ -110,7 +110,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
   const stepNumber = STEPS.indexOf(step as (typeof STEPS)[number]) + 1;
   const common = { onBack: goBack, title: TITLE, ...(stepNumber > 0 ? { step: stepNumber, totalSteps: STEPS.length } : {}) };
   const nextButton = (enabled: boolean, label = 'Suivant') => (
-    <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>
+    <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>
       {label}
     </Button>
   );
@@ -185,7 +185,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
         )}
 
         <div className="space-y-3">
-          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">Comment ça marche</p>
+          <p className="text-[13px] font-bold text-muted-foreground">Comment ça marche</p>
           {[
             ['Le montant', 'Dites combien il vous faut.'],
             ['Votre activité', 'Expliquez ce que vous ferez de l’argent.'],
@@ -193,7 +193,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
             ['L’étude', 'Notre équipe décide et vous verse l’aide si elle est accordée.'],
           ].map(([label, text], i) => (
             <div key={label} className="flex items-start gap-3">
-              <span className="w-8 h-8 rounded-full bg-brand/10 text-brand text-sm font-black flex items-center justify-center shrink-0">{i + 1}</span>
+              <span className="w-8 h-8 rounded-full bg-brand/10 text-brand text-sm font-bold flex items-center justify-center shrink-0">{i + 1}</span>
               <div>
                 <p className="text-sm font-bold text-foreground">{label}</p>
                 <p className="text-[13px] text-muted-foreground">{text}</p>
@@ -333,7 +333,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
       heading="Vérifiez votre dossier"
       desc="Touchez « Modifier » pour corriger une réponse."
       footer={
-        <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || sending !== 'idle'}>
+        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || sending !== 'idle'}>
           {sending === 'uploading' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la vidéo…</>
             : sending === 'submitting' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dépôt du dossier…</>
             : `Déposer et payer ${fcfa(applicationFee)}`}

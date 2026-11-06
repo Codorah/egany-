@@ -346,7 +346,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
           <Skeleton className="h-16 rounded-2xl" />
           <Skeleton className="h-16 rounded-2xl" />
         </div>
-        <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+        <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
           <Skeleton className="h-4 w-32" />
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center justify-between gap-3 py-1.5">
@@ -375,7 +375,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-foreground truncate">
+            <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight text-foreground truncate">
               {isManager ? t('contributions_management') : t('my_contributions_title')}
             </h1>
             <p className="text-[13px] text-muted-foreground font-medium truncate">
@@ -406,32 +406,32 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
       </div>
 
       {isManager && !embedded && (
-        <div className="glass-card rounded-3xl p-4 shadow-soft border border-border/70">
+        <div className="glass-card rounded-2xl p-4 shadow-soft border border-border/70">
           <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
             <Wallet className="w-4 h-4 text-primary-ink" />
             {t('circle_accounting')}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="p-3 rounded-2xl bg-success-soft border border-secondary/20">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-secondary">{t('total_collected_in')}</p>
-              <p className="text-lg font-serif font-black text-secondary mt-0.5">{totalCollected.toLocaleString()} {group.currency}</p>
+              <p className="text-[13px] font-bold text-secondary">{t('total_collected_in')}</p>
+              <p className="text-lg font-serif font-bold text-secondary mt-0.5">{totalCollected.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-2xl bg-brand/10 border border-brand/20">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-brand">{t('total_distributed_out')}</p>
-              <p className="text-lg font-serif font-black text-brand mt-0.5">{totalDistributed.toLocaleString()} {group.currency}</p>
+              <p className="text-[13px] font-bold text-brand">{t('total_distributed_out')}</p>
+              <p className="text-lg font-serif font-bold text-brand mt-0.5">{totalDistributed.toLocaleString()} {group.currency}</p>
             </div>
             <div className="p-3 rounded-2xl bg-muted border border-border">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground">{t('available_funds')}</p>
-              <p className="text-lg font-serif font-black text-foreground mt-0.5">{availableFunds.toLocaleString()} {group.currency}</p>
+              <p className="text-[13px] font-bold text-muted-foreground">{t('available_funds')}</p>
+              <p className="text-lg font-serif font-bold text-foreground mt-0.5">{availableFunds.toLocaleString()} {group.currency}</p>
             </div>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className={`glass-card rounded-3xl shadow-soft border border-border/70 overflow-hidden ${isManager ? "lg:col-span-2" : "lg:col-span-3"}`}>
+        <div className={`glass-card rounded-2xl shadow-soft border border-border/70 overflow-hidden ${isManager ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <div className="p-4 sm:p-5 pb-3 space-y-1">
-            <h2 className="text-base font-serif font-black text-foreground">{isManager ? t('payment_history') : t('my_payments')}</h2>
+            <h2 className="text-base font-serif font-bold text-foreground">{isManager ? t('payment_history') : t('my_payments')}</h2>
             <p className="text-[13px] text-muted-foreground">
               {isManager ? t('contributions_list_desc') : t('my_contributions_desc')}
             </p>
@@ -542,9 +542,9 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
         </div>
 
         {isManager && (
-          <div className="glass-card rounded-3xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
+          <div className="glass-card rounded-2xl shadow-soft border border-border/70 p-4 sm:p-5 space-y-3">
             <div>
-              <h2 className="text-base font-serif font-black text-foreground">{t('circle_members')}</h2>
+              <h2 className="text-base font-serif font-bold text-foreground">{t('circle_members')}</h2>
               <p className="text-[13px] text-muted-foreground">{t('init_contribution_desc')}</p>
             </div>
             <div className="space-y-2">
@@ -572,7 +572,7 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
                       <Button
                         size="sm"
                         disabled={paying}
-                        className="btn-shine h-9 text-[13px] px-3 rounded-xl gap-1.5 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
+                        className="h-9 text-[13px] px-3 rounded-xl gap-1.5 bg-secondary hover:bg-secondary/90 cursor-pointer disabled:opacity-60"
                         onClick={() => handleRegisterPayment(member.uid, member.displayName, member.email)}
                       >
                         {paying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
@@ -590,12 +590,12 @@ export function ContributionsManager({ group, user, onBack, onNavigateToVerifica
 
       {/* Dialogue de vérification d'identité juste-à-temps */}
       <Dialog open={showKycPrompt} onOpenChange={setShowKycPrompt}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 text-center space-y-3 bg-card border border-border">
+        <DialogContent className="max-w-sm rounded-2xl p-6 text-center space-y-3 bg-card border border-border">
           <div className="w-14 h-14 rounded-2xl bg-warning-soft text-primary-ink mx-auto flex items-center justify-center">
             <AlertCircle className="w-7 h-7" />
           </div>
           <DialogHeader className="space-y-1">
-            <DialogTitle className="font-serif text-lg font-black text-foreground">
+            <DialogTitle className="font-serif text-lg font-bold text-foreground">
               Vérification d'identité requise
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
@@ -683,7 +683,7 @@ function DeclarePaymentDialog({
           </Button>
         }
       />
-      <DialogContent className="rounded-3xl">
+      <DialogContent className="rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-serif">{t('declare_payment')}</DialogTitle>
           <DialogDescription>
@@ -704,7 +704,7 @@ function DeclarePaymentDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" className="rounded-xl cursor-pointer" onClick={() => setIsOpen(false)}>{t('cancel')}</Button>
-            <Button type="submit" disabled={isSubmitting} className="btn-shine rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
+            <Button type="submit" disabled={isSubmitting} className="rounded-xl gap-1.5 cursor-pointer disabled:opacity-60">
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {t('send_proof')}
             </Button>

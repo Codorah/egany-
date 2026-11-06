@@ -9,6 +9,7 @@ import { fetchActiveServices, fetchMyMarketplaceRequests, providerLabel, submitM
 import { CreditApplication, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
 import { CreditFlow } from './CreditApplicationPanel';
 import { AidFlow } from './AidApplicationPanel';
+import { AID_ENABLED } from '@/lib/features';
 import { AidApplication, fetchAidApplicationFee, fetchMyAidApplications } from '@/lib/aid';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -96,7 +97,9 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   useEffect(() => {
     if (loading || initialHandled || !initialOpen) return;
     setInitialHandled(true);
-    if (initialOpen === 'aid') setOpenFlow({ kind: 'aid' });
+    if (initialOpen === 'aid') {
+      if (AID_ENABLED) setOpenFlow({ kind: 'aid' });
+    }
     else {
       const credit = services.find((s) => s.category === 'credit');
       if (credit) setOpenFlow({ kind: 'credit', service: credit });
@@ -206,14 +209,15 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   return (
     <div className="space-y-5 pb-20">
       <div>
-        <h1 className="text-[26px] leading-tight font-serif font-black text-foreground tracking-tight">{t('marketplace')}</h1>
+        <h1 className="text-[26px] leading-tight font-serif font-bold text-foreground tracking-tight">{t('marketplace')}</h1>
         <p className="text-[14px] text-muted-foreground font-medium mt-1">{t('mkt_header_subtitle')}</p>
       </div>
 
+      {(AID_ENABLED || aidApps.length > 0) && (
       <button
         type="button"
         onClick={() => setOpenFlow({ kind: 'aid' })}
-        className="press-row w-full text-left rounded-3xl gradient-sunset text-white p-5 shadow-elevated cursor-pointer"
+        className="press-row w-full text-left rounded-2xl gradient-sunset text-white p-5 shadow-elevated cursor-pointer"
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
@@ -228,13 +232,14 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         <p className="mt-3 text-[13px] leading-relaxed opacity-95">
           Besoin d'argent pour votre activité ? Dites combien, présentez-vous en vidéo : notre équipe peut vous offrir le montant.
         </p>
-        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary-ink px-4 h-9 text-[13px] font-black">
+        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary-ink px-4 h-9 text-[13px] font-bold">
           {aidStatus ? aidStatus.label : 'Demander un coup de pouce'}
         </span>
       </button>
+      )}
 
       {services.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6 rounded-3xl border border-border">
+        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6 rounded-2xl border border-border">
           <PackageSearch className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm font-bold text-foreground">{t('mkt_no_service_title')}</p>
           <p className="text-xs text-muted-foreground max-w-xs">{t('mkt_no_service_desc')}</p>
@@ -242,7 +247,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
       ) : (
         <div className="space-y-2.5">
           <p className="text-[13px] font-bold text-muted-foreground px-1">Autres services</p>
-          <div className="rounded-3xl border border-border bg-card divide-y divide-border overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
             {services.map((service) => {
               const Icon = ICONS[service.iconName] || Store;
               const existingRequest = service.category === 'credit' ? undefined : requestForService(service.id);
@@ -311,7 +316,7 @@ function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputat
         existingRequest || !eligible ? (
           <Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>
         ) : (
-          <Button className="btn-shine w-full h-13 text-base font-bold rounded-2xl" onClick={onSubmit} disabled={isSubmitting}>
+          <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={onSubmit} disabled={isSubmitting}>
             {isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending_label')}</> : service.actionLabel}
           </Button>
         )
@@ -321,7 +326,7 @@ function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputat
 
       {service.requirements && service.requirements.length > 0 && (
         <div className="space-y-2.5">
-          <p className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{t('mkt_requirements_title')}</p>
+          <p className="text-[13px] font-bold text-muted-foreground">{t('mkt_requirements_title')}</p>
           {service.requirements.map((req, idx) => (
             <div key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
               <CheckCircle2 className="w-5 h-5 text-success shrink-0" />

@@ -71,14 +71,14 @@ export function BiometricPrompt({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3E2F24]/60 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3E2F24]/60">
 
         {/* Animated Card Container */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="w-full max-w-sm bg-card rounded-3xl border border-border shadow-2xl p-6 relative overflow-hidden"
+          className="w-full max-w-sm bg-card rounded-2xl border border-border shadow-2xl p-6 relative overflow-hidden"
         >
           {/* Subtle gold decoration */}
           <div className="absolute top-[-10%] left-[-10%] w-24 h-24 bg-brand/5 rounded-full blur-xl pointer-events-none" />
@@ -97,14 +97,14 @@ export function BiometricPrompt({
             {/* Logo/Icon Header */}
             <div className="flex justify-center gap-1.5 items-center text-brand">
               <Lock className="w-4 h-4 text-secondary" />
-              <span className="text-[13px] font-black uppercase tracking-widest text-muted-foreground">
+              <span className="text-[13px] font-bold text-muted-foreground">
                 {t('biom_header_label')}
               </span>
             </div>
 
             {/* Main Descriptive text */}
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-foreground leading-tight">
+              <h3 className="text-lg font-bold text-foreground leading-tight">
                 {mode === 'register' ? t('biom_register_title') : t('biom_auth_title')}
               </h3>
               <p className="text-xs text-muted-foreground px-4 leading-relaxed">
@@ -248,7 +248,7 @@ export function BiometricPrompt({
 
               {/* Scanning details / feedback text */}
               <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className={`text-[13px] font-black tracking-wide uppercase transition-colors duration-300 ${
+                <span className={`text-[13px] font-bold transition-colors duration-300 ${
                   scanState === 'scanning'
                     ? 'text-secondary animate-pulse'
                     : scanState === 'success'

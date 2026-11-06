@@ -18,7 +18,7 @@ export function ChipPicker({ options, value, onChange, ariaLabel }: ChipPickerPr
           className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
             value === opt.value
               ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-white dark:bg-card text-foreground border-border hover:bg-muted/60'
+              : 'bg-card text-foreground border-border hover:bg-muted/60'
           }`}
         >
           {opt.label}

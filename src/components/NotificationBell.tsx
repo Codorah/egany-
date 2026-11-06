@@ -48,7 +48,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
           )}
         </Button>
       } />
-      <DropdownMenuContent align="end" className="w-[320px] p-0 overflow-hidden rounded-3xl bg-card shadow-xl border border-border">
+      <DropdownMenuContent align="end" className="w-[320px] p-0 overflow-hidden rounded-2xl bg-card shadow-xl border border-border">
         <div className="flex items-center justify-between p-4 bg-chip/15">
           <h3 className="font-serif font-bold text-sm text-foreground">{t('nb_title')}</h3>
           {unreadCount > 0 && (

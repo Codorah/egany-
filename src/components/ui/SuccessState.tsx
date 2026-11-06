@@ -37,7 +37,7 @@ export function SuccessState({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="glass-card rounded-3xl border border-secondary/20 p-8 sm:p-10 text-center flex flex-col items-center justify-center max-w-md mx-auto my-6 space-y-4"
+      className="glass-card rounded-2xl border border-secondary/20 p-8 sm:p-10 text-center flex flex-col items-center justify-center max-w-md mx-auto my-6 space-y-4"
     >
       {/* Le rendu de marque porte déjà la coche : un second pictogramme
           animé au-dessus ferait redite, et son vert vif jure avec l olive
@@ -51,7 +51,7 @@ export function SuccessState({
       </motion.div>
 
       <div className="space-y-1.5">
-        <h3 className="text-lg font-serif font-black text-foreground">{title}</h3>
+        <h3 className="text-lg font-serif font-bold text-foreground">{title}</h3>
         {description && (
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">{description}</p>
         )}
@@ -66,7 +66,7 @@ export function SuccessState({
           {actionText && onAction && (
             <Button
               onClick={onAction}
-              className="btn-shine w-full rounded-2xl h-11 font-bold bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
+              className="w-full rounded-2xl h-11 font-bold bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
             >
               {actionText}
             </Button>

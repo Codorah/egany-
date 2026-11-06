@@ -1,10 +1,10 @@
 /* ================================================================
    EGANYÉ — DESIGN SYSTEM
    ================================================================
-   Polices : Poppins (titres, montants) + Nunito (texte courant)
+   Police : Nunito seule, en trois graisses. Une app se lit, elle ne s'affiche pas.
    Palette : Terracotta · Olive · Crème · Beige · Brun · Or discret
    ================================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -13,8 +13,8 @@
 
 @theme inline {
     --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-    --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Nunito', ui-sans-serif, system-ui, sans-serif;
 
     /* ── Eganyé Brand Tokens ── */
     --color-eganye-terracotta: #C96F4A;
@@ -104,15 +104,15 @@
      Ambre doux   #B5842A → en attente, warning
    ================================================================ */
 :root {
-    --background: #F8F0E4;
+    --background: #F8F6F3;
     --foreground: #3E2F24;
-    --card: #FFFDFC;
+    --card: #FFFFFF;
     --card-foreground: #3E2F24;
-    --popover: #FFFDFC;
+    --popover: #FFFFFF;
     --popover-foreground: #3E2F24;
 
     /* Action principale — terracotta */
-    --primary: #C96F4A;
+    --primary: #A95636;
     --primary-foreground: #FFFFFF;
     /* Orange pour le TEXTE : plus foncé que --primary (contraste AA sur clair) */
     --primary-ink: #A5502B;
@@ -121,16 +121,16 @@
     --secondary: #55704D;
     --secondary-foreground: #FFFFFF;
 
-    --muted: #EFE2D0;
+    --muted: #F1EDE8;
     --muted-foreground: #6B5744;
 
-    --accent: #EFE2D0;
+    --accent: #F1EDE8;
     --accent-foreground: #3E2F24;
 
     --destructive: #B4483F;
-    --border: #E4D3BC;
-    --input: #DCC7A9;
-    --ring: #C96F4A;
+    --border: #E9E4DD;
+    --input: #D8D1C7;
+    --ring: #A95636;
 
     --brand: #C96F4A;
     --brand-deep: #A95636;
@@ -145,7 +145,7 @@
     --warning-soft: #FAEFD9;
     --info: #3D7099;
     --info-soft: #EAF2F8;
-    --chip: #EFE2D0;
+    --chip: #F1EDE8;
     --ink-soft: #6B5744;
     --gold: #C49A55;
 
@@ -154,15 +154,15 @@
     --chart-3: #8CA087;
     --chart-4: #6B5744;
     --chart-5: #C49A55;
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --sidebar: #F8F0E4;
+    --sidebar: #F8F6F3;
     --sidebar-foreground: #3E2F24;
     --sidebar-primary: #C96F4A;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #EFE2D0;
+    --sidebar-accent: #F1EDE8;
     --sidebar-accent-foreground: #3E2F24;
-    --sidebar-border: #E4D3BC;
+    --sidebar-border: #E9E4DD;
     --sidebar-ring: #C96F4A;
 }
 
@@ -261,16 +261,12 @@
 
 /* Bottom nav: clean, barely transparent */
 .glass-nav {
-  background: rgba(255, 253, 252, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--card);
   border-top: 1px solid var(--border);
 }
 
 .dark .glass-nav {
-  background: rgba(33, 24, 16, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--card);
   border-top: 1px solid var(--border);
 }
 
@@ -286,7 +282,6 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 1.5rem;
-  box-shadow: 0 2px 8px -2px rgba(62, 47, 36, 0.06), 0 8px 24px -8px rgba(62, 47, 36, 0.12);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -295,30 +290,30 @@
    ================================================================ */
 
 .gradient-sunset {
-  background: linear-gradient(135deg, #C96F4A 0%, #B8623F 55%, #A95636 100%);
+  background: var(--primary);
 }
 
 /* Hero/solde cards — mêmes teintes que .gradient-sunset, dégradé diagonal
    légèrement plus doux (via un point médian distinct) pour les grandes
    surfaces pleine largeur. */
 .gradient-sunset-hero {
-  background: linear-gradient(to bottom right, #C96F4A 0%, #BD6642 55%, #AB5837 100%);
+  background: var(--primary);
 }
 
 .gradient-olive {
-  background: linear-gradient(135deg, #566C50 0%, #718A68 55%, #8CA087 100%);
+  background: var(--secondary);
 }
 
 .gradient-emerald {
-  background: linear-gradient(135deg, #566C50 0%, #718A68 55%, #8CA087 100%);
+  background: var(--secondary);
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, #A97A1E 0%, #C49A55 50%, #D4AD6A 100%);
+  background: var(--gold);
 }
 
 .gradient-card {
-  background: linear-gradient(135deg, #2C2117 0%, #3A2C1E 50%, #211810 100%);
+  background: var(--card);
 }
 
 /* ================================================================
@@ -326,23 +321,23 @@
    ================================================================ */
 
 .shadow-soft {
-  box-shadow: 0 1px 3px 0 rgba(62, 47, 36, 0.05), 0 4px 14px -10px rgba(62, 47, 36, 0.28);
+  box-shadow: none;
 }
 
 .shadow-elevated {
-  box-shadow: 0 2px 6px -2px rgba(62, 47, 36, 0.08), 0 14px 30px -16px rgba(62, 47, 36, 0.4);
+  box-shadow: 0 2px 8px rgba(43, 38, 34, 0.08);
 }
 
 .shadow-card {
-  box-shadow: 0 1px 2px 0 rgba(62, 47, 36, 0.04), 0 6px 20px -6px rgba(62, 47, 36, 0.1);
+  box-shadow: none;
 }
 
 .glow-orange {
-  box-shadow: 0 8px 20px -8px rgba(169, 86, 54, 0.55);
+  box-shadow: none;
 }
 
 .glow-olive {
-  box-shadow: 0 8px 20px -8px rgba(113, 138, 104, 0.5);
+  box-shadow: none;
 }
 
 .glow-emerald {
@@ -413,39 +408,6 @@ button.press-row:active,
   summary:active,
   .press-row:active {
     transform: none;
-  }
-}
-
-/* ================================================================
-   PRIMARY CTA SHINE — soft light sweep on hover
-   ================================================================ */
-
-.btn-shine {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.btn-shine::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
-  transform: translateX(-120%);
-  pointer-events: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-shine:hover::after {
-    transform: translateX(120%);
-    transition: transform 650ms ease;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn-shine::after {
-    display: none;
   }
 }
 
