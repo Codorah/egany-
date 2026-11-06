@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Group, UserProfile, PersonalVault } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AmountDisplay } from './ui/AmountDisplay';
 import { SuccessState } from './ui/SuccessState';
 import { ErrorState } from './ui/ErrorState';
 import { EganyeIcon, type EganyeIconName } from './ui/EganyeIcon';
-import { EganyeIllustration } from './ui/EganyeIllustration';
+import { AmountField, FlowNotice, FlowRow, FlowScreen } from './ui/FlowScreen';
+import { ConfirmationBottomSheet } from './ui/ConfirmationBottomSheet';
 import { EmptyState } from './ui/EmptyState';
 import { EganyeProgress } from './ui/EganyeProgress';
 import { LoadingScreen } from './ui/LoadingScreen';
@@ -38,14 +37,20 @@ const TIERS: BankTier[] = ['starter', 'growth', 'unlimited'];
 
 type ProjectCategory = 'scolaire' | 'voyage' | 'maison' | 'urgence' | 'commerce' | 'autre';
 
-const PROJECT_CATEGORIES: { id: ProjectCategory; labelKey: string; icon: EganyeIconName; bg: string; color: string }[] = [
-  { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies', bg: 'bg-success-soft', color: 'text-secondary' },
-  { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel', bg: 'bg-info-soft', color: 'text-info' },
-  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house', bg: 'bg-[#FFF2E8]', color: 'text-primary-ink' },
-  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield', bg: 'bg-[#FDF0EB]', color: 'text-primary-ink' },
-  { id: 'commerce', labelKey: 'bank_project_commerce', icon: 'coin', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
-  { id: 'autre', labelKey: 'bank_project_autre', icon: 'savings', bg: 'bg-[#F4EFE6]', color: 'text-[#3E2F24]' },
+const PROJECT_CATEGORIES: { id: ProjectCategory; labelKey: string; icon: EganyeIconName }[] = [
+  { id: 'scolaire', labelKey: 'bank_project_scolaire', icon: 'studies' },
+  { id: 'voyage', labelKey: 'bank_project_voyage', icon: 'travel' },
+  { id: 'maison', labelKey: 'bank_project_maison', icon: 'house' },
+  { id: 'urgence', labelKey: 'bank_project_urgence', icon: 'shield' },
+  { id: 'commerce', labelKey: 'bank_project_commerce', icon: 'coin' },
+  { id: 'autre', labelKey: 'bank_project_autre', icon: 'savings' },
 ];
+
+const GOAL_SUGGESTIONS = [50000, 100000, 250000, 500000];
+/** Ajoutés au montant saisi, jamais à sa place. */
+const ADD_AMOUNTS = [10000, 25000, 50000];
+
+const fcfa = (value: number) => `${value.toLocaleString('fr-FR')} FCFA`;
 
 export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const { t } = useLanguage();
@@ -55,8 +60,9 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const [subscribing, setSubscribing] = useState<BankTier | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  const [showBalance, setShowBalance] = useState(true);
   const [showAllReservations, setShowAllReservations] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
+  const [confirmTier, setConfirmTier] = useState<BankTier | null>(null);
 
   // Creation Flow — 4-step wizard
   const [view, setView] = useState<'list' | 'create'>('list');
@@ -64,7 +70,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const [createProject, setCreateProject] = useState<ProjectCategory>('scolaire');
   const [createProjectCustom, setCreateProjectCustom] = useState('');
   const [createAmount, setCreateAmount] = useState('100000');
-  const [createInitialDeposit, setCreateInitialDeposit] = useState('');
   const [createDeadline, setCreateDeadline] = useState('');
   const [justCreated, setJustCreated] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -117,6 +122,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       toast.error(err.message || t('bank_subscribe_error'));
     } finally {
       setSubscribing(null);
+      setConfirmTier(null);
     }
   };
 
@@ -125,7 +131,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     setCreateProject(presetProject || 'scolaire');
     setCreateProjectCustom('');
     setCreateAmount(presetAmount || '100000');
-    setCreateInitialDeposit('');
     // Default deadline: 3 months from now
     const d = new Date();
     d.setMonth(d.getMonth() + 3);
@@ -147,7 +152,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     try {
       const lockDays = Math.max(1, Math.ceil((new Date(createDeadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
       const goalAmount = parseFloat(createAmount) || 0;
-      const initialAmt = parseFloat(createInitialDeposit) || 0;
 
       const result = await createPersonalVault({
         name: getProjectLabel(),
@@ -155,14 +159,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
         lockDays,
       });
       if (!result.success) throw new Error(result.message);
-
-      // If initial deposit specified and user has sufficient wallet balance, deposit it right away
-      if (initialAmt > 0 && result.vaultId && initialAmt <= user.walletBalance) {
-        const deposit = await depositToVault(result.vaultId, initialAmt);
-        if (!deposit.success) {
-          toast.warning(deposit.message || "Le premier versement n'a pas pu être fait. Réessayez depuis votre coffre.");
-        }
-      }
 
       const freshVaults = await fetchMyVaults(user.uid);
       setVaults(freshVaults);
@@ -189,11 +185,6 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       const amt = parseFloat(createAmount);
       if (!amt || amt <= 0) {
         toast.error(t('bank_invalid_amount_error') || "Veuillez entrer un montant cible valide.");
-        return;
-      }
-      const initial = parseFloat(createInitialDeposit) || 0;
-      if (initial > user.walletBalance) {
-        toast.error(t('mb_toast_start_too_high'));
         return;
       }
       setCreateStep(3);
@@ -327,24 +318,14 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     return parsed > 0 ? parsed : Math.max(vault.balance, 100000);
   };
 
-  const getVaultIconInfo = (vaultName: string, description?: string) => {
+  const getVaultIcon = (vaultName: string, description?: string): EganyeIconName => {
     const text = `${vaultName} ${description || ''}`.toLowerCase();
-    if (text.includes('voyag') || text.includes('trave') || text.includes('vol') || text.includes('vacanc')) {
-      return { icon: 'travel' as const, bg: 'bg-info-soft text-info' };
-    }
-    if (text.includes('étud') || text.includes('etud') || text.includes('scol') || text.includes('ecol') || text.includes('univ')) {
-      return { icon: 'studies' as const, bg: 'bg-success-soft text-secondary' };
-    }
-    if (text.includes('urgenc') || text.includes('santé') || text.includes('sante') || text.includes('secours') || text.includes('imprévu')) {
-      return { icon: 'shield' as const, bg: 'bg-[#FDF0EB] text-primary-ink' };
-    }
-    if (text.includes('maison') || text.includes('logem') || text.includes('loyer') || text.includes('habit')) {
-      return { icon: 'house' as const, bg: 'bg-[#FFF2E8] text-primary-ink' };
-    }
-    if (text.includes('commerc') || text.includes('affair') || text.includes('boutiqu')) {
-      return { icon: 'coin' as const, bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
-    }
-    return { icon: 'savings' as const, bg: 'bg-[#F4EFE6] text-[#3E2F24]' };
+    if (text.includes('voyag') || text.includes('trave') || text.includes('vol') || text.includes('vacanc')) return 'travel';
+    if (text.includes('étud') || text.includes('etud') || text.includes('scol') || text.includes('ecol') || text.includes('univ')) return 'studies';
+    if (text.includes('urgenc') || text.includes('santé') || text.includes('sante') || text.includes('secours') || text.includes('imprévu')) return 'shield';
+    if (text.includes('maison') || text.includes('logem') || text.includes('loyer') || text.includes('habit')) return 'house';
+    if (text.includes('commerc') || text.includes('affair') || text.includes('boutiqu')) return 'coin';
+    return 'savings';
   };
 
   // Calculations for Total Savings — jamais de chiffre inventé : à 0 coffre,
@@ -365,731 +346,416 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     return <ErrorState onRetry={loadVaults} />;
   }
 
-  // ── WIZARD CRÉATION RÉSERVATION (Section 30) ──
-  if (view === 'create') {
-    return (
-      <div className="space-y-5 pb-20 max-w-lg mx-auto">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={closeCreateFlow} className="rounded-xl shrink-0 cursor-pointer">
-            <EganyeIcon name="chevron-left" size={16} />
-          </Button>
-          <div>
-            <h1 className="text-lg font-serif font-bold text-foreground">{t('bank_create_page_title') || "Créer une réserve d'argent"}</h1>
-            <p className="text-xs text-muted-foreground">Mets de côté à ton rythme en toute sécurité</p>
-          </div>
-        </div>
+  const dateLong = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        {justCreated ? (
+  // ── NOUVEAU COFFRE : une question par écran ──
+  if (view === 'create') {
+    if (justCreated) {
+      return (
+        <FlowScreen title="Nouveau coffre" onBack={closeCreateFlow}>
           <SuccessState
-            title="Épargne créée avec succès !"
-            description="Votre argent est mis en sécurité. Vous pouvez maintenant alimenter ce coffre selon vos objectifs."
-            actionText="Ajouter de l'argent maintenant"
+            title="Coffre créé"
+            description="Ajoutez-y de l'argent quand vous voulez."
+            actionText="Ajouter de l'argent"
             onAction={() => {
               closeCreateFlow();
               if (createdVault) {
                 setActiveVault(createdVault);
-                setActionAmount(createAmount);
+                setActionAmount('');
               }
             }}
             secondaryActionText="Voir mon épargne"
             onSecondaryAction={closeCreateFlow}
           />
-        ) : (
-          <>
-            {/* Step progress bar */}
+        </FlowScreen>
+      );
+    }
+
+    const next = (
+      <Button onClick={handleCreateNextStep} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
+        {t('mb_continue')}
+      </Button>
+    );
+
+    if (createStep === 1) {
+      return (
+        <FlowScreen title="Nouveau coffre" step={1} totalSteps={CREATE_TOTAL_STEPS} heading="Pour quel projet ?" onBack={closeCreateFlow} footer={next}>
+          <div role="radiogroup" aria-label="Projet" className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+            {PROJECT_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                role="radio"
+                aria-checked={createProject === cat.id}
+                onClick={() => setCreateProject(cat.id)}
+                className="w-full min-h-[52px] flex items-center gap-3 px-4 text-left cursor-pointer active:bg-muted transition-colors duration-150"
+              >
+                <EganyeIcon name={cat.icon} size={20} className="text-muted-foreground shrink-0" />
+                <span className="flex-1 text-[15px] font-semibold text-foreground">{t(cat.labelKey) || cat.id}</span>
+                {createProject === cat.id && <EganyeIcon name="check" size={18} strokeWidth={2.5} className="text-primary-ink shrink-0" />}
+              </button>
+            ))}
+          </div>
+
+          {createProject === 'autre' && (
             <div className="space-y-1.5">
-              <div className="flex gap-1.5">
-                {Array.from({ length: CREATE_TOTAL_STEPS }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                      i < createStep ? 'bg-primary' : 'bg-muted'
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-xs font-bold text-muted-foreground">
-                Étape {createStep} sur {CREATE_TOTAL_STEPS}
-              </p>
+              <Label htmlFor="vault_custom_name" className="text-sm font-bold text-foreground">Nom de votre projet</Label>
+              <Input
+                id="vault_custom_name"
+                value={createProjectCustom}
+                onChange={(e) => setCreateProjectCustom(e.target.value)}
+                placeholder="Ex : achat d'une moto"
+                className="rounded-xl h-12 text-base"
+                autoFocus
+              />
             </div>
+          )}
+        </FlowScreen>
+      );
+    }
 
-            <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-soft space-y-5">
-              {/* ÉTAPE 1 : Pourquoi épargnes-tu ? */}
-              {createStep === 1 && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-base font-serif font-bold text-foreground">1. Pourquoi épargnes-tu ?</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Choisis le thème qui correspond à ton projet.</p>
-                  </div>
+    if (createStep === 2) {
+      return (
+        <FlowScreen title="Nouveau coffre" step={2} totalSteps={CREATE_TOTAL_STEPS} heading="Combien voulez-vous atteindre ?" onBack={handleCreatePrevStep} footer={next}>
+          <AmountField value={createAmount} onChange={setCreateAmount} suggestions={GOAL_SUGGESTIONS} />
+        </FlowScreen>
+      );
+    }
 
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {PROJECT_CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setCreateProject(cat.id)}
-                        className={`p-3.5 rounded-2xl border-2 text-left font-bold text-xs sm:text-sm cursor-pointer transition-all flex flex-col gap-2 ${
-                          createProject === cat.id
-                            ? 'border-primary bg-primary/5 text-primary-ink'
-                            : 'border-border text-foreground hover:bg-muted/60'
-                        }`}
-                      >
-                        <div className={`w-9 h-9 rounded-xl ${cat.bg} ${cat.color} flex items-center justify-center shrink-0`}>
-                          <EganyeIcon name={cat.icon} size={18} />
-                        </div>
-                        <span className="truncate">{t(cat.labelKey) || cat.id}</span>
-                      </button>
-                    ))}
-                  </div>
+    if (createStep === 3) {
+      return (
+        <FlowScreen title="Nouveau coffre" step={3} totalSteps={CREATE_TOTAL_STEPS} heading="Jusqu'à quand ?" onBack={handleCreatePrevStep} footer={next}>
+          <div className="space-y-1.5">
+            <Label htmlFor="vault_deadline" className="text-sm font-bold text-foreground">Date de déblocage</Label>
+            <Input
+              id="vault_deadline"
+              type="date"
+              min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
+              value={createDeadline}
+              onChange={(e) => setCreateDeadline(e.target.value)}
+              className="rounded-xl h-12 text-base"
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: t('mb_dur_1m'), months: 1 },
+              { label: t('mb_dur_3m'), months: 3 },
+              { label: t('mb_dur_6m'), months: 6 },
+              { label: t('mb_dur_1y'), months: 12 },
+            ].map((dur) => (
+              <button
+                key={dur.label}
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  d.setMonth(d.getMonth() + dur.months);
+                  setCreateDeadline(d.toISOString().slice(0, 10));
+                }}
+                className="min-h-11 text-center text-sm font-bold rounded-xl border border-border bg-card text-foreground cursor-pointer active:bg-muted transition-colors duration-150"
+              >
+                {dur.label}
+              </button>
+            ))}
+          </div>
+          <FlowNotice>{t('mb_reserved_desc')}</FlowNotice>
+        </FlowScreen>
+      );
+    }
 
-                  {createProject === 'autre' && (
-                    <div className="space-y-1.5 pt-1">
-                      <Label className="text-xs font-bold text-foreground">Nom personnalisé de ton projet</Label>
-                      <Input
-                        value={createProjectCustom}
-                        onChange={(e) => setCreateProjectCustom(e.target.value)}
-                        placeholder="Ex: Achat d'une moto, Mariage..."
-                        className="rounded-xl h-11"
-                        autoFocus
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ÉTAPE 2 : Montant cible & départ */}
-              {createStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-base font-serif font-bold text-foreground">2. Combien veux-tu atteindre ?</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Définis ton objectif d'épargne.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">Montant cible (FCFA)</Label>
-                    <Input
-                      type="number" inputMode="numeric"
-                      min={1000}
-                      step={5000}
-                      value={createAmount}
-                      onChange={(e) => setCreateAmount(e.target.value)}
-                      placeholder="100 000"
-                      className="rounded-xl h-14 text-2xl font-serif font-bold"
-                      autoFocus
-                    />
-                    <div className="flex gap-2 flex-wrap pt-1">
-                      {['50000', '100000', '250000', '500000', '1000000'].map((amt) => (
-                        <button
-                          key={amt}
-                          type="button"
-                          onClick={() => setCreateAmount(amt)}
-                          className={`py-1 px-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                            createAmount === amt
-                              ? 'border-primary bg-primary/10 text-primary-ink'
-                              : 'border-border text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {parseInt(amt).toLocaleString()}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-2 border-t border-border/70">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold text-foreground">Dépôt de départ immédiat (optionnel)</Label>
-                      <span className="text-[13px] text-muted-foreground">
-                        Dispo : {(user.walletBalance || 0).toLocaleString()} FCFA
-                      </span>
-                    </div>
-                    <Input
-                      type="number" inputMode="numeric"
-                      min={0}
-                      value={createInitialDeposit}
-                      onChange={(e) => setCreateInitialDeposit(e.target.value)}
-                      placeholder="0 FCFA"
-                      className="rounded-xl h-11 font-medium"
-                    />
-                    <p className="text-[13px] text-muted-foreground">
-                      {t('mb_start_hint')}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* ÉTAPE 3 : Date de déblocage & Règle */}
-              {createStep === 3 && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-base font-serif font-bold text-foreground">3. Jusqu'à quand épargnes-tu ?</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">L'argent sera réservé pour protéger ton projet.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-foreground">Date de déblocage</Label>
-                    <Input
-                      type="date"
-                      min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
-                      value={createDeadline}
-                      onChange={(e) => setCreateDeadline(e.target.value)}
-                      className="rounded-xl h-12 text-sm font-medium"
-                      autoFocus
-                    />
-
-                    {/* Quick shortcuts */}
-                    <div className="grid grid-cols-4 gap-1.5 pt-1">
-                      {[
-                        { label: t('mb_dur_1m'), months: 1 },
-                        { label: t('mb_dur_3m'), months: 3 },
-                        { label: t('mb_dur_6m'), months: 6 },
-                        { label: t('mb_dur_1y'), months: 12 },
-                      ].map((dur) => (
-                        <button
-                          key={dur.label}
-                          type="button"
-                          onClick={() => {
-                            const d = new Date();
-                            d.setMonth(d.getMonth() + dur.months);
-                            setCreateDeadline(d.toISOString().slice(0, 10));
-                          }}
-                          className="py-1.5 text-center text-xs font-bold rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
-                        >
-                          {dur.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Règle de protection */}
-                  <div className="p-3.5 rounded-2xl bg-[#FFF8F2] dark:bg-card border border-primary/20 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary-ink flex items-center justify-center shrink-0 mt-0.5">
-                      <EganyeIcon name="shield" size={16} />
-                    </div>
-                    <div className="text-xs space-y-1">
-                      <p className="font-bold text-primary-ink">{t('mb_reserved_title')}</p>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {t('mb_reserved_desc')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ÉTAPE 4 : Confirmation */}
-              {createStep === 4 && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-base font-serif font-bold text-foreground">4. Confirmation de ton épargne</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Vérifie les détails avant d'activer ton coffre.</p>
-                  </div>
-
-                  <div className="rounded-2xl bg-[#FDFBF7] dark:bg-muted/40 p-4 border border-[#EFE2D0] dark:border-border space-y-3">
-                    <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                      <span className="text-xs text-muted-foreground font-medium">Projet</span>
-                      <span className="text-sm font-bold text-foreground">{getProjectLabel()}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                      <span className="text-xs text-muted-foreground font-medium">Montant cible</span>
-                      <span className="text-base font-serif font-bold text-primary-ink">
-                        {(parseFloat(createAmount) || 0).toLocaleString()} FCFA
-                      </span>
-                    </div>
-
-                    {parseFloat(createInitialDeposit) > 0 && (
-                      <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                        <span className="text-xs text-muted-foreground font-medium">Dépôt immédiat</span>
-                        <span className="text-xs font-bold text-foreground">
-                          {parseFloat(createInitialDeposit).toLocaleString()} FCFA
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                      <span className="text-xs text-muted-foreground font-medium">Date de déblocage</span>
-                      <span className="text-xs font-bold text-foreground">
-                        {createDeadline ? new Date(createDeadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-medium">{t('mb_status_label')}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-warning-soft text-primary-ink border border-primary/25">
-                        {t('mb_locked_badge')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation buttons */}
-              <div className="flex gap-2 pt-2">
-                {createStep > 1 && (
-                  <Button
-                    variant="outline"
-                    onClick={handleCreatePrevStep}
-                    disabled={creating}
-                    className="flex-1 h-12 rounded-xl font-bold cursor-pointer"
-                  >
-                    {t('mb_back')}
-                  </Button>
-                )}
-                {createStep < CREATE_TOTAL_STEPS ? (
-                  <Button
-                    onClick={handleCreateNextStep}
-                    className="gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
-                  >
-                    {t('mb_continue')}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleCreateVault}
-                    disabled={creating}
-                    className="gradient-sunset flex-1 h-12 rounded-xl text-white font-bold cursor-pointer"
-                  >
-                    {creating ? <EganyeIcon name="refresh" size={16} className="animate-spin mr-2" /> : null}
-                    {creating ? "Création en cours..." : "Créer mon épargne"}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+    return (
+      <FlowScreen
+        title="Nouveau coffre"
+        step={4}
+        totalSteps={CREATE_TOTAL_STEPS}
+        heading="Vérifiez votre coffre"
+        onBack={handleCreatePrevStep}
+        footer={
+          <Button onClick={handleCreateVault} disabled={creating} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
+            {creating ? 'Création en cours…' : 'Créer mon coffre'}
+          </Button>
+        }
+      >
+        <div className="rounded-2xl border border-border bg-card px-4 divide-y divide-border">
+          <FlowRow label="Projet" value={getProjectLabel()} />
+          <FlowRow label="Objectif" value={fcfa(parseFloat(createAmount) || 0)} strong />
+          <FlowRow label="Date de déblocage" value={createDeadline ? dateLong(createDeadline) : '—'} />
+        </div>
+      </FlowScreen>
     );
   }
 
-  // ── VUE PRINCIPALE MON ÉPARGNE ──
+  const tierIndex = hasActiveSubscription ? TIERS.indexOf(user.bankTier as BankTier) : -1;
+  const offeredTiers = TIERS.filter((_, index) => index > tierIndex);
+  const tierCapacity = (tier: BankTier) =>
+    BANK_TIER_MAX_VAULTS[tier] >= 999 ? 'Coffres sans limite' : `${BANK_TIER_MAX_VAULTS[tier]} coffres`;
+
+  // ── MON ÉPARGNE ──
   return (
-    <div className="space-y-4 sm:space-y-5 pb-20">
-      {/* 1. Header: Mon Épargne */}
-      <div className="space-y-0.5 pt-1">
-        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
-          {t('my_bank') || "Mon Épargne"}
-        </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-          {t('my_bank_subtitle') || "Mets de l'argent de côté pour tes projets."}
-        </p>
+    <div className="space-y-6 pb-20 max-w-lg mx-auto">
+      <div>
+        <h1 className="text-xl font-bold text-foreground">{t('my_bank') || 'Mon Épargne'}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('my_bank_subtitle')}</p>
       </div>
 
-      {/* 2. Hero Card: Mon solde disponible (avec Recharger & Retirer) */}
-      <div className="gradient-sunset-hero relative overflow-hidden rounded-[26px] p-5 sm:p-6 text-white shadow-soft">
-        <div className="flex items-center justify-between gap-3 relative z-10">
-          <div className="space-y-3 flex-1 min-w-0">
-            <p className="text-xs sm:text-[13px] font-medium text-white/90">
-              {t('bank_wallet_balance_label') || "Mon solde disponible"}
-            </p>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
-                {showBalance ? `${(user.walletBalance || 0).toLocaleString()} FCFA` : '••••••• FCFA'}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowBalance(!showBalance)}
-                className="p-3 -m-1.5 rounded-full hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
-                aria-label={showBalance ? "Masquer le solde" : "Afficher le solde"}
-              >
-                <EganyeIcon name={showBalance ? "eye" : "eye-off"} size={17} />
-              </button>
-            </div>
-
-            {/* Recharger & Retirer action buttons */}
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => onNavigate?.('wallet-recharge')}
-                className="inline-flex items-center gap-1.5 bg-white text-primary-ink hover:bg-white/95 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
-              >
-                <EganyeIcon name="plus" size={13} strokeWidth={2.5} />
-                <span>{t('recharge') || "Recharger"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate?.('wallet-withdraw')}
-                className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
-              >
-                <EganyeIcon name="withdraw" size={13} strokeWidth={2} />
-                <span>{t('withdraw') || "Retirer"}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Portrait souriant — même photo que la deuxième diapo d'accueil,
-              donc déjà en cache à ce stade du parcours. `object-top` garde le
-              visage dans le disque : un cadrage centré couperait le front. */}
-          <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-white/30 shadow-inner bg-[#A95636]/40">
-            <img
-              src="/onboarding/young-savers.webp"
-              alt="Mon Épargne"
-              className="w-full h-full object-cover object-top"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Decorative background glow */}
-        <div className="absolute -top-10 -right-10 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-      </div>
-
-      {/* 3. Card: Épargne totale */}
-      <div className="bg-card rounded-2xl p-4 sm:p-5 border border-border shadow-soft space-y-3.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F0E6D8] dark:bg-muted flex items-center justify-center text-secondary shrink-0">
-              <EganyeIcon name="savings" size={20} strokeWidth={2} />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">
-                {t('bank_total_savings') || "Épargne totale"}
-              </p>
-              <p className="text-lg sm:text-xl font-serif font-bold text-foreground">
-                {totalSaved.toLocaleString()} FCFA
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowAllReservations(!showAllReservations)}
-            className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
-          >
-            <EganyeIcon name="chevron-right" size={18} />
-          </button>
-        </div>
-
-        {/* Progress bar */}
-        <div className="space-y-1.5 pt-0.5">
-          <EganyeProgress value={totalSaved} max={totalGoal || 1} variant="bar" tone="secondary" />
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">
-              {t('bank_goal_prefix') || "Objectif :"} {totalGoal.toLocaleString()} FCFA
-            </span>
-            <span className="font-bold text-secondary">
-              {progressPercent}%
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Section: Mes réservations */}
-      <div className="space-y-3 pt-1">
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif font-bold text-lg text-foreground tracking-tight">
-            {t('bank_my_reservations') || "Mes réservations"}
-          </h2>
-          <button
-            type="button"
-            onClick={() => setShowAllReservations(!showAllReservations)}
-            className="text-xs font-bold text-primary-ink hover:opacity-80 transition-opacity flex items-center gap-0.5 cursor-pointer"
-          >
-            <span>{showAllReservations ? "Réduire" : (t('bank_view_all') || "Voir tout")}</span>
-            <EganyeIcon name="chevron-right" size={13} />
-          </button>
-        </div>
-
-        {vaults.length > 0 ? (
-          <div className="space-y-2.5">
-            {(showAllReservations ? vaults : vaults.slice(0, 4)).map((vault) => {
-              const unlocked = isUnlocked(vault);
-              const info = getVaultIconInfo(vault.name, vault.description);
-              const goal = getVaultGoal(vault);
-
-              return (
-                <div
-                  key={vault.id}
-                  onClick={() => { setActiveVault(vault); setActionAmount(''); }}
-                  className="bg-card border border-border rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 hover:border-primary/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-11 h-11 rounded-2xl ${info.bg} flex items-center justify-center shrink-0`}>
-                      <EganyeIcon name={info.icon} size={20} />
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-foreground text-[15px] truncate group-hover:text-primary-ink transition-colors">
-                        {vault.name}
-                      </h4>
-                      <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                        {vault.balance.toLocaleString()} / {goal.toLocaleString()} FCFA
-                      </p>
-                      <p className="text-[13px] text-muted-foreground/80 mt-0.5">
-                        {unlocked
-                          ? t('mb_available_for_withdrawal')
-                          : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[13px] font-bold ${
-                        unlocked
-                          ? 'bg-success-soft text-secondary border border-secondary/25'
-                          : 'bg-warning-soft text-primary-ink border border-primary/25'
-                      }`}
-                    >
-                      {unlocked ? t('mb_unlocked') : t('mb_in_progress')}
-                    </span>
-                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground group-hover:text-primary-ink transition-colors" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            illustration="circle-empty"
-            title={t('bank_empty_title') || 'Aucune épargne pour le moment'}
-            description={t('bank_empty_desc') || "Crée ta première réserve d'argent pour commencer à épargner en toute sécurité."}
-            actionText="Créer ma première épargne"
-            onAction={() => openCreateFlow()}
-          />
-        )}
-      </div>
-
-      {/* 5. Bottom Action Button: + Créer une épargne */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => openCreateFlow()}
-          disabled={!canCreateVault}
-          className="gradient-sunset w-full h-12 rounded-2xl text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <EganyeIcon name="plus" size={16} strokeWidth={2.5} />
-          <span>+ Créer une épargne</span>
-        </button>
-        {!canCreateVault && (
-          <p className="text-[13px] text-center text-muted-foreground mt-1.5">{t('bank_cap_reached_note')}</p>
-        )}
-      </div>
-
-      {/* 6. Formules & Abonnement Coffres Multiples */}
-      <div className="glass-card rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 border border-border/60">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{hasActiveSubscription ? t('bank_current_tier') : t('bank_free_trial_label')}</p>
-          <p className="font-bold text-foreground">{hasActiveSubscription ? t(`bank_tier_${user.bankTier}`) : t('bank_free_trial_desc')}</p>
-          <p className="text-[13px] text-muted-foreground mt-0.5">
-            {t('bank_vaults_used')}: {vaults.length}/{maxVaults}
-          </p>
-        </div>
-        {(!hasActiveSubscription || user.bankTier !== 'unlimited') && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="font-bold border-brand/30 text-brand hover:bg-brand/10 rounded-xl cursor-pointer shrink-0"
-            onClick={() => handleSubscribe(!hasActiveSubscription ? 'starter' : user.bankTier === 'starter' ? 'growth' : 'unlimited')}
-            disabled={subscribing !== null}
-          >
-            {hasActiveSubscription ? t('bank_upgrade_cta') : t('bank_subscribe_cta')}
-          </Button>
-        )}
-      </div>
-
-      {/* Grille des formules — le prix doit être visible avant tout clic
-          qui déclenche une facturation, jamais seulement dans un bouton. */}
-      {!hasActiveSubscription && (
-        <div className="space-y-3 pt-1">
+      {vaults.length > 0 && (
+        <div className="px-1 space-y-2">
           <div>
-            <h2 className="text-base font-serif font-bold text-foreground">{t('bank_upsell_title')}</h2>
-            <p className="text-[13px] text-muted-foreground">{t('bank_upsell_desc')}</p>
+            <p className="text-sm text-muted-foreground">{t('bank_total_savings') || 'Épargne totale'}</p>
+            <p className="text-[34px] leading-tight font-bold text-foreground tabular-nums">{fcfa(totalSaved)}</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {TIERS.map((tier) => (
-              <div key={tier} className="glass-card rounded-2xl p-5 shadow-soft flex flex-col justify-between border border-border/60">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <EganyeIcon name="star" size={16} className="text-brand" />
-                    <h3 className="font-bold text-foreground">{t(`bank_tier_${tier}`)}</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-brand mb-1">
-                    {BANK_TIER_PRICE[tier].toLocaleString()} FCFA
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">{t('bank_per_month')}</p>
-                </div>
-                <Button
-                  className="w-full h-11 font-bold rounded-xl cursor-pointer"
-                  onClick={() => handleSubscribe(tier)}
-                  disabled={subscribing !== null}
-                >
-                  {subscribing === tier ? <EganyeIcon name="loading" size={16} className="animate-spin" /> : t('bank_subscribe_cta')}
-                </Button>
-              </div>
-            ))}
-          </div>
+          <EganyeProgress value={totalSaved} max={totalGoal || 1} variant="bar" tone="secondary" />
+          <p className="text-[13px] text-muted-foreground">
+            {progressPercent} % de {fcfa(totalGoal)}
+          </p>
         </div>
       )}
 
-      {/* Évolution & Graphique d'épargne */}
-      <DashboardCharts user={user} groups={groups} />
+      {vaults.length > 0 ? (
+        <section className="space-y-2">
+          <div className="flex items-center justify-between px-3">
+            <h2 className="text-[13px] font-bold text-muted-foreground">{t('bank_my_reservations') || 'Mes coffres'}</h2>
+            {vaults.length > 4 && (
+              <button
+                type="button"
+                onClick={() => setShowAllReservations(!showAllReservations)}
+                className="min-h-11 -my-3 text-[13px] font-bold text-primary-ink cursor-pointer"
+              >
+                {showAllReservations ? 'Réduire' : (t('bank_view_all') || 'Voir tout')}
+              </button>
+            )}
+          </div>
+          <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+            {(showAllReservations ? vaults : vaults.slice(0, 4)).map((vault) => {
+              const unlocked = isUnlocked(vault);
+              return (
+                <button
+                  key={vault.id}
+                  type="button"
+                  onClick={() => { setActiveVault(vault); setActionAmount(''); }}
+                  className="w-full min-h-[60px] flex items-center gap-3 px-4 py-3 text-left cursor-pointer active:bg-muted transition-colors duration-150"
+                >
+                  <EganyeIcon name={getVaultIcon(vault.name, vault.description)} size={20} className="text-muted-foreground shrink-0" />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[15px] font-semibold text-foreground truncate">{vault.name}</span>
+                    <span className="block text-[13px] text-muted-foreground">
+                      {unlocked
+                        ? t('mb_available_for_withdrawal')
+                        : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                    </span>
+                  </span>
+                  <span className="text-right shrink-0">
+                    <span className="block text-sm font-bold text-foreground tabular-nums">{vault.balance.toLocaleString('fr-FR')} F</span>
+                    <span className="block text-[13px] text-muted-foreground tabular-nums">sur {getVaultGoal(vault).toLocaleString('fr-FR')}</span>
+                  </span>
+                  <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ) : (
+        <EmptyState
+          illustration="circle-empty"
+          title={t('bank_empty_title') || 'Aucune épargne pour le moment'}
+          description={t('bank_empty_desc')}
+          actionText="Créer mon premier coffre"
+          onAction={() => openCreateFlow()}
+        />
+      )}
 
-      {/* ── DIALOG GESTION COFFRE DÉTAILLÉ ── */}
-      <Dialog open={!!activeVault} onOpenChange={(open) => !open && setActiveVault(null)}>
-        <DialogContent className="max-w-md rounded-2xl p-6 bg-background border border-border">
-          {activeVault && (() => {
-            const unlocked = isUnlocked(activeVault);
-            const info = getVaultIconInfo(activeVault.name, activeVault.description);
-            const daysLeft = Math.max(0, Math.ceil((new Date(activeVault.unlockAt).getTime() - now) / (24 * 60 * 60 * 1000)));
+      {vaults.length > 0 && (
+        <div>
+          <Button
+            onClick={() => openCreateFlow()}
+            disabled={!canCreateVault}
+            className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer"
+          >
+            Créer un coffre
+          </Button>
+          {!canCreateVault && (
+            <p className="text-[13px] text-center text-muted-foreground mt-2">{t('bank_cap_reached_note')}</p>
+          )}
+        </div>
+      )}
 
-            return (
-              <div className="space-y-4">
-                <DialogHeader className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl ${info.bg} flex items-center justify-center shrink-0`}>
-                      <EganyeIcon name={info.icon} size={20} />
-                    </div>
-                    <div>
-                      <DialogTitle className="font-serif text-lg font-bold">{activeVault.name}</DialogTitle>
-                      <p className="text-xs text-muted-foreground">{activeVault.description || "Épargne personnelle"}</p>
-                    </div>
-                  </div>
-                </DialogHeader>
+      <section className="space-y-2">
+        <h2 className="text-[13px] font-bold text-muted-foreground px-3">{t('bank_wallet_balance_label') || 'Mon solde disponible'}</h2>
+        <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center justify-between gap-3">
+          <span className="text-[15px] font-bold text-foreground tabular-nums truncate">{fcfa(user.walletBalance || 0)}</span>
+          <span className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => onNavigate?.('wallet-recharge')}
+              className="min-h-11 px-3 text-sm font-bold text-primary-ink cursor-pointer"
+            >
+              {t('recharge') || 'Recharger'}
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate?.('wallet-withdraw')}
+              className="min-h-11 px-3 text-sm font-bold text-foreground cursor-pointer"
+            >
+              {t('withdraw') || 'Retirer'}
+            </button>
+          </span>
+        </div>
+      </section>
 
-                {/* Status notice */}
-                <div className={`p-3.5 rounded-2xl text-xs space-y-1 ${
-                  unlocked
-                    ? 'bg-success-soft text-secondary border border-secondary/25'
-                    : 'bg-[#FFF8F2] text-primary-ink border border-primary/20'
-                }`}>
-                  <p className="font-bold flex items-center gap-1.5">
-                    <EganyeIcon name={unlocked ? "check" : "shield"} size={14} />
-                    {unlocked ? t('mb_funds_available') : `${t('mb_reserved_for')} ${daysLeft} ${daysLeft > 1 ? t('gd_days') : t('gd_day')}`}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {unlocked
-                      ? t('mb_lock_over_desc')
-                      : `${t('mb_planned_date_prefix')} ${new Date(activeVault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}
-                  </p>
-                </div>
+      <section className="space-y-2">
+        <h2 className="text-[13px] font-bold text-muted-foreground px-3">Ma formule</h2>
+        <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+          <div className="min-h-[52px] flex items-center justify-between gap-3 px-4 py-2.5">
+            <span className="text-[15px] font-semibold text-foreground">
+              {hasActiveSubscription ? t(`bank_tier_${user.bankTier}`) : 'Gratuite'}
+            </span>
+            <span className="text-sm text-muted-foreground shrink-0">
+              {vaults.length} sur {maxVaults >= 999 ? '∞' : maxVaults} {maxVaults > 1 ? 'coffres' : 'coffre'}
+            </span>
+          </div>
+          {/* Le prix se lit sur la ligne, et rien n'est débité sans confirmation. */}
+          {offeredTiers.map((tier) => (
+            <button
+              key={tier}
+              type="button"
+              onClick={() => setConfirmTier(tier)}
+              disabled={subscribing !== null}
+              className="w-full min-h-[60px] flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer active:bg-muted transition-colors duration-150 disabled:opacity-50"
+            >
+              <span className="flex-1 min-w-0">
+                <span className="block text-[15px] font-semibold text-foreground">{t(`bank_tier_${tier}`)}</span>
+                <span className="block text-[13px] text-muted-foreground">{tierCapacity(tier)}</span>
+              </span>
+              <span className="text-sm font-bold text-foreground shrink-0 tabular-nums">
+                {BANK_TIER_PRICE[tier].toLocaleString('fr-FR')} F {t('bank_per_month')}
+              </span>
+              <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
+            </button>
+          ))}
+        </div>
+      </section>
 
-                {/* Balances */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[13px] font-bold text-muted-foreground">Solde du coffre</p>
-                    <p className="text-base font-serif font-bold text-foreground mt-0.5">
-                      {activeVault.balance.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-muted/60 border border-border">
-                    <p className="text-[13px] font-bold text-muted-foreground">Mon disponible</p>
-                    <p className="text-base font-serif font-bold text-foreground mt-0.5">
-                      {user.walletBalance.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                </div>
+      {/* Les graphiques consomment des données : on ne les charge que sur demande. */}
+      {showCharts ? (
+        <DashboardCharts user={user} groups={groups} />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowCharts(true)}
+          className="w-full min-h-[52px] flex items-center justify-between gap-3 px-4 rounded-2xl border border-border bg-card text-left cursor-pointer active:bg-muted transition-colors duration-150"
+        >
+          <span className="text-[15px] font-semibold text-foreground">Voir l'évolution de mon épargne</span>
+          <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
+        </button>
+      )}
 
-                {/* Saisie montant */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold text-foreground">Montant de l'opération (FCFA)</Label>
-                  <Input
-                    type="number" inputMode="numeric"
-                    min={1}
-                    placeholder="Ex: 25 000"
-                    value={actionAmount}
-                    onChange={(e) => setActionAmount(e.target.value)}
-                    className="rounded-xl h-11"
-                  />
-                  <div className="flex gap-1.5 pt-0.5">
-                    {['10000', '25000', '50000'].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setActionAmount(amt)}
-                        className="py-2.5 px-3 text-[13px] font-bold rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
-                      >
-                        +{parseInt(amt).toLocaleString()}
-                      </button>
-                    ))}
-                    {unlocked && activeVault.balance > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setActionAmount(activeVault.balance.toString())}
-                        className="py-2.5 px-3 text-[13px] font-bold rounded-lg border border-secondary text-secondary bg-secondary/10 cursor-pointer ml-auto"
-                      >
-                        {t('mb_withdraw_all')}
-                      </button>
-                    )}
-                  </div>
-                </div>
+      {/* ── COFFRE EN PLEIN ÉCRAN ── */}
+      {activeVault && (() => {
+        const unlocked = isUnlocked(activeVault);
+        const daysLeft = Math.max(0, Math.ceil((new Date(activeVault.unlockAt).getTime() - now) / (24 * 60 * 60 * 1000)));
 
-                {/* Buttons Déposer / Retirer */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Button
-                    variant="secondary"
-                    className="h-11 font-bold rounded-xl cursor-pointer"
-                    onClick={handleDeposit}
+        return (
+          <FlowScreen
+            title={activeVault.name}
+            onBack={() => setActiveVault(null)}
+            footer={
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-xl font-bold text-[15px] cursor-pointer"
+                  onClick={() => handleWithdraw(false)}
+                  disabled={actionBusy || activeVault.balance <= 0}
+                >
+                  Retirer
+                </Button>
+                <Button className="h-12 rounded-xl font-bold text-[15px] cursor-pointer" onClick={handleDeposit} disabled={actionBusy}>
+                  Déposer
+                </Button>
+              </div>
+            }
+          >
+            <div className="px-1">
+              <p className="text-sm text-muted-foreground">Dans ce coffre</p>
+              <p className="text-[34px] leading-tight font-bold text-foreground tabular-nums">{fcfa(activeVault.balance)}</p>
+              <p className="text-[13px] text-muted-foreground mt-1">
+                {unlocked
+                  ? t('mb_lock_over_desc')
+                  : `${t('mb_reserved_for')} ${daysLeft} ${daysLeft > 1 ? t('gd_days') : t('gd_day')} · ${dateLong(activeVault.unlockAt)}`}
+              </p>
+            </div>
+
+            <AmountField value={actionAmount} onChange={setActionAmount} />
+            <div className="flex flex-wrap gap-2">
+              {ADD_AMOUNTS.map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setActionAmount(String((parseFloat(actionAmount) || 0) + amt))}
+                  className="min-h-11 px-3 text-sm font-bold rounded-xl border border-border bg-card text-foreground cursor-pointer active:bg-muted transition-colors duration-150"
+                >
+                  +{amt.toLocaleString('fr-FR')}
+                </button>
+              ))}
+              {unlocked && activeVault.balance > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActionAmount(activeVault.balance.toString())}
+                  className="min-h-11 px-3 text-sm font-bold rounded-xl border border-border bg-card text-foreground cursor-pointer active:bg-muted transition-colors duration-150"
+                >
+                  {t('mb_withdraw_all')}
+                </button>
+              )}
+            </div>
+            <p className="text-[13px] text-muted-foreground">Sur votre portefeuille : {fcfa(user.walletBalance || 0)}</p>
+
+            {unlocked && (
+              <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => handleRelock(activeVault, 90)}
+                  disabled={actionBusy}
+                  className="w-full min-h-[52px] px-4 text-left text-[15px] font-semibold text-foreground cursor-pointer active:bg-muted disabled:opacity-50"
+                >
+                  Prolonger de 3 mois
+                </button>
+                {activeVault.balance === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(activeVault)}
                     disabled={actionBusy}
+                    className="w-full min-h-[52px] px-4 text-left text-[15px] font-semibold text-danger cursor-pointer active:bg-muted disabled:opacity-50"
                   >
-                    <EganyeIcon name="plus" size={14} className="mr-1.5" /> Déposer
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-11 font-bold rounded-xl border-primary/40 text-primary-ink hover:bg-primary/10 cursor-pointer"
-                    onClick={() => handleWithdraw(false)}
-                    disabled={actionBusy || activeVault.balance <= 0}
-                  >
-                    <EganyeIcon name="withdraw" size={14} className="mr-1.5" /> Retirer
-                  </Button>
-                </div>
-
-                {/* Prolonger ou Supprimer si 0 */}
-                {unlocked && (
-                  <div className="pt-2 border-t border-border flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => handleRelock(activeVault, 90)}
-                      disabled={actionBusy}
-                      className="text-xs font-bold text-secondary hover:underline cursor-pointer flex items-center gap-1"
-                    >
-                      <EganyeIcon name="refresh" size={12} /> Prolonger de 3 mois
-                    </button>
-
-                    {activeVault.balance === 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(activeVault)}
-                        disabled={actionBusy}
-                        className="text-xs font-bold text-destructive hover:underline cursor-pointer"
-                      >
-                        {t('mb_delete_vault')}
-                      </button>
-                    )}
-                  </div>
+                    {t('mb_delete_vault')}
+                  </button>
                 )}
               </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+            )}
+          </FlowScreen>
+        );
+      })()}
 
-      {/* ── MODAL AVERTISSEMENT DÉBLOCAGE ANTICIPÉ ── */}
-      <Dialog open={showEarlyUnlockConfirm} onOpenChange={setShowEarlyUnlockConfirm}>
-        <DialogContent className="max-w-sm rounded-2xl p-6 bg-background border border-border text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning mx-auto flex items-center justify-center">
-            <EganyeIcon name="shield" size={24} />
-          </div>
-          <DialogTitle className="font-serif text-lg font-bold">{t('mb_early_unlock_title')}</DialogTitle>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {t('mb_early_unlock_desc')}
-          </p>
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowEarlyUnlockConfirm(false)}
-              className="flex-1 rounded-xl h-11 font-bold"
-            >
-              {t('mb_keep')}
-            </Button>
-            <Button
-              onClick={() => handleWithdraw(true)}
-              className="flex-1 rounded-xl h-11 font-bold bg-primary hover:bg-[#B8623E] text-white"
-            >
-              {t('mb_confirm')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* ── RETRAIT AVANT LA DATE ── */}
+      <ConfirmationBottomSheet
+        isOpen={showEarlyUnlockConfirm}
+        onClose={() => setShowEarlyUnlockConfirm(false)}
+        onConfirm={() => handleWithdraw(true)}
+        isLoading={actionBusy}
+        title={t('mb_early_unlock_title')}
+        description={t('mb_early_unlock_desc')}
+        confirmLabel={t('mb_confirm')}
+      />
 
+      {/* ── ABONNEMENT : rien n'est débité sans ce geste ── */}
+      <ConfirmationBottomSheet
+        isOpen={confirmTier !== null}
+        onClose={() => setConfirmTier(null)}
+        onConfirm={() => { if (confirmTier) handleSubscribe(confirmTier); }}
+        isLoading={subscribing !== null}
+        type="debit"
+        title={confirmTier ? t(`bank_tier_${confirmTier}`) : ''}
+        description={confirmTier ? `${tierCapacity(confirmTier)}. Le prix est prélevé sur votre portefeuille.` : ''}
+        amount={confirmTier ? BANK_TIER_PRICE[confirmTier] : undefined}
+        confirmLabel="Confirmer"
+      />
     </div>
   );
 }

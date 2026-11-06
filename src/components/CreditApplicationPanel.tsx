@@ -88,7 +88,7 @@ function InfoScreen({ title, heading, onClose, children }: { title: string; head
       onBack={onClose}
       title={title}
       heading={heading}
-      footer={<Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>}
+      footer={<Button variant="outline" className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Fermer</Button>}
     >
       {children}
     </FlowScreen>
@@ -155,12 +155,12 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
   const stepNumber = STEPS.indexOf(step as (typeof STEPS)[number]) + 1;
   const common = { onBack: goBack, title: service.title, ...(stepNumber > 0 ? { step: stepNumber, totalSteps: STEPS.length } : {}) };
   const nextButton = (enabled: boolean, label = 'Suivant') => (
-    <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>{label}</Button>
+    <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={next} disabled={!enabled}>{label}</Button>
   );
 
   if (step === 'done') {
     return (
-      <FlowScreen {...common} footer={<Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Terminé</Button>}>
+      <FlowScreen {...common} footer={<Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Terminé</Button>}>
         <div className="flex flex-col items-center text-center pt-8 space-y-4">
           <div className="w-20 h-20 rounded-full bg-success-soft flex items-center justify-center">
             <CheckCircle2 className="w-10 h-10 text-success" />
@@ -294,7 +294,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
       heading="Vérifiez votre demande"
       desc="Touchez « Modifier » pour corriger une réponse."
       footer={
-        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || submitting}>
+        <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={submit} disabled={!valid.review || submitting}>
           {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la demande…</> : 'Envoyer ma demande'}
         </Button>
       }
@@ -349,7 +349,7 @@ function UnderReview({ app, title, onClose }: { app: CreditApplication; title: s
       title={title}
       heading="Demande en cours d'étude"
       desc="Vous recevrez une notification dès qu'une décision sera prise."
-      footer={<Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>}
+      footer={<Button variant="outline" className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Fermer</Button>}
     >
       <FlowNotice tone="warning" icon={<Clock className="w-5 h-5 text-warning" />}>
         « {app.projectTitle} » est entre les mains de notre équipe.
@@ -462,18 +462,17 @@ function ActiveCredit({ app, user, service, onChanged, onClose }: CreditFlowProp
       onBack={onClose}
       title={service.title}
       footer={
-        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={repay} disabled={busy || !amount}>
+        <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={repay} disabled={busy || !amount}>
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wallet className="w-4 h-4 mr-2" />}
           Rembourser {amount ? fcfa(Number(amount)) : ''}
         </Button>
       }
     >
-      <div className="rounded-2xl gradient-sunset p-5 text-white">
-        <p className="text-[13px] font-bold opacity-90">{app.projectTitle} · reste à rembourser</p>
-        <p className="text-[34px] font-bold tabular-nums leading-tight">{fcfa(remaining)}</p>
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">{app.projectTitle} · reste à rembourser</p>
+        <p className="text-[34px] font-bold tabular-nums leading-tight text-foreground">{fcfa(remaining)}</p>
         {next && (
-          <p className="mt-2 flex items-center gap-1.5 text-[13px] font-medium opacity-95">
-            <CalendarClock className="w-4 h-4" />
+          <p className="text-sm text-muted-foreground">
             Prochaine mensualité : {fcfa(next.amountDue - next.amountPaid)} le {dateFr(next.dueDate)}
           </p>
         )}

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { BrandVisual } from './BrandVisual';
 import { Celebration } from './Celebration';
@@ -75,104 +74,76 @@ export function WithdrawalPendingCard({
 
   if (state === 'sent') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-card rounded-2xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
-      >
+      <div className="text-center space-y-4">
         <div className="relative flex justify-center">
           <BrandVisual name="success" height={150} alt="" />
           <Celebration />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-bold text-foreground">Retrait effectué</h3>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <div className="space-y-1.5" aria-live="polite">
+          <h3 className="text-xl font-bold text-foreground">Retrait effectué</h3>
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             {amountLabel} ont été envoyés sur votre compte {operatorLabel} (<strong className="text-foreground">{phone}</strong>).
           </p>
         </div>
-        <Button
-          onClick={onDone}
-          className="w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
-        >
+        <Button onClick={onDone} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
           Voir mon portefeuille
         </Button>
-      </motion.div>
+      </div>
     );
   }
 
   if (state === 'failed') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-card rounded-2xl p-6 border border-border shadow-soft text-center space-y-4"
-      >
+      <div className="text-center space-y-4">
         <div className="flex justify-center">
           <BrandVisual name="failed" height={150} alt="" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-bold text-foreground">Retrait remboursé</h3>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <div className="space-y-1.5" aria-live="polite">
+          <h3 className="text-xl font-bold text-foreground">Retrait remboursé</h3>
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             Cet envoi n'a pas pu être fait. {debited.toLocaleString()} FCFA ont été rendus à votre portefeuille.
           </p>
         </div>
-        <Button
-          onClick={onDone}
-          variant="ghost"
-          className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
-        >
+        <Button onClick={onDone} variant="ghost" className="w-full h-12 rounded-xl font-bold text-sm text-foreground cursor-pointer">
           Retour au portefeuille
         </Button>
-      </motion.div>
+      </div>
     );
   }
 
   const isProcessing = state === 'processing';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5"
-    >
-      <div className="flex justify-center pt-1">
-        <div className="relative">
-          {isProcessing && !timedOut && (
-            <motion.span
-              className="absolute inset-0 rounded-full bg-primary/20"
-              animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-            />
-          )}
-          <div className="relative w-16 h-16 rounded-full gradient-sunset flex items-center justify-center text-white">
-            <EganyeIcon name="call" size={26} />
-          </div>
+    <div className="space-y-5">
+      <div className="flex justify-center pt-2">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-foreground">
+          <EganyeIcon name="call" size={26} />
         </div>
       </div>
 
       <div className="text-center space-y-1.5" aria-live="polite">
-        <h3 className="text-base font-serif font-bold text-foreground">
+        <h3 className="text-xl font-bold text-foreground">
           {isProcessing ? 'Envoi de votre argent' : 'Retrait pris en charge'}
         </h3>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <p className="text-[15px] text-muted-foreground leading-relaxed">
           {isProcessing
             ? <>{amountLabel} sont en route vers votre compte {operatorLabel} (<strong className="text-foreground">{phone}</strong>).</>
             : <>{amountLabel} seront envoyés vers {operatorLabel} (<strong className="text-foreground">{phone}</strong>). Notre équipe finalise cet envoi.</>}
         </p>
       </div>
 
-      <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2">
-        <div className="flex items-center justify-between text-xs">
+      <div className="rounded-2xl border border-border divide-y divide-border bg-card">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
           <span className="text-muted-foreground">Débité de votre solde</span>
           <span className="font-bold text-foreground tabular-nums">{debited.toLocaleString()} FCFA</span>
         </div>
         {fee > 0 && (
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <span className="text-muted-foreground">Dont frais de retrait</span>
             <span className="font-bold text-foreground tabular-nums">{fee.toLocaleString()} FCFA</span>
           </div>
         )}
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
           <span className="text-muted-foreground">Envoyé sur votre compte</span>
           <span className="font-bold text-foreground tabular-nums">{amountLabel}</span>
         </div>
@@ -185,27 +156,23 @@ export function WithdrawalPendingCard({
       </p>
 
       {defaultPin && (
-        <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2 text-center">
-          <p className="text-[13px] text-foreground leading-relaxed">
+        <div className="rounded-2xl bg-muted p-4 space-y-1 text-center">
+          <p className="text-sm text-foreground leading-relaxed">
             Votre code PIN est encore 0000. Changez-le pour que vos prochains retraits partent tout de suite.
           </p>
           <button
             type="button"
             onClick={onChangePin}
-            className="text-[13px] font-bold text-primary-ink underline underline-offset-2 cursor-pointer"
+            className="min-h-11 px-3 text-sm font-bold text-primary-ink underline underline-offset-2 cursor-pointer"
           >
             Changer mon code PIN
           </button>
         </div>
       )}
 
-      <Button
-        onClick={onDone}
-        variant="ghost"
-        className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
-      >
+      <Button onClick={onDone} variant="ghost" className="w-full h-12 rounded-xl font-bold text-sm text-foreground cursor-pointer">
         Fermer
       </Button>
-    </motion.div>
+    </div>
   );
 }

@@ -9,13 +9,15 @@ interface ChipPickerProps {
 
 export function ChipPicker({ options, value, onChange, ariaLabel }: ChipPickerProps) {
   return (
-    <div role="group" aria-label={ariaLabel} className="flex flex-wrap gap-1.5">
+    <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-2">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
+          role="radio"
+          aria-checked={value === opt.value}
           onClick={() => onChange(opt.value)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+          className={`min-h-11 px-4 rounded-xl text-sm font-bold border transition-colors cursor-pointer ${
             value === opt.value
               ? 'bg-primary text-primary-foreground border-primary'
               : 'bg-card text-foreground border-border hover:bg-muted/60'

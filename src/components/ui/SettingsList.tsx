@@ -10,25 +10,15 @@ export function SettingsGroup({ title, children }: { title?: string; children: R
   return (
     <section className="space-y-2">
       {title && <h2 className="text-[13px] font-bold text-muted-foreground px-3">{title}</h2>}
-      <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden divide-y divide-[#EFE2D0]/60 dark:divide-border/60">
+      <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border">
         {children}
       </div>
     </section>
   );
 }
 
-const TONES = {
-  brand: 'bg-[#FFF2E8] text-primary-ink',
-  sage: 'bg-success-soft text-secondary',
-  sand: 'bg-[#F4EFE6] text-[#3E2F24]',
-  gold: 'bg-[#FEF6E9] text-[#C49A55]',
-  info: 'bg-info-soft text-info',
-  muted: 'bg-muted text-muted-foreground',
-} as const;
-
 export function SettingsRow({
   icon,
-  tone = 'brand',
   label,
   hint,
   value,
@@ -36,8 +26,10 @@ export function SettingsRow({
   trailing,
   danger = false,
 }: {
-  icon: EganyeIconName;
-  tone?: keyof typeof TONES;
+  /** Icône neutre : la couleur reste réservée à l'action et à l'état. */
+  icon?: EganyeIconName;
+  /** Conservé pour les écrans existants : les icônes sont désormais toutes neutres. */
+  tone?: string;
   label: string;
   hint?: string;
   /** Valeur courte affichée à droite (montant, état…). */
@@ -50,25 +42,27 @@ export function SettingsRow({
 }) {
   const content = (
     <>
-      <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${danger ? 'bg-danger-soft text-danger' : TONES[tone]}`}>
-        <EganyeIcon name={icon} size={17} />
-      </span>
+      {icon && (
+        <span className={`w-6 flex items-center justify-center shrink-0 ${danger ? 'text-danger' : 'text-muted-foreground'}`}>
+          <EganyeIcon name={icon} size={20} />
+        </span>
+      )}
       <span className="flex-1 min-w-0">
-        <span className={`block text-sm font-bold ${danger ? 'text-danger' : 'text-foreground'}`}>{label}</span>
+        <span className={`block text-[15px] font-semibold ${danger ? 'text-danger' : 'text-foreground'}`}>{label}</span>
         {hint && <span className="block text-[13px] text-muted-foreground leading-snug">{hint}</span>}
       </span>
       {value !== undefined && (
-        <span className="text-sm font-bold text-foreground text-right shrink-0 max-w-[45%] truncate">{value}</span>
+        <span className="text-sm text-muted-foreground text-right shrink-0 max-w-[45%] truncate">{value}</span>
       )}
       {trailing}
       {onClick && !trailing && <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />}
     </>
   );
 
-  const className = 'w-full flex items-center gap-3.5 px-4 py-3.5 text-left';
+  const className = 'w-full min-h-[52px] flex items-center gap-3 px-4 py-2.5 text-left';
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={`${className} hover:bg-muted/40 active:bg-muted transition-colors cursor-pointer`}>
+      <button type="button" onClick={onClick} className={`${className} active:bg-muted transition-colors duration-150 cursor-pointer`}>
         {content}
       </button>
     );

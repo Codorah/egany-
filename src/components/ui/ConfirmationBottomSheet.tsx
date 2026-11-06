@@ -1,9 +1,9 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ShieldAlert, ArrowDown, CreditCard, Send, Wallet, X, AlertTriangle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Button } from './button';
-import { EganyeMascot } from './EganyeMascot';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBackHandler } from '@/hooks/useBackHandler';
 
 interface ConfirmationBottomSheetProps {
   isOpen: boolean;
@@ -18,6 +18,11 @@ interface ConfirmationBottomSheetProps {
   confirmLabel?: string;
 }
 
+/**
+ * Feuille de confirmation : ce qui va se passer, le montant, deux boutons.
+ * Elle ne nomme aucune provenance ni destination : seul l'écran appelant les
+ * connaît, et il les écrit dans `description`.
+ */
 export function ConfirmationBottomSheet({
   isOpen,
   onClose,
@@ -31,189 +36,87 @@ export function ConfirmationBottomSheet({
   confirmLabel,
 }: ConfirmationBottomSheetProps) {
   const { t } = useLanguage();
-  // Prevent background scroll when open
+  const reduceMotion = useReducedMotion();
+
   React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previous;
     };
   }, [isOpen]);
 
-  return (
+  // Le retour Android ferme la feuille, pas l'écran en dessous.
+  const handleBack = React.useCallback(() => {
+    if (!isLoading) onClose();
+    return true;
+  }, [isLoading, onClose]);
+  useBackHandler(handleBack, isOpen);
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-slate-950/60 z-50"
+            transition={{ duration: 0.2 }}
+            onClick={isLoading ? undefined : onClose}
+            className="absolute inset-0 bg-black/50"
           />
 
-          {/* Bottom Sheet / Modal Container */}
-          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 pointer-events-none">
-            <motion.div
-              initial={{
-                y: typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : 20,
-                opacity: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0,
-                scale: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0.95
-              }}
-              animate={{
-                y: 0,
-                opacity: 1,
-                scale: 1
-              }}
-              exit={{
-                y: typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : 15,
-                opacity: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0,
-                scale: typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 0.95
-              }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="pointer-events-auto bg-card w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden max-h-[90dvh]"
-            >
-              {/* Drag/Swipe Indicator for Mobile Bottom Sheet */}
-              <div className="flex justify-center py-3 sm:hidden">
-                <div className="w-12 h-1.5 bg-border rounded-full" />
-              </div>
+          <motion.div
+            role="alertdialog"
+            aria-modal="true"
+            aria-label={title}
+            initial={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+            animate={reduceMotion ? { opacity: 1 } : { y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="relative bg-card w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden max-h-[90dvh]"
+          >
+            <div className="px-5 pt-5 pb-4 space-y-2 overflow-y-auto min-h-0">
+              <h3 className="text-lg font-bold text-foreground">{title}</h3>
+              <p className="text-[15px] text-muted-foreground leading-relaxed">{description}</p>
+              {amount !== undefined && (
+                <p className="pt-2 text-[28px] leading-tight font-bold text-foreground tabular-nums">
+                  {amount.toLocaleString()} {currency}
+                </p>
+              )}
+            </div>
 
-              {/* Header */}
-              <div className="px-6 pt-2 pb-4 sm:pt-6 flex justify-between items-start">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-2 rounded-xl ${
-                    type === 'debit' || type === 'destructive'
-                      ? 'bg-danger-soft text-danger'
-                      : type === 'recharge'
-                      ? 'bg-brand/10 text-brand'
-                      : 'bg-success-soft text-secondary'
-                  }`}>
-                    {type === 'debit' && <ArrowDown className="w-5 h-5" />}
-                    {type === 'destructive' && <AlertTriangle className="w-5 h-5" />}
-                    {type === 'recharge' && <Wallet className="w-5 h-5" />}
-                    {type === 'transfer' && <Send className="w-5 h-5" />}
-                    {type === 'generic' && <ShieldAlert className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground tracking-tight">
-                      {title}
-                    </h3>
-                    <p className="text-[13px] text-muted-foreground font-bold">
-                      {type === 'debit' ? t('cbs_type_debit') : type === 'destructive' ? t('cbs_type_destructive') : type === 'recharge' ? t('cbs_type_recharge') : type === 'transfer' ? t('cbs_type_transfer') : t('cbs_type_generic')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  aria-label="Fermer"
-                  className="p-3 -m-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="px-6 py-2 space-y-4 overflow-y-auto min-h-0">
+            <div className="px-5 pt-1 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] flex flex-col-reverse sm:flex-row gap-2 shrink-0">
+              <Button
+                variant="ghost"
+                onClick={onClose}
+                disabled={isLoading}
+                className="w-full sm:flex-1 rounded-xl h-12 text-foreground font-bold"
+              >
+                {t('cbs_cancel')}
+              </Button>
+              <Button
+                onClick={onConfirm}
+                disabled={isLoading}
+                className={`w-full sm:flex-1 rounded-xl h-12 font-bold text-white ${
+                  type === 'destructive' ? 'bg-danger hover:bg-danger/90' : 'bg-primary hover:bg-primary/90'
+                }`}
+              >
                 {isLoading ? (
-                  <div className="py-4 flex flex-col items-center justify-center space-y-2">
-                    <EganyeMascot variant="payment" size={90} message={t('cbs_processing_message')} />
-                  </div>
+                  <span className="flex items-center gap-2 justify-center">
+                    <span className="w-4 h-4 border-2 border-white/35 border-t-white rounded-full animate-spin motion-reduce:animate-none" />
+                    {t('cbs_processing')}
+                  </span>
                 ) : (
-                  <>
-                    <p className="text-sm text-muted-foreground leading-relaxed font-normal">
-                      {description}
-                    </p>
-
-                    {/* Amount Highlight */}
-                    {amount !== undefined && (
-                      <div className="bg-muted p-4 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
-                        <span className="text-[13px] font-bold text-muted-foreground">
-                          {t('cbs_amount_label')}
-                        </span>
-                        <span className={`text-2xl font-bold mt-1 ${
-                          type === 'debit' ? 'text-danger' : 'text-secondary'
-                        }`}>
-                          {amount.toLocaleString()} {currency}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Transfer Diagram Visual */}
-                    {amount !== undefined && (
-                      <div className="flex items-center justify-between px-6 py-2 text-xs text-muted-foreground font-bold bg-muted/50 rounded-2xl border border-border">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="p-2 bg-card rounded-full shadow-xs border border-border">
-                            {type === 'recharge' ? <CreditCard className="w-4 h-4 text-foreground" /> : <Wallet className="w-4 h-4 text-foreground" />}
-                          </div>
-                          <span className="text-[13px]">{type === 'recharge' ? t('cbs_my_mobile_money') : t('cbs_my_wallet')}</span>
-                        </div>
-
-                        <div className="flex-1 flex flex-col items-center justify-center relative px-2">
-                          <div className="w-full h-0.5 border-t-2 border-dashed border-border" />
-                          <div className="absolute top-1/2 -translate-y-1/2 p-0.5 bg-brand text-white rounded-full shadow-xs">
-                            <ArrowDown className="w-3 h-3 rotate-270" />
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="p-2 bg-card rounded-full shadow-xs border border-border">
-                            {type === 'recharge' ? <Wallet className="w-4 h-4 text-secondary" /> : <Send className="w-4 h-4 text-secondary" />}
-                          </div>
-                          <span className="text-[13px]">{type === 'recharge' ? t('cbs_eganye_wallet') : t('cbs_tontine_circle')}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Secure / Protection Badge — uniquement pertinent pour une opération financière */}
-                    {amount !== undefined && (
-                      <div className="flex items-center gap-2 text-[13px] text-secondary bg-success-soft border border-secondary/20 p-3 rounded-xl font-bold">
-                        <ShieldAlert className="w-4 h-4 text-secondary shrink-0" />
-                        <span>{t('cbs_security_note')}</span>
-                      </div>
-                    )}
-                  </>
+                  confirmLabel || t('cbs_confirm_default')
                 )}
-              </div>
-
-              {/* Actions Footer */}
-              <div className="p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] bg-muted border-t border-border flex flex-col sm:flex-row gap-3 mt-4 shrink-0">
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                  disabled={isLoading}
-                  className="w-full sm:order-1 rounded-2xl h-11 border-border text-foreground hover:bg-card font-bold"
-                >
-                  {t('cbs_cancel')}
-                </Button>
-                <Button
-                  onClick={onConfirm}
-                  disabled={isLoading}
-                  className={`w-full sm:order-2 rounded-2xl h-11 font-bold text-white ${
-                    type === 'debit' || type === 'destructive'
-                      ? 'bg-danger hover:bg-danger/90'
-                      : type === 'recharge'
-                      ? 'bg-brand hover:bg-brand/90'
-                      : 'bg-secondary hover:bg-secondary/90'
-                  }`}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-1.5 justify-center">
-                      <span className="w-4.5 h-4.5 border-2 border-white/35 border-t-white rounded-full animate-spin" />
-                      {t('cbs_processing')}
-                    </span>
-                  ) : (
-                    confirmLabel || t('cbs_confirm_default')
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

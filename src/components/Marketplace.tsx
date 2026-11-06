@@ -169,7 +169,6 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
       {openFlow?.kind === 'service' && (
         <ServiceScreen
           service={openFlow.service}
-          icon={ICONS[openFlow.service.iconName] || Store}
           existingRequest={requestForService(openFlow.service.id)}
           eligible={isEligible(openFlow.service)}
           reputationScore={user.reputationScore}
@@ -209,33 +208,25 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   return (
     <div className="space-y-5 pb-20">
       <div>
-        <h1 className="text-[26px] leading-tight font-serif font-bold text-foreground tracking-tight">{t('marketplace')}</h1>
-        <p className="text-[14px] text-muted-foreground font-medium mt-1">{t('mkt_header_subtitle')}</p>
+        <h1 className="text-xl font-bold text-foreground">{t('marketplace')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('mkt_header_subtitle')}</p>
       </div>
 
       {(AID_ENABLED || aidApps.length > 0) && (
-      <button
-        type="button"
-        onClick={() => setOpenFlow({ kind: 'aid' })}
-        className="press-row w-full text-left rounded-2xl gradient-sunset text-white p-5 shadow-elevated cursor-pointer"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-            <Gift className="w-6 h-6 text-white" />
-          </div>
+        <button
+          type="button"
+          onClick={() => setOpenFlow({ kind: 'aid' })}
+          className="press-row w-full min-h-[60px] flex items-center gap-3 p-4 text-left rounded-2xl border border-border bg-card cursor-pointer"
+        >
+          <Gift className="w-6 h-6 text-muted-foreground shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="text-[18px] font-serif font-bold leading-tight">Coup de pouce eganyé</p>
-            <p className="text-[13px] opacity-90 font-medium">Aide gratuite, rien à rembourser</p>
+            <p className="text-[15px] font-bold text-foreground leading-tight">Coup de pouce</p>
+            <p className="text-[13px] text-muted-foreground">
+              {aidStatus ? aidStatus.label : "Une aide pour votre activité, rien à rembourser."}
+            </p>
           </div>
-          <ChevronRight className="w-5 h-5 shrink-0 opacity-90" />
-        </div>
-        <p className="mt-3 text-[13px] leading-relaxed opacity-95">
-          Besoin d'argent pour votre activité ? Dites combien, présentez-vous en vidéo : notre équipe peut vous offrir le montant.
-        </p>
-        <span className="mt-4 inline-flex items-center rounded-full bg-white/95 text-primary-ink px-4 h-9 text-[13px] font-bold">
-          {aidStatus ? aidStatus.label : 'Demander un coup de pouce'}
-        </span>
-      </button>
+          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+        </button>
       )}
 
       {services.length === 0 ? (
@@ -246,7 +237,6 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         </div>
       ) : (
         <div className="space-y-2.5">
-          <p className="text-[13px] font-bold text-muted-foreground px-1">Autres services</p>
           <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
             {services.map((service) => {
               const Icon = ICONS[service.iconName] || Store;
@@ -261,11 +251,9 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
                   key={service.id}
                   type="button"
                   onClick={() => openService(service)}
-                  className="press-row w-full flex items-center gap-3 p-4 text-left cursor-pointer hover:bg-muted/40 transition-colors"
+                  className="press-row w-full min-h-[60px] flex items-center gap-3 p-4 text-left cursor-pointer active:bg-muted transition-colors duration-150"
                 >
-                  <div className={`w-12 h-12 rounded-2xl ${service.colorClass} flex items-center justify-center shrink-0`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
+                  <Icon className="w-6 h-6 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-bold text-foreground leading-tight truncate">{service.title}</p>
                     <p className="text-[13px] text-muted-foreground truncate">{providerLabel(service)}</p>
@@ -287,9 +275,8 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
 }
 
 /** Fiche plein écran d'un service partenaire (assurance, équipement…). */
-function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputationScore, statusLabels, isSubmitting, onSubmit, onClose }: {
+function ServiceScreen({ service, existingRequest, eligible, reputationScore, statusLabels, isSubmitting, onSubmit, onClose }: {
   service: MarketplaceService;
-  icon: React.ComponentType<{ className?: string }>;
   existingRequest?: MarketplaceRequest;
   eligible: boolean;
   reputationScore: number;
@@ -303,20 +290,13 @@ function ServiceScreen({ service, icon: Icon, existingRequest, eligible, reputat
     <FlowScreen
       onBack={onClose}
       title={service.title}
-      hero={
-        <div className={`${service.colorClass} px-5 py-7 text-white`}>
-          <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
-            <Icon className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-[26px] leading-tight font-serif font-bold">{service.title}</h1>
-          <p className="mt-1.5 text-[14px] opacity-90 font-medium">{providerLabel(service)}</p>
-        </div>
-      }
+      heading={service.title}
+      desc={providerLabel(service)}
       footer={
         existingRequest || !eligible ? (
-          <Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>
+          <Button variant="outline" className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Fermer</Button>
         ) : (
-          <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={onSubmit} disabled={isSubmitting}>
+          <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onSubmit} disabled={isSubmitting}>
             {isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('sending_label')}</> : service.actionLabel}
           </Button>
         )

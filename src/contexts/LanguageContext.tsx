@@ -77,10 +77,6 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     fr: 'Exporter',
     en: 'Export'
   },
-  cir_validate: {
-    fr: 'Valider',
-    en: 'Approve'
-  },
   cir_not_called: {
     fr: 'Pas encore appelée',
     en: 'Not requested yet'

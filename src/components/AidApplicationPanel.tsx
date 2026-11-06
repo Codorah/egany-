@@ -110,7 +110,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
   const stepNumber = STEPS.indexOf(step as (typeof STEPS)[number]) + 1;
   const common = { onBack: goBack, title: TITLE, ...(stepNumber > 0 ? { step: stepNumber, totalSteps: STEPS.length } : {}) };
   const nextButton = (enabled: boolean, label = 'Suivant') => (
-    <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={next} disabled={!enabled}>
+    <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={next} disabled={!enabled}>
       {label}
     </Button>
   );
@@ -120,7 +120,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
     return (
       <FlowScreen
         {...common}
-        footer={<Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Terminé</Button>}
+        footer={<Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Terminé</Button>}
       >
         <div className="flex flex-col items-center text-center pt-8 space-y-4">
           <div className="w-20 h-20 rounded-full bg-success-soft flex items-center justify-center">
@@ -142,7 +142,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
         {...common}
         heading="Dossier en cours d'étude"
         desc="Vous recevrez une notification dès qu'une décision sera prise."
-        footer={<Button variant="outline" className="w-full h-13 text-base font-bold rounded-2xl" onClick={onClose}>Fermer</Button>}
+        footer={<Button variant="outline" className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={onClose}>Fermer</Button>}
       >
         <FlowNotice tone="warning" icon={<Clock className="w-5 h-5 text-warning" />}>
           « {pending.projectTitle} » est entre les mains de notre équipe.
@@ -161,15 +161,8 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
     return (
       <FlowScreen
         {...common}
-        hero={
-          <div className="gradient-sunset px-5 py-7 text-white">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
-              <Gift className="w-7 h-7 text-white" />
-            </div>
-            <h1 className="text-[26px] leading-tight font-serif font-bold">Une aide pour votre activité</h1>
-            <p className="mt-1.5 text-[14px] opacity-90 font-medium">Gratuite, rien à rembourser.</p>
-          </div>
-        }
+        heading="Une aide pour votre activité"
+        desc="Gratuite, rien à rembourser."
         footer={nextButton(true, 'Commencer')}
       >
         {last?.status === 'granted' && (
@@ -287,7 +280,6 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
               ref={fileInput}
               type="file"
               accept="video/*"
-              capture="user"
               className="hidden"
               onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
             />
@@ -333,7 +325,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
       heading="Vérifiez votre dossier"
       desc="Touchez « Modifier » pour corriger une réponse."
       footer={
-        <Button className="w-full h-13 text-base font-bold rounded-2xl" onClick={submit} disabled={!valid.review || sending !== 'idle'}>
+        <Button className="w-full h-12 text-[15px] font-bold rounded-xl" onClick={submit} disabled={!valid.review || sending !== 'idle'}>
           {sending === 'uploading' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Envoi de la vidéo…</>
             : sending === 'submitting' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dépôt du dossier…</>
             : `Déposer et payer ${fcfa(applicationFee)}`}

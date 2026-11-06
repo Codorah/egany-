@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { EganyeIcon } from './EganyeIcon';
 import { BrandVisual } from './BrandVisual';
@@ -12,18 +11,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
  *
  * Quand l'opérateur choisi le permet (SoftPay), Paydunya envoie directement la
  * demande de code sur le téléphone au lieu de rediriger vers une page web.
- * Jusqu'ici l'application se contentait d'un message fugace puis refermait le
- * formulaire : l'utilisatrice se retrouvait devant son solde inchangé, sans
- * rien lui indiquant qu'elle devait composer son code, ni combien de temps
- * attendre. Cet écran occupe cette attente et la termine explicitement.
+ * Cet écran occupe cette attente et la termine explicitement.
  *
  * Le sondage ne sert QU'À afficher. Le crédit reste décidé par le webhook
- * Paydunya (api/paydunya-webhook), seul habilité à toucher un portefeuille —
- * cet écran ne fait que regarder, et le nouveau solde arrive de lui-même par
- * le canal temps réel de `profiles`.
+ * Paydunya (api/paydunya-webhook), seul habilité à toucher un portefeuille.
+ *
+ * Délai dépassé et échec sont deux états distincts : un délai dépassé ne veut
+ * pas dire que le paiement a échoué. Proposer de repayer en premier à ce
+ * moment-là pourrait faire payer deux fois.
  */
 
-type PollStatus = 'pending' | 'completed' | 'failed';
+type PollStatus = 'pending' | 'completed' | 'failed' | 'timeout';
 
 interface PaymentPendingCardProps {
   invoiceToken: string;
@@ -56,16 +54,7 @@ export function PaymentPendingCard({
 }: PaymentPendingCardProps) {
   const { t } = useLanguage();
   const [status, setStatus] = useState<PollStatus>('pending');
-  const [elapsed, setElapsed] = useState(0);
   const startedAt = useRef(Date.now());
-
-  // Compteur d'attente, purement visuel : sans lui l'écran paraît figé et on
-  // ne sait pas si quelque chose se passe encore.
-  useEffect(() => {
-    if (status !== 'pending') return;
-    const tick = setInterval(() => setElapsed(Date.now() - startedAt.current), 1000);
-    return () => clearInterval(tick);
-  }, [status]);
 
   useEffect(() => {
     if (status !== 'pending') return;
@@ -73,7 +62,7 @@ export function PaymentPendingCard({
 
     const poll = async () => {
       if (Date.now() - startedAt.current > TIMEOUT_MS) {
-        if (!cancelled) setStatus('failed');
+        if (!cancelled) setStatus('timeout');
         return;
       }
       try {
@@ -95,129 +84,107 @@ export function PaymentPendingCard({
     return () => { cancelled = true; clearInterval(interval); };
   }, [invoiceToken, status]);
 
-  const seconds = Math.floor(elapsed / 1000);
-  const timeLabel = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-
   if (status === 'completed') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-card rounded-2xl p-6 border border-secondary/25 shadow-soft text-center space-y-4"
-      >
+      <div className="text-center space-y-4">
         <div className="relative flex justify-center">
           <BrandVisual name="success" height={150} alt="" />
           <Celebration />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-bold text-foreground">{t('pay_confirmed_title')}</h3>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <div className="space-y-1.5" aria-live="polite">
+          <h3 className="text-xl font-bold text-foreground">{t('pay_confirmed_title')}</h3>
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             {netAmount.toLocaleString()} FCFA {t('pay_confirmed_desc')}
           </p>
         </div>
-        <Button
-          onClick={onDone}
-          className="w-full h-11 rounded-2xl font-bold text-sm bg-secondary hover:bg-secondary/90 text-white cursor-pointer"
-        >
+        <Button onClick={onDone} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
           {t('pay_view_wallet')}
         </Button>
-      </motion.div>
+      </div>
     );
   }
 
   if (status === 'failed') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-card rounded-2xl p-6 border border-border shadow-soft text-center space-y-4"
-      >
+      <div className="text-center space-y-4">
         <div className="flex justify-center">
           <BrandVisual name="failed" height={150} alt="" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-base font-serif font-bold text-foreground">{t('pay_not_received_title')}</h3>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
-            {t('pay_not_received_desc_1')} {operatorLabel}. {t('pay_not_received_desc_2')}
+        <div className="space-y-1.5" aria-live="polite">
+          <h3 className="text-xl font-bold text-foreground">{t('pay_failed_title')}</h3>
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
+            {t('pay_failed_desc')}
           </p>
         </div>
         <div className="space-y-2">
-          <Button
-            onClick={onRetry}
-            className="gradient-sunset w-full h-11 rounded-2xl font-bold text-sm text-white cursor-pointer"
-          >
+          <Button onClick={onRetry} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
             {t('pay_retry')}
           </Button>
-          <Button
-            onClick={onDone}
-            variant="ghost"
-            className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
-          >
+          <Button onClick={onDone} variant="ghost" className="w-full h-12 rounded-xl font-bold text-sm text-foreground cursor-pointer">
             {t('pay_back_to_wallet')}
           </Button>
         </div>
-      </motion.div>
+      </div>
+    );
+  }
+
+  if (status === 'timeout') {
+    return (
+      <div className="text-center space-y-4">
+        <div className="space-y-1.5 pt-6" aria-live="polite">
+          <h3 className="text-xl font-bold text-foreground">{t('pay_timeout_title')}</h3>
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
+            {t('pay_timeout_desc_prefix')} {operatorLabel}. {t('pay_not_received_desc_2')}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Button onClick={onDone} className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer">
+            {t('pay_back_to_wallet')}
+          </Button>
+          <Button onClick={onRetry} variant="ghost" className="w-full h-12 rounded-xl font-bold text-sm text-foreground cursor-pointer">
+            {t('pay_timeout_retry')}
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl p-6 border border-border shadow-soft space-y-5"
-    >
-      {/* Téléphone qui « sonne » : l'anneau pulsé dit qu'on attend un geste de
-          l'utilisatrice, pas que l'application charge quelque chose. */}
-      <div className="flex justify-center pt-1">
-        <div className="relative">
-          <motion.span
-            className="absolute inset-0 rounded-full bg-primary/20"
-            animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-          />
-          <div className="relative w-16 h-16 rounded-full gradient-sunset flex items-center justify-center text-white">
-            <EganyeIcon name="call" size={26} />
-          </div>
+    <div className="space-y-5">
+      <div className="flex justify-center pt-2">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-foreground">
+          <EganyeIcon name="call" size={26} />
         </div>
       </div>
 
-      <div className="text-center space-y-1.5">
-        <h3 className="text-base font-serif font-bold text-foreground">
+      <div className="text-center space-y-1.5" aria-live="polite">
+        <h3 className="text-xl font-bold text-foreground">
           {t('pay_confirm_on_phone')}
         </h3>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <p className="text-[15px] text-muted-foreground leading-relaxed">
           {operatorLabel} {t('pay_request_sent_to')} <strong className="text-foreground">{phone}</strong>.
-          {t('pay_enter_pin')}
+          {' '}{t('pay_enter_pin')}
         </p>
       </div>
 
-      <div className="rounded-2xl bg-muted/50 border border-border p-3.5 space-y-2">
-        <div className="flex items-center justify-between text-xs">
+      <div className="rounded-2xl border border-border divide-y divide-border bg-card">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
           <span className="text-muted-foreground">{t('pay_amount_debited')}</span>
           <span className="font-bold text-foreground tabular-nums">{grossAmount.toLocaleString()} FCFA</span>
         </div>
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
           <span className="text-muted-foreground">{t('pay_credited_to_wallet')}</span>
           <span className="font-bold text-foreground tabular-nums">{netAmount.toLocaleString()} FCFA</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-[13px] text-muted-foreground">
-        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-        <span>{t('pay_waiting_confirmation')} · {timeLabel}</span>
-      </div>
-
       <p className="text-[13px] text-center text-muted-foreground leading-relaxed">
-        {t('pay_can_leave')}
+        {t('pay_waiting_confirmation')}. {t('pay_can_leave')}
       </p>
 
-      <Button
-        onClick={onDone}
-        variant="ghost"
-        className="w-full h-10 rounded-2xl font-bold text-xs text-muted-foreground cursor-pointer"
-      >
+      <Button onClick={onDone} variant="ghost" className="w-full h-12 rounded-xl font-bold text-sm text-foreground cursor-pointer">
         {t('pay_close')}
       </Button>
-    </motion.div>
+    </div>
   );
 }
