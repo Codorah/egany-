@@ -109,7 +109,7 @@
       ${phone('pot-full', { x: 1240, y: 110, h: 830, a: 'swap', d: B(2), du: 0.22, note: T.note })}`),
 
     // 5a. L'IA : le score
-    scene(12, 14.75, 'bg-night', `
+    scene(12, 15, 'bg-night', `
       ${aiTag}
       <div class="abs big" style="left:96px;top:230px;width:980px;font-size:112px">${words(T.ai1, { d: 0.1, step: BEAT })}</div>
       <div class="abs" style="left:100px;top:690px;font-size:50px;font-weight:800;color:#DD8760" data-a="rise" data-d="${B(1.25)}" data-du=".3">${T.ai1Sub}</div>
@@ -126,7 +126,7 @@
       <div class="callout" style="left:1040px;top:830px;width:800px" data-a="slam" data-d="${B(1.5)}" data-du=".3">${T.why}</div>`),
 
     // 5b. L'alerte
-    scene(14.75, 16.5, 'bg-night', `
+    scene(15, 16.5, 'bg-night', `
       ${aiTag}
       <div class="abs big" style="left:96px;top:260px;width:900px;font-size:112px">${words(T.ai2, { d: 0, step: BEAT / 1.4 })}</div>
       <div class="callout" style="left:100px;top:700px;width:800px" data-a="slam" data-d="${BEAT * 3}" data-du=".3"><small>${T.ai2Tag}</small>${T.ai2Call}</div>

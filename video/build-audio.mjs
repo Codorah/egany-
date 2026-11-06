@@ -177,7 +177,7 @@ const ding = (t, g, pan) => {
 if (VIDEO === 'presentation') {
   impact(0, 0.42); ding(0, 0.06, 0);
   // coupes : un impact et un souffle sur chaque changement de scène
-  [2, 4, 6, 9, 12, 14.75, 16.5, 18.25, 19.75, 21.5, 23.25].forEach((b) => { whoosh(b * BAR, 0.22); impact(b * BAR, 0.26); });
+  [2, 4, 6, 9, 12, 15, 16.5, 18.25, 19.75, 21.5, 23.25].forEach((b) => { whoosh(b * BAR, 0.22); impact(b * BAR, 0.26); });
   // un petit son par membre qui cotise (scène du pot)
   for (let i = 0; i < 6; i++) ding(9 * BAR + BAR * 0.5 + i * BEAT * 1.5, 0.07, 0.3);
   // le pot qui arrive

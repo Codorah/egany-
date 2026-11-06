@@ -19,18 +19,18 @@ export const speak = (text, lang) => (lang === 'en' ? text.replace(/eganyé/g, '
 // Présentation : [mesure de départ, français, anglais]. Une réplique doit finir avant la suivante.
 export const PRESENTATION_BARS = 25;
 export const PRESENTATION = [
-  [0.5, 'eganyé. La tontine, sur votre téléphone.', 'eganyé. Your tontine, on your phone.'],
+  [0.25, 'eganyé. La tontine, sur votre téléphone.', 'eganyé. Your tontine, on your phone.'],
   [2, 'Le cahier qui se perd. Qui a payé ? Qui manque ?', 'Lost notebooks. Who paid? Who’s missing?'],
   [4, 'Vos cercles, votre argent. Tout est là.', 'Your circles, your money. All in one place.'],
   [6, 'Créez votre cercle. Invitez vos proches, par lien ou par code.', 'Start your circle. Invite your people, by link or by code.'],
   [9, 'Cotisez par Flooz ou Mixx. Chaque franc se voit, et le pot se remplit.', 'Pay in with Flooz or Mixx. Every franc is visible, and the pot fills up.'],
-  [12, 'Au cœur d’eganyé, une IA. Elle estime votre fiabilité, et vous explique votre score.', 'At the heart of eganyé, there’s AI. It estimates your reliability, and explains your score.'],
-  [14.75, 'Elle vous prévient avant un retard.', 'It warns you before you’re late.'],
-  [16.5, 'Elle estime le risque du tour, sans nommer personne.', 'It estimates the risk for each round, without naming anyone.'],
+  [12, 'Au cœur d’eganyé, une IA. Elle estime votre fiabilité, et vous explique votre score.', 'At eganyé’s heart: AI. It estimates your reliability, and explains your score.'],
+  [15, 'Elle vous prévient avant un retard.', 'It warns you before you’re late.'],
+  [16.5, 'Elle estime le risque du tour, sans nommer personne.', 'It estimates each round’s risk, without naming anyone.'],
   [18.25, 'Et elle ne décide jamais à votre place.', 'And it never decides for you.'],
   [19.75, 'À votre tour, le pot arrive sur votre portefeuille.', 'When it’s your turn, the pot lands in your wallet.'],
   [21.5, 'Mettez de côté dans vos coffres. Retirez avec votre code PIN.', 'Put money aside in your vaults. Withdraw with your PIN.'],
-  [23.25, 'eganyé. Épargnons ensemble.', 'eganyé. Let’s save together.'],
+  [23.35, 'eganyé. Épargnons ensemble.', 'eganyé. Let’s save together.'],
 ];
 
 // Tutoriel : une étape, un écran, une phrase. tap = repère [x, y] en fraction de l'écran.
@@ -49,10 +49,11 @@ export const TUTORIAL = [
   { ch: 2, screen: 'invite', fr: 'Votre cercle est prêt. Partagez le code, ou invitez vos proches sur WhatsApp.', en: 'Your circle is ready. Share the code, or invite your people on WhatsApp.' },
   { ch: 3, screen: 'circle', tap: [0.5, 0.33], fr: 'Quand vient le moment de cotiser, ouvrez votre cercle et touchez Cotiser.', en: 'When it’s time to pay in, open your circle and tap Contribute.' },
   { ch: 3, screen: 'circle', tap: [0.5, 0.115], fr: 'L’IA estime aussi le risque de retard du tour, sans nommer personne.', en: 'The AI also estimates the risk of delay for the round, without naming anyone.' },
+  { ch: 3, screen: 'pay', fr: 'La cotisation part toute seule de votre portefeuille dès que le solde suffit. Déjà payé autrement ? Déclarez-le ici.', en: 'Your contribution goes out from your wallet as soon as your balance covers it. Already paid another way? Declare it here.' },
   { ch: 3, screen: 'pot-partial', tap: [0.5, 0.19], fr: 'Le pot se remplit à chaque cotisation, et chacun peut le voir.', en: 'The pot fills up with every contribution, and everyone can see it.' },
   { ch: 4, screen: 'pot-full', tap: [0.5, 0.315], fr: 'Quand tout le monde a cotisé, l’organisateur distribue le pot.', en: 'Once everyone has paid in, the organizer distributes the pot.' },
   { ch: 4, screen: 'received', tap: [0.5, 0.83], fr: 'À votre tour, l’argent arrive sur votre portefeuille.', en: 'When it’s your turn, the money lands in your wallet.' },
-  { ch: 5, screen: 'topup-1', tap: [0.5, 0.955], fr: 'Pour recharger, choisissez le montant.', en: 'To top up, choose the amount.' },
+  { ch: 5, screen: 'topup-1', tap: [0.5, 0.955], fr: 'Pour recharger votre portefeuille, choisissez le montant.', en: 'To recharge your wallet, choose the amount.' },
   { ch: 5, screen: 'topup-2', tap: [0.5, 0.955], fr: 'Vérifiez les frais, payez, puis confirmez sur votre téléphone.', en: 'Check the fees, pay, then confirm on your phone.' },
   { ch: 5, screen: 'withdraw-1', tap: [0.5, 0.955], fr: 'Pour retirer, choisissez le montant.', en: 'To withdraw, choose the amount.' },
   { ch: 5, screen: 'withdraw-2', tap: [0.5, 0.33], fr: 'Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé.', en: 'Double-check the number: a completed transfer can’t be reversed.' },

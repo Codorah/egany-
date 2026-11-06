@@ -122,8 +122,8 @@ const DB = {
   ],
   messages: [],
   personal_vaults: [
-    { id: 'a3000000-0000-4000-8000-000000000001', user_id: ME, name: 'Scolarité des enfants', description: 'Rentrée de septembre', balance: 85000, lock_days: 90, unlock_at: later(45), created_at: ago(45) },
-    { id: 'a3000000-0000-4000-8000-000000000002', user_id: ME, name: 'Fonds de commerce', description: 'Nouveau stock', balance: 40000, lock_days: 30, unlock_at: ago(2), created_at: ago(32) },
+    { id: 'a3000000-0000-4000-8000-000000000001', user_id: ME, name: EN ? 'School fees' : 'Scolarité des enfants', description: 'Rentrée de septembre', balance: 85000, lock_days: 90, unlock_at: later(45), created_at: ago(45) },
+    { id: 'a3000000-0000-4000-8000-000000000002', user_id: ME, name: EN ? 'Shop fund' : 'Fonds de commerce', description: 'Nouveau stock', balance: 40000, lock_days: 30, unlock_at: ago(2), created_at: ago(32) },
   ],
   platform_settings: [{
     id: 1, maintenance_mode: false, allow_signups: true, payout_fee_mode: 'none', payout_fee_percent: 0, platform_wallet_id: null,
@@ -415,14 +415,14 @@ function setPot(paidCount) {
   DB.contributions = DB.contributions.filter((c) => c.group_id !== G1);
   // Awa cotise en dernier : avant cela, le bouton « Cotiser » la concerne.
   [person(1), person(2), person(3), person(4), person(5), ME].forEach((u, i) => {
-    DB.contributions.push({ ...contrib(`d9000000-0000-4000-8000-00000000000${i}`, G1, u, 10000, 0, i < paidCount ? 'paid' : 'pending'), period: 'NOW', date: later(2).slice(0, 10) });
+    DB.contributions.push({ ...contrib(`d9000000-0000-4000-8000-00000000000${i}`, G1, u, 10000, 0, i < paidCount ? 'paid' : 'pending'), period: '2026-11', date: later(2).slice(0, 10) });
   });
 }
 const CLEAN = () => JSON.parse(JSON.stringify(DB));
 async function logged(browser, storageKey) {
   const p = await newPage(browser, { session: makeSession(), storageKey });
   await open(p, '/');
-  await waitText(p, EN ? 'Top up' : 'Recharger', 120000);
+  await waitText(p, EN ? 'Recharge' : 'Recharger', 120000);
   await sleep(1500);
   return p;
 }
@@ -470,9 +470,9 @@ async function run(browser) {
   // --- Alerte avant un retard
   restore();
   DB.profiles[0].wallet_balance = 7500;
-  DB.contributions.push({ ...contrib('d8000000-0000-4000-8000-000000000001', G1, ME, 10000, 0, 'pending'), date: later(3).slice(0, 10), period: 'NEXT' });
+  DB.contributions.push({ ...contrib('d8000000-0000-4000-8000-000000000001', G1, ME, 10000, 0, 'pending'), date: later(3).slice(0, 10), period: '2026-12' });
   p = await logged(browser, storageKey).catch(() => null);
-  if (p) { await shot(p, 'home-alert', { settle: 2500 }); await p.close(); }
+  if (p) { await shot(p, 'home-alert', { settle: 6000 }); await p.close(); }
   restore();
 
   // --- Créer un cercle
@@ -553,7 +553,7 @@ async function run(browser) {
 
   // --- Recharger, retirer
   p = await logged(browser, storageKey);
-  await clickText(p, EN ? 'Top up' : 'Recharger');
+  await clickText(p, EN ? 'Recharge' : 'Recharger');
   await sleep(2000);
   await typeNth(p, 0, '10000');
   await p.evaluate(() => document.activeElement?.blur());

@@ -1,6 +1,6 @@
 [
  {
-  "t": 0.968,
+  "t": 0.484,
   "text": "eganyé. Your tontine, on your phone.",
   "file": "01.mp3",
   "duree": 2.688
@@ -31,21 +31,21 @@
  },
  {
   "t": 23.226,
-  "text": "At the heart of eganyé, there’s AI. It estimates your reliability, and explains your score.",
+  "text": "At eganyé’s heart: AI. It estimates your reliability, and explains your score.",
   "file": "06.mp3",
-  "duree": 6.024
+  "duree": 5.688
  },
  {
-  "t": 28.548,
+  "t": 29.032,
   "text": "It warns you before you’re late.",
   "file": "07.mp3",
   "duree": 1.728
  },
  {
   "t": 31.935,
-  "text": "It estimates the risk for each round, without naming anyone.",
+  "text": "It estimates each round’s risk, without naming anyone.",
   "file": "08.mp3",
-  "duree": 3.72
+  "duree": 3.672
  },
  {
   "t": 35.323,
@@ -66,7 +66,7 @@
   "duree": 3.384
  },
  {
-  "t": 45,
+  "t": 45.194,
   "text": "eganyé. Let’s save together.",
   "file": "12.mp3",
   "duree": 2.328

@@ -99,72 +99,79 @@
  },
  {
   "t": 68.948,
-  "text": "The pot fills up with every contribution, and everyone can see it.",
+  "text": "Your contribution goes out from your wallet as soon as your balance covers it. Already paid another way? Declare it here.",
   "file": "15.mp3",
-  "duree": 4.2,
+  "duree": 6.84,
   "step": 14
  },
  {
-  "t": 73.998,
-  "text": "Once everyone has paid in, the organizer distributes the pot.",
+  "t": 76.638,
+  "text": "The pot fills up with every contribution, and everyone can see it.",
   "file": "16.mp3",
-  "duree": 3.96,
+  "duree": 4.2,
   "step": 15
  },
  {
-  "t": 78.808,
-  "text": "When it’s your turn, the money lands in your wallet.",
+  "t": 81.688,
+  "text": "Once everyone has paid in, the organizer distributes the pot.",
   "file": "17.mp3",
-  "duree": 3.144,
+  "duree": 3.96,
   "step": 16
  },
  {
-  "t": 82.802,
-  "text": "To top up, choose the amount.",
+  "t": 86.498,
+  "text": "When it’s your turn, the money lands in your wallet.",
   "file": "18.mp3",
-  "duree": 2.208,
+  "duree": 3.144,
   "step": 17
  },
  {
-  "t": 85.86,
-  "text": "Check the fees, pay, then confirm on your phone.",
+  "t": 90.492,
+  "text": "To recharge your wallet, choose the amount.",
   "file": "19.mp3",
-  "duree": 3.576,
+  "duree": 2.76,
   "step": 18
  },
  {
-  "t": 90.286,
-  "text": "To withdraw, choose the amount.",
+  "t": 94.102,
+  "text": "Check the fees, pay, then confirm on your phone.",
   "file": "20.mp3",
-  "duree": 2.376,
+  "duree": 3.576,
   "step": 19
  },
  {
-  "t": 93.512,
-  "text": "Double-check the number: a completed transfer can’t be reversed.",
+  "t": 98.528,
+  "text": "To withdraw, choose the amount.",
   "file": "21.mp3",
-  "duree": 3.984,
+  "duree": 2.376,
   "step": 20
  },
  {
-  "t": 98.346,
-  "text": "Check the summary.",
+  "t": 101.754,
+  "text": "Double-check the number: a completed transfer can’t be reversed.",
   "file": "22.mp3",
-  "duree": 1.872,
+  "duree": 3.984,
   "step": 21
  },
  {
-  "t": 101.068,
-  "text": "Enter your PIN, and you’re done.",
+  "t": 106.588,
+  "text": "Check the summary.",
   "file": "23.mp3",
-  "duree": 1.896,
+  "duree": 1.872,
   "step": 22
  },
  {
-  "t": 103.814,
-  "text": "That’s all you need. Welcome to eganyé.",
+  "t": 109.31,
+  "text": "Enter your PIN, and you’re done.",
   "file": "24.mp3",
-  "duree": 3.312,
+  "duree": 1.896,
   "step": 23
+ },
+ {
+  "t": 112.056,
+  "text": "That’s all you need. Welcome to eganyé.",
+  "file": "25.mp3",
+  "duree": 3.312,
+  "step": 24
  }
 ]

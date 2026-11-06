@@ -99,72 +99,79 @@
  },
  {
   "t": 65.396,
-  "text": "Le pot se remplit à chaque cotisation, et chacun peut le voir.",
+  "text": "La cotisation part toute seule de votre portefeuille dès que le solde suffit. Déjà payé autrement ? Déclarez-le ici.",
   "file": "15.mp3",
-  "duree": 3.48,
+  "duree": 6.576,
   "step": 14
  },
  {
-  "t": 69.726,
-  "text": "Quand tout le monde a cotisé, l’organisateur distribue le pot.",
+  "t": 72.822,
+  "text": "Le pot se remplit à chaque cotisation, et chacun peut le voir.",
   "file": "16.mp3",
-  "duree": 3.408,
+  "duree": 3.48,
   "step": 15
  },
  {
-  "t": 73.984,
-  "text": "À votre tour, l’argent arrive sur votre portefeuille.",
+  "t": 77.152,
+  "text": "Quand tout le monde a cotisé, l’organisateur distribue le pot.",
   "file": "17.mp3",
-  "duree": 3.192,
+  "duree": 3.408,
   "step": 16
  },
  {
-  "t": 78.026,
-  "text": "Pour recharger, choisissez le montant.",
+  "t": 81.41,
+  "text": "À votre tour, l’argent arrive sur votre portefeuille.",
   "file": "18.mp3",
-  "duree": 2.472,
+  "duree": 3.192,
   "step": 17
  },
  {
-  "t": 81.348,
-  "text": "Vérifiez les frais, payez, puis confirmez sur votre téléphone.",
+  "t": 85.452,
+  "text": "Pour recharger votre portefeuille, choisissez le montant.",
   "file": "19.mp3",
-  "duree": 3.96,
+  "duree": 3.024,
   "step": 18
  },
  {
-  "t": 86.158,
-  "text": "Pour retirer, choisissez le montant.",
+  "t": 89.326,
+  "text": "Vérifiez les frais, payez, puis confirmez sur votre téléphone.",
   "file": "20.mp3",
-  "duree": 2.352,
+  "duree": 3.96,
   "step": 19
  },
  {
-  "t": 89.36,
-  "text": "Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé.",
+  "t": 94.136,
+  "text": "Pour retirer, choisissez le montant.",
   "file": "21.mp3",
-  "duree": 3.792,
+  "duree": 2.352,
   "step": 20
  },
  {
-  "t": 94.002,
-  "text": "Relisez le récapitulatif.",
+  "t": 97.338,
+  "text": "Vérifiez bien le numéro : un envoi réussi ne peut pas être annulé.",
   "file": "22.mp3",
-  "duree": 2.088,
+  "duree": 3.792,
   "step": 21
  },
  {
-  "t": 96.94,
-  "text": "Entrez votre code PIN, et c’est parti.",
+  "t": 101.98,
+  "text": "Relisez le récapitulatif.",
   "file": "23.mp3",
-  "duree": 2.424,
+  "duree": 2.088,
   "step": 22
  },
  {
-  "t": 100.214,
-  "text": "Vous savez tout. Bienvenue sur eganyé.",
+  "t": 104.918,
+  "text": "Entrez votre code PIN, et c’est parti.",
   "file": "24.mp3",
-  "duree": 2.736,
+  "duree": 2.424,
   "step": 23
+ },
+ {
+  "t": 108.192,
+  "text": "Vous savez tout. Bienvenue sur eganyé.",
+  "file": "25.mp3",
+  "duree": 2.736,
+  "step": 24
  }
 ]
