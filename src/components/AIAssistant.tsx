@@ -1,15 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Bot, Sparkles, Send, Activity, AlertTriangle, ShieldCheck, Bell, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import React, { useEffect, useRef, useState } from 'react';
+import { Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { mapContributionRow } from '@/lib/mappers';
-import { apiFetch } from '@/lib/apiBase';
 import { Group, UserProfile } from '@/types';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { answer, explainChange, type AssistantContext, type AssistantContribution } from '@/lib/assistantEngine';
+import { fetchMyReliability, reliabilityLevel, type Reliability } from '@/lib/reliability';
 
 interface AIAssistantProps {
   user: UserProfile;
@@ -17,263 +11,179 @@ interface AIAssistantProps {
 }
 
 interface Message {
-  id: string;
-  sender: 'user' | 'ai';
+  id: number;
+  sender: 'user' | 'assistant';
   text: string;
 }
 
+const SUGGESTIONS = [
+  'Pourquoi mon score a bougé ?',
+  'Comment faire monter mon score ?',
+  'Ma prochaine cotisation ?',
+  'Qui voit mon score ?',
+];
+
 export function AIAssistant({ user, groups }: AIAssistantProps) {
-  const { t } = useLanguage();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'ai',
-      text: t('ais_welcome_message')
-    }
-  ]);
+  const [reliability, setReliability] = useState<Reliability | null>(null);
+  const [contributions, setContributions] = useState<AssistantContribution[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [lateContributions, setLateContributions] = useState<{ groupName: string; amount: number; currency: string; period?: string }[]>([]);
-  const [loadingContext, setLoadingContext] = useState(true);
+  const endRef = useRef<HTMLDivElement>(null);
+  const nextId = useRef(1);
 
   useEffect(() => {
-    const loadContext = async () => {
-      const { data } = await supabase.from('contributions').select('*').eq('user_id', user.uid).eq('status', 'late');
-      const rows = (data ?? []).map(mapContributionRow);
-      setLateContributions(rows.map((c) => {
-        const g = groups.find((gr) => gr.id === c.groupId);
-        return { groupName: g?.name || t('ais_circle_fallback_label'), amount: c.amount, currency: g?.currency || 'FCFA', period: c.period };
-      }));
-      setLoadingContext(false);
-    };
-    loadContext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.uid, groups.length]);
+    let cancelled = false;
+    fetchMyReliability().then((value) => {
+      if (!cancelled) setReliability(value);
+    });
+    return () => { cancelled = true; };
+  }, [user.uid]);
 
-  const activeGroups = groups.filter((g) => g.status === 'active');
-  const totalCommitted = activeGroups.reduce((acc, g) => acc + g.contributionAmount * g.members.length, 0);
-  const nextPayoutGroup = activeGroups.find((g) => {
-    const idx = g.payoutOrder.indexOf(user.uid);
-    return idx >= g.currentPayoutIndex;
-  }) || activeGroups[0] || null;
-
-  const financialContext = useMemo(() => ({
-    displayName: user.displayName,
-    soldeDisponible: user.walletBalance,
-    totalEpargne: user.totalSaved,
-    scoreReputation: user.reputationScore,
-    cerclesActifs: activeGroups.map((g) => ({
-      nom: g.name,
-      cotisation: g.contributionAmount,
-      devise: g.currency,
-      frequence: g.frequency,
-      membres: g.members.length,
-      potParCycle: g.contributionAmount * g.members.length,
-      prochaineDateVersement: g.nextPayoutDate,
-    })),
-    cotisationsEnRetard: lateContributions,
-    prochainTour: nextPayoutGroup ? {
-      cercle: nextPayoutGroup.name,
-      montant: nextPayoutGroup.contributionAmount * nextPayoutGroup.members.length,
-      date: nextPayoutGroup.nextPayoutDate,
-    } : null,
-    montantTotalEngage: totalCommitted,
-  }), [user, activeGroups, lateContributions, nextPayoutGroup, totalCommitted]);
-
-  const handleSend = async (textToSend?: string) => {
-    const query = textToSend || input;
-    if (!query.trim()) return;
-
-    const newMsg: Message = { id: Date.now().toString(), sender: 'user', text: query };
-    setMessages((prev) => [...prev, newMsg]);
-    if (!textToSend) setInput('');
-    setIsTyping(true);
-
-    try {
-      const response = await apiFetch('/api/ai-assistant', {
-        method: 'POST',
-        body: JSON.stringify({ message: query, context: financialContext }),
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('contributions')
+      .select('group_id, amount, date, status, penalty_applied, penalty_status')
+      .eq('user_id', user.uid)
+      .in('status', ['pending', 'late'])
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setContributions(data.map((row: any) => {
+          const group = groups.find((g) => g.id === row.group_id);
+          return {
+            groupName: group?.name || 'Cercle',
+            amount: Number(row.amount),
+            penalty: row.penalty_status === 'pending' ? Number(row.penalty_applied ?? 0) : 0,
+            currency: group?.currency || 'FCFA',
+            dueDate: row.date,
+            status: row.status,
+          };
+        }));
       });
-      // Même précaution que pour la recharge : une réponse en échec renvoie du
-      // HTML, qu'il ne faut jamais tenter de parser en JSON.
-      // Quota atteint (429) ou service indisponible (503) : le serveur envoie
-      // un message lisible, à montrer tel quel plutôt qu'une « erreur réseau ».
-      const data = await response.json().catch(() => null);
-      if (!response.ok && !data?.reply) throw new Error(`AI assistant HTTP ${response.status}`);
-      setMessages((prev) => [...prev, {
-        id: (Date.now() + 1).toString(),
-        sender: 'ai',
-        text: data?.reply || t('ais_no_reply_fallback'),
-      }]);
-    } catch (err) {
-      toast.error(t('ais_connection_error_toast'));
-      setMessages((prev) => [...prev, {
-        id: (Date.now() + 1).toString(),
-        sender: 'ai',
-        text: t('ais_network_error_message'),
-      }]);
-    } finally {
-      setIsTyping(false);
-    }
+    return () => { cancelled = true; };
+  }, [user.uid, groups]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages]);
+
+  const buildContext = (): AssistantContext => ({
+    firstName: user.firstName || user.displayName.split(' ')[0] || '',
+    walletBalance: user.walletBalance || 0,
+    contributions,
+    reliability,
+    circles: groups.filter((g) => g.status === 'active').map((g) => ({
+      name: g.name,
+      nextPayoutDate: g.nextPayoutDate,
+      potAmount: g.contributionAmount * g.members.length,
+      currency: g.currency,
+      isNextBeneficiary: g.payoutOrder[g.currentPayoutIndex] === user.uid,
+    })),
+  });
+
+  const send = (raw: string) => {
+    const question = raw.trim();
+    if (!question) return;
+    const reply = answer(question, buildContext());
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId.current++, sender: 'user', text: question },
+      { id: nextId.current++, sender: 'assistant', text: reply.text },
+    ]);
+    setInput('');
   };
 
+  const ready = reliability?.status === 'ready' ? reliability : null;
+  const moved = ready && ready.previousScore !== null && ready.previousScore !== ready.score;
+
   return (
-    <div className="space-y-6 pb-20 max-w-4xl mx-auto flex flex-col min-h-[calc(100dvh-140px)]">
-      {/* Copilote Header */}
-      <div className="gradient-sunset p-6 rounded-3xl border border-white/20 shadow-elevated text-white shrink-0 flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-xs">
-              <Bot className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-serif font-black flex items-center gap-2">
-              {t('ais_header_title')} <span className="text-[13px] uppercase bg-white/20 px-2 py-0.5 rounded-full font-bold tracking-widest">{t('ais_status_operational')}</span>
-            </h1>
-          </div>
-          <p className="text-white/80 text-xs font-medium">
-            {t('ais_header_subtitle')}
+    <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-2xl flex-col">
+      <h1 className="text-xl font-bold text-foreground">Assistant</h1>
+
+      {/* Le score d'abord : c'est ce que la personne vient voir. */}
+      <section className="mt-4 border-b border-border pb-5" aria-label="Score de fiabilité">
+        {ready ? (
+          <>
+            <p className="text-[13px] text-muted-foreground">Score de fiabilité</p>
+            <p className="mt-0.5 flex items-baseline gap-2">
+              <span className="text-4xl font-bold tabular-nums text-foreground">{ready.score}</span>
+              <span className="text-sm text-muted-foreground">/ 100 · {reliabilityLevel(ready.score)}</span>
+            </p>
+            {moved && <p className="mt-2 text-sm leading-relaxed text-foreground">{explainChange(ready)}</p>}
+          </>
+        ) : reliability?.status === 'building' ? (
+          <>
+            <p className="text-[13px] text-muted-foreground">Score de fiabilité</p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground">
+              Pas encore de score : il faut {reliability.needed} cotisations échues, vous en avez {reliability.dueCount}.
+            </p>
+          </>
+        ) : reliability?.status === 'error' ? (
+          <p className="text-sm text-muted-foreground">Score indisponible pour le moment.</p>
+        ) : (
+          <div className="h-16 animate-pulse rounded-xl bg-muted" />
+        )}
+      </section>
+
+      <div className="flex-1 space-y-3 py-4" aria-live="polite">
+        {messages.length === 0 && (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Posez une question sur votre score, vos cotisations ou votre solde. Je réponds uniquement à partir de vos données, et ce que vous écrivez reste sur votre téléphone.
           </p>
-        </div>
-      </div>
-
-      {/* Operational Treasury Alerts */}
-      <div className="bg-card border border-border/80 rounded-3xl p-5 shadow-soft space-y-4 shrink-0">
-        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Activity className="w-4 h-4 text-primary-ink" />
-          {t('ais_detection_health_title')}
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {lateContributions.length > 0 ? (
-            <div className="bg-warning-soft border border-warning/20 p-4 rounded-2xl space-y-2">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">
-                    {lateContributions.length} {t('ais_late_contributions_count_label')}
-                  </h4>
-                  <p className="text-[13px] text-muted-foreground mt-0.5">
-                    {lateContributions[0].groupName} : {lateContributions[0].amount.toLocaleString()} {lateContributions[0].currency}
-                    {lateContributions.length > 1 ? ` ${t('ais_and_label')} ${lateContributions.length - 1} ${t('ais_others_label')}` : ''}.
-                  </p>
-                  <Button
-                    onClick={() => handleSend(t('ais_prompt_draft_reminder'))}
-                    size="sm"
-                    className="btn-shine mt-2.5 h-8 text-[13px] font-bold gradient-sunset text-white rounded-xl shadow-xs"
-                  >
-                    <Bell className="w-3.5 h-3.5 mr-1" /> {t('ais_draft_reminder_cta')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-success-soft border border-secondary/20 p-4 rounded-2xl space-y-2">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">{t('ais_no_late_contribution_title')}</h4>
-                  <p className="text-[13px] text-muted-foreground mt-0.5">
-                    {loadingContext ? t('ais_checking_ellipsis') : t('ais_all_payments_uptodate')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl space-y-2">
-            <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-foreground">
-                  {activeGroups.length} {t('ais_active_circles_count_label')}
-                </h4>
-                <p className="text-[13px] text-muted-foreground mt-0.5">
-                  {totalCommitted.toLocaleString()} {t('ais_engaged_this_cycle_suffix')}
-                </p>
-                <Button
-                  onClick={() => handleSend(t('ais_prompt_treasury_report'))}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2.5 h-8 text-[13px] font-bold border-border text-foreground rounded-xl"
-                >
-                  <FileText className="w-3.5 h-3.5 mr-1" /> {t('ais_generate_report_cta')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Action Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <button
-          onClick={() => handleSend(t('ais_prompt_late_summary'))}
-          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
-        >
-          <Bell className="w-3.5 h-3.5 text-primary-ink" /> {t('ais_smart_reminders_chip')}
-        </button>
-        <button
-          onClick={() => handleSend(t('ais_prompt_treasury_report'))}
-          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
-        >
-          <FileText className="w-3.5 h-3.5 text-secondary" /> {t('ais_treasury_report_chip')}
-        </button>
-        <button
-          onClick={() => handleSend(t('ais_prompt_next_turn'))}
-          className="px-3.5 py-2 rounded-2xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1.5"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-warning" /> {t('ais_next_turn_chip')}
-        </button>
-      </div>
-
-      {/* Chat Interface */}
-      <div className="flex-1 bg-card border border-border/80 rounded-3xl shadow-soft flex flex-col overflow-hidden min-h-[300px]">
-        <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center gap-2">
-          <Bot className="w-4 h-4 text-primary-ink" />
-          <span className="text-xs font-bold text-foreground">{t('ais_conversation_label')}</span>
-        </div>
-
-        <div className="flex-1 p-4 overflow-y-auto space-y-3">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+        )}
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <p
+              className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                m.sender === 'user' ? 'bg-primary-ink text-white' : 'bg-muted text-foreground'
+              }`}
             >
-              <div
-                className={`max-w-[85%] p-3.5 rounded-2xl text-xs whitespace-pre-line leading-relaxed ${
-                  m.sender === 'user'
-                    ? 'gradient-sunset text-white rounded-br-none font-medium'
-                    : 'bg-muted/40 text-foreground border border-border/60 rounded-bl-none font-normal'
-                }`}
-              >
-                {m.text}
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-muted/40 text-muted-foreground p-3 rounded-2xl text-xs animate-pulse">
-                {t('ais_analyzing_ellipsis')}
-              </div>
-            </div>
-          )}
-        </div>
+              {m.text}
+            </p>
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
 
-        <div className="p-3 border-t border-border/60 bg-card flex gap-2">
-          <Input
-            placeholder={t('ais_input_placeholder')}
+      {/* Reste visible au-dessus de la barre de navigation. */}
+      <div className="sticky bottom-20 bg-background pb-2 pt-2 md:bottom-0">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none">
+          {SUGGESTIONS.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => send(suggestion)}
+              className="h-11 shrink-0 cursor-pointer rounded-full border border-border bg-card px-4 text-[13px] font-semibold text-foreground"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send(input);
+          }}
+        >
+          <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            className="rounded-2xl h-11 text-base border-border/80 focus-visible:ring-primary"
+            placeholder="Votre question"
             aria-label="Votre question"
             enterKeyHint="send"
             autoComplete="off"
+            maxLength={300}
+            className="h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-primary-ink"
           />
-          <Button onClick={() => handleSend()} className="group/send gradient-sunset text-white rounded-2xl h-11 px-4 cursor-pointer">
-            <Send className="w-4 h-4 transition-transform duration-200 group-hover/send:translate-x-0.5 group-hover/send:-translate-y-0.5" />
-          </Button>
-        </div>
+          <button
+            type="submit"
+            aria-label="Envoyer"
+            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-primary-ink text-white"
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        </form>
       </div>
     </div>
   );

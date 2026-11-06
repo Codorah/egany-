@@ -1,0 +1,40 @@
+{
+  "version": "depart-1",
+  "trainedOn": "membres simulés (voir simulate)",
+  "trainedAt": "2026-11-06",
+  "examples": 6000,
+  "intercept": 0.2394,
+  "coefficients": {
+    "on_time_rate": -2.1124,
+    "recent_late_rate": 0.9773,
+    "open_late": 0.3187,
+    "experience": -0.0311,
+    "late_after_payout": 0.7264
+  },
+  "test": {
+    "auc": 0.782,
+    "lateRate": 0.328,
+    "calibration": [
+      {
+        "predit": 0.129,
+        "observe": 0.087
+      },
+      {
+        "predit": 0.176,
+        "observe": 0.142
+      },
+      {
+        "predit": 0.286,
+        "observe": 0.237
+      },
+      {
+        "predit": 0.491,
+        "observe": 0.517
+      },
+      {
+        "predit": 0.749,
+        "observe": 0.658
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fetchMemberReliability, type Reliability } from '@/lib/reliability';
 import { Check, Loader2, RefreshCw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -135,6 +136,9 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
           <p className="text-sm font-bold text-foreground">{app.projectTitle}</p>
           <p className="text-[13px] text-muted-foreground">{app.userName} • {app.userEmail}</p>
           <p className="text-[13px] text-muted-foreground">
+            <ReliabilityHint userId={app.userId} />
+          </p>
+          <p className="text-[13px] text-muted-foreground">
             Épargne : {fcfa(app.userTotalSaved)} • Réputation : {app.userReputation} • Déposé le {dateFr(app.createdAt)}
           </p>
         </div>
@@ -211,4 +215,21 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
       )}
     </div>
   );
+}
+
+/** Pour information seulement : le score ne décide rien, c'est l'admin qui étudie le dossier. */
+function ReliabilityHint({ userId }: { userId: string }) {
+  const [value, setValue] = useState<Reliability | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchMemberReliability(userId).then((result) => {
+      if (!cancelled) setValue(result);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  if (!value) return null;
+  if (value.status === 'building') return <>Fiabilité : pas assez d'historique ({value.dueCount} cotisations échues). À ne pas lire comme un risque.</>;
+  if (value.status === 'error') return <>Fiabilité : indisponible.</>;
+  return <>Fiabilité : {value.score}/100, {value.onTimeCount} à l'heure sur {value.dueCount} (estimation indicative, ne décide rien).</>;
 }
