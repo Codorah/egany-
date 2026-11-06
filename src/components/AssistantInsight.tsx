@@ -3,6 +3,8 @@ import { ChevronRight, Sparkles } from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { loadAssistantContext } from '@/lib/assistantContext';
 import { momentInsight } from '@/lib/assistantEngine';
+import { setAssistantLanguage, tr } from '@/lib/reliability';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AssistantInsightProps {
   user: UserProfile;
@@ -12,6 +14,8 @@ interface AssistantInsightProps {
 
 /** La phrase la plus utile du moment. Rien s'il n'y a rien d'utile à dire. */
 export function AssistantInsight({ user, groups, onNavigate }: AssistantInsightProps) {
+  const { language } = useLanguage();
+  setAssistantLanguage(language);
   const [text, setText] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +37,7 @@ export function AssistantInsight({ user, groups, onNavigate }: AssistantInsightP
     >
       <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-semibold text-muted-foreground">Assistant eganyé</span>
+        <span className="block text-[13px] font-semibold text-muted-foreground">{tr('Assistant eganyé', 'eganyé assistant')}</span>
         <span className="block text-sm leading-snug text-foreground">{text}</span>
       </span>
       <ChevronRight className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />

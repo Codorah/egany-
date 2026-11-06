@@ -3,7 +3,8 @@ import { Send } from 'lucide-react';
 import { Group, UserProfile } from '@/types';
 import { answer, momentInsight, type AssistantContext } from '@/lib/assistantEngine';
 import { loadAssistantContext } from '@/lib/assistantContext';
-import { reliabilityLevel, type Reliability } from '@/lib/reliability';
+import { reliabilityLevel, setAssistantLanguage, tr, type Reliability } from '@/lib/reliability';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AIAssistantProps {
   user: UserProfile;
@@ -16,16 +17,18 @@ interface Message {
   text: string;
 }
 
-const SUGGESTIONS = [
-  'Pourquoi mon score a bougé ?',
-  'Comment faire monter mon score ?',
-  'Ma prochaine cotisation ?',
-  'La santé de mon cercle',
-  'Que fait l’IA ?',
-  'Qui voit mon score ?',
+const suggestions = () => [
+  tr('Pourquoi mon score a bougé ?', 'Why did my score move?'),
+  tr('Comment faire monter mon score ?', 'How can I raise my score?'),
+  tr('Ma prochaine cotisation ?', 'My next contribution?'),
+  tr('La santé de mon cercle', 'How is my circle doing?'),
+  tr('Que fait l’IA ?', 'What does the AI do?'),
+  tr('Qui voit mon score ?', 'Who can see my score?'),
 ];
 
 export function AIAssistant({ user, groups }: AIAssistantProps) {
+  const { language } = useLanguage();
+  setAssistantLanguage(language);
   const [context, setContext] = useState<AssistantContext | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,7 +49,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
         greeted.current = true;
         const opening = momentInsight(value);
         setMessages((prev) => [
-          { id: nextId.current++, sender: 'assistant', text: opening ?? 'Rien à signaler pour le moment. Posez-moi une question sur votre score, vos cotisations ou vos cercles.' },
+          { id: nextId.current++, sender: 'assistant', text: opening ?? tr('Rien à signaler pour le moment. Posez-moi une question sur votre score, vos cotisations ou vos cercles.', 'Nothing to report right now. Ask me about your score, contributions or circles.') },
           ...prev,
         ]);
       }
@@ -63,7 +66,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
     if (!question) return;
     const replyText = context
       ? answer(question, context).text
-      : 'Je n’arrive pas à lire vos données pour le moment. Réessayez dans un instant.';
+      : tr('Je n’arrive pas à lire vos données pour le moment. Réessayez dans un instant.', 'I can’t read your data right now. Try again in a moment.');
     setMessages((prev) => [
       ...prev,
       { id: nextId.current++, sender: 'user', text: question },
@@ -77,25 +80,25 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-2xl flex-col">
       {/* Le score d'abord : c'est ce que la personne vient voir. */}
-      <section className="border-b border-border pb-5" aria-label="Score de fiabilité">
+      <section className="border-b border-border pb-5" aria-label={tr('Score de fiabilité', 'Reliability score')}>
         {ready ? (
           <>
-            <p className="text-[13px] text-muted-foreground">Score de fiabilité</p>
+            <p className="text-[13px] text-muted-foreground">{tr('Score de fiabilité', 'Reliability score')}</p>
             <p className="mt-0.5 flex items-baseline gap-2">
               <span className="text-4xl font-bold tabular-nums text-foreground">{ready.score}</span>
               <span className="text-sm text-muted-foreground">/ 100 · {reliabilityLevel(ready.score)}</span>
             </p>
-            <p className="mt-1 text-[13px] leading-snug text-muted-foreground">Estimé par l’IA d’eganyé à partir de vos cotisations. Le modèle peut se tromper et ne décide rien.</p>
+            <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{tr('Estimé par l’IA d’eganyé à partir de vos cotisations. Le modèle peut se tromper et ne décide rien.', 'Estimated by eganyé’s AI from your contributions. The model can be wrong and decides nothing.')}</p>
           </>
         ) : reliability?.status === 'building' ? (
           <>
-            <p className="text-[13px] text-muted-foreground">Score de fiabilité</p>
+            <p className="text-[13px] text-muted-foreground">{tr('Score de fiabilité', 'Reliability score')}</p>
             <p className="mt-1 text-sm leading-relaxed text-foreground">
-              Pas encore de score : il faut {reliability.needed} cotisations échues, vous en avez {reliability.dueCount}.
+              {tr(`Pas encore de score : il faut ${reliability.needed} cotisations échues, vous en avez ${reliability.dueCount}.`, `No score yet: it takes ${reliability.needed} contributions past their due date, and you have ${reliability.dueCount}.`)}
             </p>
           </>
         ) : loaded ? (
-          <p className="text-sm text-muted-foreground">Score indisponible pour le moment.</p>
+          <p className="text-sm text-muted-foreground">{tr('Score indisponible pour le moment.', 'Score unavailable right now.')}</p>
         ) : (
           <div className="h-16 animate-pulse rounded-xl bg-muted" />
         )}
@@ -104,7 +107,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       <div className="flex-1 space-y-3 py-4" aria-live="polite">
         {loaded && (
           <p className="text-[13px] leading-relaxed text-muted-foreground">
-            Je réponds uniquement à partir de vos données, et ce que vous écrivez reste sur votre téléphone.
+            {tr('Je réponds uniquement à partir de vos données, et ce que vous écrivez reste sur votre téléphone.', 'I only answer from your own data, and what you type stays on your phone.')}
           </p>
         )}
         {messages.map((m) => (
@@ -124,7 +127,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       {/* Reste visible au-dessus de la barre de navigation. */}
       <div className="sticky bottom-[calc(3.75rem+env(safe-area-inset-bottom))] bg-background pb-2 pt-2 md:bottom-0">
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none">
-          {SUGGESTIONS.map((suggestion) => (
+          {suggestions().map((suggestion) => (
             <button
               key={suggestion}
               type="button"
@@ -145,8 +148,8 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Votre question"
-            aria-label="Votre question"
+            placeholder={tr('Votre question', 'Your question')}
+            aria-label={tr('Votre question', 'Your question')}
             enterKeyHint="send"
             autoComplete="off"
             maxLength={300}
@@ -154,7 +157,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
           />
           <button
             type="submit"
-            aria-label="Envoyer"
+            aria-label={tr('Envoyer', 'Send')}
             className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-primary-ink text-white"
           >
             <Send className="h-5 w-5" />

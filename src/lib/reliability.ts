@@ -79,9 +79,17 @@ export async function fetchReliabilityOverview(): Promise<MemberToContact[] | nu
   return result?.status === 'ok' ? result.members ?? [] : null;
 }
 
+// L'assistant et son moteur sont hors de React : la langue affichée leur est transmise ici.
+let assistantEnglish = false;
+export function setAssistantLanguage(language: string) {
+  assistantEnglish = language === 'en';
+}
+/** Le français par défaut ; l'anglais si la personne a choisi l'anglais. */
+export const tr = (fr: string, en: string) => (assistantEnglish ? en : fr);
+
 export function reliabilityLevel(score: number): string {
-  if (score >= 80) return 'Très régulier';
-  if (score >= 60) return 'Régulier';
-  if (score >= 40) return 'À surveiller';
-  return 'À redresser';
+  if (score >= 80) return tr('Très régulier', 'Very regular');
+  if (score >= 60) return tr('Régulier', 'Regular');
+  if (score >= 40) return tr('À surveiller', 'Keep an eye on it');
+  return tr('À redresser', 'Needs work');
 }

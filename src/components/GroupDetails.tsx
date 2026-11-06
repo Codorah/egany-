@@ -8,7 +8,7 @@ import {
   CalendarDays, Check, ChevronDown, ChevronRight, Copy, FileText, HandCoins, Loader2, MessageSquare, QrCode, Settings, Users,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enGB, fr } from 'date-fns/locale';
 import { MemberManagement } from './MemberManagement';
 import { DocumentsManager } from './DocumentsManager';
 import { Chat } from './Chat';
@@ -60,7 +60,8 @@ function NavRow({ icon: Icon, label, value, onClick }: {
 
 export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupDetailsProps) {
   const { profile } = useAuthContext();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const dateLocale = language === 'en' ? enGB : fr;
   const [section, setSection] = React.useState<Section | null>(null);
   // Arrivée par « Cotiser » : la déclaration s'ouvre directement.
   const [payNow, setPayNow] = React.useState(false);
@@ -418,7 +419,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
                   <span className={`shrink-0 text-[13px] font-bold ${isPast ? 'text-secondary' : isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {isPast
                       ? t('cir_turn_received')
-                      : turnDates[idx] ? format(new Date(turnDates[idx]), 'd MMM yyyy', { locale: fr }) : ''}
+                      : turnDates[idx] ? format(new Date(turnDates[idx]), 'd MMM yyyy', { locale: dateLocale }) : ''}
                   </span>
                 </li>
               );
@@ -656,7 +657,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
           <div>
             <AmountDisplay amount={group.contributionAmount} currency={group.currency} size="lg" />
             <p className="mt-0.5 text-[13px] text-muted-foreground">
-              {t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: fr })}
+              {t('dash_due_prefix')} {format(new Date(group.nextPayoutDate), 'dd MMMM yyyy', { locale: dateLocale })}
             </p>
           </div>
           <Button

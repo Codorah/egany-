@@ -1401,11 +1401,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       {/* ── RECHARGE ── */}
       {walletFlow === 'recharge' && !pendingPayment && flowStep === 1 && (
         <FlowScreen
-          title="Recharger"
+          title={t('flow_topup')}
           step={1}
           totalSteps={2}
-          heading="Combien voulez-vous ajouter ?"
-          desc="Minimum 500 FCFA"
+          heading={t('flow_topup_how_much')}
+          desc={t('flow_minimum')}
           onBack={closeWalletFlow}
           footer={
             <Button
@@ -1413,7 +1413,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               disabled={!rechargeAmount}
               onClick={() => { if (validateRechargeAmount()) setFlowStep(2); }}
             >
-              Continuer
+              {t('flow_continue')}
             </Button>
           }
         >
@@ -1423,21 +1423,21 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
       {walletFlow === 'recharge' && !pendingPayment && flowStep === 2 && (
         <FlowScreen
-          title="Recharger"
+          title={t('flow_topup')}
           step={2}
           totalSteps={2}
-          heading="Vérifiez votre paiement"
+          heading={t('flow_check_payment')}
           onBack={() => setFlowStep(1)}
           footer={
             <Button className="w-full h-12 rounded-xl font-bold text-[15px]" onClick={handleRecharge} disabled={isRecharging}>
-              {isRecharging ? 'Paiement en cours…' : `Payer ${fcfa(depositBreakdown?.gross ?? (parseFloat(rechargeAmount) || 0))}`}
+              {isRecharging ? t('flow_paying') : `${t('flow_pay')} ${fcfa(depositBreakdown?.gross ?? (parseFloat(rechargeAmount) || 0))}`}
             </Button>
           }
         >
           {editRechargePayer ? (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-foreground">Avec quel opérateur ?</Label>
+                <Label className="text-sm font-bold text-foreground">{t('flow_which_operator')}</Label>
                 <ChipPicker
                   ariaLabel="Opérateur"
                   value={rechargeMethod}
@@ -1446,7 +1446,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="recharge_phone" className="text-sm font-bold text-foreground">Numéro qui paie</Label>
+                <Label htmlFor="recharge_phone" className="text-sm font-bold text-foreground">{t('flow_paying_number')}</Label>
                 <Input
                   id="recharge_phone"
                   type="tel"
@@ -1456,13 +1456,13 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                   onChange={(e) => setRechargePhone(e.target.value)}
                   className="rounded-xl h-12 font-mono text-base"
                 />
-                <p className="text-[13px] text-muted-foreground">Vous confirmerez le paiement sur ce téléphone.</p>
+                <p className="text-[13px] text-muted-foreground">{t('flow_confirm_on_phone')}</p>
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-border bg-card px-4">
               <FlowRow
-                label="Payer avec"
+                label={t('flow_pay_with')}
                 value={`${findOperatorLabel(rechargeMethod)} · ${rechargePhone}`}
                 onEdit={() => setEditRechargePayer(true)}
               />
@@ -1470,18 +1470,18 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
           )}
 
           <div className="rounded-2xl border border-border bg-card px-4 divide-y divide-border">
-            <FlowRow label="Vous recevez" value={fcfa(depositBreakdown?.net ?? (parseFloat(rechargeAmount) || 0))} />
+            <FlowRow label={t('flow_you_receive')} value={fcfa(depositBreakdown?.net ?? (parseFloat(rechargeAmount) || 0))} />
             {depositBreakdown && depositBreakdown.fee > 0 && (
-              <FlowRow label="Frais de l'opérateur" value={fcfa(depositBreakdown.fee)} />
+              <FlowRow label={t('flow_operator_fees')} value={fcfa(depositBreakdown.fee)} />
             )}
-            <FlowRow label="Total à payer" value={fcfa(depositBreakdown?.gross ?? (parseFloat(rechargeAmount) || 0))} strong />
+            <FlowRow label={t('flow_total_to_pay')} value={fcfa(depositBreakdown?.gross ?? (parseFloat(rechargeAmount) || 0))} strong />
           </div>
 
           {platformSettings?.depositFeeEnabled && (
             <FlowCheckbox checked={rechargeFeeOnTop} onChange={setRechargeFeeOnTop}>
-              <span className="font-bold">Payer les frais en plus</span>
+              <span className="font-bold">{t('flow_pay_fees_on_top')}</span>
               <span className="block text-muted-foreground">
-                {rechargeFeeOnTop ? 'Vous recevez le montant entier.' : 'Les frais sont retirés du montant reçu.'}
+                {rechargeFeeOnTop ? t('flow_topup_on_top') : t('flow_fees_deducted')}
               </span>
             </FlowCheckbox>
           )}
@@ -1491,11 +1491,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
       {/* ── RETRAIT ── */}
       {walletFlow === 'withdraw' && flowStep === 1 && (
         <FlowScreen
-          title="Retirer"
+          title={t('flow_withdraw')}
           step={1}
           totalSteps={4}
-          heading="Combien voulez-vous retirer ?"
-          desc={`Solde : ${fcfa(user.walletBalance || 0)}. Minimum 500 FCFA.`}
+          heading={t('flow_withdraw_how_much')}
+          desc={`${t('flow_balance')}${language === 'en' ? ':' : ' :'} ${fcfa(user.walletBalance || 0)}. ${t('flow_minimum')}.`}
           onBack={closeWalletFlow}
           footer={
             <Button
@@ -1503,7 +1503,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               disabled={!withdrawAmount}
               onClick={() => { if (validateWithdrawAmount()) setFlowStep(2); }}
             >
-              Continuer
+              {t('flow_continue')}
             </Button>
           }
         >
@@ -1517,29 +1517,29 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             }}
             className="w-full min-h-11 text-center text-sm font-bold text-primary-ink cursor-pointer"
           >
-            Tout retirer
+            {t('flow_withdraw_all')}
           </button>
         </FlowScreen>
       )}
 
       {walletFlow === 'withdraw' && flowStep === 2 && (
         <FlowScreen
-          title="Retirer"
+          title={t('flow_withdraw')}
           step={2}
           totalSteps={4}
-          heading="Où envoyer l'argent ?"
+          heading={t('flow_where_send')}
           onBack={() => setFlowStep(1)}
           footer={
             <Button
               className="w-full h-12 rounded-xl font-bold text-[15px]"
               onClick={() => { if (validateWithdrawRecipient()) setFlowStep(3); }}
             >
-              Continuer
+              {t('flow_continue')}
             </Button>
           }
         >
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold text-foreground">Opérateur</Label>
+            <Label className="text-sm font-bold text-foreground">{t('flow_operator')}</Label>
             <ChipPicker
               ariaLabel="Opérateur"
               value={withdrawMethod}
@@ -1548,7 +1548,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="withdraw_phone" className="text-sm font-bold text-foreground">Numéro qui reçoit l'argent</Label>
+            <Label htmlFor="withdraw_phone" className="text-sm font-bold text-foreground">{t('flow_receiving_number')}</Label>
             <Input
               id="withdraw_phone"
               type="tel"
@@ -1559,42 +1559,42 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               className="rounded-xl h-12 font-mono text-base"
             />
           </div>
-          <FlowNotice tone="warning">Vérifiez le numéro : un envoi réussi ne peut pas être annulé.</FlowNotice>
+          <FlowNotice tone="warning">{t('flow_check_number')}</FlowNotice>
         </FlowScreen>
       )}
 
       {walletFlow === 'withdraw' && flowStep === 3 && (
         <FlowScreen
-          title="Retirer"
+          title={t('flow_withdraw')}
           step={3}
           totalSteps={4}
-          heading="Vérifiez votre retrait"
+          heading={t('flow_check_withdrawal')}
           onBack={() => setFlowStep(2)}
           footer={
             <Button
               className="w-full h-12 rounded-xl font-bold text-[15px]"
               onClick={() => { if (validateWithdrawSummary()) setFlowStep(4); }}
             >
-              Continuer
+              {t('flow_continue')}
             </Button>
           }
         >
           <div className="px-1">
-            <p className="text-sm text-muted-foreground">Vous recevez</p>
+            <p className="text-sm text-muted-foreground">{t('flow_you_receive')}</p>
             <p className="text-[34px] leading-tight font-bold text-foreground tabular-nums">{fcfa(withdrawBreakdown?.net ?? 0)}</p>
           </div>
 
           <div className="rounded-2xl border border-border bg-card px-4 divide-y divide-border">
-            <FlowRow label="Frais de retrait" value={fcfa(withdrawBreakdown?.fee ?? 0)} />
-            <FlowRow label="Débité de votre solde" value={fcfa(withdrawBreakdown?.debit ?? 0)} strong />
-            <FlowRow label="Envoyé à" value={`${findOperatorLabel(withdrawMethod)} · ${withdrawPhone}`} onEdit={() => setFlowStep(2)} />
+            <FlowRow label={t('flow_withdraw_fees')} value={fcfa(withdrawBreakdown?.fee ?? 0)} />
+            <FlowRow label={t('flow_debited')} value={fcfa(withdrawBreakdown?.debit ?? 0)} strong />
+            <FlowRow label={t('flow_sent_to')} value={`${findOperatorLabel(withdrawMethod)} · ${withdrawPhone}`} onEdit={() => setFlowStep(2)} />
           </div>
 
           {withdrawFeeSettings?.withdrawFeeEnabled && (
             <FlowCheckbox checked={withdrawFeeOnTop} onChange={setWithdrawFeeOnTop}>
-              <span className="font-bold">Payer les frais en plus</span>
+              <span className="font-bold">{t('flow_pay_fees_on_top')}</span>
               <span className="block text-muted-foreground">
-                {withdrawFeeOnTop ? 'Frais pris sur votre solde. Vous recevez tout.' : 'Les frais sont retirés du montant reçu.'}
+                {withdrawFeeOnTop ? t('flow_withdraw_on_top') : t('flow_fees_deducted')}
               </span>
             </FlowCheckbox>
           )}
@@ -1603,11 +1603,11 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
       {walletFlow === 'withdraw' && flowStep === 4 && (
         <FlowScreen
-          title="Retirer"
+          title={t('flow_withdraw')}
           step={4}
           totalSteps={4}
-          heading="Entrez votre code PIN"
-          desc={`${fcfa(withdrawBreakdown?.net ?? 0)} vers ${findOperatorLabel(withdrawMethod)} · ${withdrawPhone}`}
+          heading={t('flow_enter_pin')}
+          desc={`${fcfa(withdrawBreakdown?.net ?? 0)} ${t('flow_to')} ${findOperatorLabel(withdrawMethod)} · ${withdrawPhone}`}
           onBack={() => {
             setWithdrawPin('');
             setFlowStep(3);
@@ -1618,7 +1618,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               onClick={handleConfirmWithdraw}
               disabled={isWithdrawing || withdrawPin.length !== 4}
             >
-              {isWithdrawing ? 'Envoi en cours…' : `Retirer ${fcfa(withdrawBreakdown?.net ?? 0)}`}
+              {isWithdrawing ? t('flow_sending') : `${t('flow_withdraw')} ${fcfa(withdrawBreakdown?.net ?? 0)}`}
             </Button>
           }
         >
@@ -1627,7 +1627,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             inputMode="numeric"
             autoComplete="off"
             autoFocus
-            aria-label="Code PIN"
+            aria-label={t('flow_pin')}
             maxLength={4}
             value={withdrawPin}
             onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -1643,7 +1643,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
             }}
             className="w-full min-h-11 text-center text-sm font-bold text-primary-ink cursor-pointer"
           >
-            Code oublié ?
+            {t('flow_pin_forgot')}
           </button>
         </FlowScreen>
       )}

@@ -7779,7 +7779,384 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   gd_soft_show_qr: { fr: 'Afficher le QR code', en: 'Show QR code' },
   gd_soft_reliability_title: { fr: 'Fiabilité des membres', en: 'Member reliability' },
   onb_install_app: { fr: "Installer l'application", en: 'Install the app' },
-  gd_soft_reliability_desc: { fr: 'Note sur 100, selon la régularité des cotisations.', en: 'Score out of 100, based on how regularly they pay.' }
+  gd_soft_reliability_desc: { fr: 'Note sur 100, selon la régularité des cotisations.', en: 'Score out of 100, based on how regularly they pay.' },
+  // Écrans montrés en anglais dans les vidéos
+  flow_topup: {
+    fr: 'Recharger',
+    en: 'Recharge'
+  },
+  flow_withdraw: {
+    fr: 'Retirer',
+    en: 'Withdraw'
+  },
+  flow_continue: {
+    fr: 'Continuer',
+    en: 'Continue'
+  },
+  flow_topup_how_much: {
+    fr: 'Combien voulez-vous ajouter ?',
+    en: 'How much do you want to add?'
+  },
+  flow_minimum: {
+    fr: 'Minimum 500 FCFA',
+    en: 'Minimum 500 FCFA'
+  },
+  flow_check_payment: {
+    fr: 'Vérifiez votre paiement',
+    en: 'Check your payment'
+  },
+  flow_which_operator: {
+    fr: 'Avec quel opérateur ?',
+    en: 'Which operator?'
+  },
+  flow_paying_number: {
+    fr: 'Numéro qui paie',
+    en: 'Paying number'
+  },
+  flow_confirm_on_phone: {
+    fr: 'Vous confirmerez le paiement sur ce téléphone.',
+    en: 'You will confirm the payment on this phone.'
+  },
+  flow_pay_with: {
+    fr: 'Payer avec',
+    en: 'Pay with'
+  },
+  flow_operator_fees: {
+    fr: "Frais de l'opérateur",
+    en: 'Operator fees'
+  },
+  flow_total_to_pay: {
+    fr: 'Total à payer',
+    en: 'Total to pay'
+  },
+  flow_withdraw_how_much: {
+    fr: 'Combien voulez-vous retirer ?',
+    en: 'How much do you want to withdraw?'
+  },
+  flow_where_send: {
+    fr: "Où envoyer l'argent ?",
+    en: 'Where should the money go?'
+  },
+  flow_operator: {
+    fr: 'Opérateur',
+    en: 'Operator'
+  },
+  flow_receiving_number: {
+    fr: "Numéro qui reçoit l'argent",
+    en: 'Receiving number'
+  },
+  flow_check_number: {
+    fr: 'Vérifiez le numéro : un envoi réussi ne peut pas être annulé.',
+    en: 'Check the number: a completed transfer can’t be reversed.'
+  },
+  flow_check_withdrawal: {
+    fr: 'Vérifiez votre retrait',
+    en: 'Check your withdrawal'
+  },
+  flow_withdraw_fees: {
+    fr: 'Frais de retrait',
+    en: 'Withdrawal fees'
+  },
+  flow_debited: {
+    fr: 'Débité de votre solde',
+    en: 'Taken from your balance'
+  },
+  flow_sent_to: {
+    fr: 'Envoyé à',
+    en: 'Sent to'
+  },
+  flow_enter_pin: {
+    fr: 'Entrez votre code PIN',
+    en: 'Enter your PIN'
+  },
+  flow_pin: {
+    fr: 'Code PIN',
+    en: 'PIN'
+  },
+  flow_you_receive: {
+    fr: 'Vous recevez',
+    en: 'You receive'
+  },
+  flow_pay_fees_on_top: {
+    fr: 'Payer les frais en plus',
+    en: 'Pay the fees on top'
+  },
+  flow_topup_on_top: {
+    fr: 'Vous recevez le montant entier.',
+    en: 'You receive the full amount.'
+  },
+  flow_fees_deducted: {
+    fr: 'Les frais sont retirés du montant reçu.',
+    en: 'The fees come out of the amount received.'
+  },
+  flow_withdraw_on_top: {
+    fr: 'Frais pris sur votre solde. Vous recevez tout.',
+    en: 'Fees come from your balance. You receive it all.'
+  },
+  flow_paying: {
+    fr: 'Paiement en cours…',
+    en: 'Paying…'
+  },
+  flow_pay: {
+    fr: 'Payer',
+    en: 'Pay'
+  },
+  flow_sending: {
+    fr: 'Envoi en cours…',
+    en: 'Sending…'
+  },
+  flow_balance: {
+    fr: 'Solde',
+    en: 'Balance'
+  },
+  flow_to: {
+    fr: 'vers',
+    en: 'to'
+  },
+  flow_withdraw_all: {
+    fr: 'Tout retirer',
+    en: 'Withdraw everything'
+  },
+  flow_pin_forgot: {
+    fr: 'Code oublié ?',
+    en: 'Forgot your PIN?'
+  },
+  flow_edit: {
+    fr: 'Modifier',
+    en: 'Edit'
+  },
+  cgd_step_1: {
+    fr: 'Votre cercle',
+    en: 'Your circle'
+  },
+  cgd_step_2: {
+    fr: 'Rythme et règles',
+    en: 'Schedule and rules'
+  },
+  cgd_step_3: {
+    fr: 'Votre engagement',
+    en: 'Your commitment'
+  },
+  cgd_of: {
+    fr: 'sur',
+    en: 'of'
+  },
+  cgd_continue: {
+    fr: 'Continuer',
+    en: 'Continue'
+  },
+  cgd_name: {
+    fr: 'Nom du cercle',
+    en: 'Circle name'
+  },
+  cgd_name_ph: {
+    fr: 'Ex : Tontine Famille 2026',
+    en: 'E.g. Family Tontine 2026'
+  },
+  cgd_amount: {
+    fr: 'Cotisation par membre',
+    en: 'Contribution per member'
+  },
+  cgd_members: {
+    fr: 'Participants, vous compris',
+    en: 'Members, including you'
+  },
+  cgd_frequency: {
+    fr: 'Fréquence',
+    en: 'How often'
+  },
+  cgd_start: {
+    fr: 'Date du 1er tour',
+    en: 'First round date'
+  },
+  cgd_who: {
+    fr: 'Qui reçoit la cagnotte ?',
+    en: 'Who gets the pot?'
+  },
+  cgd_draw: {
+    fr: 'Tirage au sort',
+    en: 'Random draw'
+  },
+  cgd_order: {
+    fr: 'Ordre convenu',
+    en: 'Agreed order'
+  },
+  cgd_draw_hint: {
+    fr: 'Le hasard désigne le bénéficiaire à chaque tour.',
+    en: 'Chance picks who receives each round.'
+  },
+  cgd_order_hint: {
+    fr: "Selon l'ordre d'inscription ou un accord entre membres.",
+    en: 'By sign-up order or an agreement between members.'
+  },
+  cgd_pledge: {
+    fr: "Je m'engage sur l'honneur à faire mes versements et à respecter la confiance des membres.",
+    en: 'I solemnly commit to making my payments and honouring the members’ trust.'
+  },
+  cgd_read_rules: {
+    fr: 'Lire le règlement des cercles',
+    en: 'Read the circle rules'
+  },
+  cgd_signature: {
+    fr: 'Votre signature',
+    en: 'Your signature'
+  },
+  cgd_created: {
+    fr: 'Votre cercle est créé',
+    en: 'Your circle is created'
+  },
+  cgd_invite_whatsapp: {
+    fr: 'Inviter sur WhatsApp',
+    en: 'Invite on WhatsApp'
+  },
+  cgd_open: {
+    fr: 'Accéder au cercle',
+    en: 'Open the circle'
+  },
+  cgd_seats: {
+    fr: 'Places prévues',
+    en: 'Planned places'
+  },
+  cgd_code: {
+    fr: "Code d'invitation",
+    en: 'Invite code'
+  },
+  cgd_pot_per_round: {
+    fr: 'Cagnotte par tour',
+    en: 'Pot per round'
+  },
+  cgd_invite_now: {
+    fr: 'Invitez maintenant les participants de',
+    en: 'Now invite the members of'
+  },
+  cgd_freq_monthly: {
+    fr: 'Chaque mois',
+    en: 'Every month'
+  },
+  'cgd_freq_bi-weekly': {
+    fr: 'Tous les 15 jours',
+    en: 'Every 15 days'
+  },
+  cgd_freq_weekly: {
+    fr: 'Chaque semaine',
+    en: 'Every week'
+  },
+  cgd_freq_daily: {
+    fr: 'Chaque jour',
+    en: 'Every day'
+  },
+  cgd_per_daily: {
+    fr: 'par jour',
+    en: 'per day'
+  },
+  cgd_per_weekly: {
+    fr: 'par semaine',
+    en: 'per week'
+  },
+  'cgd_per_bi-weekly': {
+    fr: 'tous les 15 jours',
+    en: 'every 15 days'
+  },
+  cgd_per_monthly: {
+    fr: 'par mois',
+    en: 'per month'
+  },
+  cgd_sum_circle: {
+    fr: 'Cercle',
+    en: 'Circle'
+  },
+  cgd_sum_amount: {
+    fr: 'Cotisation',
+    en: 'Contribution'
+  },
+  cgd_sum_members: {
+    fr: 'Participants',
+    en: 'Members'
+  },
+  cgd_sum_first: {
+    fr: '1er tour',
+    en: 'First round'
+  },
+  cgd_sum_attr: {
+    fr: 'Attribution',
+    en: 'Who receives'
+  },
+  cgd_sum_access: {
+    fr: 'Accès',
+    en: 'Access'
+  },
+  cgd_sum_penalty: {
+    fr: 'Pénalité de retard',
+    en: 'Late penalty'
+  },
+  cgd_private: {
+    fr: 'Privé',
+    en: 'Private'
+  },
+  cgd_public: {
+    fr: 'Public',
+    en: 'Public'
+  },
+  cgd_none: {
+    fr: 'Aucune',
+    en: 'None'
+  },
+  cgd_theme_0: {
+    fr: 'Solidarité Famille',
+    en: 'Family Solidarity'
+  },
+  cgd_theme_1: {
+    fr: 'Tontine Collègues',
+    en: 'Work Colleagues'
+  },
+  cgd_theme_2: {
+    fr: 'Projet Moto / Véhicule',
+    en: 'Motorbike Project'
+  },
+  cgd_theme_3: {
+    fr: 'Commerce & Marché',
+    en: 'Trade & Market'
+  },
+  cgd_theme_4: {
+    fr: 'Épargne Fêtes & Célébrations',
+    en: 'Holiday Savings'
+  },
+  mb_of: {
+    fr: 'sur',
+    en: 'of'
+  },
+  mb_of_goal: {
+    fr: 'de',
+    en: 'of'
+  },
+  mb_vault_one: {
+    fr: 'coffre',
+    en: 'vault'
+  },
+  mb_vault_many: {
+    fr: 'coffres',
+    en: 'vaults'
+  },
+  mb_create_vault: {
+    fr: 'Créer un coffre',
+    en: 'Create a vault'
+  },
+  mb_my_plan: {
+    fr: 'Ma formule',
+    en: 'My plan'
+  },
+  mb_free: {
+    fr: 'Gratuite',
+    en: 'Free'
+  },
+  mb_see_progress: {
+    fr: "Voir l'évolution de mon épargne",
+    en: 'See how my savings have grown'
+  },
+  mb_unlimited: {
+    fr: 'Coffres sans limite',
+    en: 'Unlimited vaults'
+  },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

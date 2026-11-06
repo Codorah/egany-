@@ -53,7 +53,7 @@ const ADD_AMOUNTS = [10000, 25000, 50000];
 const fcfa = (value: number) => `${value.toLocaleString('fr-FR')} FCFA`;
 
 export function MyBank({ user, groups, onNavigate }: MyBankProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [vaults, setVaults] = useState<PersonalVault[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -346,7 +346,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
     return <ErrorState onRetry={loadVaults} />;
   }
 
-  const dateLong = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLong = (value: string) => new Date(value).toLocaleDateString(language === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── NOUVEAU COFFRE : une question par écran ──
   if (view === 'create') {
@@ -487,7 +487,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   const tierIndex = hasActiveSubscription ? TIERS.indexOf(user.bankTier as BankTier) : -1;
   const offeredTiers = TIERS.filter((_, index) => index > tierIndex);
   const tierCapacity = (tier: BankTier) =>
-    BANK_TIER_MAX_VAULTS[tier] >= 999 ? 'Coffres sans limite' : `${BANK_TIER_MAX_VAULTS[tier]} coffres`;
+    BANK_TIER_MAX_VAULTS[tier] >= 999 ? t('mb_unlimited') : `${BANK_TIER_MAX_VAULTS[tier]} ${t('mb_vault_many')}`;
 
   // ── MON ÉPARGNE ──
   return (
@@ -502,7 +502,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           </div>
           <EganyeProgress value={totalSaved} max={totalGoal || 1} variant="bar" tone="secondary" />
           <p className="text-[13px] text-muted-foreground">
-            {progressPercent} % de {fcfa(totalGoal)}
+            {progressPercent} % {t('mb_of_goal')} {fcfa(totalGoal)}
           </p>
         </div>
       )}
@@ -537,12 +537,12 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
                     <span className="block text-[13px] text-muted-foreground">
                       {unlocked
                         ? t('mb_available_for_withdrawal')
-                        : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                        : `${t('mb_unlock_prefix')} ${new Date(vault.unlockAt).toLocaleDateString(language === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                     </span>
                   </span>
                   <span className="text-right shrink-0">
                     <span className="block text-sm font-bold text-foreground tabular-nums">{vault.balance.toLocaleString('fr-FR')} F</span>
-                    <span className="block text-[13px] text-muted-foreground tabular-nums">sur {getVaultGoal(vault).toLocaleString('fr-FR')}</span>
+                    <span className="block text-[13px] text-muted-foreground tabular-nums">{t('mb_of')} {getVaultGoal(vault).toLocaleString('fr-FR')}</span>
                   </span>
                   <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
                 </button>
@@ -567,7 +567,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
             disabled={!canCreateVault}
             className="w-full h-12 rounded-xl font-bold text-[15px] cursor-pointer"
           >
-            Créer un coffre
+            {t('mb_create_vault')}
           </Button>
           {!canCreateVault && (
             <p className="text-[13px] text-center text-muted-foreground mt-2">{t('bank_cap_reached_note')}</p>
@@ -599,14 +599,14 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-[13px] font-bold text-muted-foreground px-3">Ma formule</h2>
+        <h2 className="text-[13px] font-bold text-muted-foreground px-3">{t('mb_my_plan')}</h2>
         <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
           <div className="min-h-[52px] flex items-center justify-between gap-3 px-4 py-2.5">
             <span className="text-[15px] font-semibold text-foreground">
-              {hasActiveSubscription ? t(`bank_tier_${user.bankTier}`) : 'Gratuite'}
+              {hasActiveSubscription ? t(`bank_tier_${user.bankTier}`) : t('mb_free')}
             </span>
             <span className="text-sm text-muted-foreground shrink-0">
-              {vaults.length} sur {maxVaults >= 999 ? '∞' : maxVaults} {maxVaults > 1 ? 'coffres' : 'coffre'}
+              {vaults.length} {t('mb_of')} {maxVaults >= 999 ? '∞' : maxVaults} {maxVaults > 1 ? t('mb_vault_many') : t('mb_vault_one')}
             </span>
           </div>
           {/* Le prix se lit sur la ligne, et rien n'est débité sans confirmation. */}
@@ -640,7 +640,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
           onClick={() => setShowCharts(true)}
           className="w-full min-h-[52px] flex items-center justify-between gap-3 px-4 rounded-2xl border border-border bg-card text-left cursor-pointer active:bg-muted transition-colors duration-150"
         >
-          <span className="text-[15px] font-semibold text-foreground">Voir l'évolution de mon épargne</span>
+          <span className="text-[15px] font-semibold text-foreground">{t('mb_see_progress')}</span>
           <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
         </button>
       )}

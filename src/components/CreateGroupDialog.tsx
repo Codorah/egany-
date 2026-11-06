@@ -111,11 +111,11 @@ function buildFormSchema(t: (key: string) => string) {
 type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 const PRESET_THEMES = [
-  { label: 'Solidarité Famille', desc: 'Entraide familiale et projets communs' },
-  { label: 'Tontine Collègues', desc: 'Épargne mensuelle entre collègues de travail' },
-  { label: 'Projet Moto / Véhicule', desc: 'Financement groupé d’équipement et mobilité' },
-  { label: 'Commerce & Marché', desc: 'Fonds de roulement pour activités marchandes' },
-  { label: 'Épargne Fêtes & Célébrations', desc: 'Anticipation des fêtes et rentrées scolaires' },
+  { key: 'cgd_theme_0', label: 'Solidarité Famille', desc: 'Entraide familiale et projets communs' },
+  { key: 'cgd_theme_1', label: 'Tontine Collègues', desc: 'Épargne mensuelle entre collègues de travail' },
+  { key: 'cgd_theme_2', label: 'Projet Moto / Véhicule', desc: 'Financement groupé d’équipement et mobilité' },
+  { key: 'cgd_theme_3', label: 'Commerce & Marché', desc: 'Fonds de roulement pour activités marchandes' },
+  { key: 'cgd_theme_4', label: 'Épargne Fêtes & Célébrations', desc: 'Anticipation des fêtes et rentrées scolaires' },
 ];
 
 const PRESET_AMOUNTS = [5000, 10000, 25000, 50000];
@@ -193,7 +193,7 @@ export function CreateGroupDialog({
   onNavigateToVerification?: () => void;
   onGroupCreated?: (groupId: string) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   // Sens de l'animation : +1 on avance (l'écran part à gauche), -1 on recule.
@@ -294,10 +294,10 @@ export function CreateGroupDialog({
 
   const frequencyLabel = (f: string) => {
     switch (f) {
-      case 'daily': return 'par jour';
-      case 'weekly': return 'par semaine';
-      case 'bi-weekly': return 'tous les 15 jours';
-      case 'monthly': return 'par mois';
+      case 'daily': return t('cgd_per_daily');
+      case 'weekly': return t('cgd_per_weekly');
+      case 'bi-weekly': return t('cgd_per_bi-weekly');
+      case 'monthly': return t('cgd_per_monthly');
       default: return 'par cycle';
     }
   };
@@ -478,7 +478,7 @@ export function CreateGroupDialog({
   );
 
   const startDateLabel = startDateValue
-    ? new Date(startDateValue).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    ? new Date(startDateValue).toLocaleDateString(language === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     : '—';
 
   return (
@@ -512,21 +512,21 @@ export function CreateGroupDialog({
           <div className="flex-1 overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <div className="mx-auto max-w-sm space-y-5 py-6">
               <div className="space-y-1.5 text-center">
-                <DialogTitle className="text-2xl font-bold text-foreground">Votre cercle est créé</DialogTitle>
-                <p className="text-sm text-muted-foreground">Invitez maintenant les participants de « {createdGroup.name} ».</p>
+                <DialogTitle className="text-2xl font-bold text-foreground">{t('cgd_created')}</DialogTitle>
+                <p className="text-sm text-muted-foreground">{t('cgd_invite_now')} « {createdGroup.name} ».</p>
               </div>
 
               <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
                 <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <dt className="text-muted-foreground">Cagnotte par tour</dt>
+                  <dt className="text-muted-foreground">{t('cgd_pot_per_round')}</dt>
                   <dd className="font-bold tabular-nums text-foreground">{createdGroup.potAmount.toLocaleString()} FCFA</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <dt className="text-muted-foreground">Places prévues</dt>
+                  <dt className="text-muted-foreground">{t('cgd_seats')}</dt>
                   <dd className="font-bold tabular-nums text-foreground">{createdGroup.membersCount}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-1 pl-4 pr-1 text-sm">
-                  <dt className="text-muted-foreground">Code d'invitation</dt>
+                  <dt className="text-muted-foreground">{t('cgd_code')}</dt>
                   <dd className="flex items-center gap-1 font-mono text-lg font-bold text-foreground">
                     {createdGroup.joinCode}
                     <button
@@ -548,7 +548,7 @@ export function CreateGroupDialog({
                   rel="noopener noreferrer"
                   className="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-primary-foreground"
                 >
-                  Inviter sur WhatsApp
+                  {t('cgd_invite_whatsapp')}
                 </a>
                 <Button
                   variant="outline"
@@ -560,7 +560,7 @@ export function CreateGroupDialog({
                   }}
                   className="h-12 w-full cursor-pointer rounded-xl font-bold"
                 >
-                  Accéder au cercle
+                  {t('cgd_open')}
                 </Button>
               </div>
             </div>
@@ -611,7 +611,7 @@ export function CreateGroupDialog({
                   <span className="h-11 w-11 shrink-0" />
                 )}
                 <p className="flex-1 text-center text-[13px] font-bold text-muted-foreground">
-                  Étape {step} sur {TOTAL_STEPS}
+                  {t('cgd_step_word')} {step} {t('cgd_of')} {TOTAL_STEPS}
                 </p>
                 {closeButton}
               </div>
@@ -637,16 +637,16 @@ export function CreateGroupDialog({
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                   className="space-y-6 px-5 pt-3 pb-6 motion-reduce:!transform-none"
                 >
-                  <DialogTitle className="text-2xl font-bold text-foreground">{STEPS[step - 1].title}</DialogTitle>
+                  <DialogTitle className="text-2xl font-bold text-foreground">{t(`cgd_step_${step}`)}</DialogTitle>
 
                   {/* ── 1. Le cercle ── */}
                   {step === 1 && (
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="name" className="text-sm font-bold text-foreground">Nom du cercle</Label>
+                        <Label htmlFor="name" className="text-sm font-bold text-foreground">{t('cgd_name')}</Label>
                         <Input
                           id="name"
-                          placeholder="Ex : Tontine Famille 2026"
+                          placeholder={t('cgd_name_ph')}
                           {...register('name')}
                           className="h-12 rounded-xl bg-card text-base"
                           autoFocus
@@ -654,15 +654,15 @@ export function CreateGroupDialog({
                         {errors.name && <p className="text-[13px] font-medium text-danger">{errors.name.message}</p>}
                         <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-none">
                           {PRESET_THEMES.map((theme) => (
-                            <div key={theme.label} className="shrink-0">
+                            <div key={t(theme.key)} className="shrink-0">
                               <Pill
-                                selected={groupName === theme.label}
+                                selected={groupName === t(theme.key)}
                                 onClick={() => {
-                                  setValue('name', theme.label, { shouldValidate: true });
+                                  setValue('name', t(theme.key), { shouldValidate: true });
                                   setValue('description', theme.desc);
                                 }}
                               >
-                                {theme.label}
+                                {t(theme.key)}
                               </Pill>
                             </div>
                           ))}
@@ -670,7 +670,7 @@ export function CreateGroupDialog({
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="contributionAmount" className="text-sm font-bold text-foreground">Cotisation par membre</Label>
+                        <Label htmlFor="contributionAmount" className="text-sm font-bold text-foreground">{t('cgd_amount')}</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             id="contributionAmount"
@@ -700,7 +700,7 @@ export function CreateGroupDialog({
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="maxMembers" className="text-sm font-bold text-foreground">Participants, vous compris</Label>
+                        <Label htmlFor="maxMembers" className="text-sm font-bold text-foreground">{t('cgd_members')}</Label>
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
@@ -739,7 +739,7 @@ export function CreateGroupDialog({
                       </div>
 
                       <p className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
-                        Cagnotte par tour : <span className="font-bold tabular-nums">{totalPot.toLocaleString()} FCFA</span>
+                        {t('cgd_pot_per_round')}{language === 'en' ? ':' : ' :'} <span className="font-bold tabular-nums">{totalPot.toLocaleString()} FCFA</span>
                       </p>
                     </div>
                   )}
@@ -748,21 +748,21 @@ export function CreateGroupDialog({
                   {step === 2 && (
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <p className="text-sm font-bold text-foreground">Fréquence</p>
+                        <p className="text-sm font-bold text-foreground">{t('cgd_frequency')}</p>
                         <div className="divide-y divide-border rounded-2xl border border-border bg-card">
                           {FREQUENCY_OPTIONS.map((opt) => (
                             <ChoiceRow
                               key={opt.value}
                               selected={frequency === opt.value}
                               onClick={() => setValue('frequency', opt.value, { shouldValidate: true })}
-                              title={opt.label}
+                              title={t(`cgd_freq_${opt.value}`)}
                             />
                           ))}
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="startDate" className="text-sm font-bold text-foreground">Date du 1er tour</Label>
+                        <Label htmlFor="startDate" className="text-sm font-bold text-foreground">{t('cgd_start')}</Label>
                         <Input
                           id="startDate"
                           type="date"
@@ -776,19 +776,19 @@ export function CreateGroupDialog({
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-sm font-bold text-foreground">Qui reçoit la cagnotte ?</p>
+                        <p className="text-sm font-bold text-foreground">{t('cgd_who')}</p>
                         <div className="divide-y divide-border rounded-2xl border border-border bg-card">
                           <ChoiceRow
                             selected={distributionMethod === 'draw'}
                             onClick={() => setValue('distributionMethod', 'draw')}
-                            title="Tirage au sort"
-                            hint="Le hasard désigne le bénéficiaire à chaque tour."
+                            title={t('cgd_draw')}
+                            hint={t('cgd_draw_hint')}
                           />
                           <ChoiceRow
                             selected={distributionMethod === 'sequential'}
                             onClick={() => setValue('distributionMethod', 'sequential')}
-                            title="Ordre convenu"
-                            hint="Selon l'ordre d'inscription ou un accord entre membres."
+                            title={t('cgd_order')}
+                            hint={t('cgd_order_hint')}
                           />
                         </div>
                       </div>
@@ -841,14 +841,14 @@ export function CreateGroupDialog({
                     <div className="space-y-5">
                       <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
                         {[
-                          ['Cercle', groupName],
-                          ['Cotisation', `${contributionAmount.toLocaleString()} FCFA ${frequencyLabel(frequency)}`],
-                          ['Participants', `${maxMembers}`],
-                          ['Cagnotte par tour', `${totalPot.toLocaleString()} FCFA`],
-                          ['1er tour', startDateLabel],
-                          ['Attribution', distributionMethod === 'draw' ? 'Tirage au sort' : 'Ordre convenu'],
-                          ['Accès', isPrivate ? 'Privé' : 'Public'],
-                          ['Pénalité de retard', penaltiesEnabled ? '1 000 FCFA' : 'Aucune'],
+                          [t('cgd_sum_circle'), groupName],
+                          [t('cgd_sum_amount'), `${contributionAmount.toLocaleString()} FCFA ${frequencyLabel(frequency)}`],
+                          [t('cgd_sum_members'), `${maxMembers}`],
+                          [t('cgd_pot_per_round'), `${totalPot.toLocaleString()} FCFA`],
+                          [t('cgd_sum_first'), startDateLabel],
+                          [t('cgd_sum_attr'), distributionMethod === 'draw' ? t('cgd_draw') : t('cgd_order')],
+                          [t('cgd_sum_access'), isPrivate ? t('cgd_private') : t('cgd_public')],
+                          [t('cgd_sum_penalty'), penaltiesEnabled ? '1 000 FCFA' : t('cgd_none')],
                         ].map(([label, value]) => (
                           <div key={label} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                             <dt className="text-muted-foreground">{label}</dt>
@@ -866,14 +866,14 @@ export function CreateGroupDialog({
                         />
                         <div className="space-y-1">
                           <Label htmlFor="terms" className="cursor-pointer text-sm font-normal leading-relaxed text-foreground">
-                            Je m'engage sur l'honneur à faire mes versements et à respecter la confiance des membres.
+                            {t('cgd_pledge')}
                           </Label>
                           <button
                             type="button"
                             onClick={() => setShowReglement(true)}
                             className="block min-h-11 cursor-pointer text-[13px] font-bold text-primary-ink underline underline-offset-2"
                           >
-                            Lire le règlement des cercles
+                            {t('cgd_read_rules')}
                           </button>
                           {errors.termsAccepted && (
                             <span className="block text-[13px] font-medium text-danger">{errors.termsAccepted.message}</span>
@@ -882,7 +882,7 @@ export function CreateGroupDialog({
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-sm font-bold text-foreground">Votre signature</Label>
+                        <Label className="text-sm font-bold text-foreground">{t('cgd_signature')}</Label>
                         <SignaturePad
                           onSignatureChange={(dataUrl) => setValue('signature', dataUrl || '', { shouldValidate: true })}
                         />
@@ -900,7 +900,7 @@ export function CreateGroupDialog({
             <div className="shrink-0 border-t border-border bg-background px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
               {step < TOTAL_STEPS ? (
                 <Button type="button" onClick={handleNextStep} className="h-12 w-full cursor-pointer rounded-xl font-bold">
-                  Continuer
+                  {t('cgd_continue')}
                 </Button>
               ) : (
                 <Button type="submit" disabled={isSubmitting} className="h-12 w-full cursor-pointer rounded-xl font-bold">

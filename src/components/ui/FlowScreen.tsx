@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { createPortal } from 'react-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useBackHandler } from '@/hooks/useBackHandler';
@@ -108,6 +109,7 @@ export function FlowScreen({ onBack, title, step, totalSteps, hero, heading, des
 
 /** Ligne libellé / valeur d'un récapitulatif. */
 export function FlowRow({ label, value, strong, onEdit }: { label: string; value: React.ReactNode; strong?: boolean; onEdit?: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className={`flex justify-between items-center gap-3 py-3 ${strong ? 'text-[15px]' : 'text-sm'}`}>
       <span className={strong ? 'font-bold text-foreground' : 'text-muted-foreground'}>{label}</span>
@@ -115,7 +117,7 @@ export function FlowRow({ label, value, strong, onEdit }: { label: string; value
         <span className="font-bold text-foreground text-right truncate">{value}</span>
         {onEdit && (
           <button type="button" onClick={onEdit} className="min-h-11 -my-3 px-1 inline-flex items-center text-[13px] font-bold text-primary-ink underline cursor-pointer shrink-0">
-            Modifier
+            {t('flow_edit')}
           </button>
         )}
       </span>
