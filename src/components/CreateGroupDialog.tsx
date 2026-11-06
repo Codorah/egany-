@@ -426,7 +426,7 @@ export function CreateGroupDialog({
         link: `/group/${newGroup.id}`,
       }).catch((err) => console.warn('Circle creation notification skipped:', err));
 
-      toast.success('Votre cercle est créé.');
+      toast.success(t('cgd_created'));
     } catch (error: any) {
       console.error('Error creating group:', error);
       toast.error(error.message || 'Erreur lors de la création du cercle');

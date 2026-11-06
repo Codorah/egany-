@@ -7781,6 +7781,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
   onb_install_app: { fr: "Installer l'application", en: 'Install the app' },
   gd_soft_reliability_desc: { fr: 'Note sur 100, selon la régularité des cotisations.', en: 'Score out of 100, based on how regularly they pay.' },
   // Écrans montrés en anglais dans les vidéos
+  cgd_create_mine: {
+    fr: 'Créer mon cercle',
+    en: 'Create my circle'
+  },
   flow_topup: {
     fr: 'Recharger',
     en: 'Recharge'
