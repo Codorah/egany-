@@ -78,7 +78,7 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'Export'
   },
   cir_not_called: {
-    fr: 'Pas encore appelée',
+    fr: 'Cotisation pas encore demandée',
     en: 'Not requested yet'
   },
   cir_call_action: {
@@ -7323,8 +7323,8 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     en: 'cycle'
   },
   cir_your_turn: {
-    fr: '· C\'est votre tour !',
-    en: '· It’s your turn!'
+    fr: 'C\'est votre tour !',
+    en: 'It’s your turn!'
   },
   pay_confirmed_title: {
     fr: 'Paiement confirmé',

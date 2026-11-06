@@ -506,7 +506,7 @@ export function CreateGroupDialog({
       <DialogContent
         showCloseButton={false}
         showHandle={false}
-        className="top-0 flex h-[100dvh] flex-col gap-0 overflow-hidden rounded-none bg-background p-0 pb-0 sm:h-[min(860px,92vh)] sm:max-w-md sm:rounded-2xl sm:pb-0"
+        className="top-0 flex h-[100dvh] max-h-[100dvh] sm:max-h-[92vh] flex-col gap-0 overflow-hidden rounded-none bg-background p-0 pb-0 sm:h-[min(860px,92vh)] sm:max-w-md sm:rounded-2xl sm:pb-0"
       >
         {createdGroup ? (
           <div className="flex-1 overflow-y-auto px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">

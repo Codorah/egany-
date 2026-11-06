@@ -492,10 +492,7 @@ export function MyBank({ user, groups, onNavigate }: MyBankProps) {
   // ── MON ÉPARGNE ──
   return (
     <div className="space-y-6 pb-20 max-w-lg mx-auto">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{t('my_bank') || 'Mon Épargne'}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{t('my_bank_subtitle')}</p>
-      </div>
+      <p className="text-sm text-muted-foreground">{t('my_bank_subtitle')}</p>
 
       {vaults.length > 0 && (
         <div className="px-1 space-y-2">

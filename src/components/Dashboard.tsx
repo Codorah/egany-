@@ -208,6 +208,7 @@ export function Dashboard({
 
         {groups.length === 0 ? (
           <CreateGroupDialog
+            onGroupCreated={onSelectGroup}
             onNavigateToVerification={() => onNavigateToProfileTab?.('kyc')}
             trigger={
               <div>
@@ -237,11 +238,9 @@ export function Dashboard({
                     <p className="text-[13px] text-muted-foreground mt-0.5">
                       {group.contributionAmount.toLocaleString('fr-FR')} {group.currency} · {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'd MMM', { locale })}
                     </p>
+                    {status && <p className={`mt-0.5 text-[13px] font-bold ${status.tone}`}>{status.label}</p>}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {status && <span className={`text-[13px] font-bold ${status.tone}`}>{status.label}</span>}
-                    <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground" />
-                  </div>
+                  <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
                 </button>
               );
             })}

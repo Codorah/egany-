@@ -193,6 +193,18 @@ const AI_ABOUT = 'L’IA d’eganyé est un modèle de fiabilité. À partir de 
  * La phrase la plus utile du moment, ou null s'il n'y a rien d'utile à dire.
  * Dans l'ordre : ce qui coûte déjà, ce qui va coûter, ce qui a changé, puis ce qui va bien.
  */
+/** Pour l'accueil : ce qui a bougé et la première raison. */
+function shortChange(r: ReadyReliability): string {
+  const down = r.score < (r.previousScore as number);
+  const top = r.changes
+    .filter((c) => (down ? c.impact > 0 : c.impact < 0))
+    .sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact))[0];
+  const head = `Votre score est passé de ${r.previousScore} à ${r.score}.`;
+  if (!top) return head;
+  const why = CHANGE_REASON[top.factor][down ? 'down' : 'up'];
+  return `${head} ${why.charAt(0).toUpperCase()}${why.slice(1)}.`;
+}
+
 export function momentInsight(ctx: AssistantContext, now: Date = new Date()): string | null {
   const today = now.toISOString().slice(0, 10);
   const byDate = [...ctx.contributions].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
@@ -215,7 +227,7 @@ export function momentInsight(ctx: AssistantContext, now: Date = new Date()): st
 
   const r = ctx.reliability;
   if (r?.status === 'ready') {
-    if (r.previousScore !== null && r.previousScore !== r.score) return explainChange(r);
+    if (r.previousScore !== null && r.previousScore !== r.score) return shortChange(r);
     if (r.openLate === 0 && r.recentLate === 0) {
       return `Aucun retard récent : votre score de fiabilité est de ${r.score}/100.`;
     }

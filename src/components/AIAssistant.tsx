@@ -75,11 +75,9 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
   const ready = reliability?.status === 'ready' ? reliability : null;
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-2xl flex-col">
-      <h1 className="text-xl font-bold text-foreground">Assistant</h1>
-
+    <div className="mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-2xl flex-col">
       {/* Le score d'abord : c'est ce que la personne vient voir. */}
-      <section className="mt-4 border-b border-border pb-5" aria-label="Score de fiabilité">
+      <section className="border-b border-border pb-5" aria-label="Score de fiabilité">
         {ready ? (
           <>
             <p className="text-[13px] text-muted-foreground">Score de fiabilité</p>
@@ -124,7 +122,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
       </div>
 
       {/* Reste visible au-dessus de la barre de navigation. */}
-      <div className="sticky bottom-20 bg-background pb-2 pt-2 md:bottom-0">
+      <div className="sticky bottom-[calc(3.75rem+env(safe-area-inset-bottom))] bg-background pb-2 pt-2 md:bottom-0">
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none">
           {SUGGESTIONS.map((suggestion) => (
             <button

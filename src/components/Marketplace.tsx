@@ -207,10 +207,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
 
   return (
     <div className="space-y-5 pb-20">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{t('marketplace')}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{t('mkt_header_subtitle')}</p>
-      </div>
+      <p className="text-sm text-muted-foreground">{t('mkt_header_subtitle')}</p>
 
       {(AID_ENABLED || aidApps.length > 0) && (
         <button

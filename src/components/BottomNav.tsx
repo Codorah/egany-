@@ -68,7 +68,7 @@ export function BottomNav({
                 }`}
               >
                 <EganyeIcon name={item.icon} size={22} />
-                <span className={`text-[13px] leading-none truncate max-w-full px-0.5 ${active ? 'font-bold' : 'font-semibold'}`}>
+                <span className={`text-[13px] leading-tight truncate max-w-full px-0.5 ${active ? 'font-bold' : 'font-semibold'}`}>
                   {item.label}
                 </span>
               </button>

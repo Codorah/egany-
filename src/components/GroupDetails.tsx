@@ -395,6 +395,7 @@ export function GroupDetails({ group, onBack, onNavigateToVerification }: GroupD
             {canManage && group.status === 'active' && beneficiaryToDistribute && (
               <Button
                 onClick={() => setIsConfirmDistributeOpen(true)}
+                variant={potMissing > 0 ? 'outline' : 'default'}
                 className="h-12 w-full cursor-pointer rounded-xl font-bold"
               >
                 {t('gd_distribute_funds_button')}

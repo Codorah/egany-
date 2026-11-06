@@ -134,6 +134,7 @@ export function CircleHub({
       </Dialog>
 
       <CreateGroupDialog
+            onGroupCreated={onSelectGroup}
         onNavigateToVerification={onNavigateToVerification}
         triggerIsNativeButton
         trigger={<button id={CREATE_TRIGGER_ID} type="button" className="hidden" tabIndex={-1} aria-hidden="true" />}
@@ -171,11 +172,9 @@ export function CircleHub({
                   <p className="text-[13px] text-muted-foreground">
                     {t('dash_next_prefix')} {format(new Date(group.nextPayoutDate), 'd MMM yyyy', { locale })}
                   </p>
+                  {status && <p className={`mt-0.5 text-[13px] font-bold ${status.tone}`}>{status.label}</p>}
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {status && <span className={`text-[13px] font-bold ${status.tone}`}>{status.label}</span>}
-                  <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground" />
-                </div>
+                <EganyeIcon name="chevron-right" size={16} className="text-muted-foreground shrink-0" />
               </button>
             );
           })}

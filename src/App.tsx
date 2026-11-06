@@ -152,7 +152,7 @@ export default function App() {
   // elle, le premier appui ferme l'application, quel que soit l'écran ouvert.
   React.useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
-    const pushGuard = () => window.history.pushState({ eganyeGuard: true }, '', window.location.pathname);
+    const pushGuard = () => window.history.pushState({ eganyeGuard: true }, '', window.location.href);
     pushGuard();
     const onPopState = () => {
       if (runBackHandlers()) {
