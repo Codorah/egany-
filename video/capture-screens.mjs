@@ -395,12 +395,14 @@ async function shot(page, name, { settle = 1500 } = {}) {
   console.log(`  ${name}${errors.length ? '  ! ' + errors[0] : ''}`);
 }
 async function typeIn(page, selector, text) {
-  const el = await page.waitForSelector(selector, { timeout: 15000 });
+  const el = await page.waitForSelector(selector, { timeout: 90000 });
   await el.click();
   await el.evaluate((e) => e.select?.());
   await el.type(text, { delay: 8 });
 }
 async function typeNth(page, index, text) {
+  await page.waitForFunction((n) => document.querySelectorAll('input:not([type="checkbox"]):not([type="hidden"])').length > n, { timeout: 90000 }, index);
+  await sleep(400);
   const inputs = await page.$$('input:not([type="checkbox"]):not([type="hidden"])');
   await inputs[index].click();
   await inputs[index].evaluate((e) => e.select?.());
@@ -427,54 +429,8 @@ async function logged(browser, storageKey) {
   return p;
 }
 
-async function run(browser) {
-  const base = CLEAN();
-  const restore = () => { Object.keys(base).forEach((k) => { DB[k] = JSON.parse(JSON.stringify(base[k])); }); };
-
-  // --- Inscription
-  let p = await newPage(browser);
-  await open(p, '/');
-  await waitText(p, EN ? 'account' : 'compte');
-  const storageKey = await p.evaluate(async () => (await import('/src/lib/supabase.ts')).supabase.auth.storageKey);
-  await shot(p, 'welcome');
-  await clickText(p, EN ? 'Create' : 'Créer');
-  await sleep(600);
-  await typeNth(p, 0, 'Awa Koffi');
-  await typeNth(p, 1, 'awa@exemple.tg');
-  await typeNth(p, 2, 'Tontine2026!');
-  await shot(p, 'register');
-  await clickText(p, EN ? 'Create my account' : 'Créer mon compte', { last: true });
-  await sleep(1500);
-  await shot(p, 'code-empty', { settle: 500 });
-  await typeNth(p, 0, '48201736');
-  await sleep(4500);
-  await shot(p, 'code', { settle: 300 });
-  await clickText(p, EN ? 'Confirm' : 'Valider');
-  await clickText(p, EN ? 'Verify' : 'Vérifier');
-  await sleep(5000);
-  await shot(p, 'intent', { settle: 500 });
-  await p.close();
-
-  // --- Accueil et assistant
-  setPot(1);
-  p = await logged(browser, storageKey);
-  await shot(p, 'home', { settle: 2500 });
-  await nav(p, 'Assistant');
-  await shot(p, 'assistant', { settle: 1500 });
-  await clickText(p, EN ? 'How can I raise' : 'Comment faire monter');
-  await shot(p, 'assistant-answer', { settle: 800 });
-  await nav(p, EN ? 'Savings' : 'Épargne');
-  await shot(p, 'savings', { settle: 2000 });
-  await p.close();
-
-  // --- Alerte avant un retard
-  restore();
-  DB.profiles[0].wallet_balance = 7500;
-  DB.contributions.push({ ...contrib('d8000000-0000-4000-8000-000000000001', G1, ME, 10000, 0, 'pending'), date: later(3).slice(0, 10), period: '2026-12' });
-  p = await logged(browser, storageKey).catch(() => null);
-  if (p) { await shot(p, 'home-alert', { settle: 6000 }); await p.close(); }
-  restore();
-
+async function createPart(browser, storageKey) {
+  let p;
   // --- Créer un cercle
   p = await logged(browser, storageKey);
   await nav(p, EN ? 'Circles' : 'Cercles');
@@ -507,10 +463,63 @@ async function run(browser) {
     await p.mouse.up();
   } else console.log('  (signature introuvable)');
   await shot(p, 'create-3', { settle: 500 });
-  await clickText(p, EN ? 'Create' : 'Créer', { last: true });
-  await sleep(4800);
+  await clickText(p, EN ? 'Create my circle' : 'Créer mon cercle', { last: true });
+  await sleep(6000);
   await shot(p, 'invite', { settle: 500 });
   await p.close();
+}
+
+async function run(browser) {
+  const base = CLEAN();
+  const restore = () => { Object.keys(base).forEach((k) => { DB[k] = JSON.parse(JSON.stringify(base[k])); }); };
+
+  const ONLY = process.env.ONLY || '';
+  // --- Inscription
+  let p = await newPage(browser);
+  await open(p, '/');
+  await waitText(p, EN ? 'account' : 'compte');
+  const storageKey = await p.evaluate(async () => (await import('/src/lib/supabase.ts')).supabase.auth.storageKey);
+  await shot(p, 'welcome');
+  if (ONLY === 'create') { await p.close(); await createPart(browser, storageKey); return; }
+  await clickText(p, EN ? 'Create' : 'Créer');
+  await sleep(600);
+  await typeNth(p, 0, 'Awa Koffi');
+  await typeNth(p, 1, 'awa@exemple.tg');
+  await typeNth(p, 2, 'Tontine2026!');
+  await shot(p, 'register');
+  await clickText(p, EN ? 'Create my account' : 'Créer mon compte', { last: true });
+  await waitText(p, '@exemple.tg', 60000);
+  await shot(p, 'code-empty', { settle: 500 });
+  await typeNth(p, 0, '48201736');
+  await sleep(4500);
+  await shot(p, 'code', { settle: 300 });
+  await clickText(p, EN ? 'Confirm' : 'Valider');
+  await clickText(p, EN ? 'Verify' : 'Vérifier');
+  await sleep(5000);
+  await shot(p, 'intent', { settle: 500 });
+  await p.close();
+
+  // --- Accueil et assistant
+  setPot(1);
+  p = await logged(browser, storageKey);
+  await shot(p, 'home', { settle: 2500 });
+  await nav(p, 'Assistant');
+  await shot(p, 'assistant', { settle: 1500 });
+  await clickText(p, EN ? 'How can I raise' : 'Comment faire monter');
+  await shot(p, 'assistant-answer', { settle: 800 });
+  await nav(p, EN ? 'Savings' : 'Épargne');
+  await shot(p, 'savings', { settle: 2000 });
+  await p.close();
+
+  // --- Alerte avant un retard
+  restore();
+  DB.profiles[0].wallet_balance = 7500;
+  DB.contributions.push({ ...contrib('d8000000-0000-4000-8000-000000000001', G1, ME, 10000, 0, 'pending'), date: later(3).slice(0, 10), period: '2026-12' });
+  p = await logged(browser, storageKey).catch(() => null);
+  if (p) { await shot(p, 'home-alert', { settle: 6000 }); await p.close(); }
+  restore();
+
+  await createPart(browser, storageKey);
 
   // --- Cotiser, le pot, recevoir
   const openCircle = async (page) => {
