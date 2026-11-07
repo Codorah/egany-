@@ -477,27 +477,36 @@ async function run(browser) {
   // --- Inscription
   let p = await newPage(browser);
   await open(p, '/');
-  await waitText(p, EN ? 'account' : 'compte');
+  await waitText(p, EN ? 'Discover' : 'Découvrir');
   const storageKey = await p.evaluate(async () => (await import('/src/lib/supabase.ts')).supabase.auth.storageKey);
   await shot(p, 'welcome');
   if (ONLY === 'create') { await p.close(); await createPart(browser, storageKey); return; }
-  await clickText(p, EN ? 'Create' : 'Créer');
-  await sleep(600);
+  await clickText(p, EN ? 'Discover' : 'Découvrir');
+  await sleep(1200);
+  await shot(p, 'slide-1', { settle: 1200 });
+  await clickText(p, EN ? 'Next' : 'Suivant');
+  await shot(p, 'slide-2', { settle: 1200 });
+  await clickText(p, EN ? 'Skip' : 'Passer');
+  await waitText(p, EN ? 'Create a tontine' : 'Créer une tontine');
+  await shot(p, 'intent', { settle: 800 });
+  await clickText(p, EN ? 'Create a tontine' : 'Créer une tontine');
+  await sleep(900);
   await typeNth(p, 0, 'Awa Koffi');
   await typeNth(p, 1, 'awa@exemple.tg');
   await typeNth(p, 2, 'Tontine2026!');
-  await shot(p, 'register');
+  await p.evaluate(() => document.activeElement?.blur());
+  await shot(p, 'register', { settle: 500 });
+  await clickText(p, EN ? 'Next Step' : 'Étape Suivante');
+  await sleep(1500);
+  await shot(p, 'avatar', { settle: 1500 });
   await clickText(p, EN ? 'Create my account' : 'Créer mon compte', { last: true });
   await waitText(p, '@exemple.tg', 60000);
   await shot(p, 'code-empty', { settle: 500 });
   await typeNth(p, 0, '48201736');
-  await sleep(4500);
+  await sleep(3000);
   await shot(p, 'code', { settle: 300 });
-  await clickText(p, EN ? 'Confirm' : 'Valider');
-  await clickText(p, EN ? 'Verify' : 'Vérifier');
-  await sleep(5000);
-  await shot(p, 'intent', { settle: 500 });
   await p.close();
+  const intentDone = true;
 
   // --- Accueil et assistant
   setPot(1);
