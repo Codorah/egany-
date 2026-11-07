@@ -509,7 +509,7 @@ export default function App() {
     }
     return (
       <>
-        <Onboarding onComplete={handleOnboardingComplete} initialScreen={authEntry ?? 'welcome'} />
+        <Onboarding onComplete={handleOnboardingComplete} initialScreen={authEntry ?? 'welcome'} hasInvite={Boolean(joinCode)} />
         <Toaster />
       </>
     );
