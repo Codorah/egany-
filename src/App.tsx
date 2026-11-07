@@ -155,6 +155,8 @@ export default function App() {
     const pushGuard = () => window.history.pushState({ eganyeGuard: true }, '', window.location.href);
     pushGuard();
     const onPopState = () => {
+      // Un lien d'ancre (#video, #services…) déclenche aussi popstate : ce n'est pas un retour.
+      if (window.location.hash) return;
       if (runBackHandlers()) {
         pushGuard();
       } else if (viewRef.current !== 'dashboard') {
