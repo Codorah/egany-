@@ -35,7 +35,7 @@ interface LandingProps {
 const ease = [0.16, 1, 0.3, 1] as const;
 
 // À passer à true une fois le tutoriel rendu dans public/video.
-const TUTORIAL_READY = false;
+const TUTORIAL_READY = true;
 
 // Les vidéos existent en français et en anglais. Les autres langues reçoivent le français.
 function LandingVideos() {
