@@ -12,7 +12,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { CHAPTERS, TUTORIAL } from './scripts.mjs';
+import { CHAPTERS, tutorialSteps } from './scripts.mjs';
 
 const FPS = 30;
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -30,7 +30,7 @@ const lang = args[1] === 'en' ? 'en' : 'fr';
 const stillsArg = args.includes('--stills') ? args[args.indexOf('--stills') + 1] : null;
 
 // Données du tutoriel pour la page (scripts.mjs reste la seule source).
-writeFileSync(path.join(here, 'tutorial-steps.js'), `window.__STEPS = ${JSON.stringify(TUTORIAL)};\nwindow.__CHAPTERS = ${JSON.stringify(CHAPTERS)};\n`);
+writeFileSync(path.join(here, 'tutorial-steps.js'), `window.__STEPS = ${JSON.stringify(tutorialSteps(lang))};\nwindow.__CHAPTERS = ${JSON.stringify(CHAPTERS)};\n`);
 
 const browser = await chromium.launch({ args: ['--allow-file-access-from-files'] });
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });

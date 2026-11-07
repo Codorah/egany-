@@ -35,12 +35,14 @@ export const PRESENTATION = [
 
 // Tutoriel : une étape, un écran, une phrase. tap = repère [x, y] en fraction de l'écran.
 export const TUTORIAL = [
-  { ch: 0, screen: 'welcome', tap: [0.5, 0.884], fr: 'Ouvrez eganyé, et touchez Créer un compte.', en: 'Open eganyé and tap Create an account.' },
-  { ch: 0, screen: 'register', tap: [0.5, 0.565], fr: 'Entrez votre nom, votre e-mail et un mot de passe.', en: 'Enter your name, your email and a password.' },
-  { ch: 0, screen: 'code', tap: [0.5, 0.298], fr: 'Vous recevez un code par e-mail. Entrez-le ici.', en: 'You get a code by email. Type it in here.' },
-  { ch: 0, screen: 'intent', tap: [0.5, 0.19], fr: 'Dites ce que vous voulez faire. Ici : créer une tontine.', en: 'Choose what you want to do. Here, start a tontine.' },
+  { ch: 0, screen: 'welcome', skipEn: true, tap: [0.5, 0.72], fr: 'Ouvrez eganyé, et touchez Découvrir eganyé.', en: 'Open eganyé and tap Discover eganyé.' },
+  { ch: 0, screen: 'slide-1', tap: [0.64, 0.94], fr: 'Quelques écrans vous présentent l’application. Touchez Suivant, ou Passer.', en: 'Open eganyé, tap Discover eganyé: a few screens introduce the app. Tap Next, or Skip.' },
+  { ch: 0, screen: 'intent', tap: [0.5, 0.43], fr: 'Dites ce que vous voulez faire. Ici : créer une tontine.', en: 'Choose what you want to do. Here, start a tontine.' },
+  { ch: 0, screen: 'register', tap: [0.5, 0.74], fr: 'Entrez votre nom, votre e-mail et un mot de passe.', en: 'Enter your name, your email and a password.' },
+  { ch: 0, screen: 'avatar', skipEn: true, tap: [0.5, 0.91], fr: 'Choisissez une photo ou un emoji, puis créez votre compte.', en: 'Pick a photo or an emoji, then create your account.' },
+  { ch: 0, screen: 'code', tap: [0.5, 0.45], fr: 'Vous recevez un code par e-mail. Entrez-le ici.', en: 'You get a code by email. Type it in here.' },
   { ch: 1, screen: 'home', fr: 'Voici votre accueil : votre solde, vos cercles, vos derniers mouvements.', en: 'This is your home screen: your balance, your circles, your latest activity.' },
-  { ch: 1, screen: 'home', tap: [0.5, 0.325], fr: 'L’assistant vous dit ce qui compte aujourd’hui. Par exemple, pourquoi votre score a bougé.', en: 'The assistant tells you what matters today. For example, why your score moved.' },
+  { ch: 1, screen: 'home', tap: [0.5, 0.31], fr: 'L’assistant vous dit ce qui compte aujourd’hui. Par exemple, pourquoi votre score a bougé.', en: 'The assistant tells you what matters today. For example, why your score moved.' },
   { ch: 1, screen: 'assistant-answer', fr: 'Posez-lui vos questions : il répond à partir de vos cotisations.', en: 'Ask it your questions: it answers from your own contributions.' },
   { ch: 2, screen: 'circles-add', tap: [0.5, 0.8], fr: 'Dans Cercles, touchez le plus, puis Créer un cercle.', en: 'In Circles, tap the plus, then Create a circle.' },
   { ch: 2, screen: 'create-1', tap: [0.5, 0.953], fr: 'Donnez un nom au cercle, le montant de la cotisation et le nombre de participants.', en: 'Name your circle, then set the contribution and the number of members.' },
@@ -66,3 +68,6 @@ export const CHAPTERS = {
   fr: ['Votre compte', 'L’accueil et l’assistant', 'Créer un cercle', 'Cotiser', 'Recevoir sa part', 'Recharger et retirer', ''],
   en: ['Your account', 'Home and the assistant', 'Create a circle', 'Contribute', 'Get your share', 'Top up and withdraw', ''],
 };
+
+// Écrans dont des textes sont encore en français dans l'application : jamais montrés en anglais.
+export const tutorialSteps = (lang) => TUTORIAL.filter((step) => !(lang === 'en' && step.skipEn));

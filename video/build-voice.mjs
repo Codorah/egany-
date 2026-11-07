@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { BAR, PRESENTATION, PRESENTATION_BARS, TUTORIAL, VOICES, speak } from './scripts.mjs';
+import { BAR, PRESENTATION, PRESENTATION_BARS, tutorialSteps, VOICES, speak } from './scripts.mjs';
 
 const synth = (text, lang, rate, file) => {
   let r;
@@ -56,7 +56,7 @@ const build = (video, lang) => {
   } else {
     // Le tutoriel se cale sur la voix : chaque étape dure sa réplique, plus un temps pour regarder.
     let t = 0.6;
-    TUTORIAL.forEach((step, i) => {
+    tutorialSteps(lang).forEach((step, i) => {
       const file = String(i + 1).padStart(2, '0') + '.mp3';
       const duree = say(step[lang], path.join(dir, file));
       out.push({ t: +t.toFixed(3), text: step[lang], file, duree, step: i });
