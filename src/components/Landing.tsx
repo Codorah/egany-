@@ -15,7 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { EganyeLogo } from './ui/EganyeLogo';
-import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED, PLAY_STORE_URL } from '@/lib/links';
+import { PLAY_STORE_PUBLISHED, PLAY_STORE_URL } from '@/lib/links';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
@@ -168,15 +168,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 >
                   <Smartphone className="w-5 h-5" /> Télécharger l'app
                 </a>
-              ) : (
-                <a
-                  href={APK_DOWNLOAD_URL}
-                  download="eganye.apk"
-                  className="h-14 px-2 inline-flex items-center gap-2 text-base font-bold text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Smartphone className="w-5 h-5" /> App Android (APK)
-                </a>
-              )}
+              ) : null}
             </div>
           </motion.div>
 

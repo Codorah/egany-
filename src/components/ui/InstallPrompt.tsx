@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { APK_DOWNLOAD_URL, PLAY_STORE_PUBLISHED } from '@/lib/links';
 import { isInstalledApp, isIos, promptInstall, useCanPromptInstall } from '@/lib/pwaInstall';
 
 /**
@@ -142,18 +141,6 @@ export function InstallPrompt() {
             )}
           </div>
 
-          {/* Android hors Play Store : l'APK signé du site, pour qui préfère
-              une vraie app à l'installation par le navigateur. */}
-          {!iosHint && !PLAY_STORE_PUBLISHED && (
-            <a
-              href={APK_DOWNLOAD_URL}
-              download="eganye.apk"
-              onClick={dismiss}
-              className="mt-1 flex min-h-11 items-center justify-center text-[13px] font-bold text-muted-foreground underline underline-offset-2"
-            >
-              {t('install_apk_link')}
-            </a>
-          )}
         </motion.div>
       )}
     </AnimatePresence>
