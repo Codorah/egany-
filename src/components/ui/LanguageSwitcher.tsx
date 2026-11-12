@@ -31,7 +31,7 @@ export function LanguageSwitcher({ value, onChange, variant = 'grid', className 
             key={code}
             type="button"
             onClick={() => onChange(code)}
-            className={`h-8 text-xs rounded-full px-3 font-bold cursor-pointer transition-all ${
+            className={`min-h-11 min-w-11 text-[13px] rounded-full px-3 font-bold cursor-pointer transition-all ${
               value === code ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'
             }`}
           >

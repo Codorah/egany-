@@ -68,6 +68,7 @@ function LandingVideos() {
               playsInline
               preload="none"
             >
+              <track kind="captions" src={`/video/${video.name}.vtt`} srcLang={en ? 'en' : 'fr'} label={en ? 'English' : 'Français'} default />
               {en ? 'Your browser cannot play this video.' : 'Votre navigateur ne lit pas cette vidéo.'}
             </video>
           </Reveal>
@@ -100,15 +101,15 @@ export function Landing({ onStart, onLogin }: LandingProps) {
       {/* ---------------------------------------------------- Navigation */}
       <header className="sticky top-0 z-30 bg-background/85 border-b border-border/60">
         <nav className="max-w-7xl mx-auto px-8 h-[72px] flex items-center gap-10">
-          <a href="/" className="flex items-center gap-2.5 shrink-0" aria-label="eganyé, accueil">
+          <a href="/" className="flex min-h-11 items-center gap-2.5 shrink-0" aria-label="eganyé, accueil">
             <EganyeLogo size={36} />
             <span className="text-2xl font-heading font-bold lowercase tracking-tight">eganyé</span>
           </a>
           <div className="flex items-center gap-8 text-sm font-semibold text-muted-foreground">
-            <a href="#fonctionnement" className="hover:text-foreground transition-colors">Comment ça marche</a>
-            <a href="#services" className="hover:text-foreground transition-colors">Services</a>
-            <a href="#argent" className="hover:text-foreground transition-colors">Microcrédit</a>
-            <a href="#securite" className="hover:text-foreground transition-colors">Sécurité</a>
+            <a href="#fonctionnement" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Comment ça marche</a>
+            <a href="#services" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Services</a>
+            <a href="#argent" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Microcrédit</a>
+            <a href="#securite" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Sécurité</a>
           </div>
           <div className="ml-auto flex items-center gap-3">
             <button
@@ -230,7 +231,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                 ].map((step, i) => (
                   <Reveal key={step.title} delay={i * 0.08}>
                     <li className="flex gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-brand/10 text-primary-ink flex items-center justify-center shrink-0">
                         <step.icon className="w-7 h-7" />
                       </div>
                       <div className="space-y-1.5">
@@ -270,7 +271,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             </Reveal>
             <Reveal className="col-span-2" delay={0.06}>
               <div className="h-full rounded-2xl bg-card border border-border p-7 flex flex-col justify-between">
-                <PiggyBank className="w-8 h-8 text-brand" />
+                <PiggyBank className="w-8 h-8 text-primary-ink" />
                 <div className="space-y-1.5">
                   <h3 className="text-lg font-heading font-bold">Mon Épargne</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">Des coffres personnels bloqués le temps que vous choisissez, pour ne pas toucher à votre épargne.</p>
@@ -289,11 +290,11 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             <Reveal className="col-span-3" delay={0.06}>
               <div className="h-full rounded-2xl bg-card border border-border p-7 flex items-end gap-6">
                 <div className="space-y-1.5 flex-1">
-                  <MessagesSquare className="w-8 h-8 text-brand mb-4" />
+                  <MessagesSquare className="w-8 h-8 text-primary-ink mb-4" />
                   <h3 className="text-lg font-heading font-bold">Discussion et calendrier du cercle</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">Parlez entre membres et voyez d'un coup d'œil qui reçoit et quand.</p>
                 </div>
-                <CalendarDays className="w-20 h-20 text-brand/15 shrink-0" />
+                <CalendarDays className="w-20 h-20 text-primary-ink/15 shrink-0" />
               </div>
             </Reveal>
             <Reveal className="col-span-3" delay={0.12}>
@@ -364,7 +365,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
               ].map((item, i) => (
                 <Reveal key={item.title} delay={(i % 2) * 0.08}>
                   <div className="flex gap-5">
-                    <item.icon className="w-7 h-7 text-brand shrink-0 mt-1" />
+                    <item.icon className="w-7 h-7 text-primary-ink shrink-0 mt-1" />
                     <div className="space-y-1.5">
                       <h3 className="text-lg font-heading font-bold">{item.title}</h3>
                       <p className="text-muted-foreground leading-relaxed">{item.body}</p>
@@ -382,7 +383,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             <div className="rounded-2xl gradient-sunset text-white px-16 py-16 flex items-center justify-between gap-10">
               <div className="space-y-3">
                 <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight">Créez votre premier cercle.</h2>
-                <p className="text-white/85 text-lg">Gratuit à l'inscription, sur téléphone comme sur ordinateur.</p>
+                <p className="text-white text-lg">Gratuit à l'inscription, sur téléphone comme sur ordinateur.</p>
               </div>
               <button
                 type="button"
@@ -405,10 +406,10 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             <span>Épargner ensemble, au Togo.</span>
           </div>
           <nav className="flex items-center gap-6">
-            <a href="/conditions" className="hover:text-foreground">Conditions</a>
-            <a href="/confidentialite" className="hover:text-foreground">Confidentialité</a>
-            <a href="/suppression-compte" className="hover:text-foreground">Supprimer mon compte</a>
-            <a href="/mentions-legales" className="hover:text-foreground">Mentions légales</a>
+            <a href="/conditions" className="inline-flex min-h-11 items-center hover:text-foreground">Conditions</a>
+            <a href="/confidentialite" className="inline-flex min-h-11 items-center hover:text-foreground">Confidentialité</a>
+            <a href="/suppression-compte" className="inline-flex min-h-11 items-center hover:text-foreground">Supprimer mon compte</a>
+            <a href="/mentions-legales" className="inline-flex min-h-11 items-center hover:text-foreground">Mentions légales</a>
           </nav>
         </div>
       </footer>

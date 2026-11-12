@@ -8200,6 +8200,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, [profile]);
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   const setLanguage = async (newLang: LanguageCode) => {
     setLanguageState(newLang);
     localStorage.setItem('egayne_lang', newLang);

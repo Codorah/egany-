@@ -593,7 +593,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-3 text-muted-foreground">
-        <Loader2 className="w-10 h-10 animate-spin text-brand" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary-ink" />
         <p className="text-xs font-bold">{t('admin_loading')}</p>
       </div>
     );
@@ -655,7 +655,7 @@ export function AdminDashboard() {
                 {standardUsersCount} {t('admin_users_word')} • {adminCount} {t('admin_admins_word')}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-brand">
+            <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center text-primary-ink">
               <User className="w-5 h-5" />
             </div>
           </CardContent>
@@ -734,7 +734,7 @@ export function AdminDashboard() {
             <Card className="border-2 border-brand bg-muted rounded-2xl overflow-hidden shadow-md">
               <CardHeader className="bg-brand/5 p-5 border-b border-border flex flex-row items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs text-brand font-bold">
+                  <div className="flex items-center gap-1.5 text-xs text-primary-ink font-bold">
                     <Sliders className="w-4 h-4" />
                     {t('admin_member_config_console')}
                   </div>
@@ -755,7 +755,7 @@ export function AdminDashboard() {
                 {/* Field 1: Reputation Score */}
                 <div className="space-y-2">
                   <label className="text-[13px] font-bold text-foreground flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-brand" />
+                    <Award className="w-3.5 h-3.5 text-primary-ink" />
                     {t('admin_reputation_score_range')}
                   </label>
                   <div className="flex items-center gap-3">
@@ -815,7 +815,7 @@ export function AdminDashboard() {
                     className="border-border hover:bg-muted font-bold text-xs text-foreground px-3.5 rounded-xl cursor-pointer h-[44px]"
                     title={t('admin_toggle_role_title')}
                   >
-                    <Shield className="w-4 h-4 text-brand" />
+                    <Shield className="w-4 h-4 text-primary-ink" />
                   </Button>
                 </div>
               </CardContent>
@@ -827,11 +827,11 @@ export function AdminDashboard() {
       {/* --- DETAILED MANAGEMENT SECTIONS --- */}
       {(() => {
         const adminSections = [
-          { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-brand', count: pendingDeletions.length },
+          { id: 'users', label: t('members'), icon: User, color: 'bg-brand/10 text-primary-ink', count: pendingDeletions.length },
           { id: 'balances', label: 'Soldes', icon: Coins, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'groups', label: t('admin_tab_groups'), icon: GroupsIcon, color: 'bg-secondary/10 text-secondary', count: 0 },
           { id: 'kyc', label: 'KYC', icon: BadgeCheck, color: 'bg-eganye-gold/10 text-eganye-gold', count: kycSubmissions.length },
-          { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-brand', count: marketplaceRequests.length + pendingCreditCount + pendingAidCount },
+          { id: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-brand/10 text-primary-ink', count: marketplaceRequests.length + pendingCreditCount + pendingAidCount },
           { id: 'ledger', label: t('admin_tab_ledger'), icon: BookOpen, color: 'bg-secondary/10 text-secondary', count: pendingWithdrawals.length },
           { id: 'settings', label: t('settings'), icon: Settings, color: 'bg-muted-foreground/10 text-muted-foreground', count: 0 },
         ];
@@ -1023,7 +1023,7 @@ export function AdminDashboard() {
                           <p className="truncate text-[13px] text-muted-foreground">{u.email}</p>
                         </div>
                         <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold ${
-                          u.role === 'admin' ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground'
+                          u.role === 'admin' ? 'bg-brand/10 text-primary-ink' : 'bg-muted text-muted-foreground'
                         }`}>
                           {u.role === 'admin' ? t('admin_administrator') : t('member')}
                         </Badge>
@@ -1037,7 +1037,7 @@ export function AdminDashboard() {
                           <p className={`font-serif text-sm font-bold ${
                             u.reputationScore >= 85 ? 'text-secondary'
                               : u.reputationScore >= 70 ? 'text-sage'
-                              : u.reputationScore >= 50 ? 'text-brand' : 'text-danger'
+                              : u.reputationScore >= 50 ? 'text-primary-ink' : 'text-danger'
                           }`}>
                             {u.reputationScore}
                             <span className="ml-1 text-[13px] font-bold text-muted-foreground">
@@ -1060,7 +1060,7 @@ export function AdminDashboard() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleSelectUserToEdit(u)}
-                          className="h-10 flex-1 rounded-xl text-[13px] font-bold text-brand"
+                          className="h-10 flex-1 rounded-xl text-[13px] font-bold text-primary-ink"
                         >
                           {t('admin_adjust')}
                         </Button>
@@ -1068,7 +1068,7 @@ export function AdminDashboard() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleRole(u)}
-                          className={`h-10 w-10 rounded-xl p-0 ${u.role === 'admin' ? 'text-brand' : 'text-muted-foreground'}`}
+                          className={`h-10 w-10 rounded-xl p-0 ${u.role === 'admin' ? 'text-primary-ink' : 'text-muted-foreground'}`}
                           title={u.role === 'admin' ? t('admin_demote_user') : t('admin_promote_admin')}
                         >
                           <Shield className="h-4 w-4" />
@@ -1124,7 +1124,7 @@ export function AdminDashboard() {
                           <TableCell>
                             <Badge className={`text-[13px] font-bold px-2 py-0.5 border-none ${
                               u.role === 'admin' 
-                                ? 'bg-brand/10 text-brand' 
+                                ? 'bg-brand/10 text-primary-ink' 
                                 : 'bg-muted text-muted-foreground'
                             }`}>
                               {u.role === 'admin' ? t('admin_administrator') : t('member')}
@@ -1139,7 +1139,7 @@ export function AdminDashboard() {
                                   : u.reputationScore >= 70 
                                   ? 'text-sage'
                                   : u.reputationScore >= 50 
-                                  ? 'text-brand' 
+                                  ? 'text-primary-ink' 
                                   : 'text-danger'
                               }`}>
                                 {u.reputationScore}
@@ -1160,7 +1160,7 @@ export function AdminDashboard() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleSelectUserToEdit(u)}
-                                className="h-8 px-2.5 text-[13px] font-bold text-brand hover:bg-brand/10 hover:text-brand rounded-lg cursor-pointer"
+                                className="h-8 px-2.5 text-[13px] font-bold text-primary-ink hover:bg-brand/10 hover:text-primary-ink rounded-lg cursor-pointer"
                               >
                                 {t('admin_adjust')}
                               </Button>
@@ -1168,7 +1168,7 @@ export function AdminDashboard() {
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleToggleRole(u)}
-                                className={`h-8 w-8 p-0 rounded-lg cursor-pointer ${u.role === 'admin' ? 'text-brand' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`h-8 w-8 p-0 rounded-lg cursor-pointer ${u.role === 'admin' ? 'text-primary-ink' : 'text-muted-foreground hover:text-foreground'}`}
                                 title={u.role === 'admin' ? t('admin_demote_user') : t('admin_promote_admin')}
                               >
                                 <Shield className="w-3.5 h-3.5" />
@@ -1274,7 +1274,7 @@ export function AdminDashboard() {
                           </div>
                           <Badge className={`shrink-0 border-none px-2 py-0.5 text-[13px] font-bold ${
                             g.status === 'active' ? 'bg-secondary/10 text-secondary'
-                              : g.status === 'pending' ? 'bg-brand/10 text-brand'
+                              : g.status === 'pending' ? 'bg-brand/10 text-primary-ink'
                               : 'bg-muted text-muted-foreground'
                           }`}>
                             {g.status === 'active' ? t('admin_status_active') : g.status === 'pending' ? t('admin_status_init') : t('admin_status_closed')}
@@ -1392,7 +1392,7 @@ export function AdminDashboard() {
                                 g.status === 'active' 
                                   ? 'bg-secondary/10 text-secondary' 
                                   : g.status === 'pending'
-                                  ? 'bg-brand/10 text-brand'
+                                  ? 'bg-brand/10 text-primary-ink'
                                   : 'bg-muted text-muted-foreground'
                               }`}>
                                 {g.status === 'active' ? t('admin_status_active') : g.status === 'pending' ? t('admin_status_init') : t('admin_status_closed')}
@@ -2042,7 +2042,7 @@ export function AdminDashboard() {
 
                 {/* Info block for developer demo */}
                 <div className="bg-brand/10 border border-brand/20 p-4 rounded-2xl flex gap-3 text-xs text-foreground leading-relaxed">
-                  <AlertTriangle className="w-5 h-5 text-brand shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-primary-ink shrink-0" />
                   <div className="space-y-1">
                     <span className="font-bold block">{t('admin_reputation_control')}</span>
                     <p className="text-[13px] text-muted-foreground">
@@ -2061,7 +2061,7 @@ export function AdminDashboard() {
           <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
             <CardHeader className="pb-4 bg-muted/30 border-b border-border">
               <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-brand" />
+                <ArrowUpRight className="w-5 h-5 text-primary-ink" />
                 Retraits Mobile Money à traiter
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
@@ -2079,7 +2079,7 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-0.5">
                         <p className="text-sm font-bold text-foreground">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-bold text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-bold text-primary-ink">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
                         {w.fee > 0 && (
                           <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
                         )}
@@ -2176,7 +2176,7 @@ export function AdminDashboard() {
                     <div key={w.id} className="p-5 flex items-start justify-between gap-4">
                       <div className="space-y-0.5 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">{w.userName} • {w.userEmail}</p>
-                        <p className="text-xs font-bold text-brand">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
+                        <p className="text-xs font-bold text-primary-ink">{w.sendAmount.toLocaleString()} FCFA → {w.paymentMethod.toUpperCase()} ({w.reference})</p>
                         {w.fee > 0 && (
                           <p className="text-[13px] text-muted-foreground">Débité : {w.amount.toLocaleString()} FCFA, dont {w.fee.toLocaleString()} FCFA de frais</p>
                         )}

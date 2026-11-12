@@ -64,7 +64,7 @@ export function PublicLegalPage({ docId }: { docId: LegalDocId | 'suppression' }
     <main className="min-h-dvh bg-background text-foreground px-4 py-10">
       <article className="max-w-2xl mx-auto space-y-6">
         <header className="space-y-2">
-          <a href="/" className="text-2xl font-serif font-bold lowercase text-brand">eganyé</a>
+          <a href="/" className="text-2xl font-serif font-bold lowercase text-primary-ink">eganyé</a>
           <h1 className="text-3xl font-serif font-bold">{doc.title}</h1>
           <p className="text-sm text-muted-foreground">{doc.audience} — mis à jour le {LEGAL_LAST_UPDATED}</p>
         </header>

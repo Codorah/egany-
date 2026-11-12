@@ -26,7 +26,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const getIcon = (type: string) => {
     switch (type) {
       case 'reminder':
-        return <EganyeIcon name="pending" size={16} className="text-brand" />;
+        return <EganyeIcon name="pending" size={16} className="text-primary-ink" />;
       case 'chat':
         return <EganyeIcon name="chat" size={16} className="text-primary-ink" />;
       case 'payout':
@@ -52,7 +52,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         <div className="flex items-center justify-between p-4 bg-chip/15">
           <h3 className="font-serif font-bold text-sm text-foreground">{t('nb_title')}</h3>
           {unreadCount > 0 && (
-            <span className="text-[13px] bg-brand/10 text-brand px-2.5 py-0.5 rounded-full font-bold">
+            <span className="text-[13px] bg-brand/10 text-primary-ink px-2.5 py-0.5 rounded-full font-bold">
               {unreadCount} {t('nb_new_count_suffix')}
             </span>
           )}

@@ -173,7 +173,7 @@ function Pill({ selected, onClick, children }: { selected: boolean; onClick: () 
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`min-h-11 cursor-pointer rounded-full border px-4 text-[13px] font-bold transition-colors duration-150 ${
+      className={`min-h-11 min-w-11 cursor-pointer rounded-full border px-4 text-[13px] font-bold transition-colors duration-150 ${
         selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
       }`}
     >

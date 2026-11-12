@@ -64,8 +64,8 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-center gap-2 mb-6 text-white">
           <div className="bg-brand text-primary-foreground p-1.5 rounded-lg font-bold text-lg">P</div>
-          <span className="text-xl font-bold text-brand">PAYDUNYA</span>
-          <Badge className="bg-brand/20 text-brand border-brand/30 text-[13px] ml-1">SANDBOX SIMULATOR</Badge>
+          <span className="text-xl font-bold text-primary-ink">PAYDUNYA</span>
+          <Badge className="bg-brand/20 text-primary-ink border-brand/30 text-[13px] ml-1">SANDBOX SIMULATOR</Badge>
         </div>
 
         <Card className="border-slate-800 bg-slate-950 text-white shadow-2xl">
@@ -77,7 +77,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
               </div>
               <div className="text-right">
                 <span className="text-xs text-slate-400 block font-medium">Montant</span>
-                <span className="text-lg font-bold text-brand">{amount.toLocaleString()} FCFA</span>
+                <span className="text-lg font-bold text-primary-ink">{amount.toLocaleString()} FCFA</span>
               </div>
             </div>
           </CardHeader>
@@ -123,7 +123,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
                         >
                           <span
                             className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                              isActive ? 'bg-brand/20 text-brand' : 'bg-slate-800 text-slate-400'
+                              isActive ? 'bg-brand/20 text-primary-ink' : 'bg-slate-800 text-slate-400'
                             }`}
                           >
                             <Smartphone className="w-5 h-5" />
@@ -187,7 +187,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
 
             {step === 'processing' && (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-brand" />
+                <Loader2 className="w-10 h-10 animate-spin text-primary-ink" />
                 <div className="text-center space-y-1">
                   <p className="font-bold text-slate-200">Traitement de la transaction...</p>
                   <p className="text-xs text-slate-500">Sécurisé par chiffrement SSL de Paydunya.</p>
@@ -198,7 +198,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
             {step === 'pin_sent' && (
               <div className="space-y-5 py-4 animate-in fade-in duration-300">
                 <div className="flex flex-col items-center justify-center text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+                  <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-primary-ink">
                     <Smartphone className="w-6 h-6 animate-bounce" />
                   </div>
                   <div className="space-y-1">
@@ -233,7 +233,7 @@ export function PaydunyaSimulator({ amount, userId, userName, userEmail, initial
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-slate-100">Paiement Réussi !</h3>
                   <p className="text-sm text-slate-400 max-w-xs mx-auto">
-                    Votre paiement de <span className="text-brand font-bold">{amount.toLocaleString()} FCFA</span> a été validé avec succès par le wallet Paydunya.
+                    Votre paiement de <span className="text-primary-ink font-bold">{amount.toLocaleString()} FCFA</span> a été validé avec succès par le wallet Paydunya.
                   </p>
                 </div>
 

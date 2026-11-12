@@ -244,7 +244,7 @@ function ApplicationFlow({ user, service, icon: Icon, applications, onChanged, o
                 type="button"
                 onClick={() => setMonths(m)}
                 className={`h-12 rounded-2xl border-2 text-sm font-bold cursor-pointer transition-colors ${
-                  months === m ? 'border-brand bg-brand/10 text-brand' : 'border-border text-foreground'
+                  months === m ? 'border-brand bg-brand/10 text-primary-ink' : 'border-border text-foreground'
                 }`}
               >
                 {m} mois

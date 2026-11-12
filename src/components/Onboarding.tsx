@@ -112,7 +112,7 @@ function AuthLayout({
   // Sur ordinateur, l'écran devient une carte centrée de la largeur d'un
   // téléphone : étiré sur 1 440 px, le formulaire n'avait plus de forme.
   return (
-    <div className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+    <div role="main" className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
       <div className="relative w-full min-h-dvh md:min-h-[720px] md:max-w-[440px] md:rounded-[2rem] md:shadow-elevated bg-background overflow-hidden flex flex-col">
 
         {/* Bandeau coloré + filigrane photo réelle + courbe */}
@@ -152,7 +152,7 @@ function AuthLayout({
               <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
                 <EganyeLogo size={24} />
               </div>
-              <span className="text-lg font-serif font-bold text-white lowercase tracking-tight pr-1">
+              <span className="text-xl font-serif font-bold text-white lowercase tracking-tight pr-1">
                 eganyé
               </span>
             </div>
@@ -214,6 +214,7 @@ function PillField({
         id={id}
         type={type}
         placeholder={placeholder}
+        aria-label={placeholder}
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -720,7 +721,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           <button
             type="button"
             onClick={() => goTo(intent || hasInvite ? 'register' : 'intent')}
-            className="w-full text-center text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
+            className="w-full min-h-11 flex items-center justify-center text-center text-[15px] font-bold text-primary-ink hover:underline cursor-pointer py-2"
           >
             {t('onb_no_account_yet')}
           </button>
@@ -750,7 +751,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           <button
             type="button"
             onClick={() => goTo('forgot')}
-            className="text-[14px] font-bold text-brand hover:underline cursor-pointer py-1"
+            className="min-h-11 inline-flex items-center text-[14px] font-bold text-primary-ink hover:underline cursor-pointer py-1"
           >
             {t('onb_forgot_title')}
           </button>
@@ -782,7 +783,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           <button
             type="button"
             onClick={() => goTo('login')}
-            className="w-full text-center text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
+            className="w-full min-h-11 flex items-center justify-center text-center text-[15px] font-bold text-primary-ink hover:underline cursor-pointer py-2"
           >
             {t('onb_already_account_login')}
           </button>
@@ -863,7 +864,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
           <button
             type="button"
             onClick={() => goTo('login')}
-            className="w-full text-center text-[15px] font-bold text-brand hover:underline cursor-pointer py-2"
+            className="w-full min-h-11 flex items-center justify-center text-center text-[15px] font-bold text-primary-ink hover:underline cursor-pointer py-2"
           >
             {t('onb_back_to_login')}
           </button>
@@ -904,7 +905,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
             type="button"
             onClick={handleResendOtp}
             disabled={isResendingOtp}
-            className="w-full text-center text-[15px] font-bold text-brand hover:underline disabled:opacity-50 cursor-pointer py-2"
+            className="w-full text-center text-[15px] font-bold text-primary-ink hover:underline disabled:opacity-50 cursor-pointer py-2"
           >
             {isResendingOtp ? t('onb_sending_in_progress') : t('onb_resend_code')}
           </button>
@@ -975,7 +976,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   if (screen === 'slides') {
     const currentSlide = slides[slideIndex];
     return (
-      <div className="fixed inset-0 z-50 bg-background md:bg-muted/60 md:flex md:items-center md:justify-center md:p-6">
+      <div role="main" className="fixed inset-0 z-50 bg-background md:bg-muted/60 md:flex md:items-center md:justify-center md:p-6">
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
@@ -1028,8 +1029,9 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   key={idx}
                   type="button"
                   onClick={() => setSlideIndex(idx)}
-                  aria-label={`${idx + 1}`}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                  aria-label={`${idx + 1} / ${slides.length}`}
+                  aria-current={slideIndex === idx ? 'true' : undefined}
+                  className={`relative h-2 rounded-full transition-all cursor-pointer before:absolute before:-inset-x-2 before:-inset-y-3.5 before:content-[''] ${
                     slideIndex === idx ? 'w-7 bg-white' : 'w-2 bg-white/45 hover:bg-white/70'
                   }`}
                 />
@@ -1093,7 +1095,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   /* ---------------- Bienvenue, intention & avatar --------------------- */
 
   return (
-    <div className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
+    <div role="main" className="w-full min-h-dvh md:min-h-[100dvh] md:flex md:items-center md:justify-center md:py-8 md:bg-muted/50">
       <div
         className={`w-full min-h-dvh md:min-h-[740px] flex flex-col justify-between bg-background px-6 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:px-8 md:py-8 relative overflow-hidden md:rounded-[2rem] md:shadow-elevated transition-all duration-500 ${
           screen === 'avatar' ? 'md:max-w-lg' : 'md:max-w-[440px]'
@@ -1170,7 +1172,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                         className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
                       />
                     </div>
-                    <span className="text-xs font-serif font-bold text-white bg-white/20 px-3 py-1.5 rounded-full border border-white/25">
+                    <span className="text-[13px] font-serif font-bold text-white bg-white/20 px-3 py-1.5 rounded-full border border-white/25">
                       Tontine · Épargne · Crédit
                     </span>
                   </div>
@@ -1214,7 +1216,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                           toast.info(t('install_ios_hint'), { duration: 8000 });
                         }
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-brand hover:underline cursor-pointer"
+                      className="w-full min-h-11 flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-primary-ink hover:underline cursor-pointer"
                     >
                       <Download className="w-5 h-5" />
                       {t('onb_install_app')}
@@ -1224,7 +1226,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   <button
                     type="button"
                     onClick={() => setGuideOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-brand hover:underline cursor-pointer"
+                    className="w-full min-h-11 flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-primary-ink hover:underline cursor-pointer"
                   >
                     <Play className="w-5 h-5" />
                     {t('onb_watch_guide')}
@@ -1235,7 +1237,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     <button
                       type="button"
                       onClick={() => setLegalModal('cgu')}
-                      className="hover:text-primary-ink hover:underline cursor-pointer"
+                      className="min-h-11 px-2 hover:text-primary-ink hover:underline cursor-pointer"
                     >
                       Conditions d'utilisation
                     </button>
@@ -1243,7 +1245,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     <button
                       type="button"
                       onClick={() => setLegalModal('confidentialite')}
-                      className="hover:text-primary-ink hover:underline cursor-pointer"
+                      className="min-h-11 px-2 hover:text-primary-ink hover:underline cursor-pointer"
                     >
                       Confidentialité
                     </button>

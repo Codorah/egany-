@@ -289,7 +289,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
       <Card className="bg-card border border-border shadow-sm rounded-2xl overflow-hidden animate-in fade-in duration-300">
         <CardHeader className="pb-3 bg-muted/40 border-b border-border flex flex-row items-center justify-between gap-3">
           <CardTitle className="font-serif text-base font-bold text-foreground flex items-center gap-2">
-            <Landmark className="w-4.5 h-4.5 text-brand" />
+            <Landmark className="w-4.5 h-4.5 text-primary-ink" />
             {t('chart_tab_contributions')}
           </CardTitle>
           <div className="relative inline-block shrink-0">
@@ -311,7 +311,7 @@ export function DashboardCharts({ user, groups }: DashboardChartsProps) {
 
         <CardContent className="pt-5">
           {currentGroup && (
-            <div className="text-xs font-semibold text-brand bg-brand/10 px-3 py-1.5 rounded-xl mb-4 inline-block">
+            <div className="text-xs font-semibold text-primary-ink bg-brand/10 px-3 py-1.5 rounded-xl mb-4 inline-block">
               {t('chart_recurring_contribution')} {formatCurrency(currentGroup.contributionAmount)} ({currentGroup.frequency})
             </div>
           )}

@@ -186,7 +186,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
             ['L’étude', 'Notre équipe décide et vous verse l’aide si elle est accordée.'],
           ].map(([label, text], i) => (
             <div key={label} className="flex items-start gap-3">
-              <span className="w-8 h-8 rounded-full bg-brand/10 text-brand text-sm font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+              <span className="w-8 h-8 rounded-full bg-brand/10 text-primary-ink text-sm font-bold flex items-center justify-center shrink-0">{i + 1}</span>
               <div>
                 <p className="text-sm font-bold text-foreground">{label}</p>
                 <p className="text-[13px] text-muted-foreground">{text}</p>
@@ -265,7 +265,7 @@ export function AidFlow({ user, applications, applicationFee, onChanged, onShowT
               type="button"
               onClick={() => setVideoMode(mode)}
               className={`p-4 rounded-2xl border-2 text-sm font-bold flex flex-col items-center gap-2 cursor-pointer transition-colors ${
-                videoMode === mode ? 'border-brand bg-brand/5 text-brand' : 'border-border text-muted-foreground'
+                videoMode === mode ? 'border-brand bg-brand/5 text-primary-ink' : 'border-border text-muted-foreground'
               }`}
             >
               {mode === 'upload' ? <Upload className="w-6 h-6" /> : <Link2 className="w-6 h-6" />}

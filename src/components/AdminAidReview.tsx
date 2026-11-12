@@ -48,7 +48,7 @@ export function AdminAidReview({ onPendingCountChange }: AdminAidReviewProps) {
       <CardHeader className="pb-4 bg-muted/30 border-b border-border flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="text-lg font-serif font-bold text-foreground flex items-center gap-2">
-            <Gift className="w-5 h-5 text-brand" /> Dossiers Coup de pouce
+            <Gift className="w-5 h-5 text-primary-ink" /> Dossiers Coup de pouce
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground mt-0.5">
             Aide gratuite, versée sur le portefeuille dès votre accord. Frais d'étude déjà encaissés.
@@ -134,7 +134,7 @@ function AidRow({ app, onDone }: { app: AidApplicationForReview; onDone: () => v
       </div>
 
       <p className="text-xs text-foreground leading-relaxed whitespace-pre-line bg-muted/30 rounded-2xl p-3">{app.projectDescription}</p>
-      <p className="text-[13px] text-brand font-bold">Demande : {fcfa(app.requestedAmount)}</p>
+      <p className="text-[13px] text-primary-ink font-bold">Demande : {fcfa(app.requestedAmount)}</p>
 
       <div className="bg-muted/30 border border-border rounded-2xl p-4 space-y-3">
         <div className="grid grid-cols-2 gap-2">

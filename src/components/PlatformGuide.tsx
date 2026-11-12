@@ -91,6 +91,7 @@ export function PlatformGuide() {
               playsInline
               preload="none"
             >
+              <track kind="captions" src={`/video/${video.name}.vtt`} srcLang={en ? 'en' : 'fr'} label={en ? 'English' : 'Français'} default />
               {en ? 'Your browser cannot play this video.' : 'Votre navigateur ne lit pas cette vidéo.'}
             </video>
           </div>

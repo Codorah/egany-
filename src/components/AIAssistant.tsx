@@ -194,7 +194,7 @@ export function AIAssistant({ user, groups }: AIAssistantProps) {
             enterKeyHint="send"
             autoComplete="off"
             maxLength={300}
-            className="h-10 min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+            className="h-11 min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
           />
           <button
             type="submit"

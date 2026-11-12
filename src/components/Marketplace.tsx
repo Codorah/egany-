@@ -322,7 +322,7 @@ function ServiceScreen({ service, existingRequest, eligible, reputationScore, st
           {t('mkt_requires_score_prefix')} {service.minReputationScore}. {t('mkt_your_score_is_suffix')} {reputationScore}.
         </FlowNotice>
       ) : (
-        <FlowNotice tone="brand" icon={<AlertCircle className="w-5 h-5 text-brand" />}>
+        <FlowNotice tone="brand" icon={<AlertCircle className="w-5 h-5 text-primary-ink" />}>
           {t('mkt_consent_disclaimer')}
         </FlowNotice>
       )}

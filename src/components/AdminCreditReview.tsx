@@ -145,7 +145,7 @@ function ApplicationRow({ app, onDone }: { app: CreditApplicationForReview; onDo
       </div>
 
       <p className="text-xs text-foreground leading-relaxed whitespace-pre-line bg-muted/30 rounded-2xl p-3">{app.projectDescription}</p>
-      <p className="text-[13px] text-brand font-bold">
+      <p className="text-[13px] text-primary-ink font-bold">
         Demande : {fcfa(app.requestedAmount)} sur {app.requestedMonths} mois
       </p>
 

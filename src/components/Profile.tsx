@@ -737,7 +737,7 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <SettingsRow
                 icon="fingerprint"
                 label="Verrouiller avec l'empreinte"
-                trailing={<Switch checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />}
+                trailing={<Switch aria-label="Verrouiller avec l'empreinte" checked={biometricsEnabled} onCheckedChange={handleToggleBiometrics} />}
               />
               <SettingsRow
                 icon="lock"
@@ -1272,12 +1272,12 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
               <SettingsRow
                 label="Sur l'écran du téléphone"
                 hint="Rappels d'échéances et tours"
-                trailing={<Switch checked={pushNotif} onCheckedChange={() => handleToggleNotification('push_enabled', pushNotif, setPushNotif)} />}
+                trailing={<Switch aria-label="Notifications sur le téléphone" checked={pushNotif} onCheckedChange={() => handleToggleNotification('push_enabled', pushNotif, setPushNotif)} />}
               />
               <SettingsRow
                 label="SMS"
                 hint="Paiements et rappels"
-                trailing={<Switch checked={smsNotif} onCheckedChange={() => handleToggleNotification('sms_notifications_enabled', smsNotif, setSmsNotif)} />}
+                trailing={<Switch aria-label="Notifications par SMS" checked={smsNotif} onCheckedChange={() => handleToggleNotification('sms_notifications_enabled', smsNotif, setSmsNotif)} />}
               />
               <SettingsRow
                 label="WhatsApp"
