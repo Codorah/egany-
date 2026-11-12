@@ -4715,6 +4715,10 @@ const translations: Record<string, Partial<Record<LanguageCode, string>>> = {
     ee: "Besoin d'argent pour lancer ou faire grandir votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous l'offrir, sans rien à rembourser.",
     kbp: "Besoin d'argent pour lancer ou faire grandir votre activité ? Dites combien, expliquez votre projet en vidéo : notre équipe étudie votre dossier et peut vous l'offrir, sans rien à rembourser."
   },
+  onb_watch_guide: {
+    fr: 'Voir comment ça marche',
+    en: 'See how it works'
+  },
   onb_slide_assistant_title: {
     fr: 'Un assistant qui veille avec vous',
     en: 'An assistant looking out for you'

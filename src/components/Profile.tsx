@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import LegalDocumentDialog from './LegalDocumentDialog';
 import { LEGAL_DOCUMENTS, LEGAL_DOC_ORDER, type LegalDocId } from '@/lib/legalDocuments';
+import { PlatformGuide } from './PlatformGuide';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -60,6 +61,7 @@ type ProfileSection =
   | 'wallet'
   | 'language'
   | 'notifications'
+  | 'guide'
   | 'legal';
 
 /** Montants proposés en un geste pour recharger. */
@@ -765,6 +767,12 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
 
             <SettingsGroup title="Aide">
               <SettingsRow
+                icon="help"
+                label="Découvrir eganyé"
+                value="Vidéos et lexique"
+                onClick={() => setActiveSection('guide')}
+              />
+              <SettingsRow
                 icon="chat"
                 label="Aide et support"
                 onClick={() => onNavigate?.('support')}
@@ -1282,6 +1290,23 @@ export function Profile({ user, groups, defaultTab, focusCard, onLogout, onNavig
                 trailing={<Switch checked={emailNotif} onCheckedChange={() => handleToggleNotification('email_notifications_enabled', emailNotif, setEmailNotif)} />}
               />
             </SettingsGroup>
+          </motion.div>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════════ */}
+        {/* SOUS-PAGE : DÉCOUVRIR EGANYÉ (VIDÉOS ET LEXIQUE)                */}
+        {/* ═════════════════════════════════════════════════════════════════ */}
+        {activeSection === 'guide' && (
+          <motion.div
+            key="guide"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={screenTransition}
+            className="space-y-5"
+          >
+            {renderSubHeader('Découvrir eganyé')}
+            <PlatformGuide />
           </motion.div>
         )}
 

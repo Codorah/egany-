@@ -8,6 +8,7 @@ import { EganyeLogo } from './ui/EganyeLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LegalDocumentDialog from './LegalDocumentDialog';
+import { PlatformGuideDialog } from './PlatformGuide';
 import { useBackHandler } from '@/hooks/useBackHandler';
 import type { LegalDocId } from '@/lib/legalDocuments';
 import {
@@ -24,7 +25,8 @@ import {
   Link2,
   Gift,
   HandCoins,
-  Download
+  Download,
+  Play
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -280,6 +282,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [legalModal, setLegalModal] = useState<LegalDocId | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   // Installer l'app web sur l'écran d'accueil, dès la première visite.
   const canPromptInstall = useCanPromptInstall();
   const showInstallButton = !isInstalledApp() && (canPromptInstall || isIos());
@@ -1218,6 +1221,15 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     </button>
                   )}
 
+                  <button
+                    type="button"
+                    onClick={() => setGuideOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-[15px] font-bold text-brand hover:underline cursor-pointer"
+                  >
+                    <Play className="w-5 h-5" />
+                    {t('onb_watch_guide')}
+                  </button>
+
                   {/* Liens légaux indispensables pour l'approbation Play Store / App Store */}
                   <div className="flex items-center justify-center gap-3 text-[13px] text-muted-foreground pt-1">
                     <button
@@ -1356,6 +1368,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
 
         {/* ── DOCUMENTS LÉGAUX (ACCESSIBLES AVANT INSCRIPTION, EXIGÉ PAR LES STORES) ── */}
         <LegalDocumentDialog docId={legalModal} onClose={() => setLegalModal(null)} />
+        <PlatformGuideDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
       </div>
     </div>
   );
