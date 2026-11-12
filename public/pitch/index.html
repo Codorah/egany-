@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>eganyé : présentation investisseurs</title>
+<meta name="description" content="La tontine sur téléphone, avec un assistant qui prévient avant un retard. Présentation du projet eganyé.">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F8F6F3; --ink:#3E2F24; --muted:#6B5744; --card:#fff; --line:#E9E4DD; --soft:#F1EDE8;
+  --primary:#A95636; --primary-ink:#A5502B; --green:#55704D; --warm:#C96F4A;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#2b211a;font-family:'Nunito',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none}
+.slide{position:absolute;inset:0;background:var(--bg);padding:64px 80px;display:none;overflow:hidden}
+.slide.on{display:block;animation:in .45s ease both}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide.on{animation:none}}
+.kicker{font-size:15px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--primary-ink);margin-bottom:18px}
+h1{font-size:76px;line-height:1.02;font-weight:900;letter-spacing:-.02em}
+h2{font-size:48px;line-height:1.08;font-weight:900;letter-spacing:-.015em;max-width:980px}
+h3{font-size:24px;font-weight:800;margin-bottom:8px}
+p,li{font-size:22px;line-height:1.5;color:var(--muted);font-weight:600}
+.lead{font-size:26px;max-width:860px;margin-top:20px}
+.grid{display:grid;gap:22px;margin-top:38px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px}
+.card p,.card li{font-size:19px}
+.num{font-size:52px;font-weight:900;color:var(--primary-ink);line-height:1}
+.pill{display:inline-block;padding:6px 14px;border-radius:999px;background:var(--soft);color:var(--primary-ink);font-weight:800;font-size:15px}
+.todo{background:#FFF4D6;border:1.5px dashed #B88A12;color:#6B4E00;border-radius:10px;padding:2px 10px;font-weight:800;font-size:.9em}
+ul{padding-left:0;list-style:none}
+li{padding-left:28px;position:relative;margin:10px 0}
+li::before{content:"";position:absolute;left:0;top:.62em;width:12px;height:12px;border-radius:50%;background:var(--primary)}
+.cover{background:var(--primary);color:#fff;padding:0}
+.cover .photo{position:absolute;right:0;top:0;bottom:0;width:46%;background:url(/onboarding/mamas.webp) center/cover}
+.cover .photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--primary) 0%,rgba(169,86,54,.0) 45%)}
+.cover .txt{position:absolute;left:80px;top:0;bottom:0;width:640px;display:flex;flex-direction:column;justify-content:center}
+.cover h1{color:#fff}.cover p{color:#fff;opacity:.96;font-size:30px;margin-top:22px}
+.cover img.logo{height:70px;width:auto;align-self:flex-start;margin-bottom:34px}
+.foot{position:absolute;left:80px;right:80px;bottom:26px;display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#9a8a7b}
+.cover .foot{color:#fff;opacity:.8;z-index:2}
+.photo-r{position:absolute;right:0;top:0;bottom:0;width:34%;background-size:cover;background-position:center}
+.photo-r::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg),rgba(248,246,243,0) 40%)}
+.txt-w{max-width:700px;position:relative}
+.vid{width:100%;border-radius:16px;background:#2b211a;aspect-ratio:16/9;display:block}
+.shot{width:100%;border-radius:16px;border:1px solid var(--line);display:block}
+.dark{background:var(--ink);color:#fff}.dark h2,.dark h3{color:#fff}.dark p,.dark li{color:#e8ddd3}.dark .card{background:#4b392c;border-color:#5f4a3a}.dark .card p,.dark .card li{color:#e8ddd3}.dark .kicker{color:#F0B79C}
+.green .num{color:var(--green)}
+#hud{position:fixed;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:8px;z-index:9}
+#hud button{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font:800 20px Nunito;cursor:pointer}
+#hud button:focus-visible{outline:3px solid #fff}
+#count{align-self:center;color:#e8ddd3;font:700 14px Nunito;min-width:60px;text-align:center}
+@media print{
+  @page{size:1280px 720px;margin:0}
+  html,body{background:#fff;height:auto}
+  #viewport{position:static;display:block;overflow:visible}
+  #stage{transform:none!important;width:1280px;height:auto}
+  .slide{display:block!important;position:relative;height:720px;page-break-after:always;animation:none}
+  #hud{display:none}
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 Couverture -->
+<section class="slide cover" aria-label="Couverture">
+  <div class="photo"></div>
+  <div class="txt">
+    <img class="logo" src="/logo-white.svg" alt="eganyé">
+    <h1>La tontine, sur votre téléphone.</h1>
+    <p>Épargner ensemble, voir chaque franc, être prévenu avant un retard.</p>
+  </div>
+  <div class="foot"><span>Présentation investisseurs</span><span>Codorah · Togo</span></div>
+</section>
+
+<!-- 2 Problème -->
+<section class="slide">
+  <div class="kicker">Le problème</div>
+  <h2>La tontine fait vivre des millions de foyers. Elle repose sur un cahier.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Qui a payé ?</h3><p>Le cahier se perd, se discute, se corrige. La confiance s’use à chaque tour.</p></div>
+    <div class="card"><h3>L’argent circule en main propre</h3><p>Déplacements, espèces sur soi, aucune trace. Le risque est pour la trésorière.</p></div>
+    <div class="card"><h3>Les retards arrivent par surprise</h3><p>On s’aperçoit du manque le jour du versement, quand il est trop tard pour agir.</p></div>
+  </div>
+  <div class="foot"><span>eganyé</span><span>2</span></div>
+</section>
+
+<!-- 3 Solution -->
+<section class="slide">
+  <div class="kicker">La solution</div>
+  <h2>Un cercle sur le téléphone, un pot que tout le monde voit.</h2>
+  <p class="lead">eganyé garde l’esprit de la tontine et remplace le cahier : cotisations par Mobile Money, tours visibles, rappels automatiques.</p>
+  <div class="grid g4">
+    <div class="card"><div class="num">1</div><h3>Créez</h3><p>Montant, rythme, ordre des tours. Invitation par lien ou par code.</p></div>
+    <div class="card"><div class="num">2</div><h3>Cotisez</h3><p>Flooz ou Mixx. Le portefeuille paie à la date prévue si le solde suffit.</p></div>
+    <div class="card"><div class="num">3</div><h3>Suivez</h3><p>Le pot, les tours, qui a payé : chaque franc se voit.</p></div>
+    <div class="card"><div class="num">4</div><h3>Recevez</h3><p>Quand tout le monde a cotisé, le pot est versé au bénéficiaire.</p></div>
+  </div>
+  <div class="foot"><span>eganyé</span><span>3</span></div>
+</section>
+
+<!-- 4 Produit -->
+<section class="slide">
+  <div class="kicker">Le produit</div>
+  <h2>Une application mobile, pensée pour le téléphone d’abord.</h2>
+  <div class="grid g2" style="grid-template-columns:1.25fr 1fr;align-items:center">
+    <video class="vid" controls playsinline preload="none" poster="/video/eganye-presentation-fr.jpg" src="/video/eganye-presentation-fr.mp4" aria-label="Vidéo de présentation d’eganyé, 49 secondes"></video>
+    <ul>
+      <li>Application Android (publication sur Google Play en cours) et version web installable</li>
+      <li>Français et anglais, autres langues en cours</li>
+      <li>Portefeuille, cercles, épargne avec coffre, assistant</li>
+      <li>Accessibilité : contrastes, tailles tactiles, sous-titres des vidéos</li>
+    </ul>
+  </div>
+  <div class="foot"><span>eganyé</span><span>4</span></div>
+</section>
+
+<!-- 5 Parcours en vidéo -->
+<section class="slide">
+  <div class="kicker">Du premier écran au premier cercle</div>
+  <h2>Comment ça marche, écran par écran.</h2>
+  <div class="grid" style="grid-template-columns:1.25fr 1fr;align-items:center">
+    <video class="vid" controls playsinline preload="none" poster="/video/eganye-comment-ca-marche-fr.jpg" src="/video/eganye-comment-ca-marche-fr.mp4" aria-label="Tutoriel : de l’inscription à la création d’un cercle"></video>
+    <ul>
+      <li>Inscription en quelques écrans, avatar, code PIN</li>
+      <li>Création d’un cercle et invitation</li>
+      <li>Cotisation, suivi du pot, retrait</li>
+    </ul>
+  </div>
+  <div class="foot"><span>eganyé</span><span>5</span></div>
+</section>
+
+<!-- 6 IA -->
+<section class="slide dark">
+  <div class="kicker">L’intelligence artificielle</div>
+  <h2>Une IA qui prévient et qui explique. Jamais qui décide.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Score de fiabilité</h3><p>Une estimation du risque de retard, calculée sur vos seules cotisations. Chaque variation est expliquée.</p></div>
+    <div class="card"><h3>Rappels avant le retard</h3><p>Le solde manque pour la prochaine cotisation ? On le dit à temps, avant la date.</p></div>
+    <div class="card"><h3>Santé du cercle</h3><p>Le risque du tour, sans nommer personne, pour que le groupe agisse ensemble.</p></div>
+  </div>
+  <p style="margin-top:30px;font-size:21px"><b style="color:#fff">IA responsable :</b> modèle simple et lisible, calculé dans la base, sans API externe. Il peut se tromper et ne décide jamais à la place des membres.</p>
+  <div class="foot"><span>eganyé</span><span style="color:#d9c9bb">6</span></div>
+</section>
+
+<!-- 7 Sécurité -->
+<section class="slide">
+  <div class="kicker">La confiance</div>
+  <h2>L’argent est traité comme de l’argent.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Un registre comptable à double entrée</h3><ul><li>Chaque mouvement est enregistré des deux côtés</li><li>Opérations rejouables sans doublon (clés d’idempotence)</li><li>Le pot est recalculé depuis le registre</li></ul></div>
+    <div class="card"><h3>Retraits encadrés</h3><ul><li>Code PIN vérifié côté serveur</li><li>Plafonds par retrait et par jour</li><li>Cas inhabituels envoyés à l’examen manuel</li><li>Statut vérifié auprès du prestataire de paiement</li></ul></div>
+  </div>
+  <p style="margin-top:26px;font-size:20px">Audit de sécurité interne réalisé et corrigé : failles de création de monnaie fermées, contrôle d’accès par ligne dans la base.</p>
+  <div class="foot"><span>eganyé</span><span>7</span></div>
+</section>
+
+<!-- 8 Marché -->
+<section class="slide">
+  <div class="kicker">Le marché</div>
+  <h2>Des millions d’épargnants déjà organisés en cercles, très peu d’outils.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Pratique installée</h3><p>La tontine est une habitude ancienne et répandue en Afrique de l’Ouest. Pas besoin d’éduquer le marché.</p></div>
+    <div class="card"><h3>Mobile Money partout</h3><p>Flooz et Mixx sont déjà dans les poches : le paiement est possible sans carte bancaire.</p></div>
+    <div class="card"><h3>Un trou entre cahier et banque</h3><p>Les solutions existantes sont soit des cahiers, soit des produits financiers hors de portée.</p></div>
+  </div>
+  <p style="margin-top:28px"><span class="todo">À compléter</span> taille du marché chiffrée et sourcée (Togo, UEMOA) avant l’envoi aux investisseurs.</p>
+  <div class="foot"><span>eganyé</span><span>8</span></div>
+</section>
+
+<!-- 9 Modèle économique -->
+<section class="slide">
+  <div class="kicker">Modèle économique</div>
+  <h2>On gagne quand les cercles vivent, pas en vendant du crédit.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Frais sur le Mobile Money</h3><p>Frais de dépôt et de retrait réglables, avec case « payer les frais en plus » pour que l’utilisateur choisisse.</p></div>
+    <div class="card"><h3>Commission de priorité</h3><p>Un membre peut convenir d’avancer son tour avec le groupe. Une commission transparente, pas de promesse de rendement.</p></div>
+    <div class="card"><h3>Services complémentaires</h3><p>Microcrédit encadré (taux plafonné) en préparation, soumis à validation réglementaire avant ouverture.</p></div>
+  </div>
+  <p style="margin-top:28px"><span class="todo">À compléter</span> prix exacts, revenu par cercle actif et seuil de rentabilité.</p>
+  <div class="foot"><span>eganyé</span><span>9</span></div>
+</section>
+
+<!-- 10 Conformité -->
+<section class="slide">
+  <div class="kicker">Conformité et risques</div>
+  <h2>Nous les connaissons, et nous les traitons en premier.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Cadre réglementaire</h3><p>Garder des fonds relève de la réglementation BCEAO. Nous cherchons un partenaire de paiement agréé et un avis juridique, et nos textes disent la vérité sur qui contrôle les fonds.</p></div>
+    <div class="card"><h3>Règles des stores</h3><p>Pas de promesse de rendement, pas de mot « banque », aucune enchère, coût total affiché sur tout crédit.</p></div>
+    <div class="card"><h3>Entreprise</h3><p>Codorah, immatriculée au Togo (RCCM TG-LFW-01-2026-A10-02627).</p></div>
+    <div class="card"><h3>Protection des utilisateurs</h3><p>Données limitées au nécessaire, sauvegarde désactivée sur l’appareil, suppression de compte sur demande.</p></div>
+  </div>
+  <div class="foot"><span>eganyé</span><span>10</span></div>
+</section>
+
+<!-- 11 Avancement -->
+<section class="slide green">
+  <div class="kicker">Où nous en sommes</div>
+  <h2>Un produit complet, prêt à être mis à l’épreuve.</h2>
+  <div class="grid g4">
+    <div class="card"><div class="num">✓</div><h3>Application</h3><p>Cercles, portefeuille, épargne, assistant, administration.</p></div>
+    <div class="card"><div class="num">✓</div><h3>Paiements</h3><p>Dépôts et petits retraits automatiques via PayDunya. Test réel des retraits en cours.</p></div>
+    <div class="card"><div class="num">✓</div><h3>Android</h3><p>Version 1.3 signée, prête pour Google Play.</p></div>
+    <div class="card"><div class="num">✓</div><h3>Vidéos</h3><p>Présentation et tutoriel en français et en anglais.</p></div>
+  </div>
+  <p style="margin-top:28px"><span class="todo">À compléter</span> chiffres réels : utilisateurs inscrits, cercles actifs, montant cotisé, taux de ponctualité.</p>
+  <div class="foot"><span>eganyé</span><span>11</span></div>
+</section>
+
+<!-- 12 Feuille de route -->
+<section class="slide">
+  <div class="kicker">Feuille de route</div>
+  <h2>Sécuriser, ouvrir, puis étendre.</h2>
+  <div class="grid g3">
+    <div class="card"><span class="pill">Maintenant</span><ul><li>Test réel des retraits</li><li>Publication Google Play</li><li>Premiers cercles pilotes</li></ul></div>
+    <div class="card"><span class="pill">Ensuite</span><ul><li>Partenaire de paiement agréé</li><li>Avis juridique et dossier BCEAO</li><li>Langues locales (éwé)</li></ul></div>
+    <div class="card"><span class="pill">Après</span><ul><li>Microcrédit encadré</li><li>Autres pays de l’UEMOA</li><li>Score étendu à d’autres usages</li></ul></div>
+  </div>
+  <div class="foot"><span>eganyé</span><span>12</span></div>
+</section>
+
+<!-- 13 Demande -->
+<section class="slide cover">
+  <div class="photo" style="background-image:url(/onboarding/young-savers.webp)"></div>
+  <div class="txt">
+    <img class="logo" src="/logo-white.svg" alt="eganyé">
+    <h1 style="font-size:60px">Construisons la tontine de demain.</h1>
+    <p style="font-size:26px">Levée recherchée : <span class="todo">montant à préciser</span><br>Utilisation : agrément et conformité, produit, croissance des premiers cercles.</p>
+    <p style="font-size:22px;margin-top:26px">eganye.codorah.com · Codorah, Togo</p>
+  </div>
+  <div class="foot"><span>Merci</span><span>13</span></div>
+</section>
+
+</div></div>
+
+<div id="hud" aria-label="Navigation">
+  <button id="prev" aria-label="Diapositive précédente">‹</button>
+  <span id="count" aria-live="polite"></span>
+  <button id="next" aria-label="Diapositive suivante">›</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide')), stage=document.getElementById('stage'), i=0;
+  function fit(){var s=Math.min(innerWidth/1280,(innerHeight-60)/720);stage.style.transform='scale('+s+')';}
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(s,k){s.classList.toggle('on',k===i);var v=s.querySelector('video'); if(v&&k!==i)v.pause();});
+    document.getElementById('count').textContent=(i+1)+' / '+slides.length;
+    try{history.replaceState(null,'','#'+(i+1));}catch(e){}
+  }
+  addEventListener('resize',fit);fit();
+  addEventListener('keydown',function(e){
+    if(e.target&&e.target.tagName==='VIDEO'&&(e.key===' '||e.key==='Enter'))return;
+    if(['ArrowRight','PageDown',' '].indexOf(e.key)>-1){e.preventDefault();show(i+1);}
+    if(['ArrowLeft','PageUp'].indexOf(e.key)>-1){e.preventDefault();show(i-1);}
+    if(e.key==='Home')show(0);if(e.key==='End')show(slides.length-1);
+  });
+  document.getElementById('next').onclick=function(){show(i+1)};
+  document.getElementById('prev').onclick=function(){show(i-1)};
+  var x0=null;
+  addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+  addEventListener('touchend',function(e){if(x0===null)return;var d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)show(i+(d<0?1:-1));x0=null},{passive:true});
+  function fromHash(){var h=parseInt(location.hash.slice(1),10);show(isNaN(h)?0:h-1);}
+  addEventListener('hashchange',fromHash);fromHash();
+})();
+</script>
+</body>
+</html>
