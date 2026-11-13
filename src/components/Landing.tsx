@@ -402,7 +402,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
             <a href="/confidentialite" className="inline-flex min-h-11 items-center hover:text-foreground">Confidentialité</a>
             <a href="/suppression-compte" className="inline-flex min-h-11 items-center hover:text-foreground">Supprimer mon compte</a>
             <a href="/mentions-legales" className="inline-flex min-h-11 items-center hover:text-foreground">Mentions légales</a>
-            <a href="/pitch/index.html" className="inline-flex min-h-11 items-center hover:text-foreground">Présentation investisseurs</a>
+            <a href="/pitch/index.html" className="inline-flex min-h-11 items-center hover:text-foreground">Présentation du projet</a>
           </nav>
         </div>
       </footer>
