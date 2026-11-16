@@ -399,6 +399,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
           </div>
           <nav className="flex items-center gap-6">
             <a href="/conditions" className="inline-flex min-h-11 items-center hover:text-foreground">Conditions</a>
+            <a href="/remboursement" className="inline-flex min-h-11 items-center hover:text-foreground">Remboursement</a>
             <a href="/confidentialite" className="inline-flex min-h-11 items-center hover:text-foreground">Confidentialité</a>
             <a href="/suppression-compte" className="inline-flex min-h-11 items-center hover:text-foreground">Supprimer mon compte</a>
             <a href="/mentions-legales" className="inline-flex min-h-11 items-center hover:text-foreground">Mentions légales</a>

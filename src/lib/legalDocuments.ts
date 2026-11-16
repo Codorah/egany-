@@ -13,7 +13,7 @@
  * par les stores.
  */
 
-export type LegalDocId = 'cgu' | 'reglement' | 'credit' | 'aide' | 'confidentialite' | 'mentions';
+export type LegalDocId = 'cgu' | 'remboursement' | 'reglement' | 'credit' | 'aide' | 'confidentialite' | 'mentions';
 
 export interface LegalSection {
   heading: string;
@@ -29,7 +29,7 @@ export interface LegalDocument {
 }
 
 /** Date de la dernière révision de l'ensemble des textes. */
-export const LEGAL_LAST_UPDATED = '6 novembre 2026';
+export const LEGAL_LAST_UPDATED = '16 novembre 2026';
 
 /**
  * Identité de l'éditeur, reprise dans les mentions légales et la politique de
@@ -43,7 +43,7 @@ export const LEGAL_ENTITY = {
   address: 'Kégué, Lomé',
   country: 'Togo',
   publicationDirector: 'ATANA Essodom Elodie H.',
-  contactEmail: 'codorah@hotmail.com',
+  contactEmail: 'services@codorah.com',
 };
 
 const entityLines = (): string[] => {
@@ -117,7 +117,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         paragraphs: [
           "Pour un retrait non reçu, un dépôt absent de votre solde, une cotisation contestée ou tout autre problème, " + contactLine() + ". Indiquez la date, le montant et, si vous l'avez, la référence de l'opération : chaque mouvement est tracé, ce qui nous permet de vérifier.",
           "Si vous pensez que quelqu'un utilise votre compte, changez votre mot de passe et votre code PIN, puis prévenez-nous tout de suite : nous pouvons suspendre le compte le temps de vérifier.",
-          "Nous répondons dans les meilleurs délais, et au plus tard sous 30 jours. Pour un désaccord entre membres d'un cercle, voir le Règlement des cercles.",
+          "Nous répondons dans les meilleurs délais, et au plus tard sous 30 jours. Pour un désaccord entre membres d'un cercle, voir le Règlement des cercles. Les cas où votre argent vous est rendu sont décrits dans la Politique de remboursement.",
         ],
       },
       {
@@ -130,6 +130,74 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
         heading: '9. Modifications',
         paragraphs: [
           "Ces conditions peuvent évoluer. La date de dernière mise à jour est indiquée en haut du document ; en cas de changement important, vous serez prévenu·e dans l'application.",
+        ],
+      },
+    ],
+  },
+
+  remboursement: {
+    id: 'remboursement',
+    title: 'Politique de remboursement',
+    audience: 'Pour toute personne qui dépose, cotise, épargne ou emprunte avec eganyé',
+    sections: [
+      {
+        heading: '1. En résumé',
+        paragraphs: [
+          "Votre argent reste à vous tant qu'il est dans votre portefeuille : vous pouvez le retirer à tout moment vers votre numéro Mobile Money. Une fois qu'une opération a produit son effet (cotisation versée au pot du tour, frais d'étude consommés, mensualité payée), elle ne s'annule pas d'elle-même. Cette page dit précisément quand votre argent vous est rendu, et comment le demander.",
+        ],
+      },
+      {
+        heading: '2. Dépôt débité mais non crédité',
+        paragraphs: [
+          "Un dépôt n'est ajouté à votre solde qu'une fois le paiement confirmé par notre prestataire PayDunya. Si vous avez été débité·e sur votre Mobile Money mais que votre solde n'a pas bougé, " + contactLine() + " avec la date, le montant et le numéro utilisé. Nous vérifions auprès de PayDunya : si le paiement a bien abouti, votre portefeuille est crédité ; s'il a échoué, la somme est rendue sur votre Mobile Money selon les délais de l'opérateur.",
+        ],
+      },
+      {
+        heading: '3. Retrait échoué',
+        paragraphs: [
+          "Si l'envoi d'un retrait échoue, notre équipe le relance ou rend à votre portefeuille tout ce qui a été débité, frais compris. Aucune démarche n'est nécessaire de votre part ; si rien ne se passe, écrivez-nous.",
+          "À l'inverse, un retrait envoyé avec succès vers le numéro que vous avez indiqué ne peut pas être annulé : vérifiez ce numéro avant de confirmer. Une erreur de numéro ne donne pas droit à un remboursement, mais nous vous aidons à contacter votre opérateur.",
+        ],
+      },
+      {
+        heading: '4. Cotisations et pot du tour',
+        paragraphs: [
+          "Une cotisation prélevée pour un cercle est versée au pot du tour : elle n'est pas remboursable à la demande, car elle a servi à payer une autre membre. Quitter un cercle ne rend pas les cotisations déjà versées, et ne fait pas disparaître ce que vous devez aux autres membres si vous avez déjà reçu votre pot (voir le Règlement des cercles).",
+          "Si une cotisation a été prélevée par erreur (double prélèvement, prélèvement après la fin du cycle, anomalie technique), signalez-le : après vérification dans le registre, le montant est rendu à votre portefeuille.",
+          "La commission eganyé, prélevée sur le pot au moment du versement, n'est pas remboursable, sauf erreur de calcul constatée.",
+        ],
+      },
+      {
+        heading: "5. Coffres d'épargne",
+        paragraphs: [
+          "L'argent d'un coffre d'épargne bloqué revient à votre portefeuille à la date d'échéance du coffre. Avant cette date, il reste bloqué : c'est le principe du coffre. En cas de difficulté grave, écrivez-nous : chaque demande est étudiée.",
+        ],
+      },
+      {
+        heading: '6. Microcrédit',
+        paragraphs: [
+          "La demande de microcrédit est gratuite : il n'y a donc rien à rembourser si elle est refusée ou si vous refusez l'offre. Tant que vous n'avez pas accepté l'offre, rien ne vous est versé et vous ne devez rien.",
+          "Une fois l'offre acceptée et le montant versé, le crédit est dû selon l'échéancier. Vous pouvez rembourser en avance à tout moment. Une mensualité prélevée deux fois par erreur est rendue.",
+        ],
+      },
+      {
+        heading: '7. Coup de pouce : frais d’étude',
+        paragraphs: [
+          "Les frais d'étude (1 000 FCFA, ou le montant affiché au dépôt) paient le temps que notre équipe passe sur votre dossier. Ils ne sont pas remboursés, même si l'aide n'est pas accordée, comme indiqué avant que vous ne déposiez le dossier. Si les frais ont été prélevés plusieurs fois pour un même dossier, les prélèvements en trop sont rendus.",
+          "Une aide accordée n'est jamais à rembourser.",
+        ],
+      },
+      {
+        heading: '8. Comment demander un remboursement',
+        paragraphs: [
+          "Écrivez à " + (LEGAL_ENTITY.contactEmail || 'notre support') + " ou passez par Profil → Centre d'aide. Indiquez votre nom, la date, le montant, le numéro Mobile Money concerné et, si vous l'avez, la référence de l'opération : chaque mouvement est tracé, ce qui nous permet de vérifier rapidement.",
+          "Nous répondons dans les meilleurs délais, et au plus tard sous 30 jours. Un remboursement accepté est crédité sur votre portefeuille eganyé, d'où vous pouvez le retirer vers votre Mobile Money.",
+        ],
+      },
+      {
+        heading: '9. Fermeture du compte',
+        paragraphs: [
+          "Avant de fermer votre compte, retirez votre solde : la fermeture est refusée tant que le portefeuille n'est pas vide, pour que votre argent ne soit jamais perdu.",
         ],
       },
     ],
@@ -408,4 +476,4 @@ export const LEGAL_DOCUMENTS: Record<LegalDocId, LegalDocument> = {
 };
 
 /** Ordre d'affichage dans la liste « Conditions & Légal » du Profil. */
-export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'reglement', 'credit', 'confidentialite', 'mentions'];
+export const LEGAL_DOC_ORDER: LegalDocId[] = ['cgu', 'remboursement', 'reglement', 'credit', 'confidentialite', 'mentions'];

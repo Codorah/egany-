@@ -11,6 +11,7 @@ import { LEGAL_DOCUMENTS, LEGAL_ENTITY, LEGAL_LAST_UPDATED, type LegalDocId } fr
 export const PUBLIC_LEGAL_PATHS: Record<string, LegalDocId | 'suppression'> = {
   '/confidentialite': 'confidentialite',
   '/conditions': 'cgu',
+  '/remboursement': 'remboursement',
   '/reglement': 'reglement',
   '/conditions-credit': 'credit',
   '/conditions-coup-de-pouce': 'aide',
@@ -79,6 +80,7 @@ export function PublicLegalPage({ docId }: { docId: LegalDocId | 'suppression' }
         <nav className="pt-6 border-t border-border flex flex-wrap gap-x-4 gap-y-2 text-sm">
           <a href="/confidentialite" className="underline">Confidentialité</a>
           <a href="/conditions" className="underline">Conditions d’utilisation</a>
+          <a href="/remboursement" className="underline">Remboursement</a>
           <a href="/conditions-credit" className="underline">Microcrédit</a>
           <a href="/suppression-compte" className="underline">Supprimer mon compte</a>
           <a href="/mentions-legales" className="underline">Mentions légales</a>
