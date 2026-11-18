@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>eganyé : présentation du projet</title>
-<meta name="description" content="La tontine sur téléphone, avec un assistant qui prévient avant un retard. Présentation du projet eganyé.">
+<meta name="description" content="Pour qui, pourquoi, et ce qui existe déjà : présentation du projet eganyé, la tontine sur téléphone avec un assistant qui prévient avant un retard.">
 <link rel="icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -53,6 +53,30 @@ li::before{content:"";position:absolute;left:0;top:.62em;width:12px;height:12px;
 .shot{width:100%;border-radius:16px;border:1px solid var(--line);display:block}
 .dark{background:var(--ink);color:#fff}.dark h2,.dark h3{color:#fff}.dark p,.dark li{color:#e8ddd3}.dark .card{background:#4b392c;border-color:#5f4a3a}.dark .card p,.dark .card li{color:#e8ddd3}.dark .kicker{color:#F0B79C}
 .green .num{color:var(--green)}
+.src{margin-top:14px;font-size:14px;line-height:1.4}
+.band{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.band div{display:flex;align-items:center;gap:18px;background:var(--soft);border-radius:16px;padding:16px 22px}
+.band b{font-size:40px;font-weight:900;color:var(--primary-ink);white-space:nowrap}
+.band span{font-size:18px;line-height:1.35;font-weight:700;color:var(--ink)}
+.punch{margin-top:26px;font-size:24px;font-weight:800;color:var(--primary-ink)}
+.cmp{width:100%;border-collapse:separate;border-spacing:0;margin-top:28px;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.cmp th{background:var(--soft);text-align:left;font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--primary-ink);padding:12px 18px}
+.cmp td{font-size:17px;line-height:1.35;font-weight:600;color:var(--muted);padding:11px 18px;border-top:1px solid var(--line);vertical-align:top}
+.cmp td:first-child{font-weight:800;color:var(--ink);width:230px}
+.cmp tr.us td{background:var(--primary);color:#fff;font-weight:700}
+.split{display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:center;height:100%}
+.split figure.phone:first-child{order:0}
+.slide .split:has(figure.phone:first-child){grid-template-columns:300px 1fr}
+.steps{margin-top:24px;display:grid;gap:14px}
+.steps div{display:flex;gap:16px;align-items:flex-start}
+.steps span{flex:none;width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center}
+.steps p{font-size:20px;margin:0}
+.steps b,ul b{color:var(--ink)}
+.phone{margin:0;border:10px solid #2b211a;border-radius:38px;overflow:hidden;background:#fff;box-shadow:0 18px 40px rgba(62,47,36,.22);height:560px}
+.phone img{display:block;width:100%;height:auto}
+a.card.link{text-decoration:none;display:block;color:var(--ink)}
+a.card.link code{display:block;margin-top:10px;font:700 15px/1.3 ui-monospace,Consolas,monospace;color:var(--primary-ink);word-break:break-all}
+
 #hud{position:fixed;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:8px;z-index:9}
 #hud button{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font:800 20px Nunito;cursor:pointer}
 #hud button:focus-visible{outline:3px solid #fff}
@@ -75,170 +99,203 @@ li::before{content:"";position:absolute;left:0;top:.62em;width:12px;height:12px;
   <div class="photo"></div>
   <div class="txt">
     <img class="logo" src="/logo-white.svg" alt="eganyé">
-    <h1>La tontine, sur votre téléphone.</h1>
-    <p>Épargner ensemble, voir chaque franc, être prévenu avant un retard.</p>
+    <h1 style="font-size:62px">Au Togo, l’épargne de millions de familles tient dans un cahier.</h1>
+    <p>eganyé met la tontine sur le téléphone, sans lui retirer ce qui la fait marcher : le groupe.</p>
   </div>
-  <div class="foot"><span>Présentation du projet</span><span>Codorah · Togo</span></div>
+  <div class="foot"><span>Présentation du projet</span><span>Codorah · Lomé, Togo</span></div>
 </section>
 
-<!-- 2 Problème -->
+<!-- 2 Pour qui -->
 <section class="slide">
-  <div class="kicker">Le problème</div>
-  <h2>La tontine fait vivre des millions de foyers. Elle repose sur un cahier.</h2>
-  <div class="grid g3">
-    <div class="card"><h3>Qui a payé ?</h3><p>Le cahier se perd, se discute, se corrige. La confiance s’use à chaque tour.</p></div>
-    <div class="card"><h3>L’argent circule en main propre</h3><p>Déplacements, espèces sur soi, aucune trace. Le risque est pour la trésorière.</p></div>
-    <div class="card"><h3>Les retards arrivent par surprise</h3><p>On s’aperçoit du manque le jour du versement, quand il est trop tard pour agir.</p></div>
+  <div class="kicker">Pour qui</div>
+  <h2>Ceux que la banque ne sert pas, mais qui épargnent chaque semaine.</h2>
+  <div class="grid g4">
+    <div class="card"><h3>Commerçantes des marchés</h3><p>Elles cotisent chaque jour ou chaque semaine. Le pot reconstitue le stock avant les fêtes.</p></div>
+    <div class="card"><h3>Taxi-motos, artisans, couturières</h3><p>Des revenus au jour le jour. Le pot achète la moto, la machine, l’outil.</p></div>
+    <div class="card"><h3>Salariés, associations, églises</h3><p>La tontine du bureau ou du quartier finance la rentrée, un loyer, un événement.</p></div>
+    <div class="card"><h3>Jeunes et étudiants</h3><p>Un premier téléphone, un premier projet, et l’envie d’épargner à plusieurs.</p></div>
   </div>
+  <div class="band">
+    <div><b>≈ 30 %</b><span>des adultes togolais ont un compte en banque ou à la poste (taux strict, 2021)</span></div>
+    <div><b>89 %</b><span>sont servis par au moins un service financier, surtout le Mobile Money (2024)</span></div>
+  </div>
+  <p class="src">Sources : BCEAO, rapports sur l’inclusion financière dans l’UEMOA ; gouvernement togolais, cité par Togo First (février 2025).</p>
   <div class="foot"><span>eganyé</span><span>2</span></div>
 </section>
 
-<!-- 3 Solution -->
+<!-- 3 Pourquoi la tontine -->
 <section class="slide">
-  <div class="kicker">La solution</div>
-  <h2>Un cercle sur le téléphone, un pot que tout le monde voit.</h2>
-  <p class="lead">eganyé garde l’esprit de la tontine et remplace le cahier : cotisations par Mobile Money, tours visibles, rappels automatiques.</p>
-  <div class="grid g4">
-    <div class="card"><div class="num">1</div><h3>Créez</h3><p>Montant, rythme, ordre des tours. Invitation par lien ou par code.</p></div>
-    <div class="card"><div class="num">2</div><h3>Cotisez</h3><p>Flooz ou Mixx. Le portefeuille paie à la date prévue si le solde suffit.</p></div>
-    <div class="card"><div class="num">3</div><h3>Suivez</h3><p>Le pot, les tours, qui a payé : chaque franc se voit.</p></div>
-    <div class="card"><div class="num">4</div><h3>Recevez</h3><p>Quand tout le monde a cotisé, le pot est versé au bénéficiaire.</p></div>
+  <div class="photo-r" style="background-image:url(/onboarding/vendor.webp)"></div>
+  <div class="txt-w">
+    <div class="kicker">Pourquoi la tontine</div>
+    <h2 style="font-size:44px">Ils ne choisissent pas la tontine faute de mieux. Ils la choisissent parce qu’elle marche.</h2>
+    <ul style="margin-top:28px">
+      <li><b>La discipline du groupe :</b> on cotise parce que les autres comptent sur vous.</li>
+      <li><b>Une grosse somme d’un coup,</b> sans intérêt, sans garantie, sans dossier.</li>
+      <li><b>Aucun minimum, aucun papier :</b> on commence avec ce qu’on a.</li>
+      <li><b>La confiance entre proches,</b> que l’on connaît et que l’on voit.</li>
+    </ul>
+    <p class="punch">Le problème n’est pas la tontine. C’est l’outil : un cahier et une caisse.</p>
   </div>
   <div class="foot"><span>eganyé</span><span>3</span></div>
 </section>
 
-<!-- 4 Produit -->
+<!-- 4 Le problème -->
 <section class="slide">
-  <div class="kicker">Le produit</div>
-  <h2>Une application mobile, pensée pour le téléphone d’abord.</h2>
-  <div class="grid g2" style="grid-template-columns:1.25fr 1fr;align-items:center">
-    <video class="vid" controls playsinline preload="none" poster="/video/eganye-presentation-fr.jpg" src="/video/eganye-presentation-fr.mp4" aria-label="Vidéo de présentation d’eganyé, 49 secondes"></video>
-    <ul>
-      <li>Application Android (publication sur Google Play en cours) et version web installable</li>
-      <li>Français et anglais, autres langues en cours</li>
-      <li>Portefeuille, cercles, épargne avec coffre, assistant</li>
-      <li>Accessibilité : contrastes, tailles tactiles, sous-titres des vidéos</li>
-    </ul>
+  <div class="kicker">Ce qui casse aujourd’hui</div>
+  <h2>Un cahier perdu, une trésorière qui part, un retard découvert trop tard.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>« Qui a payé ? »</h3><p>Le cahier se perd, se discute, se corrige. À chaque tour, la confiance s’use un peu.</p></div>
+    <div class="card"><h3>Toute la caisse chez une seule personne</h3><p>Des espèces sur soi, des déplacements, aucune trace. Si la trésorière disparaît, tout le groupe perd.</p></div>
+    <div class="card"><h3>Le retard arrive par surprise</h3><p>On découvre qu’il manque de l’argent le jour du versement, quand il est trop tard pour réagir.</p></div>
+    <div class="card"><h3>Celui qui a déjà reçu ne paie plus</h3><p>Le risque bien connu de toute tontine : le membre qui a touché son tour et arrête de cotiser.</p></div>
   </div>
   <div class="foot"><span>eganyé</span><span>4</span></div>
 </section>
 
-<!-- 5 Parcours en vidéo -->
+<!-- 5 L'existant -->
 <section class="slide">
-  <div class="kicker">Du premier écran au premier cercle</div>
-  <h2>Comment ça marche, écran par écran.</h2>
-  <div class="grid" style="grid-template-columns:1.25fr 1fr;align-items:center">
-    <video class="vid" controls playsinline preload="none" poster="/video/eganye-comment-ca-marche-fr.jpg" src="/video/eganye-comment-ca-marche-fr.mp4" aria-label="Tutoriel : de l’inscription à la création d’un cercle"></video>
-    <ul>
-      <li>Inscription en quelques écrans, avatar, code PIN</li>
-      <li>Création d’un cercle et invitation</li>
-      <li>Cotisation, suivi du pot, retrait</li>
-    </ul>
-  </div>
+  <div class="kicker">Ce qui existe déjà</div>
+  <h2 style="font-size:42px">Chaque solution règle une partie du problème. Aucune ne garde le groupe.</h2>
+  <table class="cmp">
+    <thead><tr><th>Aujourd’hui</th><th>Ce que ça apporte</th><th>Ce qui manque</th></tr></thead>
+    <tbody>
+      <tr><td>Cahier et trésorière</td><td>Gratuit, connu de tous</td><td>Aucune trace fiable, risque de perte ou de fuite, aucun rappel</td></tr>
+      <tr><td>Collecteur ambulant</td><td>Passe tous les jours au marché</td><td>Garde souvent une mise par cycle, épargne individuelle, aucune garantie s’il disparaît</td></tr>
+      <tr><td>Banque, microfinance</td><td>Sécurité, crédit</td><td>Dossier, garanties, déplacement en agence, intérêts ; pas d’épargne de groupe</td></tr>
+      <tr><td>Mobile Money seul</td><td>Dans toutes les poches</td><td>Envoie de l’argent, mais ne sait pas qui doit quoi ni à qui c’est le tour</td></tr>
+      <tr><td>Groupe WhatsApp</td><td>Le groupe se parle</td><td>Les messages ne sont pas des comptes ; personne ne vérifie</td></tr>
+      <tr class="us"><td>eganyé</td><td>Le groupe et ses règles, avec Mobile Money</td><td>Chaque franc tracé, tours visibles, cotisation automatique, alerte avant le retard</td></tr>
+    </tbody>
+  </table>
   <div class="foot"><span>eganyé</span><span>5</span></div>
 </section>
 
-<!-- 6 IA -->
+<!-- 6 Solution -->
+<section class="slide">
+  <div class="split">
+    <div>
+      <div class="kicker">La solution</div>
+      <h2 style="font-size:44px">La même tontine, mais tout le monde voit le pot.</h2>
+      <div class="steps">
+        <div><span>1</span><p><b>Créer le cercle :</b> montant, rythme, ordre des tours. On invite par lien ou par code.</p></div>
+        <div><span>2</span><p><b>Cotiser par Flooz ou Mixx.</b> À l’échéance, la cotisation part seule si le solde suffit.</p></div>
+        <div><span>3</span><p><b>Suivre :</b> le pot, qui a payé, qui reçoit quand. Plus de discussion.</p></div>
+        <div><span>4</span><p><b>Recevoir :</b> quand tout le monde a cotisé, le pot est versé au bénéficiaire.</p></div>
+      </div>
+    </div>
+    <figure class="phone"><img src="/pitch/ecran-pot.jpg" alt="Écran eganyé : le pot du tour, 40 000 F réunis sur 60 000, et l’ordre des bénéficiaires"></figure>
+  </div>
+  <div class="foot"><span>eganyé</span><span>6</span></div>
+</section>
+
+<!-- 7 Différence -->
+<section class="slide">
+  <div class="split">
+    <figure class="phone"><img src="/pitch/ecran-assistant.jpg" alt="Écran d’accueil eganyé : l’assistant prévient qu’il manque 2 500 F pour la cotisation du 10 novembre"></figure>
+    <div>
+      <div class="kicker">Pourquoi eganyé fait mieux</div>
+      <h2 style="font-size:42px">On n’attend pas le retard. On le voit venir.</h2>
+      <ul style="margin-top:22px">
+        <li><b>Un assistant qui prévient :</b> « Il manque 2 500 F pour votre cotisation du 10 novembre. » Le membre recharge à temps.</li>
+        <li><b>Un score de fiabilité</b> construit sur les cotisations réelles : il aide le groupe à décider de l’ordre des tours.</li>
+        <li><b>L’argent ne dort pas chez une personne :</b> chaque mouvement est inscrit dans un registre que personne ne réécrit.</li>
+        <li><b>Fait pour ici :</b> Flooz et Mixx, petits montants, français et anglais, éwé en préparation, téléphones Android modestes.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>eganyé</span><span>7</span></div>
+</section>
+
+<!-- 8 IA -->
 <section class="slide dark">
   <div class="kicker">L’intelligence artificielle</div>
   <h2>Une IA qui prévient et qui explique. Jamais qui décide.</h2>
   <div class="grid g3">
-    <div class="card"><h3>Score de fiabilité</h3><p>Une estimation du risque de retard, calculée sur vos seules cotisations. Chaque variation est expliquée.</p></div>
-    <div class="card"><h3>Rappels avant le retard</h3><p>Le solde manque pour la prochaine cotisation ? On le dit à temps, avant la date.</p></div>
+    <div class="card"><h3>Score de fiabilité</h3><p>Une estimation du risque de retard, calculée sur les seules cotisations du membre. Chaque variation est expliquée.</p></div>
+    <div class="card"><h3>Alerte avant l’échéance</h3><p>Le solde ne suffit pas pour la prochaine cotisation ? Le membre le sait avant la date, pas après.</p></div>
     <div class="card"><h3>Santé du cercle</h3><p>Le risque du tour, sans nommer personne, pour que le groupe agisse ensemble.</p></div>
   </div>
-  <p style="margin-top:30px;font-size:21px"><b style="color:#fff">IA responsable :</b> modèle simple et lisible, calculé dans la base, sans API externe. Il peut se tromper et ne décide jamais à la place des membres.</p>
-  <div class="foot"><span>eganyé</span><span style="color:#d9c9bb">6</span></div>
+  <p style="margin-top:30px;font-size:21px"><b style="color:#fff">IA responsable :</b> modèle simple et lisible, calculé dans notre base, sans envoyer les données ailleurs. Il peut se tromper, et il ne décide jamais à la place des membres.</p>
+  <div class="foot"><span>eganyé</span><span style="color:#d9c9bb">8</span></div>
 </section>
 
-<!-- 7 Sécurité -->
+<!-- 9 Voir le produit -->
 <section class="slide">
-  <div class="kicker">La confiance</div>
-  <h2>L’argent est traité comme de l’argent.</h2>
+  <div class="kicker">Voir le produit</div>
+  <h2>Le produit fonctionne. Vous pouvez le voir et l’essayer.</h2>
   <div class="grid g2">
-    <div class="card"><h3>Un registre comptable à double entrée</h3><ul><li>Chaque mouvement est enregistré des deux côtés</li><li>Opérations rejouables sans doublon (clés d’idempotence)</li><li>Le pot est recalculé depuis le registre</li></ul></div>
-    <div class="card"><h3>Retraits encadrés</h3><ul><li>Code PIN vérifié côté serveur</li><li>Plafonds par retrait et par jour</li><li>Cas inhabituels envoyés à l’examen manuel</li><li>Statut vérifié auprès du prestataire de paiement</li></ul></div>
+    <a class="card link" href="https://eganye.codorah.com/video/eganye-comment-ca-marche-fr.mp4"><h3>Comment ça marche (vidéo, FR)</h3><p>De l’inscription au premier cercle, écran par écran.</p><code>eganye.codorah.com/video/eganye-comment-ca-marche-fr.mp4</code></a>
+    <a class="card link" href="https://eganye.codorah.com/video/eganye-presentation-fr.mp4"><h3>Présentation (vidéo, FR, 49 s)</h3><p>eganyé en moins d’une minute.</p><code>eganye.codorah.com/video/eganye-presentation-fr.mp4</code></a>
+    <a class="card link" href="https://eganye.codorah.com/video/eganye-how-it-works-en.mp4"><h3>How it works (video, EN)</h3><p>The same walkthrough, in English.</p><code>eganye.codorah.com/video/eganye-how-it-works-en.mp4</code></a>
+    <a class="card link" href="https://eganye.codorah.com/"><h3>L’application</h3><p>Version web installable, application Android en cours de publication sur Google Play.</p><code>eganye.codorah.com</code></a>
   </div>
-  <p style="margin-top:26px;font-size:20px">Audit de sécurité interne réalisé et corrigé : failles de création de monnaie fermées, contrôle d’accès par ligne dans la base.</p>
-  <div class="foot"><span>eganyé</span><span>7</span></div>
+  <div class="foot"><span>eganyé</span><span>9</span></div>
 </section>
 
-<!-- 8 Marché -->
+<!-- 10 Marché -->
 <section class="slide">
   <div class="kicker">Le marché</div>
   <h2>Le Mobile Money est déjà dans les poches. L’épargne de groupe, elle, reste sur papier.</h2>
   <div class="grid g3">
-    <div class="card"><div class="num">6,07 M</div><h3>comptes Mobile Money actifs au Togo</h3><p>sur 12,55 millions de comptes ouverts, fin 2024. Les comptes actifs ont progressé de 76,9 % en un an.</p></div>
-    <div class="card"><div class="num">1 sur 3</div><h3>adultes d’Afrique subsaharienne</h3><p>ont un compte Mobile Money, contre environ 1 sur 10 dans le monde (Global Findex 2021).</p></div>
-    <div class="card"><div class="num">15 → 25 %</div><h3>d’adultes qui épargnent via un compte</h3><p>entre 2017 et 2021 en Afrique subsaharienne : l’épargne passe au numérique.</p></div>
+    <div class="card"><div class="num">6,07 M</div><h3>comptes Mobile Money actifs au Togo</h3><p>sur 12,55 millions de comptes ouverts, fin 2024 : +76,9 % de comptes actifs en un an.</p></div>
+    <div class="card"><div class="num">35 %</div><h3>des adultes d’Afrique subsaharienne</h3><p>ont épargné sur un compte en 2024, 12 points de plus qu’en 2021.</p></div>
+    <div class="card"><div class="num">23 %</div><h3>épargnent via le Mobile Money</h3><p>C’est le premier canal d’épargne formelle de la région, devant la banque.</p></div>
   </div>
-  <p style="margin-top:24px;font-size:20px">La tontine est une pratique ancienne et très répandue. Aucune étude ne chiffre la valeur totale des tontines ; nous ne l’inventons pas. Les premiers cercles mesureront la nôtre.</p>
-  <p style="margin-top:12px;font-size:14px;line-height:1.4">Sources : BCEAO, rapport sur les services financiers numériques, cité par Togo First (18 mars 2026) · Banque mondiale, Global Findex 2021, résumé J-PAL « Digital payments in sub-Saharan Africa ».</p>
-  <div class="foot"><span>eganyé</span><span>8</span></div>
+  <p style="margin-top:24px;font-size:20px">Les gens épargnent déjà sur leur téléphone, seuls. eganyé leur permet de le faire ensemble. La valeur totale des tontines n’est chiffrée par aucune étude fiable : nous ne l’inventons pas, nos cercles pilotes mesureront la nôtre.</p>
+  <p class="src">Sources : BCEAO, rapport sur les services financiers numériques, cité par Togo First (mars 2026) · Banque mondiale, Global Findex 2025.</p>
+  <div class="foot"><span>eganyé</span><span>10</span></div>
 </section>
 
-<!-- 9 Modèle économique -->
+<!-- 11 Modèle économique -->
 <section class="slide">
   <div class="kicker">Modèle économique</div>
   <h2>On gagne quand les cercles vivent, pas en vendant du crédit.</h2>
   <div class="grid g3">
-    <div class="card"><div class="num">≈ 10 %</div><h3>Commission sur le pot</h3><p>Prélevée quand le pot est versé : une part de cotisation ou un pourcentage du pot, réglable.</p></div>
-    <div class="card"><h3>Frais Mobile Money</h3><p>Frais de dépôt et de retrait réglables, avec la case « payer les frais en plus » : l’utilisateur choisit qui les supporte.</p></div>
-    <div class="card"><h3>Services à venir</h3><p>Commission de priorité pour avancer son tour avec l’accord du groupe, sans promesse de rendement. Microcrédit encadré en préparation, soumis à validation réglementaire.</p></div>
+    <div class="card"><div class="num">≈ 10 %</div><h3>Commission sur le pot</h3><p>Prélevée au moment où le pot est versé : une part de cotisation ou un pourcentage du pot, réglable.</p></div>
+    <div class="card"><h3>Frais Mobile Money</h3><p>Frais de dépôt et de retrait réglables. L’utilisateur choisit s’il les paie en plus ou s’ils sont déduits.</p></div>
+    <div class="card"><h3>Services à venir</h3><p>Commission de priorité pour avancer son tour avec l’accord du groupe. Microcrédit encadré, soumis à validation réglementaire.</p></div>
   </div>
-  <p style="margin-top:28px;font-size:20px">Les tarifs se règlent depuis l’administration, sans mise à jour de l’application. Il n’y a pas de grille fixe : nous ajusterons avec les premiers cercles.</p>
-  <div class="foot"><span>eganyé</span><span>9</span></div>
-</section>
-
-<!-- 10 Conformité -->
-<section class="slide">
-  <div class="kicker">Conformité et risques</div>
-  <h2>Nous les connaissons, et nous les traitons en premier.</h2>
-  <div class="grid g2">
-    <div class="card"><h3>Cadre réglementaire</h3><p>Garder des fonds relève de la réglementation BCEAO. Nous cherchons un partenaire de paiement agréé et un avis juridique, et nos textes disent la vérité sur qui contrôle les fonds.</p></div>
-    <div class="card"><h3>Règles des stores</h3><p>Pas de promesse de rendement, pas de mot « banque », aucune enchère, coût total affiché sur tout crédit.</p></div>
-    <div class="card"><h3>Entreprise</h3><p>Codorah, immatriculée au Togo (RCCM TG-LFW-01-2026-A10-02627).</p></div>
-    <div class="card"><h3>Protection des utilisateurs</h3><p>Données limitées au nécessaire, sauvegarde désactivée sur l’appareil, suppression de compte sur demande.</p></div>
-  </div>
-  <div class="foot"><span>eganyé</span><span>10</span></div>
-</section>
-
-<!-- 11 Avancement -->
-<section class="slide green">
-  <div class="kicker">Où nous en sommes</div>
-  <h2>Un produit complet, prêt à être mis à l’épreuve.</h2>
-  <div class="grid g4">
-    <div class="card"><div class="num">✓</div><h3>Application</h3><p>Cercles, portefeuille, épargne, assistant, administration.</p></div>
-    <div class="card"><div class="num">✓</div><h3>Paiements</h3><p>Dépôts et retraits automatiques via PayDunya, testés en conditions réelles.</p></div>
-    <div class="card"><div class="num">✓</div><h3>Android</h3><p>Version 1.3 signée, publication sur Google Play en cours.</p></div>
-    <div class="card"><div class="num">✓</div><h3>Vidéos</h3><p>Présentation et tutoriel en français et en anglais.</p></div>
-  </div>
-  <p style="margin-top:28px;font-size:21px">Le produit vient d’être terminé et le lancement commence. Les chiffres d’usage viendront avec les cercles pilotes.</p>
+  <p style="margin-top:28px;font-size:20px">Rejoindre un cercle est gratuit. Les tarifs se règlent depuis l’administration, sans mise à jour de l’application ; nous les ajusterons avec les premiers cercles.</p>
   <div class="foot"><span>eganyé</span><span>11</span></div>
 </section>
 
-<!-- 12 Feuille de route -->
+<!-- 12 Confiance -->
 <section class="slide">
-  <div class="kicker">Feuille de route</div>
-  <h2>Sécuriser, ouvrir, puis étendre.</h2>
+  <div class="kicker">Confiance et conformité</div>
+  <h2>L’argent est traité comme de l’argent.</h2>
   <div class="grid g3">
-    <div class="card"><span class="pill">Maintenant</span><ul><li>Publication sur Google Play</li><li>Premiers cercles pilotes</li><li>Mesure de l’usage réel</li></ul></div>
-    <div class="card"><span class="pill">Ensuite</span><ul><li>Partenaire de paiement agréé</li><li>Avis juridique et dossier BCEAO</li><li>Langues locales (éwé)</li></ul></div>
-    <div class="card"><span class="pill">Après</span><ul><li>Microcrédit encadré</li><li>Autres pays de l’UEMOA</li><li>Score étendu à d’autres usages</li></ul></div>
+    <div class="card"><h3>Registre à double entrée</h3><ul><li>Chaque mouvement inscrit des deux côtés</li><li>Aucune opération comptée deux fois</li><li>Le pot recalculé depuis le registre</li></ul></div>
+    <div class="card"><h3>Retraits encadrés</h3><ul><li>Code PIN vérifié côté serveur</li><li>Plafonds par retrait et par jour</li><li>Cas inhabituels examinés à la main</li></ul></div>
+    <div class="card"><h3>Cadre réglementaire</h3><ul><li>Recherche d’un partenaire de paiement agréé</li><li>Avis juridique et dossier BCEAO</li><li>Ni promesse de rendement, ni enchère</li></ul></div>
   </div>
+  <p style="margin-top:24px;font-size:19px">Codorah, entreprise immatriculée au Togo (RCCM TG-LFW-01-2026-A10-02627). Audit de sécurité interne réalisé et corrigé ; accès aux données contrôlé ligne par ligne.</p>
   <div class="foot"><span>eganyé</span><span>12</span></div>
 </section>
 
-<!-- 13 Demande -->
+<!-- 13 Avancement et suite -->
+<section class="slide green">
+  <div class="kicker">Où nous en sommes</div>
+  <h2>Le produit est construit. Il faut maintenant le mettre entre les mains des cercles.</h2>
+  <div class="grid g3">
+    <div class="card"><span class="pill">Fait</span><ul><li>Cercles, portefeuille, épargne, assistant</li><li>Dépôts et retraits Mobile Money testés en réel</li><li>Android 1.3 signé, vidéos FR et EN</li></ul></div>
+    <div class="card"><span class="pill">Maintenant</span><ul><li>Publication sur Google Play</li><li>Premiers cercles pilotes à Lomé</li><li>Mesure de l’usage réel</li></ul></div>
+    <div class="card"><span class="pill">Ensuite</span><ul><li>Partenaire de paiement agréé</li><li>Langue éwé</li><li>Autres pays de l’UEMOA</li></ul></div>
+  </div>
+  <p style="margin-top:26px;font-size:20px">Nous n’avons pas encore d’utilisateurs à vous montrer : le lancement commence. Les chiffres viendront des cercles pilotes, et nous les publierons tels qu’ils sont.</p>
+  <div class="foot"><span>eganyé</span><span>13</span></div>
+</section>
+
+<!-- 14 Clôture -->
 <section class="slide cover">
   <div class="photo" style="background-image:url(/onboarding/young-savers.webp)"></div>
   <div class="txt">
     <img class="logo" src="/logo-white.svg" alt="eganyé">
-    <h1 style="font-size:60px">Construisons la tontine de demain.</h1>
-    <p style="font-size:26px">Plus simple, plus visible, plus sûr : l’épargne de groupe qu’on connaît, enfin à la hauteur de nos téléphones.</p>
-    <p style="font-size:22px;margin-top:26px">eganye.codorah.com · Codorah, Togo</p>
+    <h1 style="font-size:56px">La tontine a fait ses preuves. Donnons-lui un outil à sa hauteur.</h1>
+    <p style="font-size:24px">Nous cherchons des cercles pilotes, un partenaire de paiement agréé et des conseils pour grandir.</p>
+    <p style="font-size:22px;margin-top:26px">eganye.codorah.com · services@codorah.com</p>
   </div>
-  <div class="foot"><span>Merci</span><span>13</span></div>
+  <div class="foot"><span>Merci</span><span>14</span></div>
 </section>
 
 </div></div>
