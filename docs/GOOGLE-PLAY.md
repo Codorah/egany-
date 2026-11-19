@@ -16,8 +16,9 @@ Toutes les réponses ci-dessous décrivent **ce que l'application fait réelleme
 | Conditions du microcrédit | https://eganye.codorah.com/conditions-credit |
 | Conditions du Coup de pouce | https://eganye.codorah.com/conditions-coup-de-pouce |
 | Mentions légales | https://eganye.codorah.com/mentions-legales |
+| Politique de remboursement | https://eganye.codorah.com/remboursement |
 | Site web du développeur | https://eganye.codorah.com |
-| E-mail du développeur | codorah@hotmail.com (une adresse @codorah.com serait mieux) |
+| E-mail du développeur | services@codorah.com |
 
 Avant d'envoyer : ouvrir chaque lien dans un navigateur et vérifier que la page s'affiche (Google refuse une page qui ne charge pas).
 
@@ -180,7 +181,7 @@ Ces réponses doivent rester identiques à la politique de confidentialité. Si 
 ## 9. Avant d'appuyer sur « Envoyer pour examen »
 
 - [ ] Choix A ou B fait pour le microcrédit, et l'app, la déclaration et la fiche disent la même chose
-- [ ] Les 7 liens de la section 1 s'ouvrent
+- [ ] Les 8 liens de la section 1 s'ouvrent
 - [ ] Compte de test prêt pour Google
 - [ ] Déclaration financière remplie
 - [ ] Formulaire Sécurité des données rempli
