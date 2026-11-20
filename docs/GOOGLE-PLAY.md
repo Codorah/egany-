@@ -56,7 +56,7 @@ Au Togo, prêter de l'argent avec intérêt est en principe réservé aux banque
 - **A. Couper le microcrédit au lancement (recommandé).** Pas besoin de toucher au code : dans l'admin, désactiver les services de crédit de la marketplace (ils sont filtrés par `is_active`). On garde le **Coup de pouce**, qui aide les gens sans être un prêt. On ne coche pas les prêts dans la déclaration. On le rallume plus tard avec une institution de microfinance partenaire qui prête son propre argent.
 - **B. Le garder.** Cocher « Personal loan direct lender », mettre l'app en catégorie Finance, ajouter les mentions de la section 5 à la fiche, et accepter le risque d'une demande de licence par Google ou d'un problème avec les autorités togolaises.
 
-**La décision t'appartient.** Le reste du dossier indique ce qui change selon A ou B.
+**Décision du 20 novembre 2026 : choix A.** Le microcrédit est masqué dans l'application (`CREDIT_ENABLED = false` dans `src/lib/features.ts`) et les services de crédit sont à désactiver dans l'admin. Le Coup de pouce est lui aussi masqué depuis le 6 novembre (`AID_ENABLED = false`) : il ne figure donc ni dans la déclaration ni dans la fiche.
 
 ---
 
@@ -90,7 +90,6 @@ Pays ciblé : **Togo** uniquement au lancement. Ajouter d'autres pays seulement 
 > • Rappels avant chaque échéance
 > • Portefeuille en FCFA : rechargez et retirez par Mobile Money (Mixx, Moov Flooz)
 > • Épargne bloquée pour vos projets
-> • Coup de pouce : une aide offerte pour soutenir votre activité
 >
 > eganyé est édité par CODORAH, entreprise individuelle immatriculée au Togo (RCCM TG-LFW-01-2026-A10-02627). Les dépôts Mobile Money sont encaissés par notre prestataire de paiement PayDunya. eganyé n'est pas une banque et ne verse pas d'intérêts.
 
@@ -180,7 +179,7 @@ Ces réponses doivent rester identiques à la politique de confidentialité. Si 
 
 ## 9. Avant d'appuyer sur « Envoyer pour examen »
 
-- [ ] Choix A ou B fait pour le microcrédit, et l'app, la déclaration et la fiche disent la même chose
+- [x] Choix A fait pour le microcrédit (20 nov.) : services de crédit désactivés dans l'admin, déclaration et fiche sans prêt
 - [ ] Les 8 liens de la section 1 s'ouvrent
 - [ ] Compte de test prêt pour Google
 - [ ] Déclaration financière remplie

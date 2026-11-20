@@ -9,7 +9,7 @@ import { fetchActiveServices, fetchMyMarketplaceRequests, providerLabel, submitM
 import { CreditApplication, fetchMyCreditApplications, isOpenApplication, remainingDue } from '@/lib/credit';
 import { CreditFlow } from './CreditApplicationPanel';
 import { AidFlow } from './AidApplicationPanel';
-import { AID_ENABLED } from '@/lib/features';
+import { AID_ENABLED, CREDIT_ENABLED } from '@/lib/features';
 import { AidApplication, fetchAidApplicationFee, fetchMyAidApplications } from '@/lib/aid';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -100,7 +100,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
     if (initialOpen === 'aid') {
       if (AID_ENABLED) setOpenFlow({ kind: 'aid' });
     }
-    else {
+    else if (CREDIT_ENABLED) {
       const credit = services.find((s) => s.category === 'credit');
       if (credit) setOpenFlow({ kind: 'credit', service: credit });
     }
@@ -204,6 +204,8 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
   }
 
   const aidStatus = aidCardStatus();
+  // Crédit masqué : seule une personne qui a déjà un dossier voit encore la carte.
+  const visibleServices = services.filter((s) => s.category !== 'credit' || CREDIT_ENABLED || creditApps.length > 0);
 
   return (
     <div className="space-y-5 pb-20">
@@ -226,7 +228,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
         </button>
       )}
 
-      {services.length === 0 ? (
+      {visibleServices.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6 rounded-2xl border border-border">
           <PackageSearch className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm font-bold text-foreground">{t('mkt_no_service_title')}</p>
@@ -235,7 +237,7 @@ export function Marketplace({ user, initialOpen }: MarketplaceProps) {
       ) : (
         <div className="space-y-2.5">
           <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
-            {services.map((service) => {
+            {visibleServices.map((service) => {
               const Icon = ICONS[service.iconName] || Store;
               const existingRequest = service.category === 'credit' ? undefined : requestForService(service.id);
               const status = service.category === 'credit'

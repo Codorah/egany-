@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { EganyeLogo } from './ui/EganyeLogo';
 import { PLAY_STORE_PUBLISHED, PLAY_STORE_URL } from '@/lib/links';
+import { CREDIT_ENABLED } from '@/lib/features';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
@@ -108,7 +109,9 @@ export function Landing({ onStart, onLogin }: LandingProps) {
           <div className="flex items-center gap-8 text-sm font-semibold text-muted-foreground">
             <a href="#fonctionnement" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Comment ça marche</a>
             <a href="#services" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Services</a>
-            <a href="#argent" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Microcrédit</a>
+            {CREDIT_ENABLED && (
+              <a href="#argent" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Microcrédit</a>
+            )}
             <a href="#securite" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">Sécurité</a>
           </div>
           <div className="ml-auto flex items-center gap-3">
@@ -303,6 +306,7 @@ export function Landing({ onStart, onLogin }: LandingProps) {
         </section>
 
         {/* ------------------------------------- Argent pour son activité */}
+        {CREDIT_ENABLED && (
         <section id="argent" className="scroll-mt-20 max-w-7xl mx-auto px-8 pb-24">
           <div className="space-y-8">
             <Reveal>
@@ -332,13 +336,14 @@ export function Landing({ onStart, onLogin }: LandingProps) {
                         Une demande gratuite, une offre claire. Vous remboursez de 3 à 24 mois et voyez le coût total, au franc près, avant d'accepter.
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-muted-foreground pt-2">Taux annuel de 36 % au maximum, sans autres frais.</p>
+                    <p className="text-sm font-semibold text-muted-foreground pt-2">Taux annuel de 13 % au maximum, sans autres frais.</p>
                   </div>
                 </article>
               </Reveal>
             </div>
           </div>
         </section>
+        )}
 
         {/* --------------------------------------------------- Sécurité */}
         <section id="securite" className="scroll-mt-20 bg-card border-y border-border">

@@ -1,4 +1,4 @@
-import { AID_ENABLED } from '@/lib/features';
+import { AID_ENABLED, CREDIT_ENABLED } from '@/lib/features';
 import { setRecoveryInProgress } from '@/lib/recoveryFlag';
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -340,12 +340,12 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
       image: '/onboarding/aid-shopkeeper.webp',
       badge: 'Assistant eganyé',
     }]),
-    {
+    ...(CREDIT_ENABLED ? [{
       title: t('onb_slide5_title'),
       description: t('onb_slide5_desc'),
       image: '/onboarding/credit-merchant.webp',
       badge: 'Microcrédit · 3 à 24 mois',
-    },
+    }] : []),
   ];
 
   const BACK_TARGET: Partial<Record<Screen, Screen>> = {
@@ -1173,7 +1173,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                       />
                     </div>
                     <span className="text-[13px] font-serif font-bold text-white bg-white/20 px-3 py-1.5 rounded-full border border-white/25">
-                      Tontine · Épargne · Crédit
+                      {CREDIT_ENABLED ? 'Tontine · Épargne · Crédit' : 'Tontine · Épargne'}
                     </span>
                   </div>
                 </motion.div>
@@ -1295,6 +1295,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   </button>
                 </div>
 
+                {(AID_ENABLED || CREDIT_ENABLED) && (
                 <div className="space-y-2.5 pt-1">
                   <p className="text-xs font-bold text-muted-foreground text-left px-1">
                     {t('onb_intent_money_heading')}
@@ -1319,6 +1320,7 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                   </button>
                   )}
 
+                  {CREDIT_ENABLED && (
                   <button
                     type="button"
                     onClick={() => { setIntent('credit'); goTo('register'); }}
@@ -1335,7 +1337,9 @@ export function Onboarding({ onComplete, isLoading = false, initialScreen = 'wel
                     </div>
                     <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
                   </button>
+                  )}
                 </div>
+                )}
               </motion.div>
             )}
 
